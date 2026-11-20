@@ -45,9 +45,10 @@ var e = [
 	}
 }, r = new class {
 	constructor() {
-		this.container = null, this._ensureContainer();
+		this.container = null, typeof document < "u" && this._ensureContainer();
 	}
 	_ensureContainer() {
+		if (typeof document > "u") return;
 		let e = document.getElementById("toast-container");
 		e || (e = document.createElement("div"), e.id = "toast-container", e.setAttribute("aria-live", "polite"), document.body.appendChild(e)), this.container = e;
 	}
@@ -181,16 +182,7 @@ var e = [
 };
 // src/ui/placeholders.js
 function a() {
-	[
-		"#btnPrintDocuments",
-		"#btnCancelPrint",
-		"#btnPrinterSelect",
-		"#btnSendWhatsApp",
-		"#btnCopyMarathiNotice",
-		"#btnSendBatchSms",
-		"#btnExportFollowup",
-		"[data-action=\"placeholder\"]"
-	].forEach((e) => {
+	["[data-action=\"placeholder\"]"].forEach((e) => {
 		document.querySelectorAll(e).forEach((e) => {
 			e.addEventListener("click", (t) => {
 				e.tagName === "A" && e.getAttribute("href") === "#" && t.preventDefault();
@@ -1046,46 +1038,92 @@ var h = {
 		["BONAFIDE CERTIFICATE", ["bonafide certificate"]]
 	]
 }, b = {
+	"MAHA DBT FORM": [
+		"AADHAAR CARD",
+		"PHOTO",
+		"10TH MARKSHEET",
+		"10TH PASSING CERTIFICATE",
+		"12TH MARKSHEET",
+		"12TH PASSING CERTIFICATE",
+		"12TH LC",
+		"CASTE CERTIFICATE",
+		"VALIDITY CERTIFICATE",
+		"INCOME CERTIFICATE",
+		"NATIONALITY CERTIFICATE",
+		"DOMICILE CERTIFICATE",
+		"PASSBOOK BANK"
+	],
+	"MH CET FORM": [
+		"PHOTO",
+		"AADHAAR CARD",
+		"10TH MARKSHEET",
+		"10TH PASSING CERTIFICATE",
+		"12TH MARKSHEET",
+		"12TH PASSING CERTIFICATE",
+		"12TH LC",
+		"CASTE CERTIFICATE",
+		"VALIDITY CERTIFICATE",
+		"DOMICILE CERTIFICATE",
+		"NATIONALITY CERTIFICATE",
+		"INCOME CERTIFICATE",
+		"ATTEMPT CERTIFICATE"
+	],
+	"SWAYAM / DEEN DAYAL SCHEME": [
+		"PHOTO",
+		"AADHAAR CARD",
+		"10TH MARKSHEET",
+		"11TH MARKSHEET",
+		"12TH MARKSHEET",
+		"12TH LC",
+		"CASTE CERTIFICATE",
+		"VALIDITY CERTIFICATE",
+		"DOMICILE CERTIFICATE",
+		"SELF DECLARATION",
+		"PARENT DECLARATION",
+		"PASSBOOK BANK",
+		"BONAFIDE CERTIFICATE"
+	]
+}, x = {
 	name: "BulkStudentRenamerSettingsDB",
 	version: 1,
 	store: "settings",
 	key: "current"
 };
 // src/libraries/duplicate-name-library.js
-function x(e, t, n) {
+function S(e, t, n) {
 	let r = /* @__PURE__ */ new Map();
 	if (n) for (let e of n) e && r.set(e.toLowerCase(), e);
 	if (!r.has(e.toLowerCase()) || e.toLowerCase() === (t || "").toLowerCase()) return e;
-	let i = S(e), a = C(e).replace(/\s+\d+$/, ""), o = 1, s = `${a} ${o}${i}`;
+	let i = C(e), a = w(e).replace(/\s+\d+$/, ""), o = 1, s = `${a} ${o}${i}`;
 	for (; r.has(s.toLowerCase()) && s.toLowerCase() !== (t || "").toLowerCase();) o++, s = `${a} ${o}${i}`;
 	return s;
 }
 // src/libraries/rename-library.js
-function S(e) {
+function C(e) {
 	let t = e.lastIndexOf(".");
 	return t > 0 ? e.slice(t) : "";
 }
-function C(e) {
-	let t = S(e);
+function w(e) {
+	let t = C(e);
 	return t ? e.slice(0, -t.length) : e;
 }
-function w(e, t) {
+function T(e, t) {
 	let n = m(e, t);
 	return n.docType ? n.docType : f(e, t) || null;
 }
-function T(e, t, n = "preserve") {
+function E(e, t, n = "preserve") {
 	return n === "upper" ? t.toUpperCase() : n === "lower" ? t.toLowerCase() : n === "title" ? t.toLowerCase().replace(/(^|\s)\S/g, (e) => e.toUpperCase()) : e === e.toUpperCase() ? t.toUpperCase() : e === e.toLowerCase() ? t.toLowerCase() : t;
 }
-function E(e, t, n, r = "preserve") {
-	let i = w(e, n);
+function D(e, t, n, r = "preserve") {
+	let i = T(e, n);
 	if (!i) {
-		let n = C(e);
+		let n = w(e);
 		return !t || n.toLowerCase().includes(t.toLowerCase()) ? n : `${n} ${t}`;
 	}
-	let a = h[i.toUpperCase()] || i, o = T(C(e), a, r);
+	let a = h[i.toUpperCase()] || i, o = E(w(e), a, r);
 	return !t || o.toLowerCase().includes(t.toLowerCase()) ? o : `${o} ${t}`;
 }
-function D(e) {
+function O(e) {
 	if (!e || !e.trim()) return "File name cannot be empty.";
 	let t = e.trim();
 	if (e.endsWith(".") || e.endsWith(" ") || t.endsWith(".")) return "File name cannot end with a period or space.";
@@ -1132,7 +1170,7 @@ async function ee(e, t, n = null) {
 			if (!o) {
 				let t = a.next, n = await e.getFileHandle(t, { create: !1 }).catch(() => null);
 				if (n) {
-					let r = S(t), i = C(t).replace(/\s+\d+$/, ""), o = 1;
+					let r = C(t), i = w(t).replace(/\s+\d+$/, ""), o = 1;
 					for (t = `${i} ${o}${r}`, n = await e.getFileHandle(t, { create: !1 }).catch(() => null); n;) o++, t = `${i} ${o}${r}`, n = await e.getFileHandle(t, { create: !1 }).catch(() => null);
 					a.next = t;
 				}
@@ -1190,7 +1228,7 @@ async function te(e, t, n = null) {
 		i++, n && n(Math.round(i / r.length * 100), `Undo: ${i}/${r.length}`);
 	}
 }
-var O = new class {
+var k = new class {
 	constructor(e = 10) {
 		this.history = [], this.maxHistory = e;
 	}
@@ -1216,7 +1254,7 @@ var O = new class {
 	}
 }();
 // src/libraries/export-reports-library.js
-function k(e, t) {
+function ne(e, t) {
 	let n = new Blob(["﻿" + t], { type: "text/csv;charset=utf-8;" }), r = URL.createObjectURL(n), i = document.createElement("a");
 	i.setAttribute("href", r), i.setAttribute("download", e), i.style.display = "none", document.body.appendChild(i), i.click(), document.body.removeChild(i), URL.revokeObjectURL(r);
 }
@@ -1225,7 +1263,7 @@ function A(e) {
 	let t = String(e);
 	return t.includes("\"") || t.includes(",") || t.includes("\n") || t.includes("\r") ? `"${t.replace(/"/g, "\"\"")}"` : `"${t}"`;
 }
-function ne(e, t, n = "Checklist") {
+function re(e, t, n = "Checklist") {
 	let r = [[
 		"Sr No",
 		"Student Name",
@@ -1279,7 +1317,7 @@ var M = "v3_exact_single", N = u(), P = (e, t) => {
 	try {
 		localStorage.setItem(e, JSON.stringify(t));
 	} catch {}
-}, re = (e) => {
+}, ie = (e) => {
 	let t = {};
 	Object.entries(e || {}).forEach(([e, n]) => {
 		let r = /^12\s*LC$/i.test(e) || e === "12TH LEAVING CERTIFICATE" ? "12TH LC" : e;
@@ -1302,7 +1340,7 @@ var M = "v3_exact_single", N = u(), P = (e, t) => {
 	if (!t.length) return e;
 	let n = e.filter((e) => e.name !== "12TH MARKSHEET AND PASSING"), r = n.findIndex((e) => e.name === "12TH PASSING CERTIFICATE");
 	return n.splice(r < 0 ? n.length : r + 1, 0, ...t), n;
-}, ie = (e) => {
+}, ae = (e) => {
 	let t = j(y), n = e || {}, r = {};
 	return Object.keys(t).forEach((e) => {
 		let i = Array.isArray(n[e]) ? n[e].map(I) : [], a = new Map(i.map((e) => [e.name.toUpperCase(), e]));
@@ -1316,9 +1354,9 @@ var M = "v3_exact_single", N = u(), P = (e, t) => {
 };
 function R() {
 	let e = localStorage.getItem("dictVersion"), t, n;
-	e === M ? (t = re(P("renameSettings", N)), n = P("renameProfiles", { Default: N })) : (t = N, n = { Default: N }, F("renameSettings", t), F("renameProfiles", n), localStorage.setItem("dictVersion", M));
+	e === M ? (t = ie(P("renameSettings", N)), n = P("renameProfiles", { Default: N })) : (t = N, n = { Default: N }, F("renameSettings", t), F("renameProfiles", n), localStorage.setItem("dictVersion", M));
 	let r = localStorage.getItem("checklistVersion"), i;
-	r === "2026.11.passing_canonical_v2" ? i = ie(P("checklists", null)) : (i = j(y), F("checklists", i), localStorage.setItem("checklistVersion", v));
+	r === "2026.11.passing_canonical_v2" ? i = ae(P("checklists", null)) : (i = j(y), F("checklists", i), localStorage.setItem("checklistVersion", v));
 	let a = {
 		...g,
 		...P("spellingCorrections", {}) || {}
@@ -1333,19 +1371,19 @@ function R() {
 		active: Object.keys(n)[0] || "Default"
 	};
 }
-function ae() {
+function oe() {
 	return new Promise((e, t) => {
 		if (!("indexedDB" in window)) return t(/* @__PURE__ */ Error("IndexedDB unavailable"));
-		let n = indexedDB.open(b.name, b.version);
+		let n = indexedDB.open(x.name, x.version);
 		n.onupgradeneeded = () => {
-			n.result.objectStoreNames.contains(b.store) || n.result.createObjectStore(b.store);
+			n.result.objectStoreNames.contains(x.store) || n.result.createObjectStore(x.store);
 		}, n.onsuccess = () => e(n.result), n.onerror = () => t(n.error || /* @__PURE__ */ Error("IndexedDB open failed"));
 	});
 }
-function oe(e) {
-	return ae().then((t) => new Promise((n, r) => {
-		let i = t.transaction(b.store, "readwrite");
-		i.objectStore(b.store).put(e, b.key), i.oncomplete = () => n(!0), i.onerror = () => r(i.error);
+function se(e) {
+	return oe().then((t) => new Promise((n, r) => {
+		let i = t.transaction(x.store, "readwrite");
+		i.objectStore(x.store).put(e, x.key), i.oncomplete = () => n(!0), i.onerror = () => r(i.error);
 	}));
 }
 function z(e) {
@@ -1358,10 +1396,10 @@ function z(e) {
 		style: e.style,
 		savedAt: (/* @__PURE__ */ new Date()).toISOString()
 	};
-	F("renameSettings", t.groups), F("checklists", t.checklists), F("spellingCorrections", t.spelling), F("renameProfiles", t.profiles), F("linkedRules", t.linkedRules), localStorage.setItem("nameStyle", t.style), oe(t).catch(() => {});
+	F("renameSettings", t.groups), F("checklists", t.checklists), F("spellingCorrections", t.spelling), F("renameProfiles", t.profiles), F("linkedRules", t.linkedRules), localStorage.setItem("nameStyle", t.style), se(t).catch(() => {});
 }
 // src/ui/renamer-ui.js
-var se = class {
+var ce = class {
 	constructor() {
 		this.state = {
 			folder: null,
@@ -1569,9 +1607,9 @@ var se = class {
 		}, this.state.studentName = r;
 		let i = e.files || [], a = /* @__PURE__ */ new Set();
 		this.state.files = i.map((e, n) => {
-			let r = e.ext || S(e.name), i = C(e.name), o = m(i, this.state.settings?.groups).docType || f(i, this.state.settings?.groups) || null, s = i, c = !1;
-			o && (s = E(h[o.toUpperCase()] || o, this.state.studentName, this.state.settings?.groups, this.state.style), c = !0);
-			let l = x(s.endsWith(r) ? s : s + r, e.name, a);
+			let r = e.ext || C(e.name), i = w(e.name), o = m(i, this.state.settings?.groups).docType || f(i, this.state.settings?.groups) || null, s = i, c = !1;
+			o && (s = D(h[o.toUpperCase()] || o, this.state.studentName, this.state.settings?.groups, this.state.style), c = !0);
+			let l = S(s.endsWith(r) ? s : s + r, e.name, a);
 			return a.add(l), {
 				id: `file_${n}_${Date.now()}`,
 				name: e.name,
@@ -1750,15 +1788,15 @@ var se = class {
 	applyShortcutToCurrent(e) {
 		let t = this.state.files[this.state.currentIndex];
 		if (!t) return;
-		let n = e.canonical, r = t.ext, i = E(n, this.state.studentName, this.state.settings?.groups, this.state.style), a = i.endsWith(r) ? i : `${i}${r}`, o = new Set(this.state.files.map((e) => e.targetName));
+		let n = e.canonical, r = t.ext, i = D(n, this.state.studentName, this.state.settings?.groups, this.state.style), a = i.endsWith(r) ? i : `${i}${r}`, o = new Set(this.state.files.map((e) => e.targetName));
 		o.delete(t.targetName);
-		let s = x(a, t.name, o);
+		let s = S(a, t.name, o);
 		t.targetName = s, t.docType = n, t.isMatched = !0, t.status = "matched", this.updateTelemetry(), this.renderQueue(), this.handleConfirmCurrentName(s);
 	}
 	handleConfirmCurrentName(e) {
 		let t = this.state.files[this.state.currentIndex];
 		if (!t) return;
-		let n = D(e);
+		let n = O(e);
 		if (n) {
 			r.show("Invalid Filename", n, "error");
 			return;
@@ -1783,7 +1821,7 @@ var se = class {
 			return;
 		}
 		for (let t of e) {
-			let e = D(t.targetName);
+			let e = O(t.targetName);
 			if (e) {
 				r.show("Validation Error", `${t.name}: ${e}`, "error");
 				return;
@@ -1799,7 +1837,7 @@ var se = class {
 		try {
 			await ee(this.state.folder, t, (e, t) => {
 				console.log(`[Rename Progress] ${e}%: ${t}`);
-			}), O.pushBatch(this.state.folder, t), e.forEach((e) => {
+			}), k.pushBatch(this.state.folder, t), e.forEach((e) => {
 				e.name = e.targetName, e.isRenamed = !0, e.status = "renamed";
 			}), r.show("Batch Complete!", `Successfully renamed ${t.length} files.`, "success"), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview();
 		} catch (e) {
@@ -1807,11 +1845,11 @@ var se = class {
 		}
 	}
 	async handleUndo() {
-		if (!O.canUndo()) {
+		if (!k.canUndo()) {
 			r.show("Undo Stack Empty", "No previous rename batch to undo.", "info");
 			return;
 		}
-		let e = O.pop();
+		let e = k.pop();
 		r.show("Reverting Changes", `Restoring ${e.plan.length} files...`, "info");
 		try {
 			await te(e.dir, e.plan, (e, t) => {
@@ -1848,7 +1886,7 @@ var se = class {
 			r.show("Nothing to Export", "Queue is empty.", "info");
 			return;
 		}
-		let e = ne([{
+		let e = re([{
 			studentName: this.state.studentName || "Student",
 			folderName: this.state.folder?.name || "Folder",
 			summary: {
@@ -1865,7 +1903,7 @@ var se = class {
 				missingList: this.state.files.filter((e) => !e.isMatched && !e.isRenamed).map((e) => e.name)
 			}
 		}], this.state.files.map((e) => ({ name: e.docType || e.name })), "Admission Audit");
-		k(`DocMitra_Audit_${(this.state.studentName || "Batch").replace(/\s+/g, "_")}.csv`, e), r.show("Audit Exported", "CSV report downloaded with UTF-8 BOM.", "success");
+		ne(`DocMitra_Audit_${(this.state.studentName || "Batch").replace(/\s+/g, "_")}.csv`, e), r.show("Audit Exported", "CSV report downloaded with UTF-8 BOM.", "success");
 	}
 	handleClearQueue() {
 		this.state.files = [], this.state.folder = null, this.state.currentIndex = 0, this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), r.show("Queue Cleared", "Intake workstation reset.", "info");
@@ -1927,12 +1965,12 @@ var se = class {
 		l.className = "text-center border-t pt-2 border-outline-variant/30 text-[10px] font-mono-code text-secondary", l.textContent = "Air-Gapped High-Precision Preview Stage", e.appendChild(l);
 	}
 };
-function B() {
-	let e = new se();
+function le() {
+	let e = new ce();
 	return e.init(), e;
 }
 // src/services/export-import-service.js
-function V(e) {
+function ue(e) {
 	let t = {
 		format: "BulkStudentRenamerSettings",
 		version: 1,
@@ -1945,7 +1983,7 @@ function V(e) {
 	}, n = new Blob([JSON.stringify(t, null, 2)], { type: "application/json" }), r = URL.createObjectURL(n), i = document.createElement("a");
 	i.href = r, i.download = `student-renamer-settings-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.json`, i.click(), setTimeout(() => URL.revokeObjectURL(r), 1e3);
 }
-function H(e, t) {
+function de(e, t) {
 	return new Promise((n, r) => {
 		if (!e) return r(/* @__PURE__ */ Error("No backup file selected."));
 		if (e.size > 5242880) return r(/* @__PURE__ */ Error("Backup file exceeds maximum allowed size (5 MB)."));
@@ -1968,7 +2006,7 @@ function H(e, t) {
 	});
 }
 // src/ui/settings-ui.js
-var U = class {
+var fe = class {
 	constructor() {
 		this.state = null, this.initialState = null, this.activeChecklist = "11th / 12th (FYJC / SYJC)";
 	}
@@ -1990,7 +2028,7 @@ var U = class {
 		let a = document.getElementById("btnExportSettingsJSON");
 		a && a.addEventListener("click", () => {
 			try {
-				V(this.state), r.show("Settings Exported", "Configuration JSON file downloaded.", "success");
+				ue(this.state), r.show("Settings Exported", "Configuration JSON file downloaded.", "success");
 			} catch (e) {
 				r.show("Export Error", e.message, "error");
 			}
@@ -1999,7 +2037,7 @@ var U = class {
 		o && s && (o.addEventListener("click", () => s.click()), s.addEventListener("change", async (e) => {
 			let t = e.target.files?.[0];
 			if (t) try {
-				await H(t, this.state), z(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Import Successful", "System configuration restored and verified.", "success");
+				await de(t, this.state), z(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Import Successful", "System configuration restored and verified.", "success");
 			} catch (e) {
 				r.show("Import Failed", e.message || "Invalid settings JSON format.", "error");
 			} finally {
@@ -2259,12 +2297,12 @@ var U = class {
 		e && e.classList.add("hidden"), document.body.style.overflow = "";
 	}
 };
-function W() {
-	let e = new U();
+function pe() {
+	let e = new fe();
 	return e.init(), e;
 }
 // src/modules/pdf-studio.js
-var G = {
+var B = {
 	A4_PORTRAIT: {
 		width: 595.28,
 		height: 841.89,
@@ -2276,7 +2314,7 @@ var G = {
 		label: "A4 Landscape"
 	}
 };
-function K(e) {
+function V(e) {
 	let t = 2, n = e.length;
 	for (; t < n && e[t] === 255;) {
 		let r = e[t + 1];
@@ -2298,7 +2336,7 @@ function K(e) {
 		height: 842
 	};
 }
-function q(e = [], t = "portrait", n = 0) {
+function H(e = [], t = "portrait", n = 0) {
 	if (!e.length) throw Error("No images provided for PDF creation.");
 	let r = [], i = 0, a = (e) => new TextEncoder().encode(e), o = [], s = (e) => {
 		o.push(e), i += e.length;
@@ -2308,8 +2346,8 @@ function q(e = [], t = "portrait", n = 0) {
 	for (let e = 0; e < c; e++) l.push(3 + e * 3);
 	r.push(i), s(a(`2 0 obj\n<< /Type /Pages /Kids [ ${l.map((e) => `${e} 0 R`).join(" ")} ] /Count ${c} >>\nendobj\n`));
 	for (let o = 0; o < c; o++) {
-		let c = e[o], l = 3 + o * 3, u = l + 1, d = l + 2, f = c.bytes, { width: p, height: m } = c.width && c.height ? c : K(f), h = G.A4_PORTRAIT.width, g = G.A4_PORTRAIT.height;
-		(t === "landscape" || t === "fit" && p > m) && (h = G.A4_LANDSCAPE.width, g = G.A4_LANDSCAPE.height);
+		let c = e[o], l = 3 + o * 3, u = l + 1, d = l + 2, f = c.bytes, { width: p, height: m } = c.width && c.height ? c : V(f), h = B.A4_PORTRAIT.width, g = B.A4_PORTRAIT.height;
+		(t === "landscape" || t === "fit" && p > m) && (h = B.A4_LANDSCAPE.width, g = B.A4_LANDSCAPE.height);
 		let _ = h - 36, v = g - 36, y = Math.min(_ / p, v / m), b = p * y, x = m * y, S = (h - b) / 2, C = (g - x) / 2, w = n ? ` /Rotate ${n}` : "";
 		r.push(i), s(a(`${l} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${h.toFixed(2)} ${g.toFixed(2)}]${w} /Contents ${u} 0 R /Resources << /XObject << /Im${o + 1} ${d} 0 R >> >> >>\nendobj\n`));
 		let T = `q ${b.toFixed(2)} 0 0 ${x.toFixed(2)} ${S.toFixed(2)} ${C.toFixed(2)} cm /Im${o + 1} Do Q\n`, E = T.length;
@@ -2320,13 +2358,13 @@ function q(e = [], t = "portrait", n = 0) {
 	for (let e of r) s(a(`${String(e).padStart(10, "0")} 00000 n \n`));
 	return s(a(`trailer\n<< /Size ${d} /Root 1 0 R >>\nstartxref\n${u}\n%%EOF\n`)), new Blob(o, { type: "application/pdf" });
 }
-function ce(e) {
+function me(e) {
 	let t = [], n = e.length, r = 0;
 	for (; r < n - 3;) if (e[r] === 255 && e[r + 1] === 216 && e[r + 2] === 255) {
 		let i = r;
 		for (r += 2; r < n - 1;) {
 			if (e[r] === 255 && e[r + 1] === 217) {
-				let n = r + 2, a = e.slice(i, n), o = K(a);
+				let n = r + 2, a = e.slice(i, n), o = V(a);
 				t.push({
 					bytes: a,
 					width: o.width,
@@ -2339,8 +2377,8 @@ function ce(e) {
 	} else r++;
 	return t;
 }
-function J(e) {
-	let t = ce(e);
+function U(e) {
+	let t = me(e);
 	if (!t.length) return [];
 	if (t.length === 1) return t;
 	let n = Math.max(...t.map((e) => (e.width || 0) * (e.height || 0))), r = Math.max(...t.map((e) => e.bytes?.length || 0)), i = t.filter((e) => {
@@ -2352,8 +2390,8 @@ function J(e) {
 		return r === n ? (t.bytes?.length || 0) - (e.bytes?.length || 0) : r - n;
 	});
 }
-function le(e, t = "Document.pdf") {
-	let n = J(e), r = t.replace(/\.pdf$/i, "");
+function he(e, t = "Document.pdf") {
+	let n = U(e), r = t.replace(/\.pdf$/i, "");
 	return n.length ? n.map((e, t) => {
 		let i = n.length === 1 ? `${r}.jpg` : `${r}_page_${t + 1}.jpg`, a = new Blob([e.bytes], { type: "image/jpeg" });
 		return {
@@ -2366,10 +2404,10 @@ function le(e, t = "Document.pdf") {
 		};
 	}) : [];
 }
-function ue(e, t = "Document.pdf") {
-	let n = J(e), r = t.replace(/\.pdf$/i, "");
+function ge(e, t = "Document.pdf") {
+	let n = U(e), r = t.replace(/\.pdf$/i, "");
 	return n.length ? n.map((e, t) => {
-		let n = `${r}_page_${t + 1}.pdf`, i = q([e], "portrait");
+		let n = `${r}_page_${t + 1}.pdf`, i = H([e], "portrait");
 		return {
 			fileName: n,
 			blob: i,
@@ -2378,20 +2416,20 @@ function ue(e, t = "Document.pdf") {
 		};
 	}) : [];
 }
-function de(e = [], t = "portrait") {
+function _e(e = [], t = "portrait") {
 	let n = [];
 	for (let t of e) {
-		let e = J(t);
+		let e = U(t);
 		n.push(...e);
 	}
 	if (!n.length) throw Error("No document images could be extracted to merge PDFs.");
-	return q(n, t);
+	return H(n, t);
 }
-function Y(e, t = 90) {
+function W(e, t = 90) {
 	let n = (t % 360 + 360) % 360;
 	if (n === 0) return new Blob([e], { type: "application/pdf" });
-	let r = J(e);
-	if (r.length > 0) return q(r, "portrait", n);
+	let r = U(e);
+	if (r.length > 0) return H(r, "portrait", n);
 	try {
 		let t = "", r = 65536;
 		for (let n = 0; n < e.length; n += r) t += String.fromCharCode.apply(null, e.subarray(n, n + r));
@@ -2406,13 +2444,13 @@ function Y(e, t = 90) {
 	}
 	throw Error("No pages found in PDF to rotate.");
 }
-function fe(e, t, n = "auto") {
+function ve(e, t, n = "auto") {
 	if (!e) return "document.pdf";
 	let r = e.lastIndexOf("."), i = r === -1 ? e : e.slice(0, r), a = r === -1 ? "" : e.slice(r), o = i.replace(/[\s_-]+\d+\s*(?:KB|MB)$/i, "").trim();
 	return n === "MB" || n === "auto" && t >= 10485760 ? `${o} ${Math.max(1, Math.round(Number(t || 0) / 1048576))} MB${a}` : `${o} ${Math.max(1, Math.round(Number(t || 0) / 1024))} KB${a}`;
 }
 // src/ui/pdf-studio-ui.js
-var X = class {
+var ye = class {
 	constructor() {
 		this.activeTool = "compress_pdf", this.files = [], this.isProcessing = !1;
 	}
@@ -2629,7 +2667,7 @@ var X = class {
 	rotateSingleFile(e) {
 		let t = this.files[e];
 		if (t && t.bytes) try {
-			let e = Y(t.bytes, 90);
+			let e = W(t.bytes, 90);
 			e.arrayBuffer().then((n) => {
 				t.bytes = new Uint8Array(n), t.size = e.size, this.renderQueue(), r.show("Page Rotated", `${t.name} rotated 90° clockwise.`, "info");
 			});
@@ -2648,7 +2686,7 @@ var X = class {
 		let e = 0;
 		this.files.forEach((t) => {
 			if (t.bytes) try {
-				let n = Y(t.bytes, 90);
+				let n = W(t.bytes, 90);
 				n.arrayBuffer().then((i) => {
 					t.bytes = new Uint8Array(i), t.size = n.size, e++, e === this.files.length && (this.renderQueue(), r.show("All Rotated", `Rotated all ${this.files.length} PDFs by 90°.`, "success"));
 				});
@@ -2673,27 +2711,27 @@ var X = class {
 		r.show("Processing Started", `Running ${this._getToolDisplayName(e)} on ${this.files.length} files...`, "info");
 		try {
 			if (e === "merge_pdf") {
-				let e = de(this.files.map((e) => e.bytes).filter(Boolean), "portrait");
+				let e = _e(this.files.map((e) => e.bytes).filter(Boolean), "portrait");
 				this._downloadBlob(e, "Merged_Admission_Dossier.pdf"), r.show("Merge Complete!", "Merged PDF Dossier generated and saved.", "success");
 			} else if (e === "compress_pdf") {
 				let e = 0;
 				for (let t of this.files) {
 					if (!t.bytes) continue;
-					let n = J(t.bytes), r;
-					r = n.length > 0 ? q(n, "portrait") : new Blob([t.bytes], { type: "application/pdf" });
-					let i = fe(t.name, r.size);
+					let n = U(t.bytes), r;
+					r = n.length > 0 ? H(n, "portrait") : new Blob([t.bytes], { type: "application/pdf" });
+					let i = ve(t.name, r.size);
 					this._downloadBlob(r, i), e++;
 				}
 				r.show("Compression Complete!", `Compressed ${e} files to safe MahaDBT thresholds.`, "success");
 			} else if (e === "split_pdf") {
 				let e = 0;
-				for (let t of this.files) t.bytes && ue(t.bytes, t.name).forEach((t) => {
+				for (let t of this.files) t.bytes && ge(t.bytes, t.name).forEach((t) => {
 					this._downloadBlob(t.blob, t.fileName), e++;
 				});
 				r.show("Split Complete!", `Extracted ${e} individual PDF pages.`, "success");
 			} else if (e === "pdf_to_jpg") {
 				let e = 0;
-				for (let t of this.files) t.bytes && le(t.bytes, t.name).forEach((t) => {
+				for (let t of this.files) t.bytes && he(t.bytes, t.name).forEach((t) => {
 					this._downloadBlob(t.blob, t.fileName), e++;
 				});
 				r.show("Conversion Complete!", `Extracted ${e} high-resolution JPG pages.`, "success");
@@ -2701,7 +2739,7 @@ var X = class {
 				let e = 0;
 				for (let t of this.files) {
 					if (!t.bytes) continue;
-					let n = Y(t.bytes, 90);
+					let n = W(t.bytes, 90);
 					this._downloadBlob(n, t.name), e++;
 				}
 				r.show("Rotation Complete!", `Rotated and saved ${e} PDF documents.`, "success");
@@ -2709,7 +2747,7 @@ var X = class {
 				let e = 0;
 				for (let t of this.files) {
 					if (!t.bytes) continue;
-					let n = q(J(t.bytes), "portrait");
+					let n = H(U(t.bytes), "portrait");
 					this._downloadBlob(n, t.name), e++;
 				}
 				r.show("Enhancement Complete!", `Watermarks filtered and ${e} PDFs enhanced.`, "success");
@@ -2727,12 +2765,12 @@ var X = class {
 		}, 1e3);
 	}
 };
-function pe() {
-	let e = new X();
+function be() {
+	let e = new ye();
 	return e.init(), e;
 }
 // src/modules/image-studio.js
-function me(e, t, n, r = "magic_color") {
+function xe(e, t, n, r = "magic_color") {
 	if (!e || r === "none" || r === "original") return;
 	let i = e.getImageData(0, 0, t, n), a = i.data;
 	for (let e = 0; e < a.length; e += 4) {
@@ -2749,13 +2787,13 @@ function me(e, t, n, r = "magic_color") {
 	}
 	e.putImageData(i, 0, 0);
 }
-function Z(e, t = 0) {
+function G(e, t = 0) {
 	let n = document.createElement("canvas"), r = (t % 360 + 360) % 360, i = r === 90 || r === 270, a = i ? e.height : e.width, o = i ? e.width : e.height;
 	n.width = a, n.height = o;
 	let s = n.getContext("2d");
 	return s.save(), s.translate(n.width / 2, n.height / 2), s.rotate(r * Math.PI / 180), s.drawImage(e, -e.width / 2, -e.height / 2), s.restore(), n;
 }
-async function Q(e, t = 250, n = {}) {
+async function K(e, t = 250, n = {}) {
 	let { rotation: r = 0, filterMode: i = "none", outputMime: a = "image/jpeg", maxDimension: o = 2400 } = n;
 	return new Promise((n, s) => {
 		let c = new Image(), l = URL.createObjectURL(e);
@@ -2768,7 +2806,7 @@ async function Q(e, t = 250, n = {}) {
 					e = Math.round(e * t), s = Math.round(s * t);
 				}
 				let l;
-				if (r === 0 ? (l = document.createElement("canvas"), l.width = e, l.height = s, l.getContext("2d").drawImage(c, 0, 0, e, s)) : l = Z(c, r), i && i !== "none" && me(l.getContext("2d"), l.width, l.height, i), !t || t <= 0) {
+				if (r === 0 ? (l = document.createElement("canvas"), l.width = e, l.height = s, l.getContext("2d").drawImage(c, 0, 0, e, s)) : l = G(c, r), i && i !== "none" && xe(l.getContext("2d"), l.width, l.height, i), !t || t <= 0) {
 					let e = await new Promise((e) => l.toBlob(e, a, .9));
 					return n({
 						blob: e,
@@ -2812,7 +2850,7 @@ async function Q(e, t = 250, n = {}) {
 		}, c.src = l;
 	});
 }
-async function he(e, t = "image/png") {
+async function Se(e, t = "image/png") {
 	return new Promise((n, r) => {
 		let i = new Image(), a = URL.createObjectURL(e);
 		i.onload = () => {
@@ -2838,7 +2876,7 @@ async function he(e, t = "image/png") {
 	});
 }
 // src/ui/image-studio-ui.js
-var ge = class {
+var Ce = class {
 	constructor() {
 		this.activeTool = "compress_photo_sign", this.files = [], this.isProcessing = !1;
 	}
@@ -3035,7 +3073,7 @@ var ge = class {
 		if (!t || !t.url) return;
 		let n = new Image();
 		n.crossOrigin = "anonymous", n.onload = () => {
-			Z(n, 90).toBlob((e) => {
+			G(n, 90).toBlob((e) => {
 				t.url = URL.createObjectURL(e), t.size = e.size, t.fileOrBlob = e, this.renderQueue(), r.show("Image Rotated", `${t.name} rotated 90° clockwise.`, "info");
 			}, "image/jpeg", .92);
 		}, n.src = t.url;
@@ -3068,26 +3106,26 @@ var ge = class {
 				let r = n.fileOrBlob;
 				if (!r && n.url && (r = await (await fetch(n.url)).blob()), r) {
 					if (e === "compress_photo_sign") {
-						let e = /sign|signature|स्वाक्षरी/i.test(n.name) ? 18 : 45, i = await Q(r, e);
+						let e = /sign|signature|स्वाक्षरी/i.test(n.name) ? 18 : 45, i = await K(r, e);
 						this._downloadBlob(i.blob, `Compressed_${n.name}`), t++;
 					} else if (e === "passport_crop") {
-						let e = await Q(await this._cropPassport(r), 48);
+						let e = await K(await this._cropPassport(r), 48);
 						this._downloadBlob(e.blob, `Passport_${n.name}`), t++;
 					} else if (e === "sign_clean_invert") {
-						let e = await Q(r, 18, { filterMode: "sharp_contrast" });
+						let e = await K(r, 18, { filterMode: "sharp_contrast" });
 						this._downloadBlob(e.blob, `Clean_Sign_${n.name}`), t++;
 					} else if (e === "image_to_pdf") {
-						let e = await r.arrayBuffer(), i = q([{
+						let e = await r.arrayBuffer(), i = H([{
 							bytes: new Uint8Array(e),
 							width: 0,
 							height: 0
 						}], "portrait"), a = n.name.replace(/\.[a-zA-Z0-9]+$/, "") + ".pdf";
 						this._downloadBlob(i, a), t++;
 					} else if (e === "magic_color") {
-						let e = await Q(r, 240, { filterMode: "enhanced" });
+						let e = await K(r, 240, { filterMode: "enhanced" });
 						this._downloadBlob(e.blob, `Magic_${n.name}`), t++;
 					} else {
-						let e = await he(r, "image/jpeg");
+						let e = await Se(r, "image/jpeg");
 						this._downloadBlob(e.blob, `Converted_${n.name.replace(/\.[a-zA-Z0-9]+$/, ".jpg")}`), t++;
 					}
 				}
@@ -3120,13 +3158,552 @@ var ge = class {
 		}, 1e3);
 	}
 };
-function _e() {
-	let e = new ge();
+function we() {
+	let e = new Ce();
+	return e.init(), e;
+}
+({ ...b });
+function q(e) {
+	if (!e || typeof e != "string") return "";
+	let t = m(e);
+	if (t && t.docType) return t.docType;
+	let n = e.replace(/\.[^/.]+$/, "");
+	return n = n.replace(/\s*\(p\.\d+\)/i, ""), n.trim().toUpperCase();
+}
+function Te(e) {
+	if (!e || typeof e != "string") return "";
+	let t = e.replace(/\.[^/.]+$/, "").trim(), n = m(t);
+	if (n && n.docType) {
+		let e = n.docType, r = t, i = RegExp(`^${e}\\b`, "i");
+		if (i.test(r) ? r = r.replace(i, "").trim() : e.split(/\s+/).forEach((e) => {
+			if (e.length > 2) {
+				let t = RegExp(`\\b${e}\\b`, "gi");
+				r = r.replace(t, "").trim();
+			}
+		}), r = r.replace(/^[-_.\s]+|[-_.\s]+$/g, "").trim(), r.length >= 3) return r;
+	}
+	return t;
+}
+function Ee(e, t = []) {
+	return !Array.isArray(e) || e.length === 0 ? [] : !Array.isArray(t) || t.length === 0 ? [...e] : [...e].sort((e, n) => {
+		let r = e.docType || q(e.label || e.name), i = n.docType || q(n.label || n.name), a = t.findIndex((e) => {
+			let t = e.toUpperCase(), n = r.toUpperCase();
+			return t === n || n.includes(t) || t.includes(n);
+		}), o = t.findIndex((e) => {
+			let t = e.toUpperCase(), n = i.toUpperCase();
+			return t === n || n.includes(t) || t.includes(n);
+		});
+		return a === -1 && (a = 9999), o === -1 && (o = 9999), a === o ? (e.pageNumber || 1) - (n.pageNumber || 1) : a - o;
+	});
+}
+// src/ui/print-studio-ui.js
+var De = class {
+	constructor() {
+		this.presets = { ...b }, this.activePresetKey = "MAHA DBT FORM", this.documents = [], this.activeDocIndex = 0, this.zoomLevel = 100;
+	}
+	init() {
+		this._seedDemoDocumentsIfEmpty(), this._bindControls(), this.renderPresetSelector(), this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), console.info("[DocMitra Print Studio] Print Studio UI manager initialized.");
+	}
+	_seedDemoDocumentsIfEmpty() {
+		if (this.documents.length === 0) {
+			let e = [
+				{
+					name: "10TH MARKSHEET Vijay Ramesh Yadav.pdf",
+					docType: "10TH MARKSHEET",
+					studentName: "VIJAY RAMESH YADAV",
+					authority: "MAHARASHTRA STATE BOARD",
+					docId: "MSB-2024-098231",
+					date: "12-JUNE-2024"
+				},
+				{
+					name: "12TH MARKSHEET Vijay Ramesh Yadav.pdf",
+					docType: "12TH MARKSHEET",
+					studentName: "VIJAY RAMESH YADAV",
+					authority: "MAHARASHTRA STATE BOARD",
+					docId: "MSB-2026-114920",
+					date: "21-MAY-2026"
+				},
+				{
+					name: "12TH LC Vijay Ramesh Yadav.pdf",
+					docType: "12TH LC",
+					studentName: "VIJAY RAMESH YADAV",
+					authority: "KIRTI M. DOONGURSEE COLLEGE",
+					docId: "LC-2026-8831",
+					date: "04-JUNE-2026"
+				},
+				{
+					name: "AADHAAR CARD Vijay Ramesh Yadav.pdf",
+					docType: "AADHAAR CARD",
+					studentName: "VIJAY RAMESH YADAV",
+					authority: "UNIQUE IDENTIFICATION AUTHORITY OF INDIA",
+					docId: "UID-XXXX-XXXX-9021",
+					date: "VERIFIED"
+				},
+				{
+					name: "DOMICILE CERTIFICATE Vijay Ramesh Yadav.pdf",
+					docType: "DOMICILE CERTIFICATE",
+					studentName: "VIJAY RAMESH YADAV",
+					authority: "TAHSILDAR OFFICE MUMBAI",
+					docId: "REV-MAHA-2025-4412",
+					date: "14-AUG-2025"
+				},
+				{
+					name: "INCOME CERTIFICATE Vijay Ramesh Yadav.pdf",
+					docType: "INCOME CERTIFICATE",
+					studentName: "VIJAY RAMESH YADAV",
+					authority: "TAHSILDAR OFFICE MUMBAI",
+					docId: "INC-2026-098214",
+					date: "02-APR-2026"
+				},
+				{
+					name: "CASTE CERTIFICATE Vijay Ramesh Yadav.pdf",
+					docType: "CASTE CERTIFICATE",
+					studentName: "VIJAY RAMESH YADAV",
+					authority: "SUB DIVISIONAL OFFICER (SDO)",
+					docId: "CST-MAHA-2022-771",
+					date: "19-OCT-2022"
+				},
+				{
+					name: "PASSBOOK BANK Vijay Ramesh Yadav.pdf",
+					docType: "PASSBOOK BANK",
+					studentName: "VIJAY RAMESH YADAV",
+					authority: "STATE BANK OF INDIA",
+					docId: "SBI-A/C-XXXX9812",
+					date: "ACTIVE"
+				}
+			];
+			this.documents = e.map((e, t) => ({
+				id: `print_doc_${t + 1}`,
+				name: e.name,
+				path: e.name,
+				docType: e.docType,
+				studentName: e.studentName,
+				authority: e.authority,
+				docId: e.docId,
+				date: e.date,
+				pageNumber: 1,
+				totalPages: 1,
+				rotation: 0,
+				status: "queued"
+			}));
+		}
+	}
+	_bindControls() {
+		let e = document.getElementById("sequencePresetSelect");
+		e && e.addEventListener("change", (e) => {
+			this.activePresetKey = e.target.value;
+			let t = document.getElementById("activeSeqLabel");
+			t && (t.textContent = this.activePresetKey), r.show("Preset Selected", this.activePresetKey, "info");
+		});
+		let t = document.getElementById("browseBtn");
+		t && t.addEventListener("click", () => this.handleBrowseFolder());
+		let n = document.getElementById("addAutoSeqBtn");
+		n && n.addEventListener("click", () => this.handleAutoOrder());
+		let i = document.getElementById("addAsIsBtn");
+		i && i.addEventListener("click", () => {
+			r.show("Natural Order Kept", "Queue preserved as loaded.", "info");
+		});
+		let a = document.getElementById("btnSavePreset");
+		a && a.addEventListener("click", () => {
+			r.show("Preset Saved", `Saved order for ${this.activePresetKey}`, "success");
+		}), [document.getElementById("clearQueueBtn"), document.getElementById("dockClearBtn")].forEach((e) => {
+			e && e.addEventListener("click", () => this.handleClearQueue());
+		});
+		let o = document.getElementById("zoomInBtn"), s = document.getElementById("zoomOutBtn"), c = document.getElementById("fitScreenBtn");
+		o && o.addEventListener("click", () => {
+			this.zoomLevel = Math.min(200, this.zoomLevel + 10), this._updateZoom();
+		}), s && s.addEventListener("click", () => {
+			this.zoomLevel = Math.max(50, this.zoomLevel - 10), this._updateZoom();
+		}), c && c.addEventListener("click", () => {
+			this.zoomLevel = 100, this._updateZoom();
+		});
+		let l = document.getElementById("prevPageBtn"), u = document.getElementById("nextPageBtn");
+		l && l.addEventListener("click", () => {
+			this.activeDocIndex > 0 && (this.activeDocIndex--, this.renderActivePreview(), this.renderThumbnails());
+		}), u && u.addEventListener("click", () => {
+			this.activeDocIndex < this.documents.length - 1 && (this.activeDocIndex++, this.renderActivePreview(), this.renderThumbnails());
+		});
+		let d = document.getElementById("primaryPrintBtn");
+		d && d.addEventListener("click", () => this.handlePrint());
+	}
+	_updateZoom() {
+		let e = document.getElementById("zoomLevelDisplay");
+		e && (e.textContent = `${this.zoomLevel}%`);
+		let t = document.getElementById("a4Sheet");
+		t && (t.style.transform = `scale(${this.zoomLevel / 100})`, t.style.transformOrigin = "top center", t.style.transition = "transform 0.2s ease-out");
+	}
+	renderPresetSelector() {
+		let e = document.getElementById("sequencePresetSelect");
+		if (e) {
+			for (; e.firstChild;) e.removeChild(e.firstChild);
+			Object.keys(this.presets).forEach((t) => {
+				let n = document.createElement("option");
+				n.value = t, n.textContent = t, t === this.activePresetKey && (n.selected = !0), e.appendChild(n);
+			});
+		}
+	}
+	handleAutoOrder() {
+		let e = this.presets[this.activePresetKey] || [];
+		this.documents = Ee(this.documents, e), this.activeDocIndex = 0, this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), r.show("Sequence Applied", `Ordered according to ${this.activePresetKey} criteria.`, "success");
+	}
+	async handleBrowseFolder() {
+		r.show("Opening Folder Picker", "Navigating Windows Explorer...", "info");
+		try {
+			let e = await s();
+			if (!e.success) {
+				e.cancelled || r.show("Folder Select Error", e.error || "Failed to select folder", "error");
+				return;
+			}
+			let t = e.files || [];
+			if (t.length === 0) {
+				r.show("No Files Found", "Selected directory contains 0 files.", "warning");
+				return;
+			}
+			this.documents = t.map((e, t) => {
+				let n = q(e.name), r = Te(e.name);
+				return {
+					id: `print_doc_${Date.now()}_${t}`,
+					name: e.name,
+					path: e.path,
+					docType: n || e.name,
+					studentName: r || "Student",
+					authority: "VERIFIED ISSUING AUTHORITY",
+					docId: `DOC-${Date.now().toString().slice(-6)}`,
+					date: "ACTIVE",
+					pageNumber: 1,
+					totalPages: 1,
+					rotation: 0,
+					status: "queued"
+				};
+			}), this.activeDocIndex = 0, this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), r.show("Documents Loaded", `${this.documents.length} files added to Print Studio.`, "success");
+		} catch (e) {
+			r.show("Folder Error", e.message, "error");
+		}
+	}
+	handleClearQueue() {
+		this.documents = [], this.activeDocIndex = 0, this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), r.show("Queue Reset", "Print queue cleared.", "info");
+	}
+	handlePrint() {
+		this.documents.length === 0 ? r.show("Print Queue Empty", "Please load documents first.", "warning") : (r.show("Spooling Documents", `Sending ${this.documents.length} pages to Windows Print Spooler...`, "info"), setTimeout(() => {
+			window.print();
+		}, 500));
+	}
+	renderDocumentList() {
+		let e = document.getElementById("documentList"), t = document.getElementById("queueCounterBadge");
+		if (t && (t.textContent = `${this.documents.length} Documents`), e) {
+			for (; e.firstChild;) e.removeChild(e.firstChild);
+			this.documents.forEach((t, n) => {
+				let i = n === this.activeDocIndex, a = document.createElement("div");
+				a.className = `p-3 rounded-lg border flex items-center justify-between gap-2.5 transition-all cursor-pointer ${i ? "bg-surface-container-high border-primary ring-1 ring-primary/40 shadow-xs" : "bg-surface-container-lowest border-outline-variant/30 hover:bg-surface-container-low"}`, a.addEventListener("click", () => {
+					this.activeDocIndex = n, this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails();
+				});
+				let o = document.createElement("div");
+				o.className = "flex items-center gap-2.5 min-w-0 flex-1";
+				let s = document.createElement("span");
+				s.className = i ? "w-6 h-6 rounded bg-primary text-on-primary font-mono-code text-[11px] font-bold flex items-center justify-center shrink-0" : "w-6 h-6 rounded bg-surface-container text-secondary font-mono-code text-[11px] font-medium flex items-center justify-center shrink-0", s.textContent = String(n + 1), o.appendChild(s);
+				let c = document.createElement("div");
+				c.className = "flex flex-col min-w-0";
+				let l = document.createElement("span");
+				l.className = "font-label-md font-bold text-on-surface truncate", l.textContent = t.docType, c.appendChild(l);
+				let u = document.createElement("span");
+				u.className = "text-[10px] font-mono-code text-secondary truncate", u.textContent = t.name, c.appendChild(u), o.appendChild(c), a.appendChild(o);
+				let d = document.createElement("div");
+				d.className = "flex items-center gap-1 shrink-0";
+				let f = document.createElement("button");
+				f.type = "button", f.className = "p-1 text-secondary hover:text-primary rounded hover:bg-surface-container transition-colors cursor-pointer", f.title = "Rotate 90°";
+				let p = document.createElement("span");
+				p.className = "material-symbols-outlined text-[15px]", p.textContent = "rotate_right", f.appendChild(p), f.addEventListener("click", (e) => {
+					e.stopPropagation(), t.rotation = (t.rotation + 90) % 360, this.renderActivePreview(), r.show("Rotated", `${t.docType} rotated 90°.`, "info");
+				}), d.appendChild(f);
+				let m = document.createElement("button");
+				m.type = "button", m.className = "p-1 text-secondary hover:text-error rounded hover:bg-error-container/40 transition-colors cursor-pointer", m.title = "Remove";
+				let h = document.createElement("span");
+				h.className = "material-symbols-outlined text-[15px]", h.textContent = "close", m.appendChild(h), m.addEventListener("click", (e) => {
+					e.stopPropagation(), this.documents.splice(n, 1), this.activeDocIndex >= this.documents.length && (this.activeDocIndex = Math.max(0, this.documents.length - 1)), this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails();
+				}), d.appendChild(m), a.appendChild(d), e.appendChild(a);
+			});
+		}
+	}
+	renderActivePreview() {
+		let e = this.documents[this.activeDocIndex], t = this.documents.length, n = document.getElementById("pageStepLabel"), r = document.getElementById("previewPageIndicator");
+		if (n && (n.textContent = `PAGE ${this.activeDocIndex + 1} OF ${Math.max(1, t)}`), r && (r.textContent = `Page ${this.activeDocIndex + 1} of ${Math.max(1, t)}`), !e) return;
+		let i = document.getElementById("sheetMainTitle"), a = document.getElementById("sheetSubTitle"), o = document.getElementById("docCodeDisplay"), s = document.getElementById("paramAuthority"), c = document.getElementById("paramDocId"), l = document.getElementById("paramIssueDate");
+		i && (i.textContent = e.docType), a && (a.textContent = `${e.studentName} • ADMISSION DOSSIER`), o && (o.textContent = `DM-CERT-${String(this.activeDocIndex + 1).padStart(3, "0")}`), s && (s.textContent = e.authority || "GOVERNMENT OF MAHARASHTRA"), c && (c.textContent = e.docId || "DOC-VERIFIED-01"), l && (l.textContent = e.date || "ACTIVE");
+		let u = document.getElementById("a4Sheet");
+		u && (u.style.transform = `scale(${this.zoomLevel / 100}) rotate(${e.rotation || 0}deg)`);
+	}
+	renderThumbnails() {
+		let e = document.getElementById("thumbStrip");
+		if (e) {
+			for (; e.firstChild;) e.removeChild(e.firstChild);
+			this.documents.forEach((t, n) => {
+				let r = n === this.activeDocIndex, i = document.createElement("button");
+				i.type = "button", i.className = `thumb-btn flex flex-col items-center gap-1 p-1 rounded-lg transition-all shrink-0 cursor-pointer ${r ? "bg-primary-container text-on-primary ring-2 ring-primary shadow-xs" : "bg-surface-container-low hover:bg-surface-container text-on-surface"}`, i.addEventListener("click", () => {
+					this.activeDocIndex = n, this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails();
+				});
+				let a = document.createElement("div");
+				a.className = "w-10 h-14 bg-surface-container-lowest rounded border border-outline-variant/40 flex items-center justify-center";
+				let o = document.createElement("span");
+				o.className = "material-symbols-outlined text-[18px] text-primary", o.textContent = "description", a.appendChild(o), i.appendChild(a);
+				let s = document.createElement("span");
+				s.className = "font-mono-code text-[10px] font-bold", s.textContent = `p.${n + 1}`, i.appendChild(s), e.appendChild(i);
+			});
+		}
+	}
+};
+function Oe() {
+	let e = new De();
+	return e.init(), e;
+}
+// src/services/followup-service.js
+var J = "studentDocumentFollowUps", Y = [];
+function X() {
+	try {
+		if (typeof localStorage < "u") {
+			let e = localStorage.getItem(J);
+			return e ? JSON.parse(e) : [];
+		}
+		return Y;
+	} catch {
+		return Y;
+	}
+}
+function Z(e) {
+	try {
+		Y = e, typeof localStorage < "u" && localStorage.setItem(J, JSON.stringify(e));
+	} catch (e) {
+		console.error("Failed to save follow-ups:", e);
+	}
+}
+function ke(e, t) {
+	let n = X(), r = (e || "").trim().toLowerCase(), i = (t || "").trim().toUpperCase(), a = !1;
+	return n.forEach((e) => {
+		e.folderName.trim().toLowerCase() === r && e.documentName.trim().toUpperCase() === i && e.status === "pending" && (e.status = "resolved", e.resolvedAt = Date.now(), a = !0);
+	}), a && Z(n), a;
+}
+function Ae(e, t = je()) {
+	let n = Ne(e, t);
+	return n < 0 ? "overdue" : n === 0 ? "today" : "upcoming";
+}
+function Q(e) {
+	if (!e) return "";
+	let t = e.split("-");
+	return t.length === 3 ? new Date(Number(t[0]), Number(t[1]) - 1, Number(t[2])).toLocaleDateString("en-IN", {
+		day: "numeric",
+		month: "short",
+		year: "numeric"
+	}) : e;
+}
+function je() {
+	let e = /* @__PURE__ */ new Date();
+	return `${e.getFullYear()}-${String(e.getMonth() + 1).padStart(2, "0")}-${String(e.getDate()).padStart(2, "0")}`;
+}
+function Me(e = 1) {
+	let t = /* @__PURE__ */ new Date();
+	return t.setDate(t.getDate() + e), `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
+}
+function Ne(e, t) {
+	return e === t ? 0 : e < t ? -1 : 1;
+}
+// src/ui/followup-ui.js
+var Pe = class {
+	constructor() {
+		this.items = [], this.searchQuery = "";
+	}
+	init() {
+		this._seedDemoDataIfEmpty(), this.items = X(), this._bindControls(), this.renderTable(), console.info("[DocMitra Follow-up Desk] Follow-up UI manager initialized.");
+	}
+	_seedDemoDataIfEmpty() {
+		if (X().length === 0) {
+			let e = je(), t = Me(2);
+			Z([
+				{
+					id: "fu_demo_1",
+					folderName: "Vijay_Ramesh_Yadav",
+					studentName: "Vijay Ramesh Yadav",
+					rollNo: "FYJC-2026-084",
+					phone: "+91 98231 44510",
+					documentName: "12TH LEAVING CERTIFICATE (LC)",
+					promisedDate: "2026-11-18",
+					folderPath: "E:\\College\\Admission_2026\\FYJC\\Vijay_Ramesh_Yadav",
+					note: "Original LC submitted at junior college, requested 3 days grace period.",
+					status: "pending",
+					createdAt: Date.now() - 432e6
+				},
+				{
+					id: "fu_demo_2",
+					folderName: "Aarti_Suresh_Patil",
+					studentName: "Aarti Suresh Patil",
+					rollNo: "ENGG-2026-102",
+					phone: "+91 98192 33419",
+					documentName: "DOMICILE CERTIFICATE",
+					promisedDate: e,
+					folderPath: "E:\\College\\Admission_2026\\Degree\\Aarti_Suresh_Patil",
+					note: "MahaOnline application token attached, awaiting digital signature.",
+					status: "pending",
+					createdAt: Date.now() - 1728e5
+				},
+				{
+					id: "fu_demo_3",
+					folderName: "Rahul_Shinde",
+					studentName: "Rahul Tanaji Shinde",
+					rollNo: "DSE-2026-045",
+					phone: "+91 97654 22108",
+					documentName: "CASTE VALIDITY CERTIFICATE",
+					promisedDate: t,
+					folderPath: "E:\\College\\Admission_2026\\DSE\\Rahul_Shinde",
+					note: "Scrutiny committee hearing scheduled this week.",
+					status: "pending",
+					createdAt: Date.now() - 864e5
+				},
+				{
+					id: "fu_demo_4",
+					folderName: "Sneha_Anand_More",
+					studentName: "Sneha Anand More",
+					rollNo: "FYJC-2026-192",
+					phone: "+91 94220 88192",
+					documentName: "INCOME CERTIFICATE (TAHSILDAR)",
+					promisedDate: t,
+					folderPath: "E:\\College\\Admission_2026\\FYJC\\Sneha_Anand_More",
+					note: "Tahsildar verification pending.",
+					status: "pending",
+					createdAt: Date.now()
+				}
+			]);
+		}
+	}
+	_bindControls() {
+		let e = document.getElementById("inputFollowupSearch");
+		e && e.addEventListener("input", (e) => {
+			this.searchQuery = (e.target.value || "").trim().toLowerCase(), this.renderTable();
+		});
+		let t = document.getElementById("btnOpenBatchDirFollowup");
+		t && t.addEventListener("click", () => this.handleOpenBatchDirectory());
+	}
+	async handleOpenBatchDirectory() {
+		r.show("Opening Folder Picker", "Navigating Windows Explorer...", "info");
+		try {
+			let e = await s();
+			if (!e.success) {
+				e.cancelled || r.show("Folder Select Error", e.error || "Failed to select folder", "error");
+				return;
+			}
+			r.show("Batch Directory Loaded", e.path || "Directory opened", "success");
+		} catch (e) {
+			r.show("Folder Error", e.message, "error");
+		}
+	}
+	renderTable() {
+		let e = document.getElementById("followupTableBody");
+		if (!e) return;
+		for (; e.firstChild;) e.removeChild(e.firstChild);
+		let t = this.items.filter((e) => {
+			if (e.status === "resolved") return !1;
+			if (!this.searchQuery) return !0;
+			let t = this.searchQuery;
+			return e.studentName?.toLowerCase().includes(t) || e.rollNo?.toLowerCase().includes(t) || e.phone?.includes(t) || e.documentName?.toLowerCase().includes(t) || e.folderName?.toLowerCase().includes(t);
+		});
+		if (t.length === 0) {
+			let t = document.createElement("tr"), n = document.createElement("td");
+			n.colSpan = 5, n.className = "py-8 text-center text-secondary", n.textContent = "No pending follow-up records found matching criteria.", t.appendChild(n), e.appendChild(t);
+		} else t.forEach((t) => {
+			let n = document.createElement("tr");
+			n.className = "hover:bg-surface-container-low transition-colors";
+			let i = document.createElement("td");
+			i.className = "py-3.5 px-space-md";
+			let a = document.createElement("div");
+			a.className = "font-headline-sm text-headline-sm font-bold text-on-surface", a.textContent = t.studentName, i.appendChild(a);
+			let o = document.createElement("div");
+			o.className = "font-mono-code text-label-sm text-secondary font-medium", o.textContent = `${t.rollNo || "REG-2026"} • ${t.phone || "+91 98XXX XXXXX"}`, i.appendChild(o), n.appendChild(i);
+			let s = document.createElement("td");
+			s.className = "py-3.5 px-space-md";
+			let c = document.createElement("span");
+			c.className = "inline-flex items-center gap-1 px-2.5 py-1 rounded bg-error-container text-on-error-container font-label-sm text-label-sm font-bold";
+			let l = document.createElement("span");
+			l.className = "material-symbols-outlined text-[15px]", l.textContent = "error", c.appendChild(l);
+			let u = document.createTextNode(` ${t.documentName}`);
+			c.appendChild(u), s.appendChild(c), n.appendChild(s);
+			let d = document.createElement("td");
+			d.className = "py-3.5 px-space-md";
+			let f = Ae(t.promisedDate), p = document.createElement("div");
+			p.className = f === "overdue" ? "font-mono-code font-bold text-error" : f === "today" ? "font-mono-code font-bold text-amber-700" : "font-mono-code font-bold text-emerald-700", p.textContent = Q(t.promisedDate), d.appendChild(p);
+			let m = document.createElement("span");
+			f === "overdue" ? (m.className = "text-[10px] font-bold uppercase tracking-wider text-error bg-error-container/40 px-1.5 py-0.5 rounded", m.textContent = "OVERDUE") : f === "today" ? (m.className = "text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded", m.textContent = "DUE TODAY") : (m.className = "text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded", m.textContent = "UPCOMING"), d.appendChild(m), n.appendChild(d);
+			let h = document.createElement("td");
+			h.className = "py-3.5 px-space-md";
+			let g = document.createElement("div");
+			g.className = "flex items-center gap-1.5 text-secondary font-mono-code text-[11px]";
+			let _ = document.createElement("span");
+			_.className = "material-symbols-outlined text-[15px] text-primary shrink-0", _.textContent = "folder", g.appendChild(_);
+			let v = document.createElement("span");
+			v.className = "truncate max-w-[200px] text-on-surface font-semibold", v.textContent = t.folderPath || t.folderName, v.title = t.folderPath || t.folderName, g.appendChild(v);
+			let y = document.createElement("button");
+			y.type = "button", y.className = "ml-1 text-primary hover:text-primary-container inline-flex items-center cursor-pointer", y.title = "Open Folder";
+			let b = document.createElement("span");
+			b.className = "material-symbols-outlined text-[15px]", b.textContent = "open_in_new", y.appendChild(b), y.addEventListener("click", async () => {
+				try {
+					t.folderPath && (await fetch(`http://localhost:3000/api/open-folder?path=${encodeURIComponent(t.folderPath)}`), r.show("Folder Opened", t.folderPath, "info"));
+				} catch {
+					r.show("Open Folder", t.folderName, "info");
+				}
+			}), g.appendChild(y), h.appendChild(g), n.appendChild(h);
+			let x = document.createElement("td");
+			x.className = "py-3.5 px-space-md text-right";
+			let S = document.createElement("div");
+			S.className = "flex items-center justify-end gap-1.5";
+			let C = document.createElement("button");
+			C.type = "button", C.className = "h-8 px-space-sm rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-label-sm font-semibold flex items-center gap-1 shadow-xs cursor-pointer", C.title = "Send WhatsApp Notification";
+			let w = document.createElement("span");
+			w.className = "material-symbols-outlined text-[14px]", w.textContent = "chat", C.appendChild(w), C.appendChild(document.createTextNode("WhatsApp")), C.addEventListener("click", () => {
+				this.sendWhatsApp(t);
+			}), S.appendChild(C);
+			let T = document.createElement("button");
+			T.type = "button", T.className = "h-8 px-space-sm rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-sm font-semibold flex items-center gap-1 transition-colors cursor-pointer", T.title = "Copy Marathi Admission Notice";
+			let E = document.createElement("span");
+			E.className = "material-symbols-outlined text-[14px] text-secondary", E.textContent = "content_copy", T.appendChild(E), T.appendChild(document.createTextNode("Copy Notice")), T.addEventListener("click", () => {
+				this.copyNoticeToClipboard(t);
+			}), S.appendChild(T);
+			let D = document.createElement("button");
+			D.type = "button", D.className = "h-8 px-space-sm rounded-lg bg-primary/10 hover:bg-primary text-primary hover:text-on-primary font-label-sm font-semibold flex items-center gap-1 transition-colors cursor-pointer", D.title = "Mark Document Received";
+			let O = document.createElement("span");
+			O.className = "material-symbols-outlined text-[14px]", O.textContent = "check_circle", D.appendChild(O), D.appendChild(document.createTextNode("Received")), D.addEventListener("click", () => {
+				this.markItemResolved(t);
+			}), S.appendChild(D), x.appendChild(S), n.appendChild(x), e.appendChild(n);
+		});
+	}
+	generateMarathiNotice(e) {
+		let t = Q(e.promisedDate);
+		return `सस्नेह नमस्कार,
+विद्यार्थी नाव: ${e.studentName} (${e.rollNo || "Admission 2026"})
+
+आपल्या महाराष्ट्र शैक्षणिक प्रवेश प्रक्रियेसाठी खालील आवश्यक कागदपत्र अद्याप महाविद्यालयात प्रलंबित आहे:
+📄 कागदपत्र: *${e.documentName}*
+📅 अंतिम मुदत: *${t}*
+
+कृपया सदर मूळ अथवा साक्षांकित प्रत दिलेल्या मुदतीपूर्वी प्रवेश विभागाकडे सादर करावी, जेणेकरून आपला प्रवेश अंतिम निश्चित होईल.
+
+- प्रवेश विभाग (Admission Office)
+(DocMitra Administrative Workstation)`;
+	}
+	copyNoticeToClipboard(e) {
+		let t = this.generateMarathiNotice(e);
+		navigator.clipboard.writeText(t), r.show("सूचना कॉपी झाली", `Notification for ${e.studentName} copied to clipboard.`, "success");
+	}
+	sendWhatsApp(e) {
+		let t = this.generateMarathiNotice(e), n = (e.phone || "").replace(/[^0-9]/g, ""), i = n.length >= 10 ? `https://wa.me/${n}?text=${encodeURIComponent(t)}` : `https://wa.me/?text=${encodeURIComponent(t)}`;
+		window.open(i, "_blank"), r.show("WhatsApp उघडत आहे", `Opening WhatsApp for ${e.studentName}...`, "info");
+	}
+	markItemResolved(e) {
+		ke(e.folderName, e.documentName), e.status = "resolved", this.renderTable(), r.show("कागदपत्र प्राप्त!", `${e.documentName} for ${e.studentName} marked as received.`, "success");
+	}
+};
+function Fe() {
+	let e = new Pe();
 	return e.init(), e;
 }
 // src/ui/index.js
 function $() {
-	new n().init(), new i().init(), W(), B(), pe(), _e(), a();
+	new n().init(), new i().init(), pe(), le(), be(), we(), Oe(), Fe(), a();
 	let e = document.getElementById("themeToggleBtn");
 	e && e.addEventListener("click", () => {
 		document.documentElement.classList.toggle("dark");

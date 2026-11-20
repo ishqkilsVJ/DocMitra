@@ -12,6 +12,8 @@ import { initRenamerUI } from './renamer-ui.js';
 import { initSettingsUI } from './settings-ui.js';
 import { initPdfStudioUI } from './pdf-studio-ui.js';
 import { initImageStudioUI } from './image-studio-ui.js';
+import { initPrintStudioUI } from './print-studio-ui.js';
+import { initFollowUpUI } from './followup-ui.js';
 
 export function initAppShell() {
   // Initialize View Navigation
@@ -31,6 +33,12 @@ export function initAppShell() {
 
   // Initialize Image Studio UI
   const imageStudioUI = initImageStudioUI();
+
+  // Initialize Print Studio UI
+  const printStudioUI = initPrintStudioUI();
+
+  // Initialize Follow-up Desk UI
+  const followUpUI = initFollowUpUI();
 
   // Wire Placeholder Action Buttons to Toast
   wirePlaceholderActions();

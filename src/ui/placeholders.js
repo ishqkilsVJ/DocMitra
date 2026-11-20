@@ -8,18 +8,9 @@
 import { toast } from './toast.js';
 
 export function wirePlaceholderActions() {
-  // Common action buttons with specific IDs or selectors (Renamer, PDF, Image buttons are wired with active logic)
+  // All 5 modules (Renamer, PDF, Image, Print, Follow-up) are now fully wired with live logic
   const actionSelectors = [
-    // Print Studio (wired in Milestone 5)
-    '#btnPrintDocuments',
-    '#btnCancelPrint',
-    '#btnPrinterSelect',
-    // Follow-up Desk (wired in Milestone 5)
-    '#btnSendWhatsApp',
-    '#btnCopyMarathiNotice',
-    '#btnSendBatchSms',
-    '#btnExportFollowup',
-    // Generic placeholder triggers
+    // Generic placeholder triggers only
     '[data-action="placeholder"]'
   ];
 

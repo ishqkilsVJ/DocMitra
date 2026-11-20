@@ -7,10 +7,13 @@
 class ToastManager {
   constructor() {
     this.container = null;
-    this._ensureContainer();
+    if (typeof document !== 'undefined') {
+      this._ensureContainer();
+    }
   }
 
   _ensureContainer() {
+    if (typeof document === 'undefined') return;
     let el = document.getElementById('toast-container');
     if (!el) {
       el = document.createElement('div');
@@ -104,3 +107,7 @@ class ToastManager {
 }
 
 export const toast = new ToastManager();
+
+export function showToast(title, type = 'info') {
+  toast.show(title, '', type);
+}
