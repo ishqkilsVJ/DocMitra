@@ -56,10 +56,14 @@ export function buildName(input, student, groups, style = 'preserve') {
 
 export function validateFilename(name) {
   if (!name || !name.trim()) return 'File name cannot be empty.';
+  const trimmed = name.trim();
+  if (name.endsWith('.') || name.endsWith(' ') || trimmed.endsWith('.')) {
+    return 'File name cannot end with a period or space.';
+  }
   if (/[\\/:*?"<>|]/.test(name)) return 'File name cannot contain \\ / : * ? " < > |.';
-  if (name === '.' || name === '..') return 'Invalid file name.';
+  if (trimmed === '.' || trimmed === '..') return 'Invalid file name.';
   
-  const base = name.trim().toUpperCase().split('.')[0];
+  const base = trimmed.toUpperCase().split('.')[0];
   const reserved = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9', 'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'];
   if (reserved.includes(base)) {
     return 'This file name is reserved by Windows OS.';
@@ -200,6 +204,16 @@ export async function undoRename(dir, plan, onProgress = null) {
   let completed = 0;
   
   for (const item of reversed) {
+    if (dir && dir.nativePath) {
+      const currentPath = `${dir.nativePath}/${item.next}`;
+      await renameNativeFile(currentPath, item.old);
+      completed++;
+      if (onProgress) {
+        onProgress(Math.round((completed / reversed.length) * 100), `Undo: ${completed}/${reversed.length}`);
+      }
+      continue;
+    }
+
     const isCaseOnly = item.old.toLowerCase() === item.next.toLowerCase() && item.old !== item.next;
     const currentHandle = await dir.getFileHandle(item.next, { create: false }).catch(() => null);
     

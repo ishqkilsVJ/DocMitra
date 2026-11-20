@@ -8,31 +8,22 @@
 import { toast } from './toast.js';
 
 export function wirePlaceholderActions() {
-  // Common action buttons with specific IDs or selectors
+  // Common action buttons with specific IDs or selectors (Renamer buttons are wired with active logic)
   const actionSelectors = [
-    // Bulk Renamer
-    '#btnSelectFolder',
-    '#btnAutoDetect',
-    '#btnRenameAll',
-    '#btnUndoRename',
-    '#btnClearQueue',
-    '#btnKeepOriginal',
-    '#btnSaveBatch',
-    '#btnExportAudit',
-    // PDF Studio
+    // PDF Studio (wired in Milestone 3)
     '#startCompressBtn',
     '#btnClearPdfQueue',
     '#btnSelectPdfFolder',
-    // Image Studio
+    // Image Studio (wired in Milestone 4)
     '#startImageProcessBtn',
     '#btnAutoCropPassport',
     '#btnClearImageQueue',
     '#btnFilterOversized',
-    // Print Studio
+    // Print Studio (wired in Milestone 5)
     '#btnPrintDocuments',
     '#btnCancelPrint',
     '#btnPrinterSelect',
-    // Follow-up Desk
+    // Follow-up Desk (wired in Milestone 5)
     '#btnSendWhatsApp',
     '#btnCopyMarathiNotice',
     '#btnSendBatchSms',

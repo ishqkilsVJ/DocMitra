@@ -1,9 +1,11 @@
 /* ==========================================================================
-   Student Document Renamer — Intelligent Document Matcher & Percentage Engine
+   DocMitra — Intelligent Document Matcher & Percentage Engine
+   Smart 21-Shortcut Keyword Engine: Exact-shortcut-first, longest-keyword-first,
+   and \b word-boundary matching (so "Pankaj" never matches "PAN")
    ========================================================================== */
 
 export const DOCUMENT_PATTERNS = [
-  // 1. Compound / Multi-keyword documents first (higher precedence)
+  // 1. Compound / Multi-keyword documents first (highest precedence)
   {
     id: "12th-marksheet-passing-combined",
     outputName: "12TH MARKSHEET AND PASSING",
@@ -17,16 +19,18 @@ export const DOCUMENT_PATTERNS = [
     ]
   },
   {
-    id: "validity-certificate",
-    outputName: "VALIDITY CERTIFICATE",
-    shortcut: "VLD",
+    id: "10th-marksheet-passing-combined",
+    outputName: "10TH MARKSHEET AND PASSING",
+    shortcut: "10MP",
     patterns: [
-      /\bvld\b/i,
-      /\bvalidity\b/i,
-      /\bcaste\s*validity\b/i,
-      /वैधता/i
+      /\b10mp\b/i,
+      /\b10tmp\b/i,
+      /\b10(th)?\s*(mark|marksheet|मार्क|मार्कशीट).*(pass|passing|पास)\b/i,
+      /\b10(th)?\s*(pass|passing|पास).*(mark|marksheet|मार्क|मार्कशीट)\b/i,
+      /\b10(th)?\s*combined\b/i
     ]
   },
+  // 2. Specific 12th & 10th Documents
   {
     id: "12th-lc",
     outputName: "12TH LC",
@@ -64,37 +68,6 @@ export const DOCUMENT_PATTERNS = [
     ]
   },
   {
-    id: "11th-marksheet",
-    outputName: "11TH MARKSHEET",
-    shortcut: "11M",
-    patterns: [
-      /\b11m\b/i,
-      /\b11(th)?\s*(mark|marksheet|marskheet)\b/i,
-      /11.*(मार्क|मार्कशीट)/i
-    ]
-  },
-  {
-    id: "11th-passing",
-    outputName: "11TH PASSING CERTIFICATE",
-    shortcut: "11P",
-    patterns: [
-      /\b11p\b/i,
-      /\b11(th)?\s*(pass|passing|pasing)\b/i,
-      /11.*(पास|पासिंग)/i
-    ]
-  },
-  {
-    id: "10th-marksheet",
-    outputName: "10TH MARKSHEET",
-    shortcut: "10M",
-    patterns: [
-      /\b10m\b/i,
-      /\b10(th)?\s*(mark|marksheet|marskheet)\b/i,
-      /\bssc\s*(mark|marksheet)\b/i,
-      /10.*(मार्क|मार्कशीट)/i
-    ]
-  },
-  {
     id: "10th-lc",
     outputName: "10TH LC",
     shortcut: "10LC",
@@ -109,17 +82,196 @@ export const DOCUMENT_PATTERNS = [
     ]
   },
   {
-    id: "10th-marksheet-passing-combined",
-    outputName: "10TH MARKSHEET AND PASSING",
-    shortcut: "10MP",
+    id: "10th-marksheet",
+    outputName: "10TH MARKSHEET",
+    shortcut: "10M",
     patterns: [
-      /\b10mp\b/i,
-      /\b10tmp\b/i,
-      /\b10(th)?\s*(mark|marksheet|मार्क|मार्कशीट).*(pass|passing|पास)\b/i,
-      /\b10(th)?\s*(pass|passing|पास).*(mark|marksheet|मार्क|मार्कशीट)\b/i,
-      /\b10(th)?\s*combined\b/i
+      /\b10m\b/i,
+      /\b10(th)?\s*(mark|marksheet|marskheet)\b/i,
+      /\bssc\s*(mark|marksheet)\b/i,
+      /10.*(मार्क|मार्कशीट)/i
     ]
   },
+  {
+    id: "10th-passing",
+    outputName: "10TH PASSING CERTIFICATE",
+    shortcut: "10P",
+    patterns: [
+      /\b10p\b/i,
+      /\b10(th)?\s*(pass|passing|pasing)\b/i,
+      /\bssc\s*(pass|passing)\b/i,
+      /10.*(पास|पासिंग)/i
+    ]
+  },
+  // 3. Identity & Certificates (Strict \b Word Boundaries to prevent Pankaj matching PAN)
+  {
+    id: "aadhaar-card",
+    outputName: "AADHAAR CARD",
+    shortcut: "ADR",
+    patterns: [
+      /\badr\b/i,
+      /\b(aadhaar|aadhar|adhar|aadhhar)\b/i,
+      /\buid\b/i,
+      /आधार/i
+    ]
+  },
+  {
+    id: "pan-card",
+    outputName: "PAN CARD",
+    shortcut: "PAN",
+    patterns: [
+      /\bpan\b/i,
+      /\bpan\s*card\b/i,
+      /पॅन/i
+    ]
+  },
+  {
+    id: "photo",
+    outputName: "PHOTO",
+    shortcut: "PIC",
+    patterns: [
+      /\bpic\b/i,
+      /\b(photo|photograph|picture)\b/i,
+      /\bstudent\s*photo\b/i,
+      /\bpassport\s*photo\b/i,
+      /फोटो/i
+    ]
+  },
+  {
+    id: "caste-certificate",
+    outputName: "CASTE CERTIFICATE",
+    shortcut: "CST",
+    patterns: [
+      /\bcst\b/i,
+      /\bcast\b/i,
+      /\bcaste\b/i,
+      /\bjati\b/i,
+      /जात/i
+    ]
+  },
+  {
+    id: "validity-certificate",
+    outputName: "VALIDITY CERTIFICATE",
+    shortcut: "VLD",
+    patterns: [
+      /\bvld\b/i,
+      /\bvalidity\b/i,
+      /\bcaste\s*validity\b/i,
+      /वैधता/i
+    ]
+  },
+  {
+    id: "domicile-certificate",
+    outputName: "DOMICILE CERTIFICATE",
+    shortcut: "DOM",
+    patterns: [
+      /\bdom\b/i,
+      /\bdomi\b/i,
+      /\b(domicile|domocile|adhivas)\b/i,
+      /अधिवास|रहिवासी/i
+    ]
+  },
+  {
+    id: "nationality-certificate",
+    outputName: "NATIONALITY CERTIFICATE",
+    shortcut: "NAT",
+    patterns: [
+      /\bnat\b/i,
+      /\bnati\b/i,
+      /\bnationality\b/i,
+      /राष्ट्रीयत्व/i
+    ]
+  },
+  {
+    id: "income-certificate",
+    outputName: "INCOME CERTIFICATE",
+    shortcut: "INC",
+    patterns: [
+      /\binc\b/i,
+      /\binco\b/i,
+      /\b(income|incom|utpanna)\b/i,
+      /उत्पन्न/i
+    ]
+  },
+  {
+    id: "bank-passbook",
+    outputName: "PASSBOOK BANK",
+    shortcut: "BNK",
+    patterns: [
+      /\bbnk\b/i,
+      /\bpass\b/i,
+      /\b(passbook|pasbook|bank\s*passbook)\b/i,
+      /पासबुक|बँक/i
+    ]
+  },
+  {
+    id: "attempt-certificate",
+    outputName: "ATTEMPT CERTIFICATE",
+    shortcut: "ATM",
+    patterns: [
+      /\batm\b/i,
+      /\b(attempt|atempt|attmpt)\b/i,
+      /अटेम्प्ट|प्रयत्न/i
+    ]
+  },
+  {
+    id: "birth-certificate",
+    outputName: "BIRTH CERTIFICATE",
+    shortcut: "BRT",
+    patterns: [
+      /\bbrt\b/i,
+      /\bbir\b/i,
+      /\b(birth|janma)\b/i,
+      /जन्म/i
+    ]
+  },
+  {
+    id: "bonafide-certificate",
+    outputName: "BONAFIDE CERTIFICATE",
+    shortcut: "BNF",
+    patterns: [
+      /\bbnf\b/i,
+      /\bbona\b/i,
+      /\b(bonafide|bonafied|bonafidee)\b/i,
+      /बोनाफाईड|बोनाफाइड/i
+    ]
+  },
+  {
+    id: "gap-certificate",
+    outputName: "GAP CERTIFICATE",
+    shortcut: "GAP",
+    patterns: [
+      /\bgap\b/i,
+      /\bgap\s*certificate\b/i,
+      /\bgap\s*affidavit\b/i,
+      /गॅप/i
+    ]
+  },
+  {
+    id: "self-declaration",
+    outputName: "SELF DECLARATION",
+    shortcut: "SLF",
+    patterns: [
+      /\bslf\b/i,
+      /\bself\b/i,
+      /\bself\s*declaration\b/i,
+      /\bsvataha\b/i,
+      /स्वयं/i
+    ]
+  },
+  {
+    id: "parent-declaration",
+    outputName: "PARENT DECLARATION",
+    shortcut: "PAR",
+    patterns: [
+      /\bpar\b/i,
+      /\bpart\b/i,
+      /\b(parent|palak)\b/i,
+      /\bparent\s*declaration\b/i,
+      /पालक/i
+    ]
+  },
+  // 4. Auxiliary Records
   {
     id: "apaar-id",
     outputName: "APAAR ID",
@@ -164,167 +316,11 @@ export const DOCUMENT_PATTERNS = [
       /\bration\s*card\b/i,
       /रेशन/i
     ]
-  },
-  {
-    id: "10th-passing",
-    outputName: "10TH PASSING CERTIFICATE",
-    shortcut: "10P",
-    patterns: [
-      /\b10p\b/i,
-      /\b10(th)?\s*(pass|passing|pasing)\b/i,
-      /\bssc\s*(pass|passing)\b/i,
-      /10.*(पास|पासिंग)/i
-    ]
-  },
-  {
-    id: "aadhaar-card",
-    outputName: "AADHAAR CARD",
-    shortcut: "ADR",
-    patterns: [
-      /\badr\b/i,
-      /\b(aadhaar|aadhar|adhar|aadhhar)\b/i,
-      /आधार/i
-    ]
-  },
-  {
-    id: "pan-card",
-    outputName: "PAN CARD",
-    shortcut: "PAN",
-    patterns: [
-      /\bpan\b/i,
-      /\bpan\s*card\b/i,
-      /पॅन/i
-    ]
-  },
-  {
-    id: "photo",
-    outputName: "PHOTO",
-    shortcut: "PIC",
-    patterns: [
-      /\bpic\b/i,
-      /\b(photo|photograph|picture)\b/i,
-      /\bstudent\s*photo\b/i,
-      /\bpassport\s*photo\b/i,
-      /फोटो/i
-    ]
-  },
-  {
-    id: "caste-certificate",
-    outputName: "CASTE CERTIFICATE",
-    shortcut: "CAST",
-    patterns: [
-      /\bcast\b/i,
-      /\bcaste\b/i,
-      /\bjati\b/i,
-      /जात/i
-    ]
-  },
-  {
-    id: "domicile-certificate",
-    outputName: "DOMICILE CERTIFICATE",
-    shortcut: "DOMI",
-    patterns: [
-      /\bdomi\b/i,
-      /\b(domicile|domocile|adhivas)\b/i,
-      /अधिवास|रहिवासी/i
-    ]
-  },
-  {
-    id: "nationality-certificate",
-    outputName: "NATIONALITY CERTIFICATE",
-    shortcut: "NATI",
-    patterns: [
-      /\bnati\b/i,
-      /\bnationality\b/i,
-      /राष्ट्रीयत्व/i
-    ]
-  },
-  {
-    id: "income-certificate",
-    outputName: "INCOME CERTIFICATE",
-    shortcut: "INCO",
-    patterns: [
-      /\binco\b/i,
-      /\b(income|incom|utpanna)\b/i,
-      /उत्पन्न/i
-    ]
-  },
-  {
-    id: "bank-passbook",
-    outputName: "PASSBOOK BANK",
-    shortcut: "PASS",
-    patterns: [
-      /\bpass\b/i,
-      /\b(passbook|pasbook|bank\s*passbook)\b/i,
-      /पासबुक|बँक/i
-    ]
-  },
-  {
-    id: "attempt-certificate",
-    outputName: "ATTEMPT CERTIFICATE",
-    shortcut: "ATM",
-    patterns: [
-      /\batm\b/i,
-      /\b(attempt|atempt|attmpt)\b/i,
-      /अटेम्प्ट|प्रयत्न/i
-    ]
-  },
-  {
-    id: "birth-certificate",
-    outputName: "BIRTH CERTIFICATE",
-    shortcut: "BIR",
-    patterns: [
-      /\bbir\b/i,
-      /\b(birth|janma)\b/i,
-      /जन्म/i
-    ]
-  },
-  {
-    id: "bonafide-certificate",
-    outputName: "BONAFIDE CERTIFICATE",
-    shortcut: "BONA",
-    patterns: [
-      /\bbona\b/i,
-      /\b(bonafide|bonafied|bonafidee)\b/i,
-      /बोनाफाईड|बोनाफाइड/i
-    ]
-  },
-  {
-    id: "gap-certificate",
-    outputName: "GAP CERTIFICATE",
-    shortcut: "GAP",
-    patterns: [
-      /\bgap\b/i,
-      /\bgap\s*certificate\b/i,
-      /गॅप/i
-    ]
-  },
-  {
-    id: "self-declaration",
-    outputName: "SELF DECLARATION",
-    shortcut: "SELF",
-    patterns: [
-      /\bself\b/i,
-      /\bself\s*declaration\b/i,
-      /\bsvataha\b/i,
-      /स्वयं/i
-    ]
-  },
-  {
-    id: "parent-declaration",
-    outputName: "PARENT DECLARATION",
-    shortcut: "PART",
-    patterns: [
-      /\bpart\b/i,
-      /\b(parent|palak)\b/i,
-      /\bparent\s*declaration\b/i,
-      /पालक/i
-    ]
   }
 ];
 
 /**
- * Intelligent Document Matcher with Percentage Scoring
+ * Intelligent Document Matcher with Word-Boundary & Exact Shortcut Precedence
  * @param {string} text - The input string (file name or typed shortcut)
  * @param {Object} [groups] - Custom groups from user settings
  * @returns {Object} Match evaluation result
@@ -342,10 +338,12 @@ export function evaluateMatch(text, groups = null) {
 
   const clean = text.trim();
   const lower = clean.toLowerCase();
+  // Normalize delimiters (underscores, hyphens, dots) to space for word-boundary matching
+  const normalized = lower.replace(/[-_.]+/g, ' ');
 
-  // 1. Exact primary shortcut match (e.g. "12M", "ATM", "SELF", "BONA")
+  // 1. Exact primary shortcut match (e.g. "ADR", "PAN", "12M", "CST", "DOM", "BNK")
   for (const item of DOCUMENT_PATTERNS) {
-    if (lower === item.shortcut.toLowerCase()) {
+    if (lower === item.shortcut.toLowerCase() || normalized.trim() === item.shortcut.toLowerCase()) {
       return {
         docType: item.outputName,
         percentage: 100,
@@ -376,10 +374,10 @@ export function evaluateMatch(text, groups = null) {
     }
   }
 
-  // 3. Pattern recognition on filename / input
+  // 3. Word-Boundary Pattern Recognition (Exact word matching prevents "Pankaj" matching "PAN")
   for (const item of DOCUMENT_PATTERNS) {
     for (const pat of item.patterns) {
-      if (pat.test(lower)) {
+      if (pat.test(lower) || pat.test(normalized)) {
         return {
           docType: item.outputName,
           percentage: 100,

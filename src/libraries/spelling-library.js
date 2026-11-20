@@ -24,7 +24,10 @@ export function correctSpelling(text, rules) {
   let out = text;
   for (const [wrong, right] of Object.entries(rules || {})) {
     if (!wrong) continue;
-    out = out.replace(new RegExp(`\\b${esc(wrong)}\\b`, 'gi'), m => preserveCase(m, right));
+    const re = new RegExp(`(^|[^a-zA-Z0-9])(${esc(wrong)})([^a-zA-Z0-9]|$)`, 'gi');
+    out = out.replace(re, (match, prefix, found, suffix) => {
+      return prefix + preserveCase(found, right) + suffix;
+    });
   }
   return out;
 }

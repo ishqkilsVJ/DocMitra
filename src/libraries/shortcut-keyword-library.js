@@ -126,8 +126,8 @@ export const DEFAULT_SHORTCUT_DICTIONARY = [
   {
     id: "caste-certificate",
     displayName: "Caste Certificate",
-    primaryShortcut: "CAST",
-    alternateKeywords: [],
+    primaryShortcut: "CST",
+    alternateKeywords: ["CAST"],
     outputName: "CASTE CERTIFICATE"
   },
   {
@@ -140,29 +140,29 @@ export const DEFAULT_SHORTCUT_DICTIONARY = [
   {
     id: "domicile-certificate",
     displayName: "Domicile Certificate",
-    primaryShortcut: "DOMI",
-    alternateKeywords: [],
+    primaryShortcut: "DOM",
+    alternateKeywords: ["DOMI"],
     outputName: "DOMICILE CERTIFICATE"
   },
   {
     id: "nationality-certificate",
     displayName: "Nationality Certificate",
-    primaryShortcut: "NATI",
-    alternateKeywords: [],
+    primaryShortcut: "NAT",
+    alternateKeywords: ["NATI"],
     outputName: "NATIONALITY CERTIFICATE"
   },
   {
     id: "income-certificate",
     displayName: "Income Certificate",
-    primaryShortcut: "INCO",
-    alternateKeywords: [],
+    primaryShortcut: "INC",
+    alternateKeywords: ["INCO"],
     outputName: "INCOME CERTIFICATE"
   },
   {
     id: "bank-passbook",
     displayName: "Bank Passbook",
-    primaryShortcut: "PASS",
-    alternateKeywords: [],
+    primaryShortcut: "BNK",
+    alternateKeywords: ["PASS"],
     outputName: "PASSBOOK BANK"
   },
   {
@@ -175,15 +175,15 @@ export const DEFAULT_SHORTCUT_DICTIONARY = [
   {
     id: "birth-certificate",
     displayName: "Birth Certificate",
-    primaryShortcut: "BIR",
-    alternateKeywords: [],
+    primaryShortcut: "BRT",
+    alternateKeywords: ["BIR"],
     outputName: "BIRTH CERTIFICATE"
   },
   {
     id: "bonafide-certificate",
     displayName: "Bonafide Certificate",
-    primaryShortcut: "BONA",
-    alternateKeywords: [],
+    primaryShortcut: "BNF",
+    alternateKeywords: ["BONA"],
     outputName: "BONAFIDE CERTIFICATE"
   },
   {
@@ -196,15 +196,15 @@ export const DEFAULT_SHORTCUT_DICTIONARY = [
   {
     id: "self-declaration",
     displayName: "Self Declaration",
-    primaryShortcut: "SELF",
-    alternateKeywords: [],
+    primaryShortcut: "SLF",
+    alternateKeywords: ["SELF"],
     outputName: "SELF DECLARATION"
   },
   {
     id: "parent-declaration",
     displayName: "Parent Declaration",
-    primaryShortcut: "PART",
-    alternateKeywords: [],
+    primaryShortcut: "PAR",
+    alternateKeywords: ["PART"],
     outputName: "PARENT DECLARATION"
   },
   {

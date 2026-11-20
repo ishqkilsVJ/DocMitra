@@ -8,15 +8,21 @@ import { NavigationManager } from './navigation.js';
 import { SettingsModalManager } from './modal.js';
 import { wirePlaceholderActions } from './placeholders.js';
 import { toast } from './toast.js';
+import { initRenamerUI } from './renamer-ui.js';
+import { initSettingsUI } from './settings-ui.js';
 
 export function initAppShell() {
   // Initialize View Navigation
   const nav = new NavigationManager();
   nav.init();
 
-  // Initialize Settings Modal
+  // Initialize Settings Modal & UI
   const modal = new SettingsModalManager();
   modal.init();
+  const settingsUI = initSettingsUI();
+
+  // Initialize Bulk Renamer UI
+  const renamerUI = initRenamerUI();
 
   // Wire Placeholder Action Buttons to Toast
   wirePlaceholderActions();
@@ -31,7 +37,7 @@ export function initAppShell() {
     });
   }
 
-  console.info('[DocMitra] UI Shell initialized successfully.');
+  console.info('[DocMitra] UI Shell & Modules initialized successfully.');
 }
 
 // Auto-run if DOM is ready, or wait for DOMContentLoaded
