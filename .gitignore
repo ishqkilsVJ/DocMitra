@@ -3,6 +3,8 @@ _design_ref/
 
 # Build artifacts & releases
 releases/*.exe
+releases/*.msi
+releases/*.zip
 dist/
 *.exe
 
