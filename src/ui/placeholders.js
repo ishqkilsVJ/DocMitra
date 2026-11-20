@@ -8,12 +8,8 @@
 import { toast } from './toast.js';
 
 export function wirePlaceholderActions() {
-  // Common action buttons with specific IDs or selectors (Renamer buttons are wired with active logic)
+  // Common action buttons with specific IDs or selectors (Renamer and PDF Studio buttons are wired with active logic)
   const actionSelectors = [
-    // PDF Studio (wired in Milestone 3)
-    '#startCompressBtn',
-    '#btnClearPdfQueue',
-    '#btnSelectPdfFolder',
     // Image Studio (wired in Milestone 4)
     '#startImageProcessBtn',
     '#btnAutoCropPassport',

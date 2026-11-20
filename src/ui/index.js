@@ -10,6 +10,7 @@ import { wirePlaceholderActions } from './placeholders.js';
 import { toast } from './toast.js';
 import { initRenamerUI } from './renamer-ui.js';
 import { initSettingsUI } from './settings-ui.js';
+import { initPdfStudioUI } from './pdf-studio-ui.js';
 
 export function initAppShell() {
   // Initialize View Navigation
@@ -23,6 +24,9 @@ export function initAppShell() {
 
   // Initialize Bulk Renamer UI
   const renamerUI = initRenamerUI();
+
+  // Initialize PDF Studio UI
+  const pdfStudioUI = initPdfStudioUI();
 
   // Wire Placeholder Action Buttons to Toast
   wirePlaceholderActions();

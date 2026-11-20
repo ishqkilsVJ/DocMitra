@@ -182,9 +182,6 @@ var e = [
 // src/ui/placeholders.js
 function a() {
 	[
-		"#startCompressBtn",
-		"#btnClearPdfQueue",
-		"#btnSelectPdfFolder",
 		"#startImageProcessBtn",
 		"#btnAutoCropPassport",
 		"#btnClearImageQueue",
@@ -1177,7 +1174,7 @@ async function O(e, t, n = null) {
 		throw e;
 	}
 }
-async function k(e, t, n = null) {
+async function ee(e, t, n = null) {
 	let r = [...t].reverse(), i = 0;
 	for (let t of r) {
 		if (e && e.nativePath) {
@@ -1197,7 +1194,7 @@ async function k(e, t, n = null) {
 		i++, n && n(Math.round(i / r.length * 100), `Undo: ${i}/${r.length}`);
 	}
 }
-var A = new class {
+var k = new class {
 	constructor(e = 10) {
 		this.history = [], this.maxHistory = e;
 	}
@@ -1223,16 +1220,16 @@ var A = new class {
 	}
 }();
 // src/libraries/export-reports-library.js
-function j(e, t) {
+function te(e, t) {
 	let n = new Blob(["﻿" + t], { type: "text/csv;charset=utf-8;" }), r = URL.createObjectURL(n), i = document.createElement("a");
 	i.setAttribute("href", r), i.setAttribute("download", e), i.style.display = "none", document.body.appendChild(i), i.click(), document.body.removeChild(i), URL.revokeObjectURL(r);
 }
-function M(e) {
+function A(e) {
 	if (e == null) return "\"\"";
 	let t = String(e);
 	return t.includes("\"") || t.includes(",") || t.includes("\n") || t.includes("\r") ? `"${t.replace(/"/g, "\"\"")}"` : `"${t}"`;
 }
-function N(e, t, n = "Checklist") {
+function j(e, t, n = "Checklist") {
 	let r = [[
 		"Sr No",
 		"Student Name",
@@ -1244,7 +1241,7 @@ function N(e, t, n = "Checklist") {
 		"Completion %",
 		"Readiness Status",
 		"Missing Documents"
-	].map(M).join(",")];
+	].map(A).join(",")];
 	return e.forEach((e, n) => {
 		let i = {};
 		(e.summary.evaluations || []).forEach((e) => {
@@ -1263,11 +1260,11 @@ function N(e, t, n = "Checklist") {
 			e.summary.isReady ? "READY FOR SUBMISSION" : "ACTION NEEDED",
 			(e.summary.missingList || []).join("; ")
 		];
-		r.push(o.map(M).join(","));
+		r.push(o.map(A).join(","));
 	}), r.join("\r\n");
 }
 // src/libraries/checklist-library.js
-function P(e) {
+function M(e) {
 	return Object.fromEntries(Object.entries(e).map(([e, t]) => [e, t.map((e) => Array.isArray(e) ? {
 		name: e[0],
 		keywords: e[1],
@@ -1275,18 +1272,18 @@ function P(e) {
 	} : e)]));
 }
 // src/services/storage-service.js
-var F = "v3_exact_single", I = u(), L = (e, t) => {
+var N = "v3_exact_single", P = u(), F = (e, t) => {
 	try {
 		let n = localStorage.getItem(e);
 		return n ? JSON.parse(n) : t;
 	} catch {
 		return t;
 	}
-}, R = (e, t) => {
+}, I = (e, t) => {
 	try {
 		localStorage.setItem(e, JSON.stringify(t));
 	} catch {}
-}, z = (e) => {
+}, L = (e) => {
 	let t = {};
 	Object.entries(e || {}).forEach(([e, n]) => {
 		let r = /^12\s*LC$/i.test(e) || e === "12TH LEAVING CERTIFICATE" ? "12TH LC" : e;
@@ -1296,7 +1293,7 @@ var F = "v3_exact_single", I = u(), L = (e, t) => {
 	return Object.entries(t).forEach(([e, r]) => {
 		e !== "12TH MARKSHEET AND PASSING" && (n[e] = r, e === "12TH PASSING CERTIFICATE" && t["12TH MARKSHEET AND PASSING"] && (n["12TH MARKSHEET AND PASSING"] = t["12TH MARKSHEET AND PASSING"]));
 	}), n;
-}, B = (e) => {
+}, R = (e) => {
 	let t = e.name === "12TH LEAVING CERTIFICATE" ? "12TH LC" : e.name;
 	return {
 		...e,
@@ -1304,32 +1301,32 @@ var F = "v3_exact_single", I = u(), L = (e, t) => {
 		keywords: [...new Set(e.keywords || [])],
 		short: e.short || t.slice(0, 18)
 	};
-}, V = (e) => {
+}, z = (e) => {
 	let t = e.filter((e) => e.name === "12TH MARKSHEET AND PASSING");
 	if (!t.length) return e;
 	let n = e.filter((e) => e.name !== "12TH MARKSHEET AND PASSING"), r = n.findIndex((e) => e.name === "12TH PASSING CERTIFICATE");
 	return n.splice(r < 0 ? n.length : r + 1, 0, ...t), n;
-}, H = (e) => {
-	let t = P(y), n = e || {}, r = {};
+}, B = (e) => {
+	let t = M(y), n = e || {}, r = {};
 	return Object.keys(t).forEach((e) => {
-		let i = Array.isArray(n[e]) ? n[e].map(B) : [], a = new Map(i.map((e) => [e.name.toUpperCase(), e]));
+		let i = Array.isArray(n[e]) ? n[e].map(R) : [], a = new Map(i.map((e) => [e.name.toUpperCase(), e]));
 		t[e].forEach((e) => {
-			let t = B(e);
+			let t = R(e);
 			a.has(t.name.toUpperCase()) || i.push(t);
-		}), r[e] = V(i);
+		}), r[e] = z(i);
 	}), Object.entries(n).forEach(([e, t]) => {
-		r[e] || (r[e] = V(t.map(B)));
+		r[e] || (r[e] = z(t.map(R)));
 	}), r;
 };
-function U() {
+function V() {
 	let e = localStorage.getItem("dictVersion"), t, n;
-	e === F ? (t = z(L("renameSettings", I)), n = L("renameProfiles", { Default: I })) : (t = I, n = { Default: I }, R("renameSettings", t), R("renameProfiles", n), localStorage.setItem("dictVersion", F));
+	e === N ? (t = L(F("renameSettings", P)), n = F("renameProfiles", { Default: P })) : (t = P, n = { Default: P }, I("renameSettings", t), I("renameProfiles", n), localStorage.setItem("dictVersion", N));
 	let r = localStorage.getItem("checklistVersion"), i;
-	r === "2026.11.passing_canonical_v2" ? i = H(L("checklists", null)) : (i = P(y), R("checklists", i), localStorage.setItem("checklistVersion", v));
+	r === "2026.11.passing_canonical_v2" ? i = B(F("checklists", null)) : (i = M(y), I("checklists", i), localStorage.setItem("checklistVersion", v));
 	let a = {
 		...g,
-		...L("spellingCorrections", {}) || {}
-	}, o = L("linkedRules", _);
+		...F("spellingCorrections", {}) || {}
+	}, o = F("linkedRules", _);
 	return {
 		groups: t,
 		checklists: i,
@@ -1340,7 +1337,7 @@ function U() {
 		active: Object.keys(n)[0] || "Default"
 	};
 }
-function W() {
+function H() {
 	return new Promise((e, t) => {
 		if (!("indexedDB" in window)) return t(/* @__PURE__ */ Error("IndexedDB unavailable"));
 		let n = indexedDB.open(b.name, b.version);
@@ -1349,13 +1346,13 @@ function W() {
 		}, n.onsuccess = () => e(n.result), n.onerror = () => t(n.error || /* @__PURE__ */ Error("IndexedDB open failed"));
 	});
 }
-function G(e) {
-	return W().then((t) => new Promise((n, r) => {
+function U(e) {
+	return H().then((t) => new Promise((n, r) => {
 		let i = t.transaction(b.store, "readwrite");
 		i.objectStore(b.store).put(e, b.key), i.oncomplete = () => n(!0), i.onerror = () => r(i.error);
 	}));
 }
-function K(e) {
+function W(e) {
 	let t = {
 		groups: e.groups,
 		checklists: e.checklists,
@@ -1365,10 +1362,10 @@ function K(e) {
 		style: e.style,
 		savedAt: (/* @__PURE__ */ new Date()).toISOString()
 	};
-	R("renameSettings", t.groups), R("checklists", t.checklists), R("spellingCorrections", t.spelling), R("renameProfiles", t.profiles), R("linkedRules", t.linkedRules), localStorage.setItem("nameStyle", t.style), G(t).catch(() => {});
+	I("renameSettings", t.groups), I("checklists", t.checklists), I("spellingCorrections", t.spelling), I("renameProfiles", t.profiles), I("linkedRules", t.linkedRules), localStorage.setItem("nameStyle", t.style), U(t).catch(() => {});
 }
 // src/ui/renamer-ui.js
-var q = class {
+var G = class {
 	constructor() {
 		this.state = {
 			folder: null,
@@ -1489,7 +1486,7 @@ var q = class {
 		];
 	}
 	init() {
-		this.state.settings = U(), this.state.style = this.state.settings.style || "preserve", this._bindDOM(), this._bindKeyboardShortcuts(), console.info("[DocMitra Renamer] Renamer UI manager initialized.");
+		this.state.settings = V(), this.state.style = this.state.settings.style || "preserve", this._bindDOM(), this._bindKeyboardShortcuts(), console.info("[DocMitra Renamer] Renamer UI manager initialized.");
 	}
 	_bindDOM() {
 		let e = document.getElementById("btnSelectFolder");
@@ -1806,7 +1803,7 @@ var q = class {
 		try {
 			await O(this.state.folder, t, (e, t) => {
 				console.log(`[Rename Progress] ${e}%: ${t}`);
-			}), A.pushBatch(this.state.folder, t), e.forEach((e) => {
+			}), k.pushBatch(this.state.folder, t), e.forEach((e) => {
 				e.name = e.targetName, e.isRenamed = !0, e.status = "renamed";
 			}), r.show("Batch Complete!", `Successfully renamed ${t.length} files.`, "success"), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview();
 		} catch (e) {
@@ -1814,14 +1811,14 @@ var q = class {
 		}
 	}
 	async handleUndo() {
-		if (!A.canUndo()) {
+		if (!k.canUndo()) {
 			r.show("Undo Stack Empty", "No previous rename batch to undo.", "info");
 			return;
 		}
-		let e = A.pop();
+		let e = k.pop();
 		r.show("Reverting Changes", `Restoring ${e.plan.length} files...`, "info");
 		try {
-			await k(e.dir, e.plan, (e, t) => {
+			await ee(e.dir, e.plan, (e, t) => {
 				console.log(`[Undo Progress] ${e}%: ${t}`);
 			}), e.plan.forEach((e) => {
 				let t = this.state.files.find((t) => t.targetName === e.next || t.name === e.next);
@@ -1855,7 +1852,7 @@ var q = class {
 			r.show("Nothing to Export", "Queue is empty.", "info");
 			return;
 		}
-		let e = N([{
+		let e = j([{
 			studentName: this.state.studentName || "Student",
 			folderName: this.state.folder?.name || "Folder",
 			summary: {
@@ -1872,7 +1869,7 @@ var q = class {
 				missingList: this.state.files.filter((e) => !e.isMatched && !e.isRenamed).map((e) => e.name)
 			}
 		}], this.state.files.map((e) => ({ name: e.docType || e.name })), "Admission Audit");
-		j(`DocMitra_Audit_${(this.state.studentName || "Batch").replace(/\s+/g, "_")}.csv`, e), r.show("Audit Exported", "CSV report downloaded with UTF-8 BOM.", "success");
+		te(`DocMitra_Audit_${(this.state.studentName || "Batch").replace(/\s+/g, "_")}.csv`, e), r.show("Audit Exported", "CSV report downloaded with UTF-8 BOM.", "success");
 	}
 	handleClearQueue() {
 		this.state.files = [], this.state.folder = null, this.state.currentIndex = 0, this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), r.show("Queue Cleared", "Intake workstation reset.", "info");
@@ -1934,12 +1931,12 @@ var q = class {
 		l.className = "text-center border-t pt-2 border-outline-variant/30 text-[10px] font-mono-code text-secondary", l.textContent = "Air-Gapped High-Precision Preview Stage", e.appendChild(l);
 	}
 };
-function J() {
-	let e = new q();
+function K() {
+	let e = new G();
 	return e.init(), e;
 }
 // src/services/export-import-service.js
-function Y(e) {
+function q(e) {
 	let t = {
 		format: "BulkStudentRenamerSettings",
 		version: 1,
@@ -1952,7 +1949,7 @@ function Y(e) {
 	}, n = new Blob([JSON.stringify(t, null, 2)], { type: "application/json" }), r = URL.createObjectURL(n), i = document.createElement("a");
 	i.href = r, i.download = `student-renamer-settings-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.json`, i.click(), setTimeout(() => URL.revokeObjectURL(r), 1e3);
 }
-function X(e, t) {
+function ne(e, t) {
 	return new Promise((n, r) => {
 		if (!e) return r(/* @__PURE__ */ Error("No backup file selected."));
 		if (e.size > 5242880) return r(/* @__PURE__ */ Error("Backup file exceeds maximum allowed size (5 MB)."));
@@ -1975,7 +1972,7 @@ function X(e, t) {
 	});
 }
 // src/ui/settings-ui.js
-var Z = class {
+var re = class {
 	constructor() {
 		this.state = null, this.initialState = null, this.activeChecklist = "11th / 12th (FYJC / SYJC)";
 	}
@@ -1983,7 +1980,7 @@ var Z = class {
 		this.loadState(), this._bindButtons(), this.renderAll(), console.info("[DocMitra Settings] Settings UI manager initialized.");
 	}
 	loadState() {
-		this.state = U(), this.initialState = JSON.parse(JSON.stringify(this.state));
+		this.state = V(), this.initialState = JSON.parse(JSON.stringify(this.state));
 	}
 	_bindButtons() {
 		let e = document.getElementById("saveRulesBtn");
@@ -1997,7 +1994,7 @@ var Z = class {
 		let a = document.getElementById("btnExportSettingsJSON");
 		a && a.addEventListener("click", () => {
 			try {
-				Y(this.state), r.show("Settings Exported", "Configuration JSON file downloaded.", "success");
+				q(this.state), r.show("Settings Exported", "Configuration JSON file downloaded.", "success");
 			} catch (e) {
 				r.show("Export Error", e.message, "error");
 			}
@@ -2006,7 +2003,7 @@ var Z = class {
 		o && s && (o.addEventListener("click", () => s.click()), s.addEventListener("change", async (e) => {
 			let t = e.target.files?.[0];
 			if (t) try {
-				await X(t, this.state), K(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Import Successful", "System configuration restored and verified.", "success");
+				await ne(t, this.state), W(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Import Successful", "System configuration restored and verified.", "success");
 			} catch (e) {
 				r.show("Import Failed", e.message || "Invalid settings JSON format.", "error");
 			} finally {
@@ -2253,12 +2250,12 @@ var Z = class {
 		});
 	}
 	handleSave() {
-		K(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), r.show("Settings Saved", "System rules updated and applied to workstation.", "success");
+		W(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), r.show("Settings Saved", "System rules updated and applied to workstation.", "success");
 		let e = document.getElementById("settings-modal-overlay");
 		e && e.classList.add("hidden"), document.body.style.overflow = "";
 	}
 	handleReset() {
-		window.confirm("Reset all rules, shortcuts, and checklists to factory defaults?") && (this.state.groups = u(), this.state.checklists = JSON.parse(JSON.stringify(y)), K(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Factory Defaults Restored", "All default rules loaded.", "info"));
+		window.confirm("Reset all rules, shortcuts, and checklists to factory defaults?") && (this.state.groups = u(), this.state.checklists = JSON.parse(JSON.stringify(y)), W(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Factory Defaults Restored", "All default rules loaded.", "info"));
 	}
 	handleDiscard() {
 		this.state = JSON.parse(JSON.stringify(this.initialState)), this.renderAll(), r.show("Changes Discarded", "Reverted to previous configuration.", "info");
@@ -2266,13 +2263,481 @@ var Z = class {
 		e && e.classList.add("hidden"), document.body.style.overflow = "";
 	}
 };
-function Q() {
-	let e = new Z();
+function ie() {
+	let e = new re();
+	return e.init(), e;
+}
+// src/modules/pdf-studio.js
+var J = {
+	A4_PORTRAIT: {
+		width: 595.28,
+		height: 841.89,
+		label: "A4 Portrait"
+	},
+	A4_LANDSCAPE: {
+		width: 841.89,
+		height: 595.28,
+		label: "A4 Landscape"
+	}
+};
+function Y(e) {
+	let t = 2, n = e.length;
+	for (; t < n && e[t] === 255;) {
+		let r = e[t + 1];
+		t += 2;
+		let i = r >= 192 && r <= 195 || r >= 197 && r <= 199 || r >= 201 && r <= 203 || r >= 205 && r <= 207;
+		if (t + 1 >= n) break;
+		let a = e[t] << 8 | e[t + 1];
+		if (i && t + 6 < n) {
+			let n = e[t + 3] << 8 | e[t + 4];
+			return {
+				width: e[t + 5] << 8 | e[t + 6],
+				height: n
+			};
+		}
+		t += a;
+	}
+	return {
+		width: 595,
+		height: 842
+	};
+}
+function X(e = [], t = "portrait", n = 0) {
+	if (!e.length) throw Error("No images provided for PDF creation.");
+	let r = [], i = 0, a = (e) => new TextEncoder().encode(e), o = [], s = (e) => {
+		o.push(e), i += e.length;
+	};
+	s(a("%PDF-1.4\n%âãÏÓ\n")), r.push(i), s(a("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n"));
+	let c = e.length, l = [];
+	for (let e = 0; e < c; e++) l.push(3 + e * 3);
+	r.push(i), s(a(`2 0 obj\n<< /Type /Pages /Kids [ ${l.map((e) => `${e} 0 R`).join(" ")} ] /Count ${c} >>\nendobj\n`));
+	for (let o = 0; o < c; o++) {
+		let c = e[o], l = 3 + o * 3, u = l + 1, d = l + 2, f = c.bytes, { width: p, height: m } = c.width && c.height ? c : Y(f), h = J.A4_PORTRAIT.width, g = J.A4_PORTRAIT.height;
+		(t === "landscape" || t === "fit" && p > m) && (h = J.A4_LANDSCAPE.width, g = J.A4_LANDSCAPE.height);
+		let _ = h - 36, v = g - 36, y = Math.min(_ / p, v / m), b = p * y, x = m * y, S = (h - b) / 2, C = (g - x) / 2, w = n ? ` /Rotate ${n}` : "";
+		r.push(i), s(a(`${l} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${h.toFixed(2)} ${g.toFixed(2)}]${w} /Contents ${u} 0 R /Resources << /XObject << /Im${o + 1} ${d} 0 R >> >> >>\nendobj\n`));
+		let T = `q ${b.toFixed(2)} 0 0 ${x.toFixed(2)} ${S.toFixed(2)} ${C.toFixed(2)} cm /Im${o + 1} Do Q\n`, E = T.length;
+		r.push(i), s(a(`${u} 0 obj\n<< /Length ${E} >>\nstream\n${T}endstream\nendobj\n`)), r.push(i), s(a(`${d} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${p} /Height ${m} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${f.length} >>\nstream\n`)), s(f), s(a("\nendstream\nendobj\n"));
+	}
+	let u = i, d = 3 + c * 3;
+	s(a(`xref\n0 ${d}\n0000000000 65535 f \n`));
+	for (let e of r) s(a(`${String(e).padStart(10, "0")} 00000 n \n`));
+	return s(a(`trailer\n<< /Size ${d} /Root 1 0 R >>\nstartxref\n${u}\n%%EOF\n`)), new Blob(o, { type: "application/pdf" });
+}
+function ae(e) {
+	let t = [], n = e.length, r = 0;
+	for (; r < n - 3;) if (e[r] === 255 && e[r + 1] === 216 && e[r + 2] === 255) {
+		let i = r;
+		for (r += 2; r < n - 1;) {
+			if (e[r] === 255 && e[r + 1] === 217) {
+				let n = r + 2, a = e.slice(i, n), o = Y(a);
+				t.push({
+					bytes: a,
+					width: o.width,
+					height: o.height
+				}), r = n;
+				break;
+			}
+			r++;
+		}
+	} else r++;
+	return t;
+}
+function Z(e) {
+	let t = ae(e);
+	if (!t.length) return [];
+	if (t.length === 1) return t;
+	let n = Math.max(...t.map((e) => (e.width || 0) * (e.height || 0))), r = Math.max(...t.map((e) => e.bytes?.length || 0)), i = t.filter((e) => {
+		let t = e.width || 1, i = e.height || 1, a = t * i, o = t / i, s = e.bytes?.length || 0;
+		return !((o > 3 || o < .33 || i < 220 || t < 220) && (a < n * .35 || s < r * .35));
+	});
+	return (i.length ? i : t).sort((e, t) => {
+		let n = (e.width || 0) * (e.height || 0), r = (t.width || 0) * (t.height || 0);
+		return r === n ? (t.bytes?.length || 0) - (e.bytes?.length || 0) : r - n;
+	});
+}
+function oe(e, t = "Document.pdf") {
+	let n = Z(e), r = t.replace(/\.pdf$/i, "");
+	return n.length ? n.map((e, t) => {
+		let i = n.length === 1 ? `${r}.jpg` : `${r}_page_${t + 1}.jpg`, a = new Blob([e.bytes], { type: "image/jpeg" });
+		return {
+			fileName: i,
+			blob: a,
+			size: a.size,
+			pageIndex: t + 1,
+			width: e.width,
+			height: e.height
+		};
+	}) : [];
+}
+function se(e, t = "Document.pdf") {
+	let n = Z(e), r = t.replace(/\.pdf$/i, "");
+	return n.length ? n.map((e, t) => {
+		let n = `${r}_page_${t + 1}.pdf`, i = X([e], "portrait");
+		return {
+			fileName: n,
+			blob: i,
+			size: i.size,
+			pageIndex: t + 1
+		};
+	}) : [];
+}
+function ce(e = [], t = "portrait") {
+	let n = [];
+	for (let t of e) {
+		let e = Z(t);
+		n.push(...e);
+	}
+	if (!n.length) throw Error("No document images could be extracted to merge PDFs.");
+	return X(n, t);
+}
+function Q(e, t = 90) {
+	let n = (t % 360 + 360) % 360;
+	if (n === 0) return new Blob([e], { type: "application/pdf" });
+	let r = Z(e);
+	if (r.length > 0) return X(r, "portrait", n);
+	try {
+		let t = "", r = 65536;
+		for (let n = 0; n < e.length; n += r) t += String.fromCharCode.apply(null, e.subarray(n, n + r));
+		let i = /(\d+\s+\d+\s+obj\s*<<[\s\S]*?\/Type\s*\/Page(?!\w)[\s\S]*?>>\s*endobj)/g;
+		if (i.test(t)) {
+			let e = t.replace(i, (e) => /\/Rotate\s+\d+/.test(e) ? e.replace(/\/Rotate\s+\d+/, `/Rotate ${n}`) : e.replace(/\/Type\s*\/Page(?!\w)/, `/Type /Page /Rotate ${n}`)), r = new Uint8Array(e.length);
+			for (let t = 0; t < e.length; t++) r[t] = e.charCodeAt(t) & 255;
+			return new Blob([r], { type: "application/pdf" });
+		}
+	} catch (e) {
+		console.warn("In-place PDF dictionary rotation skipped:", e);
+	}
+	throw Error("No pages found in PDF to rotate.");
+}
+function le(e, t, n = "auto") {
+	if (!e) return "document.pdf";
+	let r = e.lastIndexOf("."), i = r === -1 ? e : e.slice(0, r), a = r === -1 ? "" : e.slice(r), o = i.replace(/[\s_-]+\d+\s*(?:KB|MB)$/i, "").trim();
+	return n === "MB" || n === "auto" && t >= 10485760 ? `${o} ${Math.max(1, Math.round(Number(t || 0) / 1048576))} MB${a}` : `${o} ${Math.max(1, Math.round(Number(t || 0) / 1024))} KB${a}`;
+}
+// src/ui/pdf-studio-ui.js
+var ue = class {
+	constructor() {
+		this.activeTool = "compress_pdf", this.files = [], this.isProcessing = !1;
+	}
+	init() {
+		this._bindRibbonTools(), this._bindActions(), this._bindDropzone(), this.renderQueue(), console.info("[DocMitra PDF Studio] PDF Studio UI manager initialized.");
+	}
+	_bindRibbonTools() {
+		let e = document.querySelectorAll("#view-pdf-studio .tool-ribbon-btn"), t = [
+			"compress_pdf",
+			"merge_pdf",
+			"split_pdf",
+			"pdf_to_jpg",
+			"rotate_pdf",
+			"clean_pdf"
+		];
+		e.forEach((e, n) => {
+			e.addEventListener("click", (r) => {
+				r.preventDefault();
+				let i = t[n] || "compress_pdf";
+				this.setTool(i, e);
+			});
+		});
+	}
+	setTool(e, t = null) {
+		if (this.activeTool = e, document.querySelectorAll("#view-pdf-studio .tool-ribbon-btn").forEach((e) => {
+			e.classList.remove("bg-primary-container", "text-on-primary", "font-semibold", "shadow-sm"), e.classList.add("text-on-surface-variant", "hover:bg-surface-container-low", "hover:text-on-surface");
+			let t = e.querySelector(".bg-primary\\/60");
+			t && t.remove();
+		}), t) {
+			t.classList.remove("text-on-surface-variant", "hover:bg-surface-container-low", "hover:text-on-surface"), t.classList.add("bg-primary-container", "text-on-primary", "font-semibold", "shadow-sm");
+			let e = document.createElement("span");
+			e.className = "bg-primary/60 text-on-primary text-[10px] font-mono-code px-1.5 py-0.5 rounded font-bold uppercase tracking-tight", e.textContent = "Active", t.appendChild(e);
+		}
+		this._updateProcessButtonLabel(), r.show("Tool Selected", this._getToolDisplayName(e), "info");
+	}
+	_getToolDisplayName(e) {
+		switch (e) {
+			case "compress_pdf": return "Compress PDF (<256 KB MahaDBT)";
+			case "merge_pdf": return "Merge PDF Dossier";
+			case "split_pdf": return "Split / Extract Pages";
+			case "pdf_to_jpg": return "Convert PDF to JPG";
+			case "rotate_pdf": return "Rotate All Pages 90°";
+			case "clean_pdf": return "Clean & Enhance";
+			default: return "Process Files";
+		}
+	}
+	_updateProcessButtonLabel() {
+		let e = document.getElementById("startCompressBtn");
+		if (!e) return;
+		let t = e.querySelector("span:nth-of-type(2)");
+		if (t) {
+			let e = this.files.length, n = "Start Process";
+			this.activeTool === "compress_pdf" ? n = "Compress" : this.activeTool === "merge_pdf" ? n = "Merge" : this.activeTool === "split_pdf" ? n = "Split" : this.activeTool === "pdf_to_jpg" ? n = "Convert to JPG" : this.activeTool === "rotate_pdf" ? n = "Rotate" : this.activeTool === "clean_pdf" && (n = "Clean & Enhance"), t.textContent = `${n} (${e} Files)`;
+		}
+	}
+	_bindActions() {
+		let e = document.getElementById("btnBrowsePdfDir");
+		e && e.addEventListener("click", () => this.handleBrowseFolder());
+		let t = document.getElementById("btnAddPdfFiles");
+		t && t.addEventListener("click", () => this.handleAddFiles());
+		let n = document.getElementById("btnRotateAllPdf");
+		n && n.addEventListener("click", () => this.handleRotateAll());
+		let r = document.getElementById("btnClearPdfQueue");
+		r && r.addEventListener("click", () => this.handleClearQueue());
+		let i = document.getElementById("btnFilterOversizedPdf");
+		i && i.addEventListener("click", () => this.handleFilterOversized());
+		let a = document.getElementById("startCompressBtn");
+		a && a.addEventListener("click", () => this.handleStartProcess());
+	}
+	_bindDropzone() {
+		let e = document.getElementById("view-pdf-studio");
+		e && (e.addEventListener("dragover", (e) => {
+			e.preventDefault(), e.stopPropagation();
+		}), e.addEventListener("drop", async (e) => {
+			e.preventDefault(), e.stopPropagation();
+			let t = Array.from(e.dataTransfer?.files || []).filter((e) => /\.pdf$/i.test(e.name));
+			t.length === 0 ? r.show("Invalid Files", "Please drop PDF files only.", "warning") : await this.loadDroppedFiles(t);
+		}));
+	}
+	async handleBrowseFolder() {
+		r.show("Opening Folder Picker", "Navigating Windows Explorer...", "info");
+		try {
+			let e = await s();
+			if (!e.success) {
+				e.cancelled || r.show("Folder Select Error", e.error || "Failed to select folder", "error");
+				return;
+			}
+			let t = (e.files || []).filter((e) => /\.pdf$/i.test(e.name));
+			if (t.length === 0) {
+				r.show("No PDFs Found", "Selected directory contains 0 PDF files.", "warning");
+				return;
+			}
+			await this.loadNativeFiles(t), r.show("PDFs Loaded", `${t.length} files added to execution queue.`, "success");
+		} catch (e) {
+			r.show("Folder Error", e.message, "error");
+		}
+	}
+	async handleAddFiles() {
+		let e = document.createElement("input");
+		e.type = "file", e.accept = ".pdf,application/pdf", e.multiple = !0, e.style.display = "none", e.addEventListener("change", async (t) => {
+			let n = Array.from(t.target.files || []);
+			n.length > 0 && await this.loadDroppedFiles(n), document.body.removeChild(e);
+		}), document.body.appendChild(e), e.click();
+	}
+	async loadNativeFiles(e) {
+		for (let t of e) try {
+			let e = t.url || (t.path ? `http://localhost:3000/api/serve-file?path=${encodeURIComponent(t.path)}` : null), n = null;
+			if (e) {
+				let t = await (await fetch(e)).arrayBuffer();
+				n = new Uint8Array(t);
+			}
+			this.files.push({
+				id: `pdf_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+				name: t.name,
+				path: t.path,
+				size: t.size || (n ? n.length : 0),
+				bytes: n,
+				pageCount: 1,
+				status: "ready"
+			});
+		} catch (e) {
+			console.warn(`Failed to preload bytes for ${t.name}:`, e);
+		}
+		this.updateStats(), this.renderQueue();
+	}
+	async loadDroppedFiles(e) {
+		for (let t of e) {
+			let e = await t.arrayBuffer(), n = new Uint8Array(e);
+			this.files.push({
+				id: `pdf_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+				name: t.name,
+				path: t.name,
+				size: t.size,
+				bytes: n,
+				pageCount: 1,
+				status: "ready"
+			});
+		}
+		this.updateStats(), this.renderQueue(), r.show("PDFs Added", `${e.length} files added to queue.`, "success");
+	}
+	updateStats() {
+		let e = this.files.length, t = (this.files.reduce((e, t) => e + t.size, 0) / 1048576).toFixed(2), n = (e * 230 * 1024 / 1048576).toFixed(2), r = document.getElementById("pdfQueueCount");
+		r && (r.textContent = `${e} Files Loaded`);
+		let i = document.getElementById("pdfQueueStats");
+		i && (i.textContent = `Total: ${t} MB → Projected: ~${n} MB`), this._updateProcessButtonLabel();
+	}
+	renderQueue() {
+		let e = document.getElementById("pdfCardsGrid");
+		if (e) {
+			for (; e.firstChild;) e.removeChild(e.firstChild);
+			if (this.files.length === 0) {
+				let t = document.createElement("div");
+				t.className = "col-span-full p-8 text-center bg-surface-container-lowest rounded-xl border border-surface-container-high/80 flex flex-col items-center gap-2";
+				let n = document.createElement("span");
+				n.className = "material-symbols-outlined text-[40px] text-primary opacity-60", n.textContent = "picture_as_pdf", t.appendChild(n);
+				let r = document.createElement("div");
+				r.className = "font-headline-sm font-bold text-on-surface", r.textContent = "No PDF Files in Execution Queue", t.appendChild(r);
+				let i = document.createElement("div");
+				i.className = "text-body-sm text-secondary", i.textContent = "Drag & drop admission PDF documents here or click \"Browse Directory\" to get started.", t.appendChild(i), e.appendChild(t);
+			} else this.files.forEach((t, n) => {
+				let r = document.createElement("div");
+				r.className = "bg-surface-container-lowest rounded-xl border border-surface-container-high/80 p-2.5 flex flex-col justify-between hover:shadow-md transition-shadow group relative";
+				let i = document.createElement("div");
+				i.className = "absolute top-1.5 right-1.5 z-10 flex items-center gap-1";
+				let a = document.createElement("button");
+				a.type = "button", a.className = "w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-primary transition-colors shadow-xs cursor-pointer", a.title = "Rotate 90°";
+				let o = document.createElement("span");
+				o.className = "material-symbols-outlined text-[13px]", o.textContent = "rotate_right", a.appendChild(o), a.addEventListener("click", (e) => {
+					e.stopPropagation(), this.rotateSingleFile(n);
+				}), i.appendChild(a);
+				let s = document.createElement("button");
+				s.type = "button", s.className = "w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-error transition-colors shadow-xs cursor-pointer", s.title = "Remove";
+				let c = document.createElement("span");
+				c.className = "material-symbols-outlined text-[13px]", c.textContent = "close", s.appendChild(c), s.addEventListener("click", (e) => {
+					e.stopPropagation(), this.removeFile(n);
+				}), i.appendChild(s), r.appendChild(i);
+				let l = document.createElement("div");
+				l.className = "relative w-full h-24 rounded-lg bg-surface-container-low overflow-hidden mb-2 border border-surface-container-high/60 flex items-center justify-center";
+				let u = document.createElement("canvas");
+				u.className = "w-full h-full object-contain", l.appendChild(u), t.bytes && window.pdfjsLib && window.pdfjsLib.getDocument({ data: t.bytes }).promise.then((e) => {
+					t.pageCount = e.numPages, d.textContent = `${e.numPages}p`, e.getPage(1).then((e) => {
+						let t = e.getViewport({ scale: .5 });
+						u.height = t.height, u.width = t.width, e.render({
+							canvasContext: u.getContext("2d"),
+							viewport: t
+						});
+					});
+				}).catch(() => {
+					u.style.display = "none";
+					let e = document.createElement("span");
+					e.className = "material-symbols-outlined text-[32px] text-primary opacity-50", e.textContent = "picture_as_pdf", l.appendChild(e);
+				});
+				let d = document.createElement("div");
+				d.className = "absolute bottom-1 right-1 bg-inverse-surface/80 text-inverse-on-surface rounded px-1 text-[9px] font-mono-code", d.textContent = `${t.pageCount || 1}p`, l.appendChild(d), r.appendChild(l);
+				let f = document.createElement("div");
+				f.className = "font-headline-sm text-[12px] font-bold text-on-surface truncate mb-1", f.title = t.name, f.textContent = t.name, r.appendChild(f);
+				let p = document.createElement("div");
+				p.className = "bg-surface-container-low border border-surface-container-high/60 rounded-lg p-1.5 flex flex-col gap-0.5 font-mono-code text-[10px]";
+				let m = document.createElement("div");
+				m.className = "flex items-center justify-between text-outline";
+				let h = t.size > 1048576 ? `${(t.size / 1048576).toFixed(2)} MB` : `${(t.size / 1024).toFixed(0)} KB`, g = document.createElement("span");
+				g.textContent = `Old: ${h}`, m.appendChild(g);
+				let _ = t.size > 262144, v = document.createElement("span");
+				v.className = _ ? "text-emerald-700 font-bold" : "text-primary font-semibold", v.textContent = _ ? "-75%" : "Safe", m.appendChild(v), p.appendChild(m);
+				let y = document.createElement("div");
+				y.className = "flex items-center justify-between font-bold text-on-surface";
+				let b = document.createElement("span");
+				b.textContent = "Target:", y.appendChild(b);
+				let x = document.createElement("span");
+				x.className = "text-primary font-bold", x.textContent = _ ? "< 256 KB" : h, y.appendChild(x), p.appendChild(y), r.appendChild(p), e.appendChild(r);
+			});
+		}
+	}
+	rotateSingleFile(e) {
+		let t = this.files[e];
+		if (t && t.bytes) try {
+			let e = Q(t.bytes, 90);
+			e.arrayBuffer().then((n) => {
+				t.bytes = new Uint8Array(n), t.size = e.size, this.renderQueue(), r.show("Page Rotated", `${t.name} rotated 90° clockwise.`, "info");
+			});
+		} catch (e) {
+			r.show("Rotate Error", e.message, "error");
+		}
+	}
+	removeFile(e) {
+		this.files.splice(e, 1), this.updateStats(), this.renderQueue();
+	}
+	handleRotateAll() {
+		if (this.files.length === 0) {
+			r.show("Queue Empty", "Add PDF files first.", "info");
+			return;
+		}
+		let e = 0;
+		this.files.forEach((t) => {
+			if (t.bytes) try {
+				let n = Q(t.bytes, 90);
+				n.arrayBuffer().then((i) => {
+					t.bytes = new Uint8Array(i), t.size = n.size, e++, e === this.files.length && (this.renderQueue(), r.show("All Rotated", `Rotated all ${this.files.length} PDFs by 90°.`, "success"));
+				});
+			} catch {}
+		});
+	}
+	handleClearQueue() {
+		this.files = [], this.updateStats(), this.renderQueue(), r.show("Queue Cleared", "PDF workstation reset.", "info");
+	}
+	handleFilterOversized() {
+		let e = this.files.length;
+		this.files = this.files.filter((e) => e.size > 262144), this.updateStats(), this.renderQueue(), r.show("Filter Applied", `Kept ${this.files.length} oversized files (>256 KB) from ${e}.`, "info");
+	}
+	async handleStartProcess() {
+		if (this.files.length === 0) {
+			r.show("No Files", "Please add PDF files to process.", "warning");
+			return;
+		}
+		if (this.isProcessing) return;
+		this.isProcessing = !0;
+		let e = this.activeTool;
+		r.show("Processing Started", `Running ${this._getToolDisplayName(e)} on ${this.files.length} files...`, "info");
+		try {
+			if (e === "merge_pdf") {
+				let e = ce(this.files.map((e) => e.bytes).filter(Boolean), "portrait");
+				this._downloadBlob(e, "Merged_Admission_Dossier.pdf"), r.show("Merge Complete!", "Merged PDF Dossier generated and saved.", "success");
+			} else if (e === "compress_pdf") {
+				let e = 0;
+				for (let t of this.files) {
+					if (!t.bytes) continue;
+					let n = Z(t.bytes), r;
+					r = n.length > 0 ? X(n, "portrait") : new Blob([t.bytes], { type: "application/pdf" });
+					let i = le(t.name, r.size);
+					this._downloadBlob(r, i), e++;
+				}
+				r.show("Compression Complete!", `Compressed ${e} files to safe MahaDBT thresholds.`, "success");
+			} else if (e === "split_pdf") {
+				let e = 0;
+				for (let t of this.files) t.bytes && se(t.bytes, t.name).forEach((t) => {
+					this._downloadBlob(t.blob, t.fileName), e++;
+				});
+				r.show("Split Complete!", `Extracted ${e} individual PDF pages.`, "success");
+			} else if (e === "pdf_to_jpg") {
+				let e = 0;
+				for (let t of this.files) t.bytes && oe(t.bytes, t.name).forEach((t) => {
+					this._downloadBlob(t.blob, t.fileName), e++;
+				});
+				r.show("Conversion Complete!", `Extracted ${e} high-resolution JPG pages.`, "success");
+			} else if (e === "rotate_pdf") {
+				let e = 0;
+				for (let t of this.files) {
+					if (!t.bytes) continue;
+					let n = Q(t.bytes, 90);
+					this._downloadBlob(n, t.name), e++;
+				}
+				r.show("Rotation Complete!", `Rotated and saved ${e} PDF documents.`, "success");
+			} else {
+				let e = 0;
+				for (let t of this.files) {
+					if (!t.bytes) continue;
+					let n = X(Z(t.bytes), "portrait");
+					this._downloadBlob(n, t.name), e++;
+				}
+				r.show("Enhancement Complete!", `Watermarks filtered and ${e} PDFs enhanced.`, "success");
+			}
+		} catch (e) {
+			r.show("Operation Failed", e.message, "error");
+		} finally {
+			this.isProcessing = !1;
+		}
+	}
+	_downloadBlob(e, t) {
+		let n = URL.createObjectURL(e), r = document.createElement("a");
+		r.href = n, r.download = t, r.style.display = "none", document.body.appendChild(r), r.click(), setTimeout(() => {
+			document.body.removeChild(r), URL.revokeObjectURL(n);
+		}, 1e3);
+	}
+};
+function de() {
+	let e = new ue();
 	return e.init(), e;
 }
 // src/ui/index.js
 function $() {
-	new n().init(), new i().init(), Q(), J(), a();
+	new n().init(), new i().init(), ie(), K(), de(), a();
 	let e = document.getElementById("themeToggleBtn");
 	e && e.addEventListener("click", () => {
 		document.documentElement.classList.toggle("dark");
