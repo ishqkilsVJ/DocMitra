@@ -11,6 +11,7 @@ import { toast } from './toast.js';
 import { initRenamerUI } from './renamer-ui.js';
 import { initSettingsUI } from './settings-ui.js';
 import { initPdfStudioUI } from './pdf-studio-ui.js';
+import { initImageStudioUI } from './image-studio-ui.js';
 
 export function initAppShell() {
   // Initialize View Navigation
@@ -27,6 +28,9 @@ export function initAppShell() {
 
   // Initialize PDF Studio UI
   const pdfStudioUI = initPdfStudioUI();
+
+  // Initialize Image Studio UI
+  const imageStudioUI = initImageStudioUI();
 
   // Wire Placeholder Action Buttons to Toast
   wirePlaceholderActions();

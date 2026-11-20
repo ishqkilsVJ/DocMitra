@@ -182,10 +182,6 @@ var e = [
 // src/ui/placeholders.js
 function a() {
 	[
-		"#startImageProcessBtn",
-		"#btnAutoCropPassport",
-		"#btnClearImageQueue",
-		"#btnFilterOversized",
 		"#btnPrintDocuments",
 		"#btnCancelPrint",
 		"#btnPrinterSelect",
@@ -1121,7 +1117,7 @@ function D(e) {
 		"LPT9"
 	].includes(n) ? "This file name is reserved by Windows OS." : "";
 }
-async function O(e, t, n = null) {
+async function ee(e, t, n = null) {
 	let r = [];
 	try {
 		let i = 0;
@@ -1174,7 +1170,7 @@ async function O(e, t, n = null) {
 		throw e;
 	}
 }
-async function ee(e, t, n = null) {
+async function te(e, t, n = null) {
 	let r = [...t].reverse(), i = 0;
 	for (let t of r) {
 		if (e && e.nativePath) {
@@ -1194,7 +1190,7 @@ async function ee(e, t, n = null) {
 		i++, n && n(Math.round(i / r.length * 100), `Undo: ${i}/${r.length}`);
 	}
 }
-var k = new class {
+var O = new class {
 	constructor(e = 10) {
 		this.history = [], this.maxHistory = e;
 	}
@@ -1220,7 +1216,7 @@ var k = new class {
 	}
 }();
 // src/libraries/export-reports-library.js
-function te(e, t) {
+function k(e, t) {
 	let n = new Blob(["﻿" + t], { type: "text/csv;charset=utf-8;" }), r = URL.createObjectURL(n), i = document.createElement("a");
 	i.setAttribute("href", r), i.setAttribute("download", e), i.style.display = "none", document.body.appendChild(i), i.click(), document.body.removeChild(i), URL.revokeObjectURL(r);
 }
@@ -1229,7 +1225,7 @@ function A(e) {
 	let t = String(e);
 	return t.includes("\"") || t.includes(",") || t.includes("\n") || t.includes("\r") ? `"${t.replace(/"/g, "\"\"")}"` : `"${t}"`;
 }
-function j(e, t, n = "Checklist") {
+function ne(e, t, n = "Checklist") {
 	let r = [[
 		"Sr No",
 		"Student Name",
@@ -1264,7 +1260,7 @@ function j(e, t, n = "Checklist") {
 	}), r.join("\r\n");
 }
 // src/libraries/checklist-library.js
-function M(e) {
+function j(e) {
 	return Object.fromEntries(Object.entries(e).map(([e, t]) => [e, t.map((e) => Array.isArray(e) ? {
 		name: e[0],
 		keywords: e[1],
@@ -1272,18 +1268,18 @@ function M(e) {
 	} : e)]));
 }
 // src/services/storage-service.js
-var N = "v3_exact_single", P = u(), F = (e, t) => {
+var M = "v3_exact_single", N = u(), P = (e, t) => {
 	try {
 		let n = localStorage.getItem(e);
 		return n ? JSON.parse(n) : t;
 	} catch {
 		return t;
 	}
-}, I = (e, t) => {
+}, F = (e, t) => {
 	try {
 		localStorage.setItem(e, JSON.stringify(t));
 	} catch {}
-}, L = (e) => {
+}, re = (e) => {
 	let t = {};
 	Object.entries(e || {}).forEach(([e, n]) => {
 		let r = /^12\s*LC$/i.test(e) || e === "12TH LEAVING CERTIFICATE" ? "12TH LC" : e;
@@ -1293,7 +1289,7 @@ var N = "v3_exact_single", P = u(), F = (e, t) => {
 	return Object.entries(t).forEach(([e, r]) => {
 		e !== "12TH MARKSHEET AND PASSING" && (n[e] = r, e === "12TH PASSING CERTIFICATE" && t["12TH MARKSHEET AND PASSING"] && (n["12TH MARKSHEET AND PASSING"] = t["12TH MARKSHEET AND PASSING"]));
 	}), n;
-}, R = (e) => {
+}, I = (e) => {
 	let t = e.name === "12TH LEAVING CERTIFICATE" ? "12TH LC" : e.name;
 	return {
 		...e,
@@ -1301,32 +1297,32 @@ var N = "v3_exact_single", P = u(), F = (e, t) => {
 		keywords: [...new Set(e.keywords || [])],
 		short: e.short || t.slice(0, 18)
 	};
-}, z = (e) => {
+}, L = (e) => {
 	let t = e.filter((e) => e.name === "12TH MARKSHEET AND PASSING");
 	if (!t.length) return e;
 	let n = e.filter((e) => e.name !== "12TH MARKSHEET AND PASSING"), r = n.findIndex((e) => e.name === "12TH PASSING CERTIFICATE");
 	return n.splice(r < 0 ? n.length : r + 1, 0, ...t), n;
-}, B = (e) => {
-	let t = M(y), n = e || {}, r = {};
+}, ie = (e) => {
+	let t = j(y), n = e || {}, r = {};
 	return Object.keys(t).forEach((e) => {
-		let i = Array.isArray(n[e]) ? n[e].map(R) : [], a = new Map(i.map((e) => [e.name.toUpperCase(), e]));
+		let i = Array.isArray(n[e]) ? n[e].map(I) : [], a = new Map(i.map((e) => [e.name.toUpperCase(), e]));
 		t[e].forEach((e) => {
-			let t = R(e);
+			let t = I(e);
 			a.has(t.name.toUpperCase()) || i.push(t);
-		}), r[e] = z(i);
+		}), r[e] = L(i);
 	}), Object.entries(n).forEach(([e, t]) => {
-		r[e] || (r[e] = z(t.map(R)));
+		r[e] || (r[e] = L(t.map(I)));
 	}), r;
 };
-function V() {
+function R() {
 	let e = localStorage.getItem("dictVersion"), t, n;
-	e === N ? (t = L(F("renameSettings", P)), n = F("renameProfiles", { Default: P })) : (t = P, n = { Default: P }, I("renameSettings", t), I("renameProfiles", n), localStorage.setItem("dictVersion", N));
+	e === M ? (t = re(P("renameSettings", N)), n = P("renameProfiles", { Default: N })) : (t = N, n = { Default: N }, F("renameSettings", t), F("renameProfiles", n), localStorage.setItem("dictVersion", M));
 	let r = localStorage.getItem("checklistVersion"), i;
-	r === "2026.11.passing_canonical_v2" ? i = B(F("checklists", null)) : (i = M(y), I("checklists", i), localStorage.setItem("checklistVersion", v));
+	r === "2026.11.passing_canonical_v2" ? i = ie(P("checklists", null)) : (i = j(y), F("checklists", i), localStorage.setItem("checklistVersion", v));
 	let a = {
 		...g,
-		...F("spellingCorrections", {}) || {}
-	}, o = F("linkedRules", _);
+		...P("spellingCorrections", {}) || {}
+	}, o = P("linkedRules", _);
 	return {
 		groups: t,
 		checklists: i,
@@ -1337,7 +1333,7 @@ function V() {
 		active: Object.keys(n)[0] || "Default"
 	};
 }
-function H() {
+function ae() {
 	return new Promise((e, t) => {
 		if (!("indexedDB" in window)) return t(/* @__PURE__ */ Error("IndexedDB unavailable"));
 		let n = indexedDB.open(b.name, b.version);
@@ -1346,13 +1342,13 @@ function H() {
 		}, n.onsuccess = () => e(n.result), n.onerror = () => t(n.error || /* @__PURE__ */ Error("IndexedDB open failed"));
 	});
 }
-function U(e) {
-	return H().then((t) => new Promise((n, r) => {
+function oe(e) {
+	return ae().then((t) => new Promise((n, r) => {
 		let i = t.transaction(b.store, "readwrite");
 		i.objectStore(b.store).put(e, b.key), i.oncomplete = () => n(!0), i.onerror = () => r(i.error);
 	}));
 }
-function W(e) {
+function z(e) {
 	let t = {
 		groups: e.groups,
 		checklists: e.checklists,
@@ -1362,10 +1358,10 @@ function W(e) {
 		style: e.style,
 		savedAt: (/* @__PURE__ */ new Date()).toISOString()
 	};
-	I("renameSettings", t.groups), I("checklists", t.checklists), I("spellingCorrections", t.spelling), I("renameProfiles", t.profiles), I("linkedRules", t.linkedRules), localStorage.setItem("nameStyle", t.style), U(t).catch(() => {});
+	F("renameSettings", t.groups), F("checklists", t.checklists), F("spellingCorrections", t.spelling), F("renameProfiles", t.profiles), F("linkedRules", t.linkedRules), localStorage.setItem("nameStyle", t.style), oe(t).catch(() => {});
 }
 // src/ui/renamer-ui.js
-var G = class {
+var se = class {
 	constructor() {
 		this.state = {
 			folder: null,
@@ -1486,7 +1482,7 @@ var G = class {
 		];
 	}
 	init() {
-		this.state.settings = V(), this.state.style = this.state.settings.style || "preserve", this._bindDOM(), this._bindKeyboardShortcuts(), console.info("[DocMitra Renamer] Renamer UI manager initialized.");
+		this.state.settings = R(), this.state.style = this.state.settings.style || "preserve", this._bindDOM(), this._bindKeyboardShortcuts(), console.info("[DocMitra Renamer] Renamer UI manager initialized.");
 	}
 	_bindDOM() {
 		let e = document.getElementById("btnSelectFolder");
@@ -1801,9 +1797,9 @@ var G = class {
 		}));
 		r.show("Executing Batch Rename", `Processing ${t.length} files atomically...`, "info");
 		try {
-			await O(this.state.folder, t, (e, t) => {
+			await ee(this.state.folder, t, (e, t) => {
 				console.log(`[Rename Progress] ${e}%: ${t}`);
-			}), k.pushBatch(this.state.folder, t), e.forEach((e) => {
+			}), O.pushBatch(this.state.folder, t), e.forEach((e) => {
 				e.name = e.targetName, e.isRenamed = !0, e.status = "renamed";
 			}), r.show("Batch Complete!", `Successfully renamed ${t.length} files.`, "success"), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview();
 		} catch (e) {
@@ -1811,14 +1807,14 @@ var G = class {
 		}
 	}
 	async handleUndo() {
-		if (!k.canUndo()) {
+		if (!O.canUndo()) {
 			r.show("Undo Stack Empty", "No previous rename batch to undo.", "info");
 			return;
 		}
-		let e = k.pop();
+		let e = O.pop();
 		r.show("Reverting Changes", `Restoring ${e.plan.length} files...`, "info");
 		try {
-			await ee(e.dir, e.plan, (e, t) => {
+			await te(e.dir, e.plan, (e, t) => {
 				console.log(`[Undo Progress] ${e}%: ${t}`);
 			}), e.plan.forEach((e) => {
 				let t = this.state.files.find((t) => t.targetName === e.next || t.name === e.next);
@@ -1852,7 +1848,7 @@ var G = class {
 			r.show("Nothing to Export", "Queue is empty.", "info");
 			return;
 		}
-		let e = j([{
+		let e = ne([{
 			studentName: this.state.studentName || "Student",
 			folderName: this.state.folder?.name || "Folder",
 			summary: {
@@ -1869,7 +1865,7 @@ var G = class {
 				missingList: this.state.files.filter((e) => !e.isMatched && !e.isRenamed).map((e) => e.name)
 			}
 		}], this.state.files.map((e) => ({ name: e.docType || e.name })), "Admission Audit");
-		te(`DocMitra_Audit_${(this.state.studentName || "Batch").replace(/\s+/g, "_")}.csv`, e), r.show("Audit Exported", "CSV report downloaded with UTF-8 BOM.", "success");
+		k(`DocMitra_Audit_${(this.state.studentName || "Batch").replace(/\s+/g, "_")}.csv`, e), r.show("Audit Exported", "CSV report downloaded with UTF-8 BOM.", "success");
 	}
 	handleClearQueue() {
 		this.state.files = [], this.state.folder = null, this.state.currentIndex = 0, this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), r.show("Queue Cleared", "Intake workstation reset.", "info");
@@ -1931,12 +1927,12 @@ var G = class {
 		l.className = "text-center border-t pt-2 border-outline-variant/30 text-[10px] font-mono-code text-secondary", l.textContent = "Air-Gapped High-Precision Preview Stage", e.appendChild(l);
 	}
 };
-function K() {
-	let e = new G();
+function B() {
+	let e = new se();
 	return e.init(), e;
 }
 // src/services/export-import-service.js
-function q(e) {
+function V(e) {
 	let t = {
 		format: "BulkStudentRenamerSettings",
 		version: 1,
@@ -1949,7 +1945,7 @@ function q(e) {
 	}, n = new Blob([JSON.stringify(t, null, 2)], { type: "application/json" }), r = URL.createObjectURL(n), i = document.createElement("a");
 	i.href = r, i.download = `student-renamer-settings-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.json`, i.click(), setTimeout(() => URL.revokeObjectURL(r), 1e3);
 }
-function ne(e, t) {
+function H(e, t) {
 	return new Promise((n, r) => {
 		if (!e) return r(/* @__PURE__ */ Error("No backup file selected."));
 		if (e.size > 5242880) return r(/* @__PURE__ */ Error("Backup file exceeds maximum allowed size (5 MB)."));
@@ -1972,7 +1968,7 @@ function ne(e, t) {
 	});
 }
 // src/ui/settings-ui.js
-var re = class {
+var U = class {
 	constructor() {
 		this.state = null, this.initialState = null, this.activeChecklist = "11th / 12th (FYJC / SYJC)";
 	}
@@ -1980,7 +1976,7 @@ var re = class {
 		this.loadState(), this._bindButtons(), this.renderAll(), console.info("[DocMitra Settings] Settings UI manager initialized.");
 	}
 	loadState() {
-		this.state = V(), this.initialState = JSON.parse(JSON.stringify(this.state));
+		this.state = R(), this.initialState = JSON.parse(JSON.stringify(this.state));
 	}
 	_bindButtons() {
 		let e = document.getElementById("saveRulesBtn");
@@ -1994,7 +1990,7 @@ var re = class {
 		let a = document.getElementById("btnExportSettingsJSON");
 		a && a.addEventListener("click", () => {
 			try {
-				q(this.state), r.show("Settings Exported", "Configuration JSON file downloaded.", "success");
+				V(this.state), r.show("Settings Exported", "Configuration JSON file downloaded.", "success");
 			} catch (e) {
 				r.show("Export Error", e.message, "error");
 			}
@@ -2003,7 +1999,7 @@ var re = class {
 		o && s && (o.addEventListener("click", () => s.click()), s.addEventListener("change", async (e) => {
 			let t = e.target.files?.[0];
 			if (t) try {
-				await ne(t, this.state), W(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Import Successful", "System configuration restored and verified.", "success");
+				await H(t, this.state), z(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Import Successful", "System configuration restored and verified.", "success");
 			} catch (e) {
 				r.show("Import Failed", e.message || "Invalid settings JSON format.", "error");
 			} finally {
@@ -2250,12 +2246,12 @@ var re = class {
 		});
 	}
 	handleSave() {
-		W(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), r.show("Settings Saved", "System rules updated and applied to workstation.", "success");
+		z(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), r.show("Settings Saved", "System rules updated and applied to workstation.", "success");
 		let e = document.getElementById("settings-modal-overlay");
 		e && e.classList.add("hidden"), document.body.style.overflow = "";
 	}
 	handleReset() {
-		window.confirm("Reset all rules, shortcuts, and checklists to factory defaults?") && (this.state.groups = u(), this.state.checklists = JSON.parse(JSON.stringify(y)), W(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Factory Defaults Restored", "All default rules loaded.", "info"));
+		window.confirm("Reset all rules, shortcuts, and checklists to factory defaults?") && (this.state.groups = u(), this.state.checklists = JSON.parse(JSON.stringify(y)), z(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Factory Defaults Restored", "All default rules loaded.", "info"));
 	}
 	handleDiscard() {
 		this.state = JSON.parse(JSON.stringify(this.initialState)), this.renderAll(), r.show("Changes Discarded", "Reverted to previous configuration.", "info");
@@ -2263,12 +2259,12 @@ var re = class {
 		e && e.classList.add("hidden"), document.body.style.overflow = "";
 	}
 };
-function ie() {
-	let e = new re();
+function W() {
+	let e = new U();
 	return e.init(), e;
 }
 // src/modules/pdf-studio.js
-var J = {
+var G = {
 	A4_PORTRAIT: {
 		width: 595.28,
 		height: 841.89,
@@ -2280,7 +2276,7 @@ var J = {
 		label: "A4 Landscape"
 	}
 };
-function Y(e) {
+function K(e) {
 	let t = 2, n = e.length;
 	for (; t < n && e[t] === 255;) {
 		let r = e[t + 1];
@@ -2302,7 +2298,7 @@ function Y(e) {
 		height: 842
 	};
 }
-function X(e = [], t = "portrait", n = 0) {
+function q(e = [], t = "portrait", n = 0) {
 	if (!e.length) throw Error("No images provided for PDF creation.");
 	let r = [], i = 0, a = (e) => new TextEncoder().encode(e), o = [], s = (e) => {
 		o.push(e), i += e.length;
@@ -2312,8 +2308,8 @@ function X(e = [], t = "portrait", n = 0) {
 	for (let e = 0; e < c; e++) l.push(3 + e * 3);
 	r.push(i), s(a(`2 0 obj\n<< /Type /Pages /Kids [ ${l.map((e) => `${e} 0 R`).join(" ")} ] /Count ${c} >>\nendobj\n`));
 	for (let o = 0; o < c; o++) {
-		let c = e[o], l = 3 + o * 3, u = l + 1, d = l + 2, f = c.bytes, { width: p, height: m } = c.width && c.height ? c : Y(f), h = J.A4_PORTRAIT.width, g = J.A4_PORTRAIT.height;
-		(t === "landscape" || t === "fit" && p > m) && (h = J.A4_LANDSCAPE.width, g = J.A4_LANDSCAPE.height);
+		let c = e[o], l = 3 + o * 3, u = l + 1, d = l + 2, f = c.bytes, { width: p, height: m } = c.width && c.height ? c : K(f), h = G.A4_PORTRAIT.width, g = G.A4_PORTRAIT.height;
+		(t === "landscape" || t === "fit" && p > m) && (h = G.A4_LANDSCAPE.width, g = G.A4_LANDSCAPE.height);
 		let _ = h - 36, v = g - 36, y = Math.min(_ / p, v / m), b = p * y, x = m * y, S = (h - b) / 2, C = (g - x) / 2, w = n ? ` /Rotate ${n}` : "";
 		r.push(i), s(a(`${l} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${h.toFixed(2)} ${g.toFixed(2)}]${w} /Contents ${u} 0 R /Resources << /XObject << /Im${o + 1} ${d} 0 R >> >> >>\nendobj\n`));
 		let T = `q ${b.toFixed(2)} 0 0 ${x.toFixed(2)} ${S.toFixed(2)} ${C.toFixed(2)} cm /Im${o + 1} Do Q\n`, E = T.length;
@@ -2324,13 +2320,13 @@ function X(e = [], t = "portrait", n = 0) {
 	for (let e of r) s(a(`${String(e).padStart(10, "0")} 00000 n \n`));
 	return s(a(`trailer\n<< /Size ${d} /Root 1 0 R >>\nstartxref\n${u}\n%%EOF\n`)), new Blob(o, { type: "application/pdf" });
 }
-function ae(e) {
+function ce(e) {
 	let t = [], n = e.length, r = 0;
 	for (; r < n - 3;) if (e[r] === 255 && e[r + 1] === 216 && e[r + 2] === 255) {
 		let i = r;
 		for (r += 2; r < n - 1;) {
 			if (e[r] === 255 && e[r + 1] === 217) {
-				let n = r + 2, a = e.slice(i, n), o = Y(a);
+				let n = r + 2, a = e.slice(i, n), o = K(a);
 				t.push({
 					bytes: a,
 					width: o.width,
@@ -2343,8 +2339,8 @@ function ae(e) {
 	} else r++;
 	return t;
 }
-function Z(e) {
-	let t = ae(e);
+function J(e) {
+	let t = ce(e);
 	if (!t.length) return [];
 	if (t.length === 1) return t;
 	let n = Math.max(...t.map((e) => (e.width || 0) * (e.height || 0))), r = Math.max(...t.map((e) => e.bytes?.length || 0)), i = t.filter((e) => {
@@ -2356,8 +2352,8 @@ function Z(e) {
 		return r === n ? (t.bytes?.length || 0) - (e.bytes?.length || 0) : r - n;
 	});
 }
-function oe(e, t = "Document.pdf") {
-	let n = Z(e), r = t.replace(/\.pdf$/i, "");
+function le(e, t = "Document.pdf") {
+	let n = J(e), r = t.replace(/\.pdf$/i, "");
 	return n.length ? n.map((e, t) => {
 		let i = n.length === 1 ? `${r}.jpg` : `${r}_page_${t + 1}.jpg`, a = new Blob([e.bytes], { type: "image/jpeg" });
 		return {
@@ -2370,10 +2366,10 @@ function oe(e, t = "Document.pdf") {
 		};
 	}) : [];
 }
-function se(e, t = "Document.pdf") {
-	let n = Z(e), r = t.replace(/\.pdf$/i, "");
+function ue(e, t = "Document.pdf") {
+	let n = J(e), r = t.replace(/\.pdf$/i, "");
 	return n.length ? n.map((e, t) => {
-		let n = `${r}_page_${t + 1}.pdf`, i = X([e], "portrait");
+		let n = `${r}_page_${t + 1}.pdf`, i = q([e], "portrait");
 		return {
 			fileName: n,
 			blob: i,
@@ -2382,20 +2378,20 @@ function se(e, t = "Document.pdf") {
 		};
 	}) : [];
 }
-function ce(e = [], t = "portrait") {
+function de(e = [], t = "portrait") {
 	let n = [];
 	for (let t of e) {
-		let e = Z(t);
+		let e = J(t);
 		n.push(...e);
 	}
 	if (!n.length) throw Error("No document images could be extracted to merge PDFs.");
-	return X(n, t);
+	return q(n, t);
 }
-function Q(e, t = 90) {
+function Y(e, t = 90) {
 	let n = (t % 360 + 360) % 360;
 	if (n === 0) return new Blob([e], { type: "application/pdf" });
-	let r = Z(e);
-	if (r.length > 0) return X(r, "portrait", n);
+	let r = J(e);
+	if (r.length > 0) return q(r, "portrait", n);
 	try {
 		let t = "", r = 65536;
 		for (let n = 0; n < e.length; n += r) t += String.fromCharCode.apply(null, e.subarray(n, n + r));
@@ -2410,13 +2406,13 @@ function Q(e, t = 90) {
 	}
 	throw Error("No pages found in PDF to rotate.");
 }
-function le(e, t, n = "auto") {
+function fe(e, t, n = "auto") {
 	if (!e) return "document.pdf";
 	let r = e.lastIndexOf("."), i = r === -1 ? e : e.slice(0, r), a = r === -1 ? "" : e.slice(r), o = i.replace(/[\s_-]+\d+\s*(?:KB|MB)$/i, "").trim();
 	return n === "MB" || n === "auto" && t >= 10485760 ? `${o} ${Math.max(1, Math.round(Number(t || 0) / 1048576))} MB${a}` : `${o} ${Math.max(1, Math.round(Number(t || 0) / 1024))} KB${a}`;
 }
 // src/ui/pdf-studio-ui.js
-var ue = class {
+var X = class {
 	constructor() {
 		this.activeTool = "compress_pdf", this.files = [], this.isProcessing = !1;
 	}
@@ -2633,7 +2629,7 @@ var ue = class {
 	rotateSingleFile(e) {
 		let t = this.files[e];
 		if (t && t.bytes) try {
-			let e = Q(t.bytes, 90);
+			let e = Y(t.bytes, 90);
 			e.arrayBuffer().then((n) => {
 				t.bytes = new Uint8Array(n), t.size = e.size, this.renderQueue(), r.show("Page Rotated", `${t.name} rotated 90° clockwise.`, "info");
 			});
@@ -2652,7 +2648,7 @@ var ue = class {
 		let e = 0;
 		this.files.forEach((t) => {
 			if (t.bytes) try {
-				let n = Q(t.bytes, 90);
+				let n = Y(t.bytes, 90);
 				n.arrayBuffer().then((i) => {
 					t.bytes = new Uint8Array(i), t.size = n.size, e++, e === this.files.length && (this.renderQueue(), r.show("All Rotated", `Rotated all ${this.files.length} PDFs by 90°.`, "success"));
 				});
@@ -2677,27 +2673,27 @@ var ue = class {
 		r.show("Processing Started", `Running ${this._getToolDisplayName(e)} on ${this.files.length} files...`, "info");
 		try {
 			if (e === "merge_pdf") {
-				let e = ce(this.files.map((e) => e.bytes).filter(Boolean), "portrait");
+				let e = de(this.files.map((e) => e.bytes).filter(Boolean), "portrait");
 				this._downloadBlob(e, "Merged_Admission_Dossier.pdf"), r.show("Merge Complete!", "Merged PDF Dossier generated and saved.", "success");
 			} else if (e === "compress_pdf") {
 				let e = 0;
 				for (let t of this.files) {
 					if (!t.bytes) continue;
-					let n = Z(t.bytes), r;
-					r = n.length > 0 ? X(n, "portrait") : new Blob([t.bytes], { type: "application/pdf" });
-					let i = le(t.name, r.size);
+					let n = J(t.bytes), r;
+					r = n.length > 0 ? q(n, "portrait") : new Blob([t.bytes], { type: "application/pdf" });
+					let i = fe(t.name, r.size);
 					this._downloadBlob(r, i), e++;
 				}
 				r.show("Compression Complete!", `Compressed ${e} files to safe MahaDBT thresholds.`, "success");
 			} else if (e === "split_pdf") {
 				let e = 0;
-				for (let t of this.files) t.bytes && se(t.bytes, t.name).forEach((t) => {
+				for (let t of this.files) t.bytes && ue(t.bytes, t.name).forEach((t) => {
 					this._downloadBlob(t.blob, t.fileName), e++;
 				});
 				r.show("Split Complete!", `Extracted ${e} individual PDF pages.`, "success");
 			} else if (e === "pdf_to_jpg") {
 				let e = 0;
-				for (let t of this.files) t.bytes && oe(t.bytes, t.name).forEach((t) => {
+				for (let t of this.files) t.bytes && le(t.bytes, t.name).forEach((t) => {
 					this._downloadBlob(t.blob, t.fileName), e++;
 				});
 				r.show("Conversion Complete!", `Extracted ${e} high-resolution JPG pages.`, "success");
@@ -2705,7 +2701,7 @@ var ue = class {
 				let e = 0;
 				for (let t of this.files) {
 					if (!t.bytes) continue;
-					let n = Q(t.bytes, 90);
+					let n = Y(t.bytes, 90);
 					this._downloadBlob(n, t.name), e++;
 				}
 				r.show("Rotation Complete!", `Rotated and saved ${e} PDF documents.`, "success");
@@ -2713,7 +2709,7 @@ var ue = class {
 				let e = 0;
 				for (let t of this.files) {
 					if (!t.bytes) continue;
-					let n = X(Z(t.bytes), "portrait");
+					let n = q(J(t.bytes), "portrait");
 					this._downloadBlob(n, t.name), e++;
 				}
 				r.show("Enhancement Complete!", `Watermarks filtered and ${e} PDFs enhanced.`, "success");
@@ -2731,13 +2727,406 @@ var ue = class {
 		}, 1e3);
 	}
 };
-function de() {
-	let e = new ue();
+function pe() {
+	let e = new X();
+	return e.init(), e;
+}
+// src/modules/image-studio.js
+function me(e, t, n, r = "magic_color") {
+	if (!e || r === "none" || r === "original") return;
+	let i = e.getImageData(0, 0, t, n), a = i.data;
+	for (let e = 0; e < a.length; e += 4) {
+		let t = a[e], n = a[e + 1], i = a[e + 2], o = .299 * t + .587 * n + .114 * i;
+		if (r === "magic_color" || r === "enhanced") o > 165 ? (t = Math.min(255, t * 1.18 + 15), n = Math.min(255, n * 1.18 + 15), i = Math.min(255, i * 1.18 + 15)) : o < 115 && (t = Math.max(0, t * .82), n = Math.max(0, n * .82), i = Math.max(0, i * .82)), a[e] = t, a[e + 1] = n, a[e + 2] = i;
+		else if (r === "bw_scan") {
+			let t = o > 140 ? 255 : 0;
+			a[e] = t, a[e + 1] = t, a[e + 2] = t;
+		} else if (r === "brighten") a[e] = Math.min(255, t * 1.25 + 20), a[e + 1] = Math.min(255, n * 1.25 + 20), a[e + 2] = Math.min(255, i * 1.25 + 20);
+		else if (r === "sharp_contrast") {
+			let r = 1.35;
+			a[e] = Math.min(255, Math.max(0, ((t / 255 - .5) * r + .5) * 255)), a[e + 1] = Math.min(255, Math.max(0, ((n / 255 - .5) * r + .5) * 255)), a[e + 2] = Math.min(255, Math.max(0, ((i / 255 - .5) * r + .5) * 255));
+		} else r === "grayscale" && (a[e] = o, a[e + 1] = o, a[e + 2] = o);
+	}
+	e.putImageData(i, 0, 0);
+}
+function Z(e, t = 0) {
+	let n = document.createElement("canvas"), r = (t % 360 + 360) % 360, i = r === 90 || r === 270, a = i ? e.height : e.width, o = i ? e.width : e.height;
+	n.width = a, n.height = o;
+	let s = n.getContext("2d");
+	return s.save(), s.translate(n.width / 2, n.height / 2), s.rotate(r * Math.PI / 180), s.drawImage(e, -e.width / 2, -e.height / 2), s.restore(), n;
+}
+async function Q(e, t = 250, n = {}) {
+	let { rotation: r = 0, filterMode: i = "none", outputMime: a = "image/jpeg", maxDimension: o = 2400 } = n;
+	return new Promise((n, s) => {
+		let c = new Image(), l = URL.createObjectURL(e);
+		c.onload = async () => {
+			URL.revokeObjectURL(l);
+			try {
+				let e = c.width, s = c.height;
+				if (Math.max(e, s) > o) {
+					let t = o / Math.max(e, s);
+					e = Math.round(e * t), s = Math.round(s * t);
+				}
+				let l;
+				if (r === 0 ? (l = document.createElement("canvas"), l.width = e, l.height = s, l.getContext("2d").drawImage(c, 0, 0, e, s)) : l = Z(c, r), i && i !== "none" && me(l.getContext("2d"), l.width, l.height, i), !t || t <= 0) {
+					let e = await new Promise((e) => l.toBlob(e, a, .9));
+					return n({
+						blob: e,
+						size: e.size,
+						targetHit: !0,
+						width: l.width,
+						height: l.height,
+						quality: .9
+					});
+				}
+				let u = t * 1024, d = .08, f = .96, p = null, m = .85;
+				for (let e = 0; e < 6; e++) {
+					let e = (d + f) / 2, t = await new Promise((t) => l.toBlob(t, a, e));
+					if (p = t, m = e, t.size > u) f = e;
+					else if (d = e, t.size >= u * .92) break;
+				}
+				if (p && p.size > u) {
+					let e = l, t = p, n = 0;
+					for (; t && t.size > u && n < 8 && e.width > 250;) {
+						n++;
+						let r = t.size, i = Math.min(.88, Math.max(.2, Math.sqrt(u / r) * .95)), o = Math.max(250, Math.round(e.width * i)), s = Math.max(300, Math.round(e.height * i)), c = document.createElement("canvas");
+						c.width = o, c.height = s;
+						let l = c.getContext("2d");
+						if (l && (l.imageSmoothingEnabled = !0, l.imageSmoothingQuality = "high", l.drawImage(e, 0, 0, o, s)), t = await new Promise((e) => c.toBlob(e, a, m)), e = c, t && t.size <= u) break;
+					}
+					t && (p = t, l = e);
+				}
+				n({
+					blob: p,
+					size: p ? p.size : 0,
+					targetHit: p ? p.size <= u * 1.05 : !1,
+					width: l.width,
+					height: l.height,
+					quality: Math.round(m * 100)
+				});
+			} catch (e) {
+				s(e);
+			}
+		}, c.onerror = () => {
+			URL.revokeObjectURL(l), s(/* @__PURE__ */ Error("Failed to load image file for compression"));
+		}, c.src = l;
+	});
+}
+async function he(e, t = "image/png") {
+	return new Promise((n, r) => {
+		let i = new Image(), a = URL.createObjectURL(e);
+		i.onload = () => {
+			URL.revokeObjectURL(a);
+			try {
+				let e = document.createElement("canvas");
+				e.width = i.width, e.height = i.height, e.getContext("2d").drawImage(i, 0, 0), e.toBlob((i) => {
+					if (!i) return r(/* @__PURE__ */ Error("Canvas format conversion failed"));
+					n({
+						blob: i,
+						size: i.size,
+						mime: t,
+						width: e.width,
+						height: e.height
+					});
+				}, t, .92);
+			} catch (e) {
+				r(e);
+			}
+		}, i.onerror = () => {
+			URL.revokeObjectURL(a), r(/* @__PURE__ */ Error("Failed to load image for format conversion"));
+		}, i.src = a;
+	});
+}
+// src/ui/image-studio-ui.js
+var ge = class {
+	constructor() {
+		this.activeTool = "compress_photo_sign", this.files = [], this.isProcessing = !1;
+	}
+	init() {
+		this._bindRibbonTools(), this._bindActions(), this._bindDropzone(), this.renderQueue(), console.info("[DocMitra Image Studio] Image Studio UI manager initialized.");
+	}
+	_bindRibbonTools() {
+		let e = document.querySelectorAll("#view-image-studio .tool-ribbon-btn"), t = [
+			"compress_photo_sign",
+			"passport_crop",
+			"sign_clean_invert",
+			"image_to_pdf",
+			"magic_color",
+			"resize_convert"
+		];
+		e.forEach((e, n) => {
+			e.addEventListener("click", (r) => {
+				r.preventDefault();
+				let i = t[n] || "compress_photo_sign";
+				this.setTool(i, e);
+			});
+		});
+	}
+	setTool(e, t = null) {
+		if (this.activeTool = e, document.querySelectorAll("#view-image-studio .tool-ribbon-btn").forEach((e) => {
+			e.classList.remove("bg-primary-container", "text-on-primary", "font-semibold", "shadow-sm"), e.classList.add("text-on-surface-variant", "hover:bg-surface-container-low", "hover:text-on-surface");
+			let t = e.querySelector(".bg-primary\\/60");
+			t && t.remove();
+		}), t) {
+			t.classList.remove("text-on-surface-variant", "hover:bg-surface-container-low", "hover:text-on-surface"), t.classList.add("bg-primary-container", "text-on-primary", "font-semibold", "shadow-sm");
+			let e = document.createElement("span");
+			e.className = "bg-primary/60 text-on-primary text-[10px] font-mono-code px-1.5 py-0.5 rounded font-bold uppercase tracking-tight", e.textContent = "Active", t.appendChild(e);
+		}
+		this._updateProcessButtonLabel(), r.show("Tool Selected", this._getToolDisplayName(e), "info");
+	}
+	_getToolDisplayName(e) {
+		switch (e) {
+			case "compress_photo_sign": return "Compress Photo (<50KB) & Sign (<20KB)";
+			case "passport_crop": return "Passport Crop (3.5 × 4.5 cm)";
+			case "sign_clean_invert": return "Signature Clean & Invert";
+			case "image_to_pdf": return "Image to PDF (A4)";
+			case "magic_color": return "CamScanner Magic Color";
+			case "resize_convert": return "Resize & Convert (JPG/PNG)";
+			default: return "Image Processing";
+		}
+	}
+	_updateProcessButtonLabel() {
+		let e = document.getElementById("startImageProcessBtn");
+		if (!e) return;
+		let t = e.querySelector("span:nth-of-type(2)");
+		if (t) {
+			let e = this.files.length, n = "Start Process";
+			this.activeTool === "compress_photo_sign" ? n = "Compress" : this.activeTool === "passport_crop" ? n = "Passport Crop" : this.activeTool === "sign_clean_invert" ? n = "Clean Signature" : this.activeTool === "image_to_pdf" ? n = "Convert to PDF" : this.activeTool === "magic_color" ? n = "Apply Magic Color" : this.activeTool === "resize_convert" && (n = "Convert Format"), t.textContent = `${n} (${e} Files)`;
+		}
+	}
+	_bindActions() {
+		let e = document.getElementById("btnBrowseImageDir");
+		e && e.addEventListener("click", () => this.handleBrowseFolder());
+		let t = document.getElementById("btnAddImageFiles");
+		t && t.addEventListener("click", () => this.handleAddFiles());
+		let n = document.getElementById("btnRotateAllImages");
+		n && n.addEventListener("click", () => this.handleRotateAll());
+		let r = document.getElementById("btnClearImageQueue");
+		r && r.addEventListener("click", () => this.handleClearQueue());
+		let i = document.getElementById("btnFilterOversizedImages");
+		i && i.addEventListener("click", () => this.handleFilterOversized());
+		let a = document.getElementById("startImageProcessBtn");
+		a && a.addEventListener("click", () => this.handleStartProcess());
+	}
+	_bindDropzone() {
+		let e = document.getElementById("view-image-studio");
+		e && (e.addEventListener("dragover", (e) => {
+			e.preventDefault(), e.stopPropagation();
+		}), e.addEventListener("drop", async (e) => {
+			e.preventDefault(), e.stopPropagation();
+			let t = Array.from(e.dataTransfer?.files || []).filter((e) => /\.(jpe?g|png|webp|bmp|gif)$/i.test(e.name));
+			t.length === 0 ? r.show("Invalid Files", "Please drop image files (JPG, PNG, WebP) only.", "warning") : await this.loadDroppedFiles(t);
+		}));
+	}
+	async handleBrowseFolder() {
+		r.show("Opening Folder Picker", "Navigating Windows Explorer...", "info");
+		try {
+			let e = await s();
+			if (!e.success) {
+				e.cancelled || r.show("Folder Select Error", e.error || "Failed to select folder", "error");
+				return;
+			}
+			let t = (e.files || []).filter((e) => /\.(jpe?g|png|webp|bmp|gif)$/i.test(e.name));
+			if (t.length === 0) {
+				r.show("No Images Found", "Selected directory contains 0 image files.", "warning");
+				return;
+			}
+			await this.loadNativeFiles(t), r.show("Images Loaded", `${t.length} photos added to execution queue.`, "success");
+		} catch (e) {
+			r.show("Folder Error", e.message, "error");
+		}
+	}
+	async handleAddFiles() {
+		let e = document.createElement("input");
+		e.type = "file", e.accept = "image/*,.jpg,.jpeg,.png,.webp,.bmp", e.multiple = !0, e.style.display = "none", e.addEventListener("change", async (t) => {
+			let n = Array.from(t.target.files || []);
+			n.length > 0 && await this.loadDroppedFiles(n), document.body.removeChild(e);
+		}), document.body.appendChild(e), e.click();
+	}
+	async loadNativeFiles(e) {
+		for (let t of e) {
+			let e = t.url || (t.path ? `http://localhost:3000/api/serve-file?path=${encodeURIComponent(t.path)}` : null);
+			this.files.push({
+				id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+				name: t.name,
+				path: t.path,
+				size: t.size || 0,
+				url: e,
+				fileOrBlob: null,
+				width: 0,
+				height: 0,
+				status: "ready"
+			});
+		}
+		this.renderQueue();
+	}
+	async loadDroppedFiles(e) {
+		for (let t of e) {
+			let e = URL.createObjectURL(t);
+			this.files.push({
+				id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+				name: t.name,
+				path: t.name,
+				size: t.size,
+				url: e,
+				fileOrBlob: t,
+				width: 0,
+				height: 0,
+				status: "ready"
+			});
+		}
+		this.renderQueue(), r.show("Images Added", `${e.length} photos added to queue.`, "success");
+	}
+	renderQueue() {
+		let e = document.getElementById("imageCardsGrid");
+		if (e) {
+			for (; e.firstChild;) e.removeChild(e.firstChild);
+			if (this.files.length === 0) {
+				let t = document.createElement("div");
+				t.className = "col-span-full p-8 text-center bg-surface-container-lowest rounded-xl border border-surface-container-high/80 flex flex-col items-center gap-2";
+				let n = document.createElement("span");
+				n.className = "material-symbols-outlined text-[40px] text-primary opacity-60", n.textContent = "image", t.appendChild(n);
+				let r = document.createElement("div");
+				r.className = "font-headline-sm font-bold text-on-surface", r.textContent = "No Images in Studio Queue", t.appendChild(r);
+				let i = document.createElement("div");
+				i.className = "text-body-sm text-secondary", i.textContent = "Drag & drop student photos or signatures here or click \"Browse Directory\".", t.appendChild(i), e.appendChild(t), this._updateProcessButtonLabel();
+			} else this.files.forEach((t, n) => {
+				let r = document.createElement("div");
+				r.className = "bg-surface-container-lowest rounded-xl border border-surface-container-high/80 p-2.5 flex flex-col justify-between hover:shadow-md transition-shadow group relative";
+				let i = document.createElement("div");
+				i.className = "absolute top-1.5 right-1.5 z-10 flex items-center gap-1";
+				let a = document.createElement("button");
+				a.type = "button", a.className = "w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-primary transition-colors shadow-xs cursor-pointer", a.title = "Rotate 90°";
+				let o = document.createElement("span");
+				o.className = "material-symbols-outlined text-[13px]", o.textContent = "rotate_right", a.appendChild(o), a.addEventListener("click", (e) => {
+					e.stopPropagation(), this.rotateSingleFile(n);
+				}), i.appendChild(a);
+				let s = document.createElement("button");
+				s.type = "button", s.className = "w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-error transition-colors shadow-xs cursor-pointer", s.title = "Remove";
+				let c = document.createElement("span");
+				c.className = "material-symbols-outlined text-[13px]", c.textContent = "close", s.appendChild(c), s.addEventListener("click", (e) => {
+					e.stopPropagation(), this.removeFile(n);
+				}), i.appendChild(s), r.appendChild(i);
+				let l = document.createElement("div");
+				if (l.className = "relative w-full h-24 rounded-lg bg-surface-container-low overflow-hidden mb-2 border border-surface-container-high/60 flex items-center justify-center", t.url) {
+					let e = document.createElement("img");
+					e.src = t.url, e.alt = t.name, e.className = "w-full h-full object-contain", l.appendChild(e);
+				}
+				r.appendChild(l);
+				let u = document.createElement("div");
+				u.className = "font-headline-sm text-[12px] font-bold text-on-surface truncate mb-1", u.title = t.name, u.textContent = t.name, r.appendChild(u);
+				let d = /sign|signature|स्वाक्षरी/i.test(t.name), f = /photo|pic|passport|फोटो/i.test(t.name), p = d ? 20 : f ? 50 : 256, m = document.createElement("div");
+				m.className = "bg-surface-container-low border border-surface-container-high/60 rounded-lg p-1.5 flex flex-col gap-0.5 font-mono-code text-[10px]";
+				let h = document.createElement("div");
+				h.className = "flex items-center justify-between text-outline";
+				let g = Math.round(t.size / 1024);
+				h.appendChild(document.createTextNode(`Size: ${g} KB`));
+				let _ = document.createElement("span");
+				_.className = d ? "text-amber-700 font-bold" : "text-primary font-bold", _.textContent = d ? "Sign" : f ? "Photo" : "Doc", h.appendChild(_), m.appendChild(h);
+				let v = document.createElement("div");
+				v.className = "flex items-center justify-between font-bold text-on-surface", v.appendChild(document.createTextNode("Target:"));
+				let y = document.createElement("span");
+				y.className = "text-primary font-bold", y.textContent = `< ${p} KB`, v.appendChild(y), m.appendChild(v), r.appendChild(m), e.appendChild(r);
+			}), this._updateProcessButtonLabel();
+		}
+	}
+	rotateSingleFile(e) {
+		let t = this.files[e];
+		if (!t || !t.url) return;
+		let n = new Image();
+		n.crossOrigin = "anonymous", n.onload = () => {
+			Z(n, 90).toBlob((e) => {
+				t.url = URL.createObjectURL(e), t.size = e.size, t.fileOrBlob = e, this.renderQueue(), r.show("Image Rotated", `${t.name} rotated 90° clockwise.`, "info");
+			}, "image/jpeg", .92);
+		}, n.src = t.url;
+	}
+	removeFile(e) {
+		this.files.splice(e, 1), this.renderQueue();
+	}
+	handleRotateAll() {
+		this.files.forEach((e, t) => this.rotateSingleFile(t));
+	}
+	handleClearQueue() {
+		this.files = [], this.renderQueue(), r.show("Queue Cleared", "Image workstation reset.", "info");
+	}
+	handleFilterOversized() {
+		let e = this.files.length;
+		this.files = this.files.filter((e) => e.size > 51200), this.renderQueue(), r.show("Filter Applied", `Kept ${this.files.length} oversized files (>50 KB) from ${e}.`, "info");
+	}
+	async handleStartProcess() {
+		if (this.files.length === 0) {
+			r.show("No Images", "Please add image files to process.", "warning");
+			return;
+		}
+		if (this.isProcessing) return;
+		this.isProcessing = !0;
+		let e = this.activeTool;
+		r.show("Processing Images", `Executing ${this._getToolDisplayName(e)} on ${this.files.length} files...`, "info");
+		try {
+			let t = 0;
+			for (let n of this.files) {
+				let r = n.fileOrBlob;
+				if (!r && n.url && (r = await (await fetch(n.url)).blob()), r) {
+					if (e === "compress_photo_sign") {
+						let e = /sign|signature|स्वाक्षरी/i.test(n.name) ? 18 : 45, i = await Q(r, e);
+						this._downloadBlob(i.blob, `Compressed_${n.name}`), t++;
+					} else if (e === "passport_crop") {
+						let e = await Q(await this._cropPassport(r), 48);
+						this._downloadBlob(e.blob, `Passport_${n.name}`), t++;
+					} else if (e === "sign_clean_invert") {
+						let e = await Q(r, 18, { filterMode: "sharp_contrast" });
+						this._downloadBlob(e.blob, `Clean_Sign_${n.name}`), t++;
+					} else if (e === "image_to_pdf") {
+						let e = await r.arrayBuffer(), i = q([{
+							bytes: new Uint8Array(e),
+							width: 0,
+							height: 0
+						}], "portrait"), a = n.name.replace(/\.[a-zA-Z0-9]+$/, "") + ".pdf";
+						this._downloadBlob(i, a), t++;
+					} else if (e === "magic_color") {
+						let e = await Q(r, 240, { filterMode: "enhanced" });
+						this._downloadBlob(e.blob, `Magic_${n.name}`), t++;
+					} else {
+						let e = await he(r, "image/jpeg");
+						this._downloadBlob(e.blob, `Converted_${n.name.replace(/\.[a-zA-Z0-9]+$/, ".jpg")}`), t++;
+					}
+				}
+			}
+			r.show("Process Complete!", `Successfully processed and saved ${t} files.`, "success");
+		} catch (e) {
+			r.show("Processing Error", e.message, "error");
+		} finally {
+			this.isProcessing = !1;
+		}
+	}
+	async _cropPassport(e) {
+		return new Promise((t, n) => {
+			let r = new Image(), i = URL.createObjectURL(e);
+			r.onload = () => {
+				URL.revokeObjectURL(i);
+				let e = document.createElement("canvas");
+				e.width = 350, e.height = 450;
+				let n = e.getContext("2d"), a = r.width / r.height, o = 350 / 450, s, c, l, u;
+				a > o ? (u = r.height, l = r.height * o, s = (r.width - l) / 2, c = 0) : (l = r.width, u = r.width / o, s = 0, c = (r.height - u) / 2), n.drawImage(r, s, c, l, u, 0, 0, 350, 450), e.toBlob(t, "image/jpeg", .95);
+			}, r.onerror = () => {
+				URL.revokeObjectURL(i), n(/* @__PURE__ */ Error("Failed to load image for passport cropping"));
+			}, r.src = i;
+		});
+	}
+	_downloadBlob(e, t) {
+		let n = URL.createObjectURL(e), r = document.createElement("a");
+		r.href = n, r.download = t, r.style.display = "none", document.body.appendChild(r), r.click(), setTimeout(() => {
+			document.body.removeChild(r), URL.revokeObjectURL(n);
+		}, 1e3);
+	}
+};
+function _e() {
+	let e = new ge();
 	return e.init(), e;
 }
 // src/ui/index.js
 function $() {
-	new n().init(), new i().init(), ie(), K(), de(), a();
+	new n().init(), new i().init(), W(), B(), pe(), _e(), a();
 	let e = document.getElementById("themeToggleBtn");
 	e && e.addEventListener("click", () => {
 		document.documentElement.classList.toggle("dark");
