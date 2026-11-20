@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta content="desktop_shell" name="shell-type">
+  <title>DocMitra - Administrative Bento Workstation</title>
+
+  <!-- Favicon & Brand Icons -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon.png">
+  <link rel="icon" type="image/svg+xml" href="assets/icons/docmitra-logo.svg">
+  <link rel="apple-touch-icon" href="assets/icons/128x128@2x.png">
+
+  <!-- Google Fonts: Inter, Plus Jakarta Sans, JetBrains Mono, Noto Sans Devanagari -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+
+  <!-- Shared Design Tokens & Styles -->
+  <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/components.css">
+
+  <!-- Tailwind Engine & Administrative Bento Design Tokens -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-primary-fixed": "#001551",
+            "inverse-surface": "#213145",
+            "on-secondary": "#ffffff",
+            "tertiary": "#004f35",
+            "background": "#f8f9ff",
+            "on-background": "#0b1c30",
+            "tertiary-container": "#006948",
+            "on-secondary-container": "#5c647a",
+            "surface-container-lowest": "#ffffff",
+            "outline-variant": "#c4c5d7",
+            "surface": "#f8f9ff",
+            "on-surface": "#0b1c30",
+            "on-tertiary": "#ffffff",
+            "surface-container-high": "#dce9ff",
+            "surface-variant": "#d3e4fe",
+            "primary-fixed-dim": "#b7c4ff",
+            "on-tertiary-fixed-variant": "#005137",
+            "on-primary-fixed-variant": "#0039b5",
+            "on-tertiary-fixed": "#002114",
+            "tertiary-fixed-dim": "#68dba9",
+            "on-error": "#ffffff",
+            "primary": "#0037b0",
+            "error-container": "#ffdad6",
+            "inverse-on-surface": "#eaf1ff",
+            "on-primary-container": "#cad3ff",
+            "on-tertiary-container": "#76eab6",
+            "surface-container-low": "#eff4ff",
+            "outline": "#747686",
+            "secondary": "#565e74",
+            "secondary-container": "#dae2fd",
+            "tertiary-fixed": "#85f8c4",
+            "inverse-primary": "#b7c4ff",
+            "on-error-container": "#93000a",
+            "on-primary": "#ffffff",
+            "secondary-fixed-dim": "#bec6e0",
+            "primary-container": "#1d4ed8",
+            "surface-bright": "#f8f9ff",
+            "on-surface-variant": "#434655",
+            "primary-fixed": "#dce1ff",
+            "secondary-fixed": "#dae2fd",
+            "surface-dim": "#cbdbf5",
+            "on-secondary-fixed-variant": "#3f465c",
+            "surface-tint": "#2151da",
+            "on-secondary-fixed": "#131b2e",
+            "error": "#ba1a1a",
+            "surface-container-highest": "#d3e4fe",
+            "surface-container": "#e5eeff"
+          },
+          borderRadius: {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          spacing: {
+            "margin-dock": "0.75rem",
+            "space-sm": "0.5rem",
+            "margin": "1.25rem",
+            "space-xs": "0.25rem",
+            "gutter": "1rem",
+            "gutter-compact": "0.75rem",
+            "space-md": "0.75rem",
+            "space-xl": "1.5rem",
+            "space-lg": "1rem"
+          },
+          fontFamily: {
+            "display-lg": ["Plus Jakarta Sans", "sans-serif"],
+            "headline-lg": ["Plus Jakarta Sans", "sans-serif"],
+            "headline-md": ["Plus Jakarta Sans", "sans-serif"],
+            "headline-sm": ["Plus Jakarta Sans", "sans-serif"],
+            "body-lg": ["Inter", "Noto Sans Devanagari", "sans-serif"],
+            "body-md": ["Inter", "Noto Sans Devanagari", "sans-serif"],
+            "body-sm": ["Inter", "Noto Sans Devanagari", "sans-serif"],
+            "label-lg": ["Inter", "Noto Sans Devanagari", "sans-serif"],
+            "label-md": ["Inter", "Noto Sans Devanagari", "sans-serif"],
+            "label-sm": ["Inter", "Noto Sans Devanagari", "sans-serif"],
+            "mono-code": ["JetBrains Mono", "monospace"]
+          },
+          fontSize: {
+            "display-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "700" }],
+            "headline-lg": ["24px", { lineHeight: "32px", letterSpacing: "-0.015em", fontWeight: "700" }],
+            "headline-md": ["20px", { lineHeight: "28px", fontWeight: "600" }],
+            "headline-sm": ["16px", { lineHeight: "24px", fontWeight: "600" }],
+            "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+            "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+            "body-sm": ["13px", { lineHeight: "18px", fontWeight: "400" }],
+            "label-lg": ["13px", { lineHeight: "18px", letterSpacing: "0.01em", fontWeight: "600" }],
+            "label-md": ["12px", { lineHeight: "16px", fontWeight: "500" }],
+            "label-sm": ["11px", { lineHeight: "14px", letterSpacing: "0.03em", fontWeight: "600" }],
+            "mono-code": ["12px", { lineHeight: "16px", fontWeight: "500" }]
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-surface font-body-md text-body-md text-on-surface select-none h-screen overflow-hidden antialiased">
+
+  <div id="app-shell" class="h-screen w-screen flex flex-col overflow-hidden">
+    <!-- Persistent Top Navigation Bar -->
+    <header id="app-header" class="h-16 w-full shrink-0 z-40 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] border-b border-outline-variant/30 select-none">
+      <div class="h-16 w-full px-gutter flex items-center justify-between gap-space-md">
+        <!-- Left: Brand + Regional Marathi Subtitle -->
+        <div class="flex items-center gap-space-lg shrink-0">
+          <div class="flex flex-col">
+            <div class="flex items-center gap-space-xs">
+              <img src="assets/icons/docmitra-logo.svg" alt="DocMitra" class="w-6 h-6 object-contain rounded-md shadow-xs" />
+              <span class="font-headline-sm text-headline-sm text-primary tracking-tight font-bold">DocMitra Suite</span>
+              <span class="px-space-xs py-0.5 rounded bg-surface-container text-on-surface-variant font-mono-code text-label-sm">v1.4.3</span>
+              <span class="material-symbols-outlined text-tertiary text-[18px]">verified</span>
+            </div>
+            <span class="font-label-sm text-label-sm text-secondary truncate max-w-[280px] xl:max-w-none">महाराष्ट्र ॲडमिशन व दस्तऐवज कार्यप्रणाली (100% Offline Localhost)</span>
+          </div>
+
+          <!-- Main Navigation Tabs (5 Views) -->
+          <nav class="flex items-center gap-space-xs bg-surface-container-low p-space-xs rounded-xl" id="main-nav">
+            <button class="nav-tab px-space-md py-1.5 rounded-lg font-label-md text-label-md bg-primary-container text-on-primary font-bold shadow-sm flex items-center gap-1.5 transition-all cursor-pointer" data-view="bulk-renamer" id="tabModRenamer" type="button">
+              <span>Bulk Renamer</span>
+              <span class="font-mono-code text-[10px] opacity-70">Alt+1</span>
+            </button>
+            <button class="nav-tab px-space-md py-1.5 rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all flex items-center gap-1.5 cursor-pointer" data-view="pdf-studio" id="tabModPdf" type="button">
+              <span>PDF Studio</span>
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
+              <span class="font-mono-code text-[10px] opacity-70">Alt+2</span>
+            </button>
+            <button class="nav-tab px-space-md py-1.5 rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all flex items-center gap-1.5 cursor-pointer" data-view="image-studio" id="tabModImage" type="button">
+              <span>Image Studio</span>
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+              <span class="font-mono-code text-[10px] opacity-70">Alt+3</span>
+            </button>
+            <button class="nav-tab px-space-md py-1.5 rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all flex items-center gap-1.5 cursor-pointer" data-view="print-studio" id="tabModPrint" type="button">
+              <span>Print Studio</span>
+              <span class="font-mono-code text-[10px] opacity-70">Alt+4</span>
+            </button>
+            <button class="nav-tab px-space-md py-1.5 rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all flex items-center gap-1.5 cursor-pointer" data-view="follow-up" id="tabModFollowUp" type="button">
+              <span>Follow-up Desk</span>
+              <span class="font-mono-code text-[10px] opacity-70">Alt+5</span>
+            </button>
+          </nav>
+        </div>
+
+        <!-- Right: Air-Gapped Status, License Badge, Theme Toggle & Settings Modal Trigger -->
+        <div class="flex items-center gap-space-md shrink-0">
+          <div class="flex items-center gap-1.5 px-space-md py-1 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-full font-label-sm text-label-sm font-semibold shadow-sm">
+            <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+            <span>100% Air-Gapped Localhost</span>
+          </div>
+          <div class="hidden 2xl:flex items-center gap-1.5 px-space-md py-1 bg-surface-container text-on-surface-variant border border-outline-variant/40 rounded-lg font-mono-code text-label-sm">
+            <span class="material-symbols-outlined text-[15px] text-tertiary">workspace_premium</span>
+            <span>Lifetime License | DM-SYS-D83E-714F-3E56-D773</span>
+          </div>
+          <button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer" id="themeToggleBtn" title="Toggle Theme" type="button">
+            <span class="material-symbols-outlined text-[18px]">contrast</span>
+          </button>
+          <button class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer" id="openSettingsBtn" title="Rules &amp; Settings (Ctrl+,)" type="button">
+            <span class="material-symbols-outlined text-[18px]">settings</span>
+          </button>
+          <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center cursor-pointer shadow-sm" title="Operator Profile">
+            <span class="material-symbols-outlined text-on-primary text-[18px]">person</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Views Viewport Container -->
+    <main id="view-container" class="flex-1 min-h-0 relative w-full overflow-hidden">
+      
+    <section id="view-bulk-renamer" class="view-pane flex flex-col h-full overflow-hidden">
+      <div class="flex flex-col w-full h-full min-h-0 overflow-hidden">
+<!-- Ribbon: Working Folder Context & Batch Telemetry -->
+<section class="bg-surface-container-low px-gutter py-space-sm flex flex-wrap items-center justify-between gap-space-md shadow-sm shrink-0">
+<div class="flex items-center gap-space-md min-w-0">
+<div class="w-8 h-8 rounded-lg bg-primary-container text-on-primary flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[19px]">drive_file_rename_outline</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs text-secondary font-label-sm">
+<span class="font-bold tracking-wider uppercase text-on-surface-variant">Active Intake Folder</span>
+<span class="text-outline-variant">•</span>
+<span class="font-mono-code text-[10px] text-tertiary font-semibold uppercase px-1 rounded bg-tertiary-fixed">Localhost Air-Gapped</span>
+</div>
+<div class="flex items-center gap-space-xs min-w-0">
+<span class="material-symbols-outlined text-[16px] text-primary shrink-0">folder_open</span>
+<span class="font-mono-code text-label-md text-on-surface truncate font-semibold">E:\College\Admission_2026\FYJC\Vijay_Ramesh_Yadav</span>
+<button class="text-secondary hover:text-primary transition-colors ml-1 p-0.5" title="Copy Path" type="button">
+<span class="material-symbols-outlined text-[15px]">content_copy</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Quick Stats Telemetry Strip -->
+<div class="flex items-center gap-space-sm bg-surface-container-lowest px-space-md py-1.5 rounded-lg shadow-sm">
+<div class="flex items-center gap-1.5 font-label-sm">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+<span class="text-on-surface-variant">Files:</span>
+<span class="font-mono-code text-on-surface font-bold">14</span>
+</div>
+<span class="text-outline-variant">|</span>
+<div class="flex items-center gap-1.5 font-label-sm">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="text-on-surface-variant">Matched:</span>
+<span class="font-mono-code text-tertiary font-bold">12 (86%)</span>
+</div>
+<span class="text-outline-variant">|</span>
+<div class="flex items-center gap-1.5 font-label-sm">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="text-on-surface-variant">Pending:</span>
+<span class="font-mono-code text-error font-bold">2</span>
+</div>
+<span class="text-outline-variant">|</span>
+<div class="flex items-center gap-1 font-label-sm">
+<span class="material-symbols-outlined text-[14px] text-secondary">pie_chart</span>
+<span class="font-mono-code text-secondary">18.4 MB</span>
+</div>
+<span class="text-outline-variant">|</span>
+<div class="flex items-center gap-1 font-label-sm text-tertiary bg-tertiary-fixed/40 px-1.5 py-0.5 rounded border border-tertiary/20">
+<span class="material-symbols-outlined text-[14px]">timelapse</span>
+<span class="font-mono-code font-bold">1h 32m Saved</span>
+</div>
+</div>
+<!-- Direct Action Triggers -->
+<div class="flex items-center gap-space-xs shrink-0"><button class="px-space-md py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-on-primary font-label-md font-semibold transition-all flex items-center gap-1.5 shadow-sm active:scale-98" type="button"><span class="material-symbols-outlined text-[16px]">folder_open</span><span>Select Folder</span><kbd class="px-1.5 py-0.5 rounded bg-surface-container-lowest/20 font-mono-code text-[10px] text-on-primary font-bold shadow-xs">F2</kbd></button><button class="px-space-md py-1.5 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-md font-medium border border-outline-variant/40 hover:border-outline-variant/60 transition-all flex items-center gap-1.5 shadow-xs" type="button"><span class="material-symbols-outlined text-[16px] text-secondary">note_add</span><span>Add Files</span></button><button class="w-8 h-8 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant flex items-center justify-center border border-outline-variant/40 transition-all shadow-xs" title="Rescan Directory" type="button"><span class="material-symbols-outlined text-[17px]">sync</span></button></div>
+</section>
+<!-- Main 3-Column Workstation Bento Grid -->
+<div class="w-full flex flex-col xl:flex-row items-stretch gap-space-md p-space-md bg-surface overflow-hidden select-none flex-1 min-h-0" id="workspace-columns-container"><main class="w-full xl:w-[420px] 2xl:w-[460px] shrink-0 flex flex-col gap-space-sm overflow-hidden h-full" id="col-queue"><div class="flex flex-col gap-space-sm overflow-y-auto pr-1 flex-1 min-h-0 custom-pan-scroll pan-grab-active queue-scroll-area"><div class="flex flex-col gap-space-xs shrink-0"><div class="flex items-center justify-between px-1 text-label-sm"><div class="flex items-center gap-2"><span class="px-2.5 py-1 rounded bg-primary text-on-primary font-bold text-[11px] flex items-center gap-1.5 shadow-sm"><span class="material-symbols-outlined text-[14px]">edit_document</span>Editing 2 of 14</span></div><span class="px-2 py-0.5 rounded font-mono-code text-[10px] bg-tertiary-fixed text-on-tertiary-fixed font-bold">Matched</span></div><article class="bg-surface-container-lowest rounded-xl shadow-md p-space-md flex flex-col gap-space-md border-2 border-primary ring-2 ring-primary/20 relative"><div class="flex flex-col gap-1.5"><div class="flex items-center justify-between font-label-sm font-semibold"><label class="text-on-surface font-bold text-[13px]">Rename To:</label><span class="text-secondary text-[11px] flex items-center gap-1">Press <kbd class="px-1.5 py-0.5 rounded bg-surface-container font-mono-code text-[10px] text-on-surface font-bold border border-outline-variant/40">Tab</kbd> to save</span></div><div class="relative flex items-center"><input class="w-full h-11 px-3 rounded-lg bg-surface-container-lowest font-mono-code text-[14px] text-on-surface font-semibold border-2 border-primary focus:ring-2 focus:ring-primary outline-none shadow-sm transition-all" type="text" value="12TH MARKSHEET Vijay Ramesh Yadav.pdf"></div></div><div class="flex flex-col gap-1.5 pt-2 border-t border-surface-container"><div class="flex items-center justify-between"><span class="font-label-sm text-secondary font-semibold flex items-center gap-1.5"><span class="material-symbols-outlined text-[15px] text-primary">bolt</span><span>Quick Document Presets:</span></span><span class="text-label-sm text-secondary font-mono-code text-[10px]">Click to set</span></div><div class="grid grid-cols-3 gap-1.5"><button class="px-2 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[11px] font-semibold border border-outline-variant/40 hover:border-primary/50 transition-all flex items-center gap-1 shadow-xs justify-center" type="button"><span class="px-1 py-0.2 rounded bg-surface-container-highest text-secondary text-[9px] font-bold">10M</span><span class="truncate">10th Marksheet</span></button><button class="px-2 py-1.5 rounded-lg bg-primary text-on-primary font-mono-code text-[11px] font-bold shadow-sm transition-all flex items-center gap-1 ring-2 ring-primary/30 justify-center" type="button"><span class="px-1 py-0.2 rounded bg-primary-container text-on-primary text-[9px] font-bold">12M</span><span class="truncate">12th Marksheet</span></button><button class="px-2 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[11px] font-semibold border border-outline-variant/40 hover:border-primary/50 transition-all flex items-center gap-1 shadow-xs justify-center" type="button"><span class="px-1 py-0.2 rounded bg-surface-container-highest text-secondary text-[9px] font-bold">12LC</span><span class="truncate">Leaving Cert</span></button><button class="px-2 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[11px] font-semibold border border-outline-variant/40 hover:border-primary/50 transition-all flex items-center gap-1 shadow-xs justify-center" type="button"><span class="px-1 py-0.2 rounded bg-surface-container-highest text-secondary text-[9px] font-bold">UID</span><span class="truncate">Aadhaar Card</span></button><button class="px-2 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[11px] font-semibold border border-outline-variant/40 hover:border-primary/50 transition-all flex items-center gap-1 shadow-xs justify-center" type="button"><span class="px-1 py-0.2 rounded bg-surface-container-highest text-secondary text-[9px] font-bold">DOM</span><span class="truncate">Domicile Cert</span></button><button class="px-2 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[11px] font-semibold border border-outline-variant/40 hover:border-primary/50 transition-all flex items-center gap-1 shadow-xs justify-center" type="button"><span class="px-1 py-0.2 rounded bg-surface-container-highest text-secondary text-[9px] font-bold">INC</span><span class="truncate">Income Cert</span></button></div></div></article></div><div class="flex items-center justify-between px-2 py-1 rounded bg-surface-container border border-outline-variant/40 text-[11px] font-mono-code text-secondary shrink-0"><div class="flex items-center gap-1.5 text-primary font-semibold"><span class="material-symbols-outlined text-[15px]">north</span><span>UPCOMING QUEUE</span></div><span class="text-[10px] text-secondary font-medium uppercase">4 files waiting</span></div><div class="flex flex-col gap-1.5 shrink-0"><article class="bg-surface-container-lowest rounded-xl shadow-xs px-space-md py-2 flex items-center justify-between gap-space-sm hover:bg-surface-container-low transition-colors border border-outline-variant/30 border-l-4 border-l-primary"><div class="flex items-center gap-2.5 min-w-0 flex-1"><span class="w-5 h-5 rounded bg-primary-fixed text-on-primary-fixed font-mono-code font-bold text-[11px] flex items-center justify-center shrink-0">3</span><div class="flex flex-col min-w-0"><span class="font-mono-code text-[12px] text-primary font-bold truncate">AADHAAR CARD Vijay Ramesh Yadav.pdf</span><span class="text-[10px] font-mono-code text-secondary truncate">adhar_card_both_sides.pdf</span></div></div><span class="px-1.5 py-0.5 rounded font-mono-code text-[9px] bg-tertiary-fixed text-on-tertiary-fixed font-bold uppercase shrink-0">Aadhaar</span></article><article class="bg-surface-container-lowest rounded-xl shadow-xs px-space-md py-2 flex items-center justify-between gap-space-sm hover:bg-surface-container-low transition-colors border border-outline-variant/30"><div class="flex items-center gap-2.5 min-w-0 flex-1"><span class="w-5 h-5 rounded bg-surface-container text-secondary font-mono-code font-medium text-[11px] flex items-center justify-center shrink-0">4</span><div class="flex flex-col min-w-0"><span class="font-mono-code text-[12px] text-on-surface font-semibold truncate">INCOME CERTIFICATE Vijay Ramesh Yadav.pdf</span><span class="text-[10px] font-mono-code text-secondary truncate">Doc_Tahsildar_2025_signed.pdf</span></div></div><span class="px-1.5 py-0.5 rounded font-mono-code text-[9px] bg-tertiary-fixed text-on-tertiary-fixed font-bold uppercase shrink-0">Income</span></article><article class="bg-surface-container-lowest rounded-xl shadow-xs px-space-md py-2 flex items-center justify-between gap-space-sm hover:bg-surface-container-low transition-colors border border-outline-variant/30"><div class="flex items-center gap-2.5 min-w-0 flex-1"><span class="w-5 h-5 rounded bg-surface-container text-secondary font-mono-code font-medium text-[11px] flex items-center justify-center shrink-0">5</span><div class="flex flex-col min-w-0"><span class="font-mono-code text-[12px] text-on-surface font-semibold truncate">DOMICILE CERTIFICATE Vijay Ramesh Yadav.pdf</span><span class="text-[10px] font-mono-code text-secondary truncate">DOM_MAHA_YADAV.pdf</span></div></div><span class="px-1.5 py-0.5 rounded font-mono-code text-[9px] bg-tertiary-fixed text-on-tertiary-fixed font-bold uppercase shrink-0">Domicile</span></article><article class="bg-surface-container-lowest rounded-xl shadow-xs px-space-md py-2 flex items-center justify-between gap-space-sm hover:bg-surface-container-low transition-colors border border-outline-variant/30 border-l-4 border-l-surface-variant"><div class="flex items-center gap-2.5 min-w-0 flex-1"><span class="w-5 h-5 rounded bg-surface-container text-secondary font-mono-code font-medium text-[11px] flex items-center justify-center shrink-0">6</span><div class="flex flex-col min-w-0"><span class="font-mono-code text-[12px] text-secondary italic truncate">unknown_document_scanned_09.pdf</span><span class="text-[10px] font-mono-code text-error truncate">Category required</span></div></div><span class="px-1.5 py-0.5 rounded font-mono-code text-[9px] bg-surface-variant text-on-surface-variant font-bold uppercase shrink-0">Select</span></article></div><div class="mt-auto pt-2 flex flex-col gap-1.5 shrink-0"><div class="flex items-center justify-between px-2 py-1 rounded bg-emerald-100 border border-emerald-300 text-[11px] font-mono-code text-emerald-900"><div class="flex items-center gap-1.5 font-bold"><span class="material-symbols-outlined text-[15px] text-tertiary">south</span><span>COMPLETED FILES</span></div><span class="text-[10px] font-semibold text-tertiary uppercase">2 finished</span></div><article class="bg-surface-container-lowest rounded-xl shadow-xs px-space-md py-1.5 flex items-center justify-between gap-space-sm border border-emerald-300"><div class="flex items-center gap-2 min-w-0 flex-1"><span class="w-4 h-4 rounded-full bg-emerald-500 text-on-primary font-mono-code font-bold text-[9px] flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[11px]">check</span></span><div class="flex flex-col min-w-0"><span class="font-mono-code text-[11px] text-tertiary font-bold truncate">10TH MARKSHEET Vijay Ramesh Yadav.pdf</span></div></div><span class="font-mono-code text-[10px] text-secondary shrink-0">1.2 MB</span></article><article class="bg-surface-container-lowest rounded-xl shadow-xs px-space-md py-1.5 flex items-center justify-between gap-space-sm border border-emerald-300"><div class="flex items-center gap-2 min-w-0 flex-1"><span class="w-4 h-4 rounded-full bg-emerald-500 text-on-primary font-mono-code font-bold text-[9px] flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[11px]">check</span></span><div class="flex flex-col min-w-0"><span class="font-mono-code text-[11px] text-tertiary font-bold truncate">12TH MARKSHEET Vijay Ramesh Yadav.pdf</span></div></div><span class="font-mono-code text-[10px] text-secondary shrink-0">1.8 MB</span></article></div></div></main><section class="w-full flex-1 flex flex-col h-full overflow-hidden" id="col-preview"><div class="bg-surface-container-lowest rounded-xl shadow-sm flex flex-col h-full overflow-hidden border border-outline-variant/30"><div class="p-space-xs bg-surface-container-low flex flex-wrap items-center justify-between gap-1 shadow-sm shrink-0"><div class="flex items-center gap-0.5"><button class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center" title="Zoom Out (Ctrl -)" type="button"><span class="material-symbols-outlined text-[16px]">zoom_out</span></button><span class="font-mono-code text-label-sm font-bold px-1.5 py-0.5 bg-surface-container-lowest rounded text-on-surface">Fit to Page</span><button class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center" title="Zoom In (Ctrl +)" type="button"><span class="material-symbols-outlined text-[16px]">zoom_in</span></button><input class="w-24 h-1.5 accent-primary cursor-pointer hidden sm:inline-block ml-1" max="350" min="50" type="range" value="160"><button class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center" title="Reset Zoom" type="button"><span class="material-symbols-outlined text-[16px]">restart_alt</span></button></div><div class="flex items-center gap-1 font-mono-code text-[11px] text-secondary"><span class="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block"></span><span>Page 1 of 1 • 300 DPI</span><span class="text-outline-variant">|</span><span>Target Buffer: <strong class="text-tertiary">214 KB / 256 KB Safe</strong></span></div><div class="flex items-center gap-0.5"><button class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center" title="Pan Hand" type="button"><span class="material-symbols-outlined text-[15px]">pan_tool</span></button><button class="w-7 h-7 rounded bg-surface-container text-primary flex items-center justify-center shadow-xs" title="Fit to A4 Width" type="button"><span class="material-symbols-outlined text-[16px]">fit_screen</span></button><button class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center" title="Rotate 90 Clockwise" type="button"><span class="material-symbols-outlined text-[16px]">rotate_right</span></button><button class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center" title="Split Compare" type="button"><span class="material-symbols-outlined text-[16px]">vertical_split</span></button></div></div><div class="flex-1 bg-surface-container-high/40 p-space-md flex items-center justify-center overflow-auto min-h-0"><div class="h-full max-h-[calc(100vh-175px)] aspect-[1/1.414] bg-surface-container-lowest rounded shadow-2xl p-space-md flex flex-col justify-between relative overflow-hidden select-text border border-outline-variant/40 shrink-0"><div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5"><span class="material-symbols-outlined text-[240px] text-primary">account_balance</span></div><div class="flex flex-col items-center text-center gap-0.5 border-b-2 pb-1 border-outline-variant/50"><span class="font-mono-code text-[9px] tracking-widest text-secondary uppercase font-bold">Government of Maharashtra</span><span class="font-headline-sm text-[13px] leading-tight font-bold text-on-surface uppercase tracking-tight">Maharashtra State Board of Secondary and Higher Secondary Education, Pune</span><span class="font-label-sm text-[10px] text-secondary font-semibold">HIGHER SECONDARY CERTIFICATE EXAMINATION / JUNIOR COLLEGE LEAVING CERTIFICATE</span></div><div class="grid grid-cols-3 gap-1 text-[10px] font-mono-code py-1"><div><span class="text-secondary block text-[9px]">SEAT / REG NO:</span><strong class="text-on-surface font-bold text-[11px]">M084921</strong></div><div><span class="text-secondary block text-[9px]">COLLEGE CODE:</span><strong class="text-on-surface font-bold text-[11px]">JC-31.04.002</strong></div><div><span class="text-secondary block text-[9px]">GENERAL REG NO:</span><strong class="text-on-surface font-bold text-[11px]">GR-2022/9104</strong></div><div class="col-span-2"><span class="text-secondary block text-[9px]">STUDENT FULL NAME:</span><strong class="text-on-surface font-bold text-[12px]">YADAV VIJAY RAMESH</strong></div><div><span class="text-secondary block text-[9px]">MOTHER NAME:</span><strong class="text-on-surface font-bold text-[11px]">SUNITA</strong></div></div><div class="flex items-center justify-between px-2.5 py-1 bg-surface-container-low rounded-lg border border-outline-variant/30"><div class="flex items-center gap-2"><div class="w-11 h-14 bg-surface-container-high rounded flex flex-col items-center justify-center text-secondary border border-outline-variant/30 shrink-0"><span class="material-symbols-outlined text-[20px]">person</span><span class="text-[8px] font-mono-code font-bold">PHOTO</span></div><div class="text-[10px] font-mono-code flex flex-col gap-0.5"><span>STREAM: <strong class="text-on-surface">SCIENCE (PCMB)</strong></span><span>PASSING YEAR: <strong class="text-on-surface">FEBRUARY 2026</strong></span><span>CONDUCT &amp; CHARACTER: <strong class="text-tertiary font-bold">EXEMPLARY</strong></span></div></div><div class="w-11 h-11 rounded-full border-2 border-primary/60 flex flex-col items-center justify-center text-primary rotate-[-8deg] opacity-85 shrink-0"><span class="text-[6px] font-bold uppercase tracking-tight">KIRTI</span><span class="material-symbols-outlined text-[11px]">school</span><span class="text-[5px] uppercase font-mono-code font-semibold">SEAL</span></div></div><div class="text-[10px] font-mono-code overflow-hidden border-t-2 border-b-2 border-outline-variant/40 py-1"><table class="w-full text-left"><thead><tr class="text-secondary text-[9px] border-b border-outline-variant/30"><th class="pb-0.5">SUBJECT CODE &amp; TITLE</th><th class="pb-0.5 text-right">MAX</th><th class="pb-0.5 text-right">OBT</th></tr></thead><tbody class="divide-y divide-surface-container"><tr class="font-medium"><td class="py-0.5">01 ENGLISH</td><td class="text-right">100</td><td class="text-right font-bold text-on-surface">086</td></tr><tr class="font-medium"><td class="py-0.5">40 PHYSICS</td><td class="text-right">100</td><td class="text-right font-bold text-on-surface">091</td></tr><tr class="font-medium"><td class="py-0.5">41 CHEMISTRY</td><td class="text-right">100</td><td class="text-right font-bold text-on-surface">088</td></tr><tr class="font-medium"><td class="py-0.5">42 MATHEMATICS &amp; STATS</td><td class="text-right">100</td><td class="text-right font-bold text-on-surface">095</td></tr><tr class="font-medium"><td class="py-0.5">43 BIOLOGY</td><td class="text-right">100</td><td class="text-right font-bold text-on-surface">087</td></tr></tbody></table></div><div class="bg-surface-container-low px-2.5 py-1 rounded-lg flex items-center justify-between text-[10px] font-mono-code border border-outline-variant/20"><div>TOTAL MARKS: <strong class="text-on-surface text-[11px]">447 / 500</strong></div><div>AGGREGATE: <strong class="text-primary font-bold text-[11px]">89.40% (DISTINCTION)</strong></div></div><div class="flex items-end justify-between pt-1 text-[9px] font-mono-code text-secondary"><span>Reason for Leaving: Course Completed</span><div class="flex flex-col items-center"><span class="italic font-serif text-[11px] text-on-surface-variant font-semibold">Dr. A. B. Joshi</span><span class="border-t border-secondary/40 pt-0.5 text-[8px]">Principal / Headmaster</span></div></div></div></div><div class="p-space-xs bg-surface-container-low flex items-center justify-between text-secondary font-label-sm border-t border-surface-container shrink-0"><span class="text-on-surface font-semibold text-[11px] flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-tertiary">tune</span>Auto Contrast Active</span><button class="text-primary hover:underline text-[11px] font-medium" type="button">Reset Filters</button></div></div></section></div>
+<!-- Persistent Execution Toolbar (Fixed Workflow Hub) -->
+<footer class="left-0 right-0 z-40 bg-inverse-surface text-inverse-on-surface px-gutter py-2 flex flex-wrap items-center justify-between gap-space-md shadow-2xl shrink-0"><div class="flex items-center gap-space-xs"><button class="px-space-md py-1.5 rounded-lg bg-surface-container-lowest/10 hover:bg-surface-container-lowest/20 text-inverse-on-surface font-label-md transition-colors flex items-center gap-1.5 shadow-sm border border-surface-container-lowest/15" id="btnUndoRename" title="Undo previous rename" type="button"><span class="material-symbols-outlined text-[16px]">undo</span><span>Undo Rename</span><kbd class="px-1.5 py-0.5 rounded bg-surface-container-lowest/20 border border-surface-container-lowest/30 font-mono-code text-[10px] text-inverse-on-surface font-bold shadow-xs">Ctrl+Z</kbd></button><button class="px-space-sm py-1.5 rounded-lg bg-surface-container-lowest/5 hover:bg-surface-container-lowest/15 text-inverse-on-surface font-label-md transition-colors flex items-center gap-1 border border-surface-container-lowest/10" id="btnClearQueue" title="Clear current queue" type="button"><span class="material-symbols-outlined text-[16px] text-error">delete_sweep</span><span>Clear Queue</span></button></div><div class="flex items-center gap-2 font-label-md"><button class="px-space-md py-1.5 rounded-lg bg-surface-container-lowest/10 hover:bg-surface-container-lowest/20 text-inverse-on-surface font-label-md transition-all flex items-center gap-2 border border-surface-container-lowest/20" id="btnKeepOriginal" title="Keep original name and scroll next" type="button"><span class="material-symbols-outlined text-[16px] text-primary-fixed-dim">redo</span><span>Keep Original &amp; Next</span><kbd class="px-1.5 py-0.5 rounded bg-primary text-on-primary font-mono-code text-[11px] font-bold shadow-xs">Tab</kbd></button><button class="px-space-md py-1.5 rounded-lg bg-surface-container-lowest/10 hover:bg-surface-container-lowest/20 text-inverse-on-surface font-label-md transition-all flex items-center gap-2 border border-surface-container-lowest/20" id="btnSaveBatch" title="Save current batch state" type="button"><span class="material-symbols-outlined text-[16px] text-tertiary-fixed">save</span><span>Save Batch</span><kbd class="px-1.5 py-0.5 rounded bg-surface-container-lowest/20 border border-surface-container-lowest/30 font-mono-code text-[10px] font-bold shadow-xs">Ctrl+S</kbd></button></div><div class="flex items-center gap-space-sm"><button class="px-space-md py-1.5 rounded-lg bg-surface-container-lowest/10 hover:bg-surface-container-lowest/20 text-inverse-on-surface font-label-md transition-all flex items-center gap-2 border border-surface-container-lowest/20 shadow-sm" id="btnExportAudit" title="Generate and export full audit log" type="button"><span class="material-symbols-outlined text-[16px]">summarize</span><span>Export Audit Report</span><kbd class="px-1.5 py-0.5 rounded bg-surface-container-lowest/20 border border-surface-container-lowest/30 font-mono-code text-[10px] font-bold shadow-xs">F9</kbd></button><button class="px-space-xl py-2 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-headline-sm text-label-lg transition-all flex items-center gap-2.5 shadow-md hover:shadow-lg active:scale-98 border border-primary-fixed/40" id="btnRenameAll" title="Execute batch rename" type="button"><span class="material-symbols-outlined text-[18px]">bolt</span><span class="font-bold">Rename All (14 Files)</span><kbd class="px-2 py-0.5 rounded bg-surface-container-lowest/25 border border-surface-container-lowest/40 font-mono-code text-label-sm font-bold shadow-xs">F8</kbd></button></div></footer>
+</div><footer class="fixed bottom-0 left-0 right-0 h-10 bg-inverse-surface text-inverse-on-surface z-50 flex items-center justify-between px-gutter font-mono-code text-label-sm border-t border-outline/30"><div class="flex items-center gap-space-md overflow-x-auto py-0.5"><div class="flex items-center gap-1.5 shrink-0 pr-1"><span class="w-2 h-2 rounded-full bg-emerald-400"></span><span class="font-bold">Localhost v1.4.3</span></div><span class="text-outline-variant opacity-40 shrink-0">|</span><div class="flex items-center gap-space-xs font-mono-code text-[11px] shrink-0"><div class="flex items-center gap-1"><kbd class="px-1.5 py-0.2 rounded bg-surface-container-lowest/15 border border-surface-container-lowest/25 text-inverse-on-surface font-bold text-[10px] shadow-xs">Alt+0</kbd><span class="opacity-80">Dashboard</span></div><span class="text-outline-variant opacity-40">•</span><div class="flex items-center gap-1"><kbd class="px-1.5 py-0.2 rounded bg-surface-container-lowest/15 border border-surface-container-lowest/25 text-inverse-on-surface font-bold text-[10px] shadow-xs">F2</kbd><span class="opacity-80">Folder</span></div><span class="text-outline-variant opacity-40">•</span><div class="flex items-center gap-1"><kbd class="px-1.5 py-0.2 rounded bg-surface-container-lowest/15 border border-surface-container-lowest/25 text-inverse-on-surface font-bold text-[10px] shadow-xs">Tab</kbd><span class="opacity-80">Keep/Next</span></div><span class="text-outline-variant opacity-40">•</span><div class="flex items-center gap-1"><kbd class="px-1.5 py-0.2 rounded bg-surface-container-lowest/15 border border-surface-container-lowest/25 text-inverse-on-surface font-bold text-[10px] shadow-xs">Ctrl+Z</kbd><span class="opacity-80">Undo</span></div><span class="text-outline-variant opacity-40">•</span><div class="flex items-center gap-1"><kbd class="px-1.5 py-0.2 rounded bg-surface-container-lowest/15 border border-surface-container-lowest/25 text-inverse-on-surface font-bold text-[10px] shadow-xs">Ctrl+S</kbd><span class="opacity-80">Save</span></div><span class="text-outline-variant opacity-40">•</span><div class="flex items-center gap-1"><kbd class="px-1.5 py-0.2 rounded bg-primary text-on-primary font-bold text-[10px] shadow-xs">F8</kbd><span class="text-tertiary-fixed font-semibold">Rename All</span></div><span class="text-outline-variant opacity-40">•</span><div class="flex items-center gap-1"><kbd class="px-1.5 py-0.2 rounded bg-surface-container-lowest/15 border border-surface-container-lowest/25 text-inverse-on-surface font-bold text-[10px] shadow-xs">F9</kbd><span class="opacity-80">Audit</span></div><span class="text-outline-variant opacity-40">•</span><div class="flex items-center gap-1"><kbd class="px-1.5 py-0.2 rounded bg-surface-container-lowest/15 border border-surface-container-lowest/25 text-inverse-on-surface font-bold text-[10px] shadow-xs">Ctrl+,</kbd><span class="opacity-80">Settings</span></div></div></div><div class="flex items-center gap-space-sm shrink-0 font-mono-code text-[11px]"><span class="hidden xl:inline text-secondary"><strong class="text-tertiary-fixed font-bold">&lt;256 KB</strong> (MahaDBT Strict)</span><span class="text-outline-variant opacity-40 hidden xl:inline">|</span><span class="px-1.5 py-0.5 rounded bg-surface-container-lowest/10 text-inverse-on-surface border border-surface-container-lowest/20">PORT: 3000</span><span class="px-1.5 py-0.5 rounded bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 font-bold text-[10px]">AIR-GAPPED</span></div></footer>
+    </section>
+  
+      
+    <section id="view-pdf-studio" class="view-pane flex flex-col h-full overflow-hidden hidden">
+      <div class="flex flex-col w-full h-full min-h-0 overflow-hidden">
+        <!-- Main Workspace Layout (Sidebar + Execution Canvas) -->
+<div class="flex flex-1 min-h-0 overflow-hidden">
+<!-- Left Sidebar: PDF Tools Ribbon -->
+<aside class="w-60 flex-shrink-0 bg-surface-container-lowest border-r border-surface-container-high/80 flex flex-col justify-between shadow-[2px_0_8px_rgba(0,0,0,0.02)] z-30">
+<div class="p-3 flex flex-col gap-1.5 overflow-y-auto">
+<div class="px-3 pt-2 pb-1.5 flex items-center justify-between text-outline text-[11px] font-mono-code uppercase tracking-wider font-semibold">
+<span>PDF Tools</span>
+<span class="text-tertiary bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded font-bold">PRO</span>
+</div>
+<!-- Tool Items -->
+<a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl bg-primary-container text-on-primary font-semibold shadow-sm transition-all group" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[20px]">compress</span>
+<span class="font-label-md text-label-md">Compress PDF</span>
+</div>
+<span class="bg-primary/60 text-on-primary text-[10px] font-mono-code px-1.5 py-0.5 rounded font-bold uppercase tracking-tight">Active</span>
+</a>
+<a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">tab_unselected</span>
+<span>Merge PDF</span>
+</div>
+<span class="text-outline-variant text-[11px] font-mono-code">Alt+M</span>
+</a>
+<a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">call_split</span>
+<span>Split PDF</span>
+</div>
+<span class="text-outline-variant text-[11px] font-mono-code">Alt+S</span>
+</a>
+<a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">image</span>
+<span>PDF to JPG</span>
+</div>
+<span class="text-outline-variant text-[11px] font-mono-code">Alt+J</span>
+</a>
+<a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">rotate_right</span>
+<span>Rotate PDF</span>
+</div>
+<span class="text-outline-variant text-[11px] font-mono-code">Alt+R</span>
+</a>
+<a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group" href="#">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">auto_fix_high</span>
+<span>Clean &amp; Enhance</span>
+</div>
+<span class="text-tertiary bg-emerald-50 px-1 py-0.5 rounded text-[10px] font-mono-code font-bold">AI</span>
+</a>
+</div>
+<!-- Bottom System Info inside Sidebar -->
+<div class="p-3 border-t border-surface-container-high/60">
+<div class="bg-surface-container-low p-2.5 rounded-xl border border-surface-container-high/50 flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-[11px] text-on-surface-variant font-semibold flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            Ghostscript Core
+          </span>
+<span class="font-mono-code text-[10px] text-primary font-bold">v10.02.0</span>
+</div>
+<div class="flex items-center justify-between text-[10px] font-mono-code text-on-surface-variant">
+<span>Subfolder Output:</span>
+<span class="text-emerald-700 font-semibold truncate max-w-[100px]">Zero-Overwrite</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Execution Workspace Canvas -->
+<main class="flex-1 min-w-0 flex flex-col justify-between overflow-y-auto bg-[#f8f9ff]">
+<div class="max-w-7xl w-full mx-auto p-4 flex flex-col gap-3.5">
+<!-- Drag & Drop Instant Dropzone Strip -->
+<div class="w-full bg-surface-container-lowest border border-surface-container-high/80 rounded-xl px-3 py-2 shadow-xs flex items-center justify-between gap-3"><div class="flex items-center gap-2"><button class="px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container-high text-on-surface border border-surface-container-high font-label-md text-[12px] font-semibold transition-colors flex items-center gap-1.5 cursor-pointer" type="button"><span class="material-symbols-outlined text-[16px] text-primary">drive_folder_upload</span><span>Browse Directory</span></button><button class="px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container-high text-on-surface border border-surface-container-high font-label-md text-[12px] font-semibold transition-colors flex items-center gap-1.5 cursor-pointer" type="button"><span class="material-symbols-outlined text-[16px] text-primary">add_circle</span><span>Add Files</span></button></div><div class="flex items-center gap-1.5 text-outline font-mono-code text-[11px]"><span class="material-symbols-outlined text-[14px]">folder_open</span><span>Drag &amp; drop files anywhere to queue</span></div></div>
+<!-- Active Batch Queue Meta Header -->
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center gap-2.5">
+<h2 class="font-headline-sm text-[15px] font-bold text-on-surface">Execution Queue</h2>
+<span class="bg-primary-container text-on-primary font-mono-code text-[11px] px-2 py-0.5 rounded-full font-bold">8 Files Loaded</span>
+<span class="text-outline-variant">•</span>
+<span class="font-mono-code text-[12px] text-outline">Total: 8.94 MB → Projected: ~1.72 MB</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="flex items-center gap-1 bg-surface-container-lowest border border-surface-container-high p-0.5 rounded-lg shadow-xs">
+<button class="w-7 h-7 flex items-center justify-center rounded text-on-surface hover:bg-surface-container text-outline hover:text-on-surface transition-colors" title="Scroll Left" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="w-7 h-7 flex items-center justify-center rounded text-on-surface hover:bg-surface-container text-outline hover:text-on-surface transition-colors" title="Scroll Right" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+<span class="text-outline-variant">|</span>
+<button class="bg-surface-container-lowest border border-surface-container-high px-2.5 py-1 rounded-lg text-on-surface font-mono-code text-[11px] font-semibold shadow-xs hover:bg-surface-container transition-colors" type="button">
+            Size (Desc)
+          </button>
+<button class="bg-surface-container-lowest border border-surface-container-high px-2.5 py-1 rounded-lg text-outline font-mono-code text-[11px] hover:bg-surface-container transition-colors" type="button">
+            Docket Type
+          </button>
+</div>
+</div>
+<!-- Main PDF Docket Cards Grid (6 Files Clean Responsive Layout) -->
+<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest rounded-xl border border-surface-container-high/80 p-2.5 flex flex-col justify-between hover:shadow-md transition-shadow group relative">
+<div class="absolute top-1.5 right-1.5 z-10 flex items-center gap-1">
+<button class="w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-primary transition-colors shadow-xs" title="Rotate 90°">
+<span class="material-symbols-outlined text-[13px]">rotate_right</span>
+</button>
+<button class="w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-error transition-colors shadow-xs" title="Remove">
+<span class="material-symbols-outlined text-[13px]">close</span>
+</button>
+</div>
+<div class="relative w-full h-24 rounded-lg bg-surface-container-low overflow-hidden mb-2 border border-surface-container-high/60">
+<img alt="10th Marksheet" class="w-full h-full object-cover object-top opacity-90 group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuALnSQCHePYnHSjzyNSA7Cv9UtzHktUrrGPBVyRq_LJCNBp9YakrsavNKNFj8-rbcFAsQCDMJuGEfa4c03qRB78xaBJ3f5Gs8zQEWuyuaYdwYOdca14awPd5TzxdT4Q6xf3l-weBq3h9NEE0mNRiRFcc4YaAdqw4Z7PGQEKDu6KIrghvTIFzTudVLa1Cyu6QswIEXRAdPidHpfveQr7cPoN0kewK2B0bud8GuwDAbhr">
+<div class="absolute bottom-1 right-1 bg-inverse-surface/80 text-inverse-on-surface rounded px-1 text-[9px] font-mono-code">2p</div>
+</div>
+<div class="font-headline-sm text-[12px] font-bold text-on-surface truncate mb-1" title="10TH MARKSHEET Vijay Yadav.pdf">10TH MARKSHEET Vijay Yadav.pdf</div>
+<div class="bg-surface-container-low border border-surface-container-high/60 rounded-lg p-1.5 flex flex-col gap-0.5 font-mono-code text-[10px]">
+<div class="flex items-center justify-between text-outline">
+<span>Old: 1.42 MB</span>
+<span class="text-emerald-700 font-bold font-semibold">-83%</span>
+</div>
+<div class="flex items-center justify-between font-bold text-on-surface">
+<span>New:</span>
+<span class="text-primary font-bold">~236 KB</span>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest rounded-xl border border-surface-container-high/80 p-2.5 flex flex-col justify-between hover:shadow-md transition-shadow group relative">
+<div class="absolute top-1.5 right-1.5 z-10 flex items-center gap-1">
+<button class="w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-primary transition-colors shadow-xs" title="Rotate 90°">
+<span class="material-symbols-outlined text-[13px]">rotate_right</span>
+</button>
+<button class="w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-error transition-colors shadow-xs" title="Remove">
+<span class="material-symbols-outlined text-[13px]">close</span>
+</button>
+</div>
+<div class="relative w-full h-24 rounded-lg bg-surface-container-low overflow-hidden mb-2 border border-surface-container-high/60">
+<img alt="School Leaving Cert" class="w-full h-full object-cover object-top opacity-90 group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuASPmRXjbLZasgUO2gBSkCSy0Vo_yNUIDcLnQgTF7vuDDtvRCUZrYHVCLUjaGmGp8BzMqYDew3JtE9iLuFa8fKqBJr3YHJjxxpVB0VbD0yWYcxoD--5XSRAEKY-MLBcoTZ8MKnslJIE9GSA_2iHQi1-roESg6iwbbzZ87VQRXMJ4DeR3HtLvMGqMvKiSYRaKiFC2xMQ0XKyFgVX-Dtqb_KupzB5EMimYRHgTOPVV4aC">
+<div class="absolute bottom-1 right-1 bg-inverse-surface/80 text-inverse-on-surface rounded px-1 text-[9px] font-mono-code">1p</div>
+</div>
+<div class="font-headline-sm text-[12px] font-bold text-on-surface truncate mb-1" title="12TH LC Aarti Patil.pdf">12TH LC Aarti Patil.pdf</div>
+<div class="bg-surface-container-low border border-surface-container-high/60 rounded-lg p-1.5 flex flex-col gap-0.5 font-mono-code text-[10px]">
+<div class="flex items-center justify-between text-outline">
+<span>Old: 840 KB</span>
+<span class="text-emerald-700 font-bold font-semibold">-76%</span>
+</div>
+<div class="flex items-center justify-between font-bold text-on-surface">
+<span>New:</span>
+<span class="text-primary font-bold">~198 KB</span>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container-lowest rounded-xl border border-surface-container-high/80 p-2.5 flex flex-col justify-between hover:shadow-md transition-shadow group relative">
+<div class="absolute top-1.5 right-1.5 z-10 flex items-center gap-1">
+<button class="w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-primary transition-colors shadow-xs" title="Rotate 90°">
+<span class="material-symbols-outlined text-[13px]">rotate_right</span>
+</button>
+<button class="w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-error transition-colors shadow-xs" title="Remove">
+<span class="material-symbols-outlined text-[13px]">close</span>
+</button>
+</div>
+<div class="relative w-full h-24 rounded-lg bg-surface-container-low overflow-hidden mb-2 border border-surface-container-high/60">
+<img alt="Caste Validity" class="w-full h-full object-cover object-top opacity-90 group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnWIlT5ydaOmdT4CYbysp2flmz4pZaTsV-Fpcii2RTFfjWHzDFUZlY6KIAh8gwEiwQwCszOBn07h53H4KAbl6BHxcCLVdGb1-I3WFvJcDpg2x0MuJnMR-iPuQR6o8Cd2Mm-emQ1aCiGQyvt5UPH9Ox3XvXICLxEtq5biS0umDGL3GMRf3c-o6B8HY1W_zysISTPgVd8WAMNHMXUu9swR-dLKx-5QMTnpZU7jPTnnB-">
+<div class="absolute bottom-1 right-1 bg-inverse-surface/80 text-inverse-on-surface rounded px-1 text-[9px] font-mono-code">1p</div>
+</div>
+<div class="font-headline-sm text-[12px] font-bold text-on-surface truncate mb-1" title="CASTE VALIDITY Rahul Shinde.pdf">CASTE VALIDITY Rahul Shinde.pdf</div>
+<div class="bg-surface-container-low border border-surface-container-high/60 rounded-lg p-1.5 flex flex-col gap-0.5 font-mono-code text-[10px]">
+<div class="flex items-center justify-between text-outline">
+<span>Old: 2.10 MB</span>
+<span class="text-emerald-700 font-bold font-semibold">-88%</span>
+</div>
+<div class="flex items-center justify-between font-bold text-on-surface">
+<span>New:</span>
+<span class="text-primary font-bold">~242 KB</span>
+</div>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-surface-container-lowest rounded-xl border border-surface-container-high/80 p-2.5 flex flex-col justify-between hover:shadow-md transition-shadow group relative">
+<div class="absolute top-1.5 right-1.5 z-10 flex items-center gap-1">
+<button class="w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-primary transition-colors shadow-xs" title="Rotate 90°">
+<span class="material-symbols-outlined text-[13px]">rotate_right</span>
+</button>
+<button class="w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-error transition-colors shadow-xs" title="Remove">
+<span class="material-symbols-outlined text-[13px]">close</span>
+</button>
+</div>
+<div class="relative w-full h-24 rounded-lg bg-surface-container-low overflow-hidden mb-2 border border-surface-container-high/60">
+<img alt="Domicile Certificate" class="w-full h-full object-cover object-top opacity-90 group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQYPBFblAeIh3SPwmagkvCRRguIfGBylG8UV3lEh4bvZ0th0qZgs3hb7C0iAq2WOrInsPoIgdfA_SBooRdJJp7efBUr4HMXRegnX4eXGMCEY8v65NlVx8cNNoosTU13S7VP7xNrCBMZNBJvqC_NrVxsHikKN4HUj1aNcaSiJLs6og66Xcll8KLrSRSrT0VYKM56ii4COVNZbz77LJPmagCnWGidWsZCmoDp_f8y0gx">
+<div class="absolute bottom-1 right-1 bg-inverse-surface/80 text-inverse-on-surface rounded px-1 text-[9px] font-mono-code">1p</div>
+</div>
+<div class="font-headline-sm text-[12px] font-bold text-on-surface truncate mb-1" title="DOMICILE CERTIFICATE Amit Kadam.pdf">DOMICILE CERTIFICATE Amit Kadam.pdf</div>
+<div class="bg-surface-container-low border border-surface-container-high/60 rounded-lg p-1.5 flex flex-col gap-0.5 font-mono-code text-[10px]">
+<div class="flex items-center justify-between text-outline">
+<span>Old: 620 KB</span>
+<span class="text-emerald-700 font-bold font-semibold">-70%</span>
+</div>
+<div class="flex items-center justify-between font-bold text-on-surface">
+<span>New:</span>
+<span class="text-primary font-bold">~185 KB</span>
+</div>
+</div>
+</div>
+<!-- Card 5 -->
+<div class="bg-surface-container-lowest rounded-xl border border-surface-container-high/80 p-2.5 flex flex-col justify-between hover:shadow-md transition-shadow group relative">
+<div class="absolute top-1.5 right-1.5 z-10 flex items-center gap-1">
+<button class="w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-primary transition-colors shadow-xs" title="Rotate 90°">
+<span class="material-symbols-outlined text-[13px]">rotate_right</span>
+</button>
+<button class="w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-error transition-colors shadow-xs" title="Remove">
+<span class="material-symbols-outlined text-[13px]">close</span>
+</button>
+</div>
+<div class="relative w-full h-24 rounded-lg bg-surface-container-low overflow-hidden mb-2 border border-surface-container-high/60">
+<img alt="Income Certificate" class="w-full h-full object-cover object-top opacity-90 group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnWIlT5ydaOmdT4CYbysp2flmz4pZaTsV-Fpcii2RTFfjWHzDFUZlY6KIAh8gwEiwQwCszOBn07h53H4KAbl6BHxcCLVdGb1-I3WFvJcDpg2x0MuJnMR-iPuQR6o8Cd2Mm-emQ1aCiGQyvt5UPH9Ox3XvXICLxEtq5biS0umDGL3GMRf3c-o6B8HY1W_zysISTPgVd8WAMNHMXUu9swR-dLKx-5QMTnpZU7jPTnnB-">
+<div class="absolute bottom-1 right-1 bg-inverse-surface/80 text-inverse-on-surface rounded px-1 text-[9px] font-mono-code">1p</div>
+</div>
+<div class="font-headline-sm text-[12px] font-bold text-on-surface truncate mb-1" title="INCOME CERTIFICATE 2024.pdf">INCOME CERTIFICATE 2024.pdf</div>
+<div class="bg-surface-container-low border border-surface-container-high/60 rounded-lg p-1.5 flex flex-col gap-0.5 font-mono-code text-[10px]">
+<div class="flex items-center justify-between text-outline">
+<span>Old: 1.15 MB</span>
+<span class="text-emerald-700 font-bold font-semibold">-79%</span>
+</div>
+<div class="flex items-center justify-between font-bold text-on-surface">
+<span>New:</span>
+<span class="text-primary font-bold">~238 KB</span>
+</div>
+</div>
+</div>
+<!-- Card 6 -->
+<div class="bg-surface-container-lowest rounded-xl border border-surface-container-high/80 p-2.5 flex flex-col justify-between hover:shadow-md transition-shadow group relative">
+<div class="absolute top-1.5 right-1.5 z-10 flex items-center gap-1">
+<button class="w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-primary transition-colors shadow-xs" title="Rotate 90°">
+<span class="material-symbols-outlined text-[13px]">rotate_right</span>
+</button>
+<button class="w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-error transition-colors shadow-xs" title="Remove">
+<span class="material-symbols-outlined text-[13px]">close</span>
+</button>
+</div>
+<div class="relative w-full h-24 rounded-lg bg-surface-container-low overflow-hidden mb-2 border border-surface-container-high/60">
+<img alt="Non Creamy Layer Certificate" class="w-full h-full object-cover object-top opacity-90 group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQYPBFblAeIh3SPwmagkvCRRguIfGBylG8UV3lEh4bvZ0th0qZgs3hb7C0iAq2WOrInsPoIgdfA_SBooRdJJp7efBUr4HMXRegnX4eXGMCEY8v65NlVx8cNNoosTU13S7VP7xNrCBMZNBJvqC_NrVxsHikKN4HUj1aNcaSiJLs6og66Xcll8KLrSRSrT0VYKM56ii4COVNZbz77LJPmagCnWGidWsZCmoDp_f8y0gx">
+<div class="absolute bottom-1 right-1 bg-inverse-surface/80 text-inverse-on-surface rounded px-1 text-[9px] font-mono-code">1p</div>
+</div>
+<div class="font-headline-sm text-[12px] font-bold text-on-surface truncate mb-1" title="NON CREAMY LAYER CERT.pdf">NON CREAMY LAYER CERT.pdf</div>
+<div class="bg-surface-container-low border border-surface-container-high/60 rounded-lg p-1.5 flex flex-col gap-0.5 font-mono-code text-[10px]">
+<div class="flex items-center justify-between text-outline">
+<span>Old: 1.80 MB</span>
+<span class="text-emerald-700 font-bold font-semibold">-86%</span>
+</div>
+<div class="flex items-center justify-between font-bold text-on-surface">
+<span>New:</span>
+<span class="text-primary font-bold">~248 KB</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Bottom Sticky Execution Dock (ClerkMaster Standard Action Dock) -->
+<div class="flex-shrink-0 h-16 bg-inverse-surface text-inverse-on-surface px-gutter flex items-center justify-between z-40 shadow-[0_-4px_16px_rgba(0,0,0,0.15)] border-t border-outline/20">
+<!-- Left: Batch Telemetry -->
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-space-xs">
+<span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+<span class="font-mono-code text-mono-code font-bold text-inverse-on-surface">4 PDF Files Loaded</span>
+</div>
+<div class="h-4 w-px bg-on-surface-variant"></div>
+<div class="font-mono-code text-[12px] text-surface-variant">
+<span>Raw: <strong class="text-inverse-on-surface">4.96 MB</strong></span>
+<span class="mx-1">→</span>
+<span>Projected: <strong class="text-emerald-400">861 KB</strong></span>
+<span class="text-emerald-300 ml-1 font-semibold">(~82% Storage Savings)</span>
+</div>
+</div>
+<!-- Center: Operational Quick Controls -->
+<div class="hidden xl:flex items-center gap-space-xs">
+<button class="px-space-md py-1.5 rounded-lg bg-on-background/70 hover:bg-on-background text-surface-variant hover:text-inverse-on-surface font-label-md text-label-md font-medium transition-colors flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[16px]">rotate_90_degrees_ccw</span>
+<span>Rotate All 90°</span>
+</button>
+<button class="px-space-md py-1.5 rounded-lg bg-on-background/70 hover:bg-on-background text-surface-variant hover:text-inverse-on-surface font-label-md text-label-md font-medium transition-colors flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[16px]">cleaning_services</span>
+<span>Clear Queue</span>
+</button>
+<button class="px-space-md py-1.5 rounded-lg bg-on-background/70 hover:bg-on-background text-surface-variant hover:text-inverse-on-surface font-label-md text-label-md font-medium transition-colors flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[16px]">filter_alt</span>
+<span>Filter Oversized (&gt;256KB)</span>
+</button>
+</div>
+<!-- Right: High Contrast Primary CTAs -->
+<div class="flex items-center gap-space-sm">
+<button class="px-space-md py-2 rounded-lg bg-on-background hover:bg-on-background/80 text-inverse-on-surface font-label-md text-label-md font-semibold transition-colors flex items-center gap-1.5 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span>Select PDF Files</span>
+</button>
+<button class="px-space-lg py-2.5 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-headline-sm text-headline-sm font-bold shadow-lg shadow-primary-container/30 transition-all flex items-center gap-2 cursor-pointer" id="startCompressBtn" type="button">
+<span class="material-symbols-outlined text-[20px]">rocket_launch</span>
+<span>Start Process (4 Files)</span>
+<kbd class="bg-primary px-1.5 py-0.5 rounded text-[11px] font-mono-code font-bold">F8</kbd>
+</button>
+</div>
+</div>
+<!-- Persistent Hotkey Footer Strip Matching Renamer -->
+<footer class="flex-shrink-0 h-10 bg-[#14202e] text-inverse-on-surface flex items-center justify-between px-gutter font-mono-code text-mono-code border-t border-slate-700/60 z-50">
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-1.5"><kbd class="bg-[#213145] px-1.5 py-0.5 rounded text-inverse-on-surface font-semibold shadow-inner">Ctrl+Z</kbd><span class="text-surface-variant">Undo</span></div>
+<div class="h-3 w-px bg-on-surface-variant"></div>
+<div class="flex items-center gap-1.5"><kbd class="bg-[#213145] px-1.5 py-0.5 rounded text-inverse-on-surface font-semibold shadow-inner">Tab</kbd><span class="text-surface-variant">Next Field</span></div>
+<div class="h-3 w-px bg-on-surface-variant"></div>
+<div class="flex items-center gap-1.5"><kbd class="bg-primary-container text-on-primary px-1.5 py-0.5 rounded font-semibold shadow-inner">F8</kbd><span class="text-surface-variant font-semibold">Process &amp; Verify</span></div>
+<div class="h-3 w-px bg-on-surface-variant"></div>
+<div class="flex items-center gap-1.5"><kbd class="bg-[#213145] px-1.5 py-0.5 rounded text-inverse-on-surface font-semibold shadow-inner">Esc</kbd><span class="text-surface-variant">Close / Abort</span></div>
+</div>
+<div class="flex items-center gap-space-lg">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+<span class="text-inverse-on-surface">Safe Threshold &lt; 256 KB</span>
+</div>
+<div class="text-surface-variant">Disk: <span class="text-inverse-on-surface font-semibold">Ready (D:\MH_ADMISSION_2024)</span></div>
+</div>
+</footer>
+<!-- Interactive Micro-interaction Script -->
+      </div>
+    </section>
+  
+      
+    <section id="view-image-studio" class="view-pane flex flex-col h-full overflow-hidden hidden">
+      <div class="flex flex-col w-full h-full min-h-0 overflow-hidden">
+        <!-- Main Workspace Layout (Sidebar + Execution Canvas) -->
+<div class="flex flex-1 min-h-0 overflow-hidden">
+<!-- Left Sidebar: PDF Tools Ribbon -->
+<aside class="w-60 flex-shrink-0 bg-surface-container-lowest border-r border-surface-container-high/80 flex flex-col justify-between shadow-[2px_0_8px_rgba(0,0,0,0.02)] z-30">
+
+<div class="p-3 flex flex-col gap-1.5 overflow-y-auto">
+  <div class="px-3 pt-2 pb-1.5 flex items-center justify-between text-outline text-[11px] font-mono-code uppercase tracking-wider font-semibold">
+    <span>IMAGE TOOLS</span>
+    <span class="text-tertiary bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded font-bold">PIL SIMD</span>
+  </div>
+  <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl bg-primary-container text-on-primary font-semibold shadow-sm transition-all group" href="#">
+    <div class="flex items-center gap-2.5">
+      <span class="material-symbols-outlined text-[20px]">compress</span>
+      <span class="font-label-md text-label-md">Compress Photo / Sign</span>
+    </div>
+    <span class="bg-primary/60 text-on-primary text-[10px] font-mono-code px-1.5 py-0.5 rounded font-bold uppercase tracking-tight">Active</span>
+  </a>
+  <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group" href="#">
+    <div class="flex items-center gap-2.5">
+      <span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">crop</span>
+      <span class="font-label-md text-label-md">Passport Crop (3.5x4.5cm)</span>
+    </div>
+    <span class="text-outline-variant text-[11px] font-mono-code">Alt+P</span>
+  </a>
+  <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group" href="#">
+    <div class="flex items-center gap-2.5">
+      <span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">draw</span>
+      <span class="font-label-md text-label-md">Signature Clean &amp; Invert</span>
+    </div>
+    <span class="text-outline-variant text-[11px] font-mono-code">Alt+I</span>
+  </a>
+  <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group" href="#">
+    <div class="flex items-center gap-2.5">
+      <span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">picture_as_pdf</span>
+      <span class="font-label-md text-label-md">Image to PDF (A4)</span>
+    </div>
+    <span class="text-outline-variant text-[11px] font-mono-code">Alt+F</span>
+  </a>
+  <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group" href="#">
+    <div class="flex items-center gap-2.5">
+      <span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">auto_fix_high</span>
+      <span class="font-label-md text-label-md">CamScanner Magic Color</span>
+    </div>
+    <span class="text-tertiary bg-emerald-50 px-1 py-0.5 rounded text-[10px] font-mono-code font-bold">HD</span>
+  </a>
+  <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group" href="#">
+    <div class="flex items-center gap-2.5">
+      <span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">transform</span>
+      <span class="font-label-md text-label-md">Resize &amp; Convert (JPG/PNG)</span>
+    </div>
+    <span class="text-outline-variant text-[11px] font-mono-code">Alt+C</span>
+  </a>
+</div>
+          <a class="flex items-center justify-between px-3 py-2.5 rounded-xl bg-primary-container text-on-primary font-semibold shadow-sm transition-all group" href="#">
+            <div class="flex items-center gap-2.5">
+              <span class="material-symbols-outlined text-[20px]">compress</span>
+              <span class="font-label-md text-label-md">Compress Photo / Sign</span>
+            </div>
+            <span class="bg-primary/60 text-on-primary text-[10px] font-mono-code px-1.5 py-0.5 rounded font-bold uppercase tracking-tight">Active</span>
+          </a>
+          <a class="flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group" href="#">
+            <div class="flex items-center gap-2.5">
+              <span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">crop</span>
+              <span>Passport Crop (3.5x4.5cm)</span>
+            </div>
+            <span class="text-outline-variant text-[11px] font-mono-code">Alt+P</span>
+          </a>
+          <a class="flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group" href="#">
+            <div class="flex items-center gap-2.5">
+              <span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">draw</span>
+              <span>Signature Clean &amp; Invert</span>
+            </div>
+            <span class="text-outline-variant text-[11px] font-mono-code">Alt+I</span>
+          </a>
+          <a class="flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group" href="#">
+            <div class="flex items-center gap-2.5">
+              <span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">picture_as_pdf</span>
+              <span>Image to PDF (A4)</span>
+            </div>
+            <span class="text-outline-variant text-[11px] font-mono-code">Alt+F</span>
+          </a>
+          <a class="flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group" href="#">
+            <div class="flex items-center gap-2.5">
+              <span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">auto_fix_high</span>
+              <span>CamScanner Magic Color</span>
+            </div>
+            <span class="text-tertiary bg-emerald-50 px-1 py-0.5 rounded text-[10px] font-mono-code font-bold">HD</span>
+          </a>
+          <a class="flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group" href="#">
+            <div class="flex items-center gap-2.5">
+              <span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">transform</span>
+              <span>Resize &amp; Convert (JPG/PNG)</span>
+            </div>
+            <span class="text-outline-variant text-[11px] font-mono-code">Alt+C</span>
+          </a>
+        </div>
+<!-- Bottom System Info inside Sidebar -->
+<div class="p-3 border-t border-surface-container-high/60">
+          <div class="bg-surface-container-low p-2.5 rounded-xl border border-surface-container-high/50 flex flex-col gap-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-label-sm text-[11px] text-on-surface-variant font-semibold flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                Pillow Core
+              </span>
+              <span class="font-mono-code text-[10px] text-primary font-bold">v10.4.0</span>
+            </div>
+            <div class="flex items-center justify-between text-[10px] font-mono-code text-on-surface-variant">
+              <span>Host Engine:</span>
+              <span class="text-emerald-700 font-semibold truncate max-w-[100px]">Zero-Cloud Local</span>
+            </div>
+          </div>
+        </div>
+</aside>
+<!-- Main Execution Workspace Canvas -->
+<main class="flex-1 min-w-0 flex flex-col justify-between overflow-y-auto bg-[#f8f9ff]"><div class="flex flex-col w-full h-full min-h-0 overflow-hidden">
+<!-- Top Operational Control Strip (Directory and Intake Bar) -->
+<div class="shrink-0 bg-surface-container-lowest px-gutter py-space-sm shadow-sm flex items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-sm shrink-0">
+<button class="px-space-md py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md font-semibold transition-colors flex items-center gap-1.5 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px] text-primary">folder_open</span>
+<span>Browse Directory</span>
+<kbd class="bg-surface-container-high text-on-surface-variant px-1.5 py-0.5 rounded text-[10px] font-mono-code font-bold">Alt+D</kbd>
+</button>
+<button class="px-space-md py-1.5 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-label-md text-label-md font-semibold transition-colors flex items-center gap-1.5 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">add_photo_alternate</span>
+<span>Add Photos / Images</span>
+<kbd class="bg-primary text-on-primary px-1.5 py-0.5 rounded text-[10px] font-mono-code font-bold">Ctrl+O</kbd>
+</button>
+<div class="h-4 w-px bg-surface-container-high mx-1 hidden sm:block"></div>
+<!-- Quick Batch Preset Pills -->
+<div class="hidden lg:flex items-center gap-space-xs">
+<span class="font-label-sm text-label-sm text-secondary uppercase font-semibold mr-1">Target Mode:</span>
+<button class="px-space-sm py-1 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[14px] text-primary">badge</span>
+<span>MahaDBT Standard</span>
+</button>
+<button class="px-space-sm py-1 rounded bg-surface-container-low hover:bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-medium transition-colors" type="button">
+<span>MHT-CET (100-300 DPI)</span>
+</button>
+<button class="px-space-sm py-1 rounded bg-surface-container-low hover:bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-medium transition-colors" type="button">
+<span>Police Bharti 2024</span>
+</button>
+</div>
+</div>
+<!-- Intake Hint / Drop Zone Beacon -->
+<div class="flex items-center gap-space-sm text-secondary font-label-sm text-label-sm">
+<div class="flex items-center gap-1 px-space-md py-1 rounded-full bg-surface-container-low">
+<span class="material-symbols-outlined text-[16px] text-primary animate-bounce">upload_file</span>
+<span class="font-medium text-on-surface-variant">Drag &amp; drop student photos or digital signatures anywhere</span>
+</div>
+<div class="hidden 2xl:flex items-center gap-1.5 font-mono-code text-[11px] text-secondary">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span>Pillow Core SIMD Active</span>
+</div>
+</div>
+</div>
+<!-- Execution Queue Subheader & Live Filter Deck -->
+<div class="shrink-0 bg-surface-container-low/70 px-gutter py-space-xs flex items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary">photo_library</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight">Execution Queue</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-primary font-mono-code text-label-sm font-bold">6 Files</span>
+</div>
+<div class="h-4 w-px bg-outline-variant/40"></div>
+<div class="font-mono-code text-label-sm text-on-surface-variant flex items-center gap-1.5">
+<span>Raw: <strong class="text-on-surface font-semibold">4.82 MB</strong></span>
+<span>→</span>
+<span>Projected: <strong class="text-tertiary-container font-semibold">~320 KB</strong></span>
+<span class="px-1.5 py-0.2 rounded bg-tertiary-fixed text-on-tertiary-fixed font-bold text-[10px]">-93.4% NET</span>
+</div>
+</div>
+<!-- Sort & Filtering Bar -->
+<div class="flex items-center gap-space-xs">
+<div class="flex items-center bg-surface-container-lowest rounded-lg p-0.5 shadow-sm">
+<button class="w-6 h-6 rounded flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface" title="Previous Page" type="button">
+<span class="material-symbols-outlined text-[16px]">chevron_left</span>
+</button>
+<span class="px-2 font-mono-code text-label-sm text-on-surface-variant">1 / 1</span>
+<button class="w-6 h-6 rounded flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface" title="Next Page" type="button">
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+<div class="flex items-center gap-1 bg-surface-container-lowest px-2 py-1 rounded-lg shadow-sm">
+<span class="material-symbols-outlined text-[16px] text-secondary">sort</span>
+<span class="font-label-sm text-label-sm text-on-surface font-medium">Size (Desc)</span>
+</div>
+<div class="flex items-center gap-1 bg-surface-container-lowest px-2 py-1 rounded-lg shadow-sm">
+<span class="material-symbols-outlined text-[16px] text-secondary">category</span>
+<span class="font-label-sm text-label-sm text-on-surface font-medium">All Doc Types</span>
+<span class="material-symbols-outlined text-[14px] text-secondary">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Primary Interactive Canvas: Bento Grid of 6 Production Cards -->
+<div class="flex-1 min-h-0 overflow-y-auto p-gutter bg-surface">
+<div class="flex flex-wrap gap-space-md items-start"><div class="w-36 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high/60 overflow-hidden flex flex-col group hover:shadow-md transition-all"><div class="px-2 py-1.5 bg-surface-container-low flex items-center justify-between border-b border-surface-container-high/50"><span class="font-label-sm text-[11px] font-bold text-on-surface truncate pr-1" title="PASSPORT PHOTO Rahul Patil.jpg">Rahul Patil.jpg</span><div class="flex items-center gap-0.5 shrink-0"><button type="button" class="w-4 h-4 rounded flex items-center justify-center text-secondary hover:text-primary transition-colors" title="Rotate"><span class="material-symbols-outlined text-[13px]">rotate_right</span></button><button type="button" class="w-4 h-4 rounded flex items-center justify-center text-secondary hover:text-error transition-colors" title="Remove"><span class="material-symbols-outlined text-[13px]">close</span></button></div></div><div class="p-2 flex flex-col items-center"><div class="relative w-full h-32 bg-surface-container rounded overflow-hidden shadow-inner flex items-center justify-center"><img class="w-full h-full object-cover" data-alt="High contrast passport headshot photograph of an Indian male college applicant wearing a crisp white collared shirt against a clean studio off-white plain background with soft diffused lighting, neutral expression, centered portrait frame." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKRBmPT3ZIH1wiV61wBmAkkWjCfjI8wPLrc_125DN08k_oCBmANx0P7SiEN4cjFgvu62T7N5Rm8ghi7myY71yVUWZeIAaPrLZIz8iRy4-F7bIluJ1B2Bi1ak1jf6kzfDBa9w1DRHd4h_q9K5a2G_Ythm1-7wfeb3laGcEFOqOixnN7e858cahGPrcXTRh5a41PGSqp1VZjqb26zeT6AuZaqc9jV5a11C39J0djvzrB"><div class="absolute top-1 left-1 bg-on-background/80 text-surface-container-lowest text-[9px] font-mono-code px-1 rounded font-bold">3.5x4.5cm</div></div></div><div class="px-2 py-1.5 bg-surface-container-low/60 border-t border-surface-container-high/50 flex flex-col gap-0.5"><div class="flex items-center justify-between font-mono-code text-[10px] text-secondary"><span>Old: 1.45 MB</span><span class="px-1 rounded bg-tertiary-fixed text-on-tertiary-fixed font-bold text-[9px]">-97%</span></div><div class="flex items-center justify-between font-mono-code text-[11px] font-bold text-tertiary-container"><span>New:</span><span>~42 KB</span></div></div></div><div class="w-36 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high/60 overflow-hidden flex flex-col group hover:shadow-md transition-all"><div class="px-2 py-1.5 bg-surface-container-low flex items-center justify-between border-b border-surface-container-high/50"><span class="font-label-sm text-[11px] font-bold text-on-surface truncate pr-1" title="SIGNATURE Rahul Patil.png">Sign Rahul.png</span><div class="flex items-center gap-0.5 shrink-0"><button type="button" class="w-4 h-4 rounded flex items-center justify-center text-secondary hover:text-primary transition-colors" title="Rotate"><span class="material-symbols-outlined text-[13px]">rotate_right</span></button><button type="button" class="w-4 h-4 rounded flex items-center justify-center text-secondary hover:text-error transition-colors" title="Remove"><span class="material-symbols-outlined text-[13px]">close</span></button></div></div><div class="p-2 flex flex-col items-center"><div class="relative w-full h-32 bg-surface-container-lowest rounded overflow-hidden shadow-inner flex items-center justify-center p-1"><img class="w-full h-full object-contain mix-blend-multiply" data-alt="High contrast clean black ink cursive student handwritten signature on a purely white textured paper background, isolated, sharp crisp pen strokes, optimal digital scan quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzZHT35FN7RmyNMpBhqIX9ELieJQ39WmtDNMX0XxytB2uaPd49T_UHaR3N06iOXB9cBSR6jL0rFRlA82ZK0orwuuZA7ZauRURStonaK-PZgkWDHzzeoQTRu6R5ytMkdW-wqwzQbQVl7DRBTzgzB5K1lAgsnokRFi9PHMXPc5Ea55o7hmUN35EVFp4diCW0IxP6ZH7t1KRw6b1sqgg90pfe8Va1YfcV9Ke-EZnczTPA"><div class="absolute bottom-1 right-1 bg-surface-container-highest text-primary text-[9px] font-mono-code px-1 rounded font-bold">Sign</div></div></div><div class="px-2 py-1.5 bg-surface-container-low/60 border-t border-surface-container-high/50 flex flex-col gap-0.5"><div class="flex items-center justify-between font-mono-code text-[10px] text-secondary"><span>Old: 620 KB</span><span class="px-1 rounded bg-tertiary-fixed text-on-tertiary-fixed font-bold text-[9px]">-97%</span></div><div class="flex items-center justify-between font-mono-code text-[11px] font-bold text-tertiary-container"><span>New:</span><span>~15 KB</span></div></div></div><div class="w-36 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high/60 overflow-hidden flex flex-col group hover:shadow-md transition-all"><div class="px-2 py-1.5 bg-surface-container-low flex items-center justify-between border-b border-surface-container-high/50"><span class="font-label-sm text-[11px] font-bold text-on-surface truncate pr-1" title="PASSPORT PHOTO Aarti Patil.jpg">Aarti Patil.jpg</span><div class="flex items-center gap-0.5 shrink-0"><button type="button" class="w-4 h-4 rounded flex items-center justify-center text-secondary hover:text-primary transition-colors" title="Rotate"><span class="material-symbols-outlined text-[13px]">rotate_right</span></button><button type="button" class="w-4 h-4 rounded flex items-center justify-center text-secondary hover:text-error transition-colors" title="Remove"><span class="material-symbols-outlined text-[13px]">close</span></button></div></div><div class="p-2 flex flex-col items-center"><div class="relative w-full h-32 bg-surface-container rounded overflow-hidden shadow-inner flex items-center justify-center"><img class="w-full h-full object-cover" data-alt="Official passport format portrait photo of an Indian young woman with hair tied neatly back, bright neutral daylight, solid sky-blue studio background, high resolution document photograph." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0mOFMy_Nph3ABRNL9EZiJtPRpGv6gyE7-x7fLna2JxKUCRQ1QkISIHdoCWDvuzAbNkpVTmLPXAm9xTwc_XtQnWxAc0UK57SUE4l-jpSs-Ac0n6233yCasmudSOp6BRGii6ydhANQVBGYZn8osQNsNGMguHDRFx72i76VNOuWPCAJR7Png2d5N0J0dgElspK-LpDLFyhQ5PqAqdhEUyWs8JpG3Sz0ehtGXBBBGvXvX"><div class="absolute top-1 left-1 bg-on-background/80 text-surface-container-lowest text-[9px] font-mono-code px-1 rounded font-bold">3.5x4.5cm</div></div></div><div class="px-2 py-1.5 bg-surface-container-low/60 border-t border-surface-container-high/50 flex flex-col gap-0.5"><div class="flex items-center justify-between font-mono-code text-[10px] text-secondary"><span>Old: 1.10 MB</span><span class="px-1 rounded bg-tertiary-fixed text-on-tertiary-fixed font-bold text-[9px]">-96%</span></div><div class="flex items-center justify-between font-mono-code text-[11px] font-bold text-tertiary-container"><span>New:</span><span>~43 KB</span></div></div></div><div class="w-36 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high/60 overflow-hidden flex flex-col group hover:shadow-md transition-all"><div class="px-2 py-1.5 bg-surface-container-low flex items-center justify-between border-b border-surface-container-high/50"><span class="font-label-sm text-[11px] font-bold text-on-surface truncate pr-1" title="SIGNATURE Aarti Patil.jpg">Sign Aarti.jpg</span><div class="flex items-center gap-0.5 shrink-0"><button type="button" class="w-4 h-4 rounded flex items-center justify-center text-secondary hover:text-primary transition-colors" title="Rotate"><span class="material-symbols-outlined text-[13px]">rotate_right</span></button><button type="button" class="w-4 h-4 rounded flex items-center justify-center text-secondary hover:text-error transition-colors" title="Remove"><span class="material-symbols-outlined text-[13px]">close</span></button></div></div><div class="p-2 flex flex-col items-center"><div class="relative w-full h-32 bg-surface-container-lowest rounded overflow-hidden shadow-inner flex items-center justify-center p-1"><img class="w-full h-full object-contain mix-blend-multiply" data-alt="Student digital signature sample in dark blue fountain pen ink on bright clean white paper background, sharp strokes, clean background threshold without shadows or smudges." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMAGUZwJmaRsr-pDfFcVAk3tKspj_yE40WOPfUfTXIu5m_i54YIMgLxmJXfDlOGL5sLG0KeFdpwlTvqZAijxO_qsKsDCmTzCduh8OA5CqTqpi4uDQXKm5flPZ40gByV-ZXUzxybDDJ9bF0oQh3KwNArTtHrbqAG9qctJAVgVfXwyhfwxnHUA4qirT69tu7ihMWM2sVR4Jw2351WOobDu_i8tUELTCzPTx9At-37rmI"><div class="absolute bottom-1 right-1 bg-surface-container-highest text-primary text-[9px] font-mono-code px-1 rounded font-bold">Sign</div></div></div><div class="px-2 py-1.5 bg-surface-container-low/60 border-t border-surface-container-high/50 flex flex-col gap-0.5"><div class="flex items-center justify-between font-mono-code text-[10px] text-secondary"><span>Old: 480 KB</span><span class="px-1 rounded bg-tertiary-fixed text-on-tertiary-fixed font-bold text-[9px]">-97%</span></div><div class="flex items-center justify-between font-mono-code text-[11px] font-bold text-tertiary-container"><span>New:</span><span>~14 KB</span></div></div></div><div class="w-36 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high/60 overflow-hidden flex flex-col group hover:shadow-md transition-all"><div class="px-2 py-1.5 bg-surface-container-low flex items-center justify-between border-b border-surface-container-high/50"><span class="font-label-sm text-[11px] font-bold text-on-surface truncate pr-1" title="10TH MARKSHEET CAMSCAN PHOTO.jpg">10th Marksheet</span><div class="flex items-center gap-0.5 shrink-0"><button type="button" class="w-4 h-4 rounded flex items-center justify-center text-secondary hover:text-primary transition-colors" title="Rotate"><span class="material-symbols-outlined text-[13px]">rotate_right</span></button><button type="button" class="w-4 h-4 rounded flex items-center justify-center text-secondary hover:text-error transition-colors" title="Remove"><span class="material-symbols-outlined text-[13px]">close</span></button></div></div><div class="p-2 flex flex-col items-center"><div class="relative w-full h-32 bg-surface-container rounded overflow-hidden shadow-inner flex items-center justify-center"><img class="w-full h-full object-cover" data-alt="Official high school marksheet educational certificate printed in English and Marathi, sharp black typography with official red rubber seal stamp on bright white paper background, photographed straight top-down view." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBHNoLgTZrZCiT_CbNnF6pPvIwXULNeC8rvHKWR0kAt6vN80frVx7PIbFp5YdrvBdCr_ED2gGTvk1COw7dV96zr0N6qxoje7WCriP9dTw9kjIW0gnXsb4cy4YtMW7IvQqqIuh8q099IcJN69A-Heo_XozG05pGnIjpdD1gQw4ToA3AH13BLRfDtHeTz1kRWhDQsNOjWU5dg8UKWHH2sC6WzKohGU0Z96da46Bus5lFB"><div class="absolute top-1 left-1 bg-primary text-on-primary text-[9px] font-mono-code px-1 rounded font-bold">A4</div></div></div><div class="px-2 py-1.5 bg-surface-container-low/60 border-t border-surface-container-high/50 flex flex-col gap-0.5"><div class="flex items-center justify-between font-mono-code text-[10px] text-secondary"><span>Old: 2.30 MB</span><span class="px-1 rounded bg-tertiary-fixed text-on-tertiary-fixed font-bold text-[9px]">-92%</span></div><div class="flex items-center justify-between font-mono-code text-[11px] font-bold text-tertiary-container"><span>New:</span><span>~178 KB</span></div></div></div><div class="w-36 bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high/60 overflow-hidden flex flex-col group hover:shadow-md transition-all"><div class="px-2 py-1.5 bg-surface-container-low flex items-center justify-between border-b border-surface-container-high/50"><span class="font-label-sm text-[11px] font-bold text-on-surface truncate pr-1" title="CASTE CERTIFICATE PHONE SCAN.jpg">Caste Cert.jpg</span><div class="flex items-center gap-0.5 shrink-0"><button type="button" class="w-4 h-4 rounded flex items-center justify-center text-secondary hover:text-primary transition-colors" title="Rotate"><span class="material-symbols-outlined text-[13px]">rotate_right</span></button><button type="button" class="w-4 h-4 rounded flex items-center justify-center text-secondary hover:text-error transition-colors" title="Remove"><span class="material-symbols-outlined text-[13px]">close</span></button></div></div><div class="p-2 flex flex-col items-center"><div class="relative w-full h-32 bg-surface-container rounded overflow-hidden shadow-inner flex items-center justify-center"><img class="w-full h-full object-cover" data-alt="Maharashtra State official caste certificate with bilingual English and Devanagari Marathi script header, official emblem, applicant name, and blue verification bar codes on bright unwrinkled white background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmQR3hV9J0rdVXGAWkIwZ6lcftQ-mCU-LhKgXPCS84HHICCQ-3HE3CIMa4LuVMxWIgyzdH2h5A_GlxOn1fJ9pvZBcNksw28ZpVKw1EHT-5dJzrMmkWSb5kyjzcDZ6nDdRUB0vB8-f2V2QVUmBwQjhxIOxEW0FB3vuRhP7ofSYVgRlPYYAUigZCyhQgPL6AjsnEX-jL5FbVDWHt4Lh-UgLObhTXtY4s6v6oyGtH_E4G"><div class="absolute top-1 left-1 bg-primary text-on-primary text-[9px] font-mono-code px-1 rounded font-bold">A4</div></div></div><div class="px-2 py-1.5 bg-surface-container-low/60 border-t border-surface-container-high/50 flex flex-col gap-0.5"><div class="flex items-center justify-between font-mono-code text-[10px] text-secondary"><span>Old: 1.85 MB</span><span class="px-1 rounded bg-tertiary-fixed text-on-tertiary-fixed font-bold text-[9px]">-89%</span></div><div class="flex items-center justify-between font-mono-code text-[11px] font-bold text-tertiary-container"><span>New:</span><span>~192 KB</span></div></div></div></div>
+</div>
+</div>
+<!-- Inline Interactive Script for Tool Switching and State Tuning -->
+</main>
+</div>
+<!-- Bottom Sticky Execution Dock (ClerkMaster Standard Action Dock) -->
+<div class="flex-shrink-0 h-16 bg-inverse-surface text-inverse-on-surface px-gutter flex items-center justify-between z-40 shadow-[0_-4px_16px_rgba(0,0,0,0.15)] border-t border-outline/20">
+<!-- Left: Batch Telemetry -->
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-space-xs">
+<span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+<span class="font-mono-code text-mono-code font-bold text-inverse-on-surface">4 PDF Files Loaded</span>
+</div>
+<div class="h-4 w-px bg-on-surface-variant"></div>
+<div class="font-mono-code text-[12px] text-surface-variant">
+<span>Raw: <strong class="text-inverse-on-surface">4.96 MB</strong></span>
+<span class="mx-1">→</span>
+<span>Projected: <strong class="text-emerald-400">861 KB</strong></span>
+<span class="text-emerald-300 ml-1 font-semibold">(~82% Storage Savings)</span>
+</div>
+</div>
+<!-- Center: Operational Quick Controls -->
+<div class="hidden xl:flex items-center gap-space-xs">
+<button class="px-space-md py-1.5 rounded-lg bg-on-background/70 hover:bg-on-background text-surface-variant hover:text-inverse-on-surface font-label-md text-label-md font-medium transition-colors flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[16px]">rotate_90_degrees_ccw</span>
+<span>Rotate All 90°</span>
+</button>
+<button class="px-space-md py-1.5 rounded-lg bg-on-background/70 hover:bg-on-background text-surface-variant hover:text-inverse-on-surface font-label-md text-label-md font-medium transition-colors flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[16px]">cleaning_services</span>
+<span>Clear Queue</span>
+</button>
+<button class="px-space-md py-1.5 rounded-lg bg-on-background/70 hover:bg-on-background text-surface-variant hover:text-inverse-on-surface font-label-md text-label-md font-medium transition-colors flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[16px]">filter_alt</span>
+<span>Filter Oversized (&gt;256KB)</span>
+</button>
+</div>
+<!-- Right: High Contrast Primary CTAs -->
+<div class="flex items-center gap-space-sm">
+<button class="px-space-md py-2 rounded-lg bg-on-background hover:bg-on-background/80 text-inverse-on-surface font-label-md text-label-md font-semibold transition-colors flex items-center gap-1.5 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span>Select PDF Files</span>
+</button>
+<button class="px-space-lg py-2.5 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-headline-sm text-headline-sm font-bold shadow-lg shadow-primary-container/30 transition-all flex items-center gap-2 cursor-pointer" id="startImageProcessBtn" type="button">
+<span class="material-symbols-outlined text-[20px]">rocket_launch</span>
+<span>Start Process (4 Files)</span>
+<kbd class="bg-primary px-1.5 py-0.5 rounded text-[11px] font-mono-code font-bold">F8</kbd>
+</button>
+</div>
+</div>
+<!-- Persistent Hotkey Footer Strip Matching Renamer -->
+<footer class="flex-shrink-0 h-10 bg-[#14202e] text-inverse-on-surface flex items-center justify-between px-gutter font-mono-code text-mono-code border-t border-slate-700/60 z-50">
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-1.5"><kbd class="bg-[#213145] px-1.5 py-0.5 rounded text-inverse-on-surface font-semibold shadow-inner">Ctrl+Z</kbd><span class="text-surface-variant">Undo</span></div>
+<div class="h-3 w-px bg-on-surface-variant"></div>
+<div class="flex items-center gap-1.5"><kbd class="bg-[#213145] px-1.5 py-0.5 rounded text-inverse-on-surface font-semibold shadow-inner">Tab</kbd><span class="text-surface-variant">Next Field</span></div>
+<div class="h-3 w-px bg-on-surface-variant"></div>
+<div class="flex items-center gap-1.5"><kbd class="bg-primary-container text-on-primary px-1.5 py-0.5 rounded font-semibold shadow-inner">F8</kbd><span class="text-surface-variant font-semibold">Process &amp; Verify</span></div>
+<div class="h-3 w-px bg-on-surface-variant"></div>
+<div class="flex items-center gap-1.5"><kbd class="bg-[#213145] px-1.5 py-0.5 rounded text-inverse-on-surface font-semibold shadow-inner">Esc</kbd><span class="text-surface-variant">Close / Abort</span></div>
+</div>
+<div class="flex items-center gap-space-lg">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+<span class="text-inverse-on-surface">Safe Threshold &lt; 256 KB</span>
+</div>
+<div class="text-surface-variant">Disk: <span class="text-inverse-on-surface font-semibold">Ready (D:\MH_ADMISSION_2024)</span></div>
+</div>
+</footer>
+<!-- Interactive Micro-interaction Script -->
+      </div>
+    </section>
+  
+      
+    <section id="view-print-studio" class="view-pane flex flex-col h-full overflow-hidden hidden">
+      <div class="flex flex-col w-full h-full min-h-0 overflow-hidden">
+        <div class="flex-1 overflow-y-auto px-margin py-space-md"><div class="flex flex-col w-full pb-6">
+<!-- Workstation Master Container -->
+<div class="w-full flex flex-col gap-space-md">
+<!-- Top Breadcrumb & Status Ribbon -->
+<div class="w-full flex items-center justify-between bg-surface-container-lowest px-space-md py-2 rounded-xl shadow-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="inline-flex items-center gap-1 font-mono-code text-label-sm px-2 py-0.5 rounded bg-primary-container text-on-primary">
+<span class="material-symbols-outlined text-[14px]">print</span>
+          STUDIO-05
+        </span>
+<span class="font-headline-sm text-headline-sm text-on-surface tracking-tight">Offline Document Print Studio</span>
+<span class="text-outline-variant font-label-md">/</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Batch Sequential Dispatch Engine</span>
+</div>
+<div class="flex items-center gap-space-md shrink-0">
+<div class="flex items-center gap-1.5 px-space-sm py-1 rounded bg-tertiary-container/15 text-tertiary font-mono-code text-label-sm">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+<span>SPOOLER IDLE • 0 ACTIVE JOBS</span>
+</div>
+<div class="h-4 w-px bg-surface-container-high"></div>
+<div class="flex items-center gap-1 text-on-surface-variant font-mono-code text-label-sm">
+<span class="material-symbols-outlined text-[16px] text-primary">speed</span>
+<span>DIRECT PASS-THROUGH</span>
+</div>
+</div>
+</div>
+<!-- Main 2-Column Workstation Layout -->
+<div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-space-md items-start">
+<!-- LEFT SIDE (approx 45% -> 5 cols lg / 5.5 cols equivalent) -->
+<div class="lg:col-span-5 flex flex-col gap-space-md">
+<!-- Command Toolbar Pod -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm"><div class="flex flex-col gap-2.5"><div class="flex items-center justify-between gap-2 pb-2 border-b border-surface-container"><div class="flex items-center gap-2 flex-1"><label class="font-label-sm text-[11px] uppercase tracking-wider text-secondary whitespace-nowrap font-bold flex items-center gap-1" for="sequencePresetSelect"><span class="material-symbols-outlined text-[15px] text-primary">tune</span><span>Sequence Preset:</span></label><div class="relative flex-1 max-w-[240px]"><select class="w-full appearance-none bg-surface-container-low hover:bg-surface-container border border-outline-variant rounded-lg px-2.5 py-1.5 pr-7 font-label-sm text-label-sm text-on-surface font-semibold focus:outline-none cursor-pointer transition-colors shadow-sm" id="sequencePresetSelect"><option selected="" value="mahadbt">MahaDBT Standard (12 Docs)</option><option value="mhcet">MH CET Sequence</option><option value="direct">Direct Admission Order</option><option value="custom">Custom Manual Order</option><option value="college_custom">★ My Custom College Order (Saved)</option><option value="poly_direct">★ Poly Direct Verification (Saved)</option></select><span class="material-symbols-outlined text-[16px] text-secondary absolute right-2 top-2 pointer-events-none">expand_more</span></div></div><button class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-secondary hover:text-on-surface hover:bg-surface-container font-label-sm text-label-sm transition-colors border border-outline-variant/60 shrink-0" id="browseBtn" title="Browse local offline folder" type="button"><span class="material-symbols-outlined text-[16px] text-primary">folder_open</span><span>Browse Folder</span><kbd class="ml-1 px-1 py-0.2 rounded bg-surface-container-high text-on-surface font-mono-code text-[9px]">Alt+D</kbd></button></div><div class="grid grid-cols-2 gap-2.5"><button class="inline-flex flex-col items-start p-3 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md transition-all shadow-md active:scale-[0.98] group cursor-pointer border border-primary" id="addAutoSeqBtn" title="Loads files and matches against active preset sequence" type="button"><div class="flex items-center justify-center gap-2 w-full"><span class="material-symbols-outlined text-[18px] text-surface-bright">auto_awesome</span><span class="font-bold text-headline-sm text-[13px] leading-tight">Auto Sequence</span></div></button><button class="inline-flex flex-col items-start p-3 rounded-lg bg-surface-container-lowest hover:bg-surface-container-low text-on-surface font-label-md text-label-md transition-all active:scale-[0.98] border-2 border-outline-variant hover:border-primary shadow-sm group cursor-pointer" id="addAsIsBtn" title="Loads files in original user order without auto-reordering" type="button"><div class="flex items-center justify-center gap-2 w-full"><span class="material-symbols-outlined text-[18px] text-primary">playlist_add</span><span class="font-bold text-headline-sm text-[13px] text-on-surface leading-tight">Manual / As-Is</span></div></button></div></div></div>
+<!-- Document Queue Bento Pod -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm flex flex-col overflow-hidden">
+<!-- Pod Header & Status -->
+<div class="px-space-md py-space-sm bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface">Admission Document Queue</span>
+<span class="font-mono-code text-label-sm px-2 py-0.5 rounded-full bg-primary text-on-primary font-bold" id="queueCounterBadge">8</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">8 Documents Loaded • 11 Pages Total</span>
+</div>
+<!-- Active Sequence Checklist Pill -->
+<div class="px-space-md py-2 bg-surface-container/60 flex flex-col gap-1 border-b border-surface-container"><div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-[16px] text-tertiary">swap_vert</span><span class="font-label-sm text-label-sm font-semibold text-on-surface" id="activeSeqLabel">MahaDBT Standard Sequence Active</span></div><div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span><span class="font-mono-code text-[11px] text-tertiary font-bold" id="seqStatusBadge">100% IN ORDER</span></div></div><div class="flex items-center gap-1.5 text-secondary text-[11px] font-mono-code"><span class="material-symbols-outlined text-[14px] text-primary">drag_pan</span><span>Drag cards up or down to change print sequence on the fly • Numbers auto-renumber</span></div></div>
+<!-- Draggable / Interactive Queue List -->
+<div class="flex flex-col p-space-sm gap-1.5 max-h-[580px] overflow-y-auto" id="documentList"><div class="doc-row group flex items-center justify-between p-2.5 rounded-lg text-on-surface cursor-grab active:cursor-grabbing border border-primary-container/40 transition-all shadow-sm bg-surface-container-high active-doc" data-code="APP-2024-MH0981" data-date="18 July 2024" data-doc-id="1" data-pages="2" data-title="Application Confirmation Form" draggable="true"><div class="flex items-center gap-2.5 min-w-0"><div class="flex items-center gap-1 text-secondary group-hover:text-primary transition-colors select-none"><span class="material-symbols-outlined text-[20px]">drag_indicator</span></div><span class="font-mono-code text-label-sm font-bold text-primary w-5 shrink-0 doc-idx">#01</span><div class="w-8 h-10 rounded bg-primary-container text-on-primary flex items-center justify-center shrink-0 shadow-sm"><span class="material-symbols-outlined text-[18px]">article</span></div><div class="flex flex-col min-w-0"><div class="flex items-center gap-1.5"><span class="font-label-md text-label-md font-bold truncate">Application Confirmation Form</span><span class="font-mono-code text-[10px] px-1 py-0.2 rounded bg-surface-container-lowest text-primary font-semibold">2p</span></div><span class="font-mono-code text-[11px] text-secondary truncate">APP-2024-MH0981 • CAP Round II</span></div></div><div class="flex items-center gap-1 shrink-0"><button class="rotate-btn p-1 text-secondary hover:text-on-surface rounded hover:bg-surface-container-lowest transition-colors" title="Rotate Document 90°" type="button"><span class="material-symbols-outlined text-[16px]">rotate_right</span></button><button class="remove-btn p-1 text-secondary hover:text-error rounded hover:bg-error-container/40 transition-colors" title="Remove Document" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button></div></div><div class="doc-row group flex items-center justify-between p-2.5 rounded-lg hover:bg-surface-container text-on-surface cursor-grab active:cursor-grabbing border border-transparent hover:border-surface-container-highest transition-all" data-code="SSC-MS-77192" data-date="June 2021" data-doc-id="2" data-pages="1" data-title="10th Marksheet SSC" draggable="true"><div class="flex items-center gap-2.5 min-w-0"><div class="flex items-center gap-1 text-outline-variant group-hover:text-primary transition-colors select-none"><span class="material-symbols-outlined text-[20px]">drag_indicator</span></div><span class="font-mono-code text-label-sm font-bold text-on-surface-variant w-5 shrink-0 doc-idx">#02</span><div class="w-8 h-10 rounded bg-surface-container-highest text-secondary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[18px]">history_edu</span></div><div class="flex flex-col min-w-0"><div class="flex items-center gap-1.5"><span class="font-label-md text-label-md font-semibold truncate">10th Marksheet SSC</span><span class="font-mono-code text-[10px] px-1 py-0.2 rounded bg-surface-container text-secondary">1p</span></div><span class="font-mono-code text-[11px] text-secondary truncate">SSC-MS-77192 • State Board Pune</span></div></div><div class="flex items-center gap-1 shrink-0"><button class="rotate-btn p-1 text-secondary hover:text-on-surface rounded hover:bg-surface-container-high transition-colors" title="Rotate Document 90°" type="button"><span class="material-symbols-outlined text-[16px]">rotate_right</span></button><button class="remove-btn p-1 text-secondary hover:text-error rounded hover:bg-error-container/40 transition-colors" title="Remove Document" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button></div></div><div class="doc-row group flex items-center justify-between p-2.5 rounded-lg hover:bg-surface-container text-on-surface cursor-grab active:cursor-grabbing border border-transparent hover:border-surface-container-highest transition-all" data-code="HSC-SCI-441029" data-date="May 2023" data-doc-id="3" data-pages="1" data-title="12th Marksheet HSC" draggable="true"><div class="flex items-center gap-2.5 min-w-0"><div class="flex items-center gap-1 text-outline-variant group-hover:text-primary transition-colors select-none"><span class="material-symbols-outlined text-[20px]">drag_indicator</span></div><span class="font-mono-code text-label-sm font-bold text-on-surface-variant w-5 shrink-0 doc-idx">#03</span><div class="w-8 h-10 rounded bg-surface-container-highest text-secondary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[18px]">school</span></div><div class="flex flex-col min-w-0"><div class="flex items-center gap-1.5"><span class="font-label-md text-label-md font-semibold truncate">12th Marksheet HSC</span><span class="font-mono-code text-[10px] px-1 py-0.2 rounded bg-surface-container text-secondary">1p</span></div><span class="font-mono-code text-[11px] text-secondary truncate">HSC-SCI-441029 • Science Stream</span></div></div><div class="flex items-center gap-1 shrink-0"><button class="rotate-btn p-1 text-secondary hover:text-on-surface rounded hover:bg-surface-container-high transition-colors" title="Rotate Document 90°" type="button"><span class="material-symbols-outlined text-[16px]">rotate_right</span></button><button class="remove-btn p-1 text-secondary hover:text-error rounded hover:bg-error-container/40 transition-colors" title="Remove Document" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button></div></div><div class="doc-row group flex items-center justify-between p-2.5 rounded-lg hover:bg-surface-container text-on-surface cursor-grab active:cursor-grabbing border border-transparent hover:border-surface-container-highest transition-all" data-code="LC-INST-8821" data-date="June 2023" data-doc-id="4" data-pages="1" data-title="School Leaving Certificate (LC)" draggable="true"><div class="flex items-center gap-2.5 min-w-0"><div class="flex items-center gap-1 text-outline-variant group-hover:text-primary transition-colors select-none"><span class="material-symbols-outlined text-[20px]">drag_indicator</span></div><span class="font-mono-code text-label-sm font-bold text-on-surface-variant w-5 shrink-0 doc-idx">#04</span><div class="w-8 h-10 rounded bg-surface-container-highest text-secondary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[18px]">badge</span></div><div class="flex flex-col min-w-0"><div class="flex items-center gap-1.5"><span class="font-label-md text-label-md font-semibold truncate">School Leaving Certificate (LC)</span><span class="font-mono-code text-[10px] px-1 py-0.2 rounded bg-surface-container text-secondary">1p</span></div><span class="font-mono-code text-[11px] text-secondary truncate">LC-INST-8821 • Original Transfer Slip</span></div></div><div class="flex items-center gap-1 shrink-0"><button class="rotate-btn p-1 text-secondary hover:text-on-surface rounded hover:bg-surface-container-high transition-colors" title="Rotate Document 90°" type="button"><span class="material-symbols-outlined text-[16px]">rotate_right</span></button><button class="remove-btn p-1 text-secondary hover:text-error rounded hover:bg-error-container/40 transition-colors" title="Remove Document" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button></div></div><div class="doc-row group flex items-center justify-between p-2.5 rounded-lg hover:bg-surface-container text-on-surface cursor-grab active:cursor-grabbing border border-transparent hover:border-surface-container-highest transition-all" data-code="REV-CST-2019-331" data-date="14 August 2019" data-doc-id="5" data-pages="2" data-title="Caste Certificate" draggable="true"><div class="flex items-center gap-2.5 min-w-0"><div class="flex items-center gap-1 text-outline-variant group-hover:text-primary transition-colors select-none"><span class="material-symbols-outlined text-[20px]">drag_indicator</span></div><span class="font-mono-code text-label-sm font-bold text-on-surface-variant w-5 shrink-0 doc-idx">#05</span><div class="w-8 h-10 rounded bg-surface-container-highest text-secondary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[18px]">policy</span></div><div class="flex flex-col min-w-0"><div class="flex items-center gap-1.5"><span class="font-label-md text-label-md font-semibold truncate">Caste Certificate</span><span class="font-mono-code text-[10px] px-1 py-0.2 rounded bg-surface-container text-secondary">2p</span></div><span class="font-mono-code text-[11px] text-secondary truncate">REV-CST-2019-331 • Sub-Divisional Officer</span></div></div><div class="flex items-center gap-1 shrink-0"><button class="rotate-btn p-1 text-secondary hover:text-on-surface rounded hover:bg-surface-container-high transition-colors" title="Rotate Document 90°" type="button"><span class="material-symbols-outlined text-[16px]">rotate_right</span></button><button class="remove-btn p-1 text-secondary hover:text-error rounded hover:bg-error-container/40 transition-colors" title="Remove Document" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button></div></div><div class="doc-row group flex items-center justify-between p-2.5 rounded-lg hover:bg-surface-container text-on-surface cursor-grab active:cursor-grabbing border border-transparent hover:border-surface-container-highest transition-all" data-code="DOM-NAT-40192" data-date="03 March 2022" data-doc-id="6" data-pages="1" data-title="Domicile &amp; Nationality Certificate" draggable="true"><div class="flex items-center gap-2.5 min-w-0"><div class="flex items-center gap-1 text-outline-variant group-hover:text-primary transition-colors select-none"><span class="material-symbols-outlined text-[20px]">drag_indicator</span></div><span class="font-mono-code text-label-sm font-bold text-on-surface-variant w-5 shrink-0 doc-idx">#06</span><div class="w-8 h-10 rounded bg-surface-container-highest text-secondary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[18px]">flag</span></div><div class="flex flex-col min-w-0"><div class="flex items-center gap-1.5"><span class="font-label-md text-label-md font-semibold truncate">Domicile &amp; Nationality Certificate</span><span class="font-mono-code text-[10px] px-1 py-0.2 rounded bg-surface-container text-secondary">1p</span></div><span class="font-mono-code text-[11px] text-secondary truncate">DOM-NAT-40192 • Tahsildar Executive</span></div></div><div class="flex items-center gap-1 shrink-0"><button class="rotate-btn p-1 text-secondary hover:text-on-surface rounded hover:bg-surface-container-high transition-colors" title="Rotate Document 90°" type="button"><span class="material-symbols-outlined text-[16px]">rotate_right</span></button><button class="remove-btn p-1 text-secondary hover:text-error rounded hover:bg-error-container/40 transition-colors" title="Remove Document" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button></div></div><div class="doc-row group flex items-center justify-between p-2.5 rounded-lg hover:bg-surface-container text-on-surface cursor-grab active:cursor-grabbing border border-transparent hover:border-surface-container-highest transition-all" data-code="CV-PUN-0918-B" data-date="11 January 2024" data-doc-id="7" data-pages="1" data-title="Caste Validity Certificate" draggable="true"><div class="flex items-center gap-2.5 min-w-0"><div class="flex items-center gap-1 text-outline-variant group-hover:text-primary transition-colors select-none"><span class="material-symbols-outlined text-[20px]">drag_indicator</span></div><span class="font-mono-code text-label-sm font-bold text-on-surface-variant w-5 shrink-0 doc-idx">#07</span><div class="w-8 h-10 rounded bg-surface-container-highest text-secondary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[18px]">verified</span></div><div class="flex flex-col min-w-0"><div class="flex items-center gap-1.5"><span class="font-label-md text-label-md font-semibold truncate">Caste Validity Certificate</span><span class="font-mono-code text-[10px] px-1 py-0.2 rounded bg-surface-container text-secondary">1p</span></div><span class="font-mono-code text-[11px] text-secondary truncate">CV-PUN-0918-B • Scrutiny Committee</span></div></div><div class="flex items-center gap-1 shrink-0"><button class="rotate-btn p-1 text-secondary hover:text-on-surface rounded hover:bg-surface-container-high transition-colors" title="Rotate Document 90°" type="button"><span class="material-symbols-outlined text-[16px]">rotate_right</span></button><button class="remove-btn p-1 text-secondary hover:text-error rounded hover:bg-error-container/40 transition-colors" title="Remove Document" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button></div></div><div class="doc-row group flex items-center justify-between p-2.5 rounded-lg hover:bg-surface-container text-on-surface cursor-grab active:cursor-grabbing border border-transparent hover:border-surface-container-highest transition-all" data-code="INC-FY23-24-998" data-date="04 April 2024" data-doc-id="8" data-pages="2" data-title="Income Certificate (Tahsil)" draggable="true"><div class="flex items-center gap-2.5 min-w-0"><div class="flex items-center gap-1 text-outline-variant group-hover:text-primary transition-colors select-none"><span class="material-symbols-outlined text-[20px]">drag_indicator</span></div><span class="font-mono-code text-label-sm font-bold text-on-surface-variant w-5 shrink-0 doc-idx">#08</span><div class="w-8 h-10 rounded bg-surface-container-highest text-secondary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[18px]">payments</span></div><div class="flex flex-col min-w-0"><div class="flex items-center gap-1.5"><span class="font-label-md text-label-md font-semibold truncate">Income Certificate (Tahsil)</span><span class="font-mono-code text-[10px] px-1 py-0.2 rounded bg-surface-container text-secondary">2p</span></div><span class="font-mono-code text-[11px] text-secondary truncate">INC-FY23-24-998 • FY 2023-24 Valid</span></div></div><div class="flex items-center gap-1 shrink-0"><button class="rotate-btn p-1 text-secondary hover:text-on-surface rounded hover:bg-surface-container-high transition-colors" title="Rotate Document 90°" type="button"><span class="material-symbols-outlined text-[16px]">rotate_right</span></button><button class="remove-btn p-1 text-secondary hover:text-error rounded hover:bg-error-container/40 transition-colors" title="Remove Document" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button></div></div></div>
+<!-- Queue Footer Actions -->
+<div class="p-space-sm bg-surface-container-lowest flex items-center justify-between border-t border-surface-container"><div class="flex flex-col gap-2 w-full"><div class="flex items-center justify-between gap-2"><div class="flex items-center gap-2"><button class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-primary font-label-sm text-label-sm font-semibold border border-primary-container/40 transition-colors shadow-sm cursor-pointer" id="btnSavePreset" title="Save current document order as reusable preset" type="button"><span class="material-symbols-outlined text-[15px]">bookmark_add</span><span>Save Sequence as Preset</span></button><span class="hidden sm:inline-flex items-center gap-1 font-mono-code text-[11px] text-tertiary font-bold bg-tertiary-container/15 px-2 py-0.5 rounded"><span class="material-symbols-outlined text-[13px]">check_circle</span><span>1-Click Recall</span></span></div><div class="flex items-center gap-2.5"><div class="hidden md:flex items-center gap-1 font-mono-code text-[11px] text-secondary"><span class="material-symbols-outlined text-[14px] text-tertiary">sync_alt</span><span>Auto-renumbers live</span></div><button class="inline-flex items-center gap-1 px-2 py-1 rounded text-error hover:bg-error-container/30 font-label-sm text-label-sm transition-colors cursor-pointer" id="clearQueueBtn" type="button"><span class="material-symbols-outlined text-[14px]">clear_all</span><span>Clear Queue</span></button></div></div><div class="flex items-center justify-between px-2 py-1 bg-surface-container-low rounded font-mono-code text-[11px] text-on-surface-variant"><span class="flex items-center gap-1"><span class="material-symbols-outlined text-[13px] text-primary">info</span><span>Custom sequence saves to offline local storage for next session</span></span><span class="text-secondary font-semibold">Ready to Save</span></div></div></div>
+</div>
+</div>
+<!-- RIGHT SIDE: Live Print Preview Canvas (approx 55% -> 7 cols lg) -->
+<div class="lg:col-span-7 flex flex-col gap-space-sm">
+<!-- Canvas Header Controls -->
+<div class="w-full bg-surface-container-lowest rounded-xl px-space-md py-space-sm shadow-sm flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-2.5 h-2.5 rounded-full bg-primary animate-ping"></div>
+<span class="font-headline-sm text-headline-sm text-on-surface">Print Sheet Preview</span>
+<span class="font-mono-code text-label-sm px-2 py-0.5 rounded bg-surface-container text-primary font-bold" id="previewPageIndicator">Page 1 of 11</span>
+</div>
+<!-- Zoom & Sheet Paging Controls -->
+<div class="flex items-center gap-space-sm">
+<!-- Paging Buttons -->
+<div class="flex items-center bg-surface-container-low rounded-lg p-0.5">
+<button class="w-7 h-7 rounded flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors disabled:opacity-30" disabled="" id="prevPageBtn" type="button">
+<span class="material-symbols-outlined text-[16px]">chevron_left</span>
+</button>
+<span class="px-2 font-mono-code text-label-sm text-on-surface font-semibold select-none" id="pageStepLabel">1 / 11</span>
+<button class="w-7 h-7 rounded flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" id="nextPageBtn" type="button">
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+<!-- Zoom Controls -->
+<div class="flex items-center bg-surface-container-low rounded-lg p-0.5">
+<button class="w-7 h-7 rounded flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" id="zoomOutBtn" title="Zoom Out" type="button">
+<span class="material-symbols-outlined text-[16px]">remove</span>
+</button>
+<span class="px-2 font-mono-code text-label-sm text-on-surface font-semibold select-none" id="zoomLevelDisplay">100%</span>
+<button class="w-7 h-7 rounded flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" id="zoomInBtn" title="Zoom In" type="button">
+<span class="material-symbols-outlined text-[16px]">add</span>
+</button>
+<button class="px-2 py-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container font-label-sm text-label-sm transition-colors" id="fitScreenBtn" title="Fit to Preview Frame" type="button">
+                Fit
+              </button>
+</div>
+</div>
+</div>
+<!-- Realistic A4 Canvas Presentation Stage -->
+<div class="w-full bg-surface-dim/40 rounded-xl p-6 flex flex-col items-center justify-center min-h-[620px] overflow-hidden relative shadow-inner">
+<!-- Live Measurement Rulers / Indicator -->
+<div class="absolute top-2 left-3 flex items-center gap-2 font-mono-code text-[11px] text-secondary">
+<span class="material-symbols-outlined text-[14px]">aspect_ratio</span>
+<span>A4 Portrait • 210 x 297 mm • 300 DPI High-Fidelity</span>
+</div>
+<div class="absolute top-2 right-3 font-mono-code text-[11px] text-tertiary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+<span>PRINTER MARGIN SAFE (0.25")</span>
+</div>
+<!-- Document Canvas Sheet (A4 Proportion: 1 to 1.414) -->
+<div class="relative bg-surface-container-lowest shadow-2xl transition-transform duration-200 ease-out origin-center select-none" id="a4Sheet" style="width: 480px; min-height: 678px; max-width: 95%;">
+<!-- Document Margins and Content Container -->
+<div class="p-7 flex flex-col justify-between h-full text-on-surface">
+<!-- Header Section -->
+<div class="flex flex-col gap-2 pb-4 border-b border-outline-variant">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<!-- Government / University Seal Emblem -->
+<div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center border-2 border-primary-container text-primary">
+<span class="material-symbols-outlined text-[28px]">account_balance</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-[10px] text-secondary tracking-widest uppercase">Government of Maharashtra • Directorate of Higher Education</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold leading-tight" id="sheetMainTitle">APPLICATION CONFIRMATION FORM</span>
+<span class="font-mono-code text-[11px] text-primary font-semibold" id="sheetSubTitle">APPLICATION VERIFICATION &amp; CONFIRMATION RECEIPT</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="px-2 py-0.5 rounded bg-tertiary-container text-on-tertiary font-mono-code text-[10px] font-bold">VERIFIED &amp; SIGNED</span>
+<span class="font-mono-code text-label-sm text-on-surface-variant mt-1" id="docCodeDisplay">APP-2024-MH0981</span>
+</div>
+</div>
+</div>
+<!-- Candidate Summary Ribbon -->
+<div class="my-3 p-3 bg-surface-container-low rounded-lg grid grid-cols-2 gap-2 text-label-sm">
+<div>
+<span class="text-secondary block text-[10px] uppercase font-mono-code">Candidate Full Name</span>
+<span class="font-semibold text-on-surface">SHARMA ROHAN VIKRAM</span>
+</div>
+<div>
+<span class="text-secondary block text-[10px] uppercase font-mono-code">Application ID / Merit Rank</span>
+<span class="font-semibold font-mono-code text-primary">EN24109823 • Rank: #1,402</span>
+</div>
+<div>
+<span class="text-secondary block text-[10px] uppercase font-mono-code">Category &amp; Quota</span>
+<span class="font-semibold text-on-surface">OBC - Non Creamy Layer (State Quota)</span>
+</div>
+<div>
+<span class="text-secondary block text-[10px] uppercase font-mono-code">Allotted Institute</span>
+<span class="font-semibold text-on-surface truncate block">Govt. College of Engineering, Pune</span>
+</div>
+</div>
+<!-- Mockup Document Table / Details -->
+<div class="flex flex-col gap-2 my-2 flex-grow">
+<span class="font-label-sm text-[11px] font-bold uppercase tracking-wider text-secondary">Document Metadata &amp; Authentication</span>
+<table class="w-full text-left font-body-sm text-[12px] bg-surface-container-lowest">
+<thead>
+<tr class="bg-surface-container text-on-surface-variant font-label-sm">
+<th class="p-1.5 font-semibold">Field Parameter</th>
+<th class="p-1.5 font-semibold">Captured Record Details</th>
+<th class="p-1.5 font-semibold text-right">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container">
+<tr>
+<td class="p-1.5 font-mono-code text-secondary">Issuing Authority</td>
+<td class="p-1.5 font-medium text-on-surface" id="paramAuthority">Sub-Divisional Magistrate / Tahsil Office</td>
+<td class="p-1.5 text-right font-mono-code text-tertiary font-bold">MATCH</td>
+</tr>
+<tr>
+<td class="p-1.5 font-mono-code text-secondary">Document Index ID</td>
+<td class="p-1.5 font-mono-code text-on-surface" id="paramDocId">APP-2024-MH0981</td>
+<td class="p-1.5 text-right font-mono-code text-tertiary font-bold">VALID</td>
+</tr>
+<tr>
+<td class="p-1.5 font-mono-code text-secondary">Date of Issuance</td>
+<td class="p-1.5 font-mono-code text-on-surface" id="paramIssueDate">18 July 2024</td>
+<td class="p-1.5 text-right font-mono-code text-tertiary font-bold">CURRENT</td>
+</tr>
+<tr>
+<td class="p-1.5 font-mono-code text-secondary">Aadhaar Vault Link</td>
+<td class="p-1.5 font-mono-code text-on-surface">XXXX-XXXX-4912 (Biometric Authenticated)</td>
+<td class="p-1.5 text-right font-mono-code text-tertiary font-bold">OK</td>
+</tr>
+<tr>
+<td class="p-1.5 font-mono-code text-secondary">Scrutiny Desk Center</td>
+<td class="p-1.5 text-on-surface">FC-6002 Govt Polytechnic Center</td>
+<td class="p-1.5 text-right font-mono-code text-tertiary font-bold">CONFIRMED</td>
+</tr>
+</tbody>
+</table>
+<!-- Mockup Barcode & Security Hologram -->
+<div class="mt-4 p-3 bg-surface-container-low/60 rounded flex items-center justify-between">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-0.5 h-6">
+<!-- Barcode Visual Bars -->
+<span class="w-1 h-full bg-on-surface"></span>
+<span class="w-0.5 h-full bg-transparent"></span>
+<span class="w-2 h-full bg-on-surface"></span>
+<span class="w-1 h-full bg-transparent"></span>
+<span class="w-1.5 h-full bg-on-surface"></span>
+<span class="w-0.5 h-full bg-transparent"></span>
+<span class="w-0.5 h-full bg-on-surface"></span>
+<span class="w-2 h-full bg-on-surface"></span>
+<span class="w-1 h-full bg-transparent"></span>
+<span class="w-1 h-full bg-on-surface"></span>
+<span class="w-0.5 h-full bg-transparent"></span>
+<span class="w-2.5 h-full bg-on-surface"></span>
+<span class="w-1 h-full bg-on-surface"></span>
+<span class="w-0.5 h-full bg-transparent"></span>
+<span class="w-1 h-full bg-on-surface"></span>
+<span class="w-1 h-full bg-transparent"></span>
+<span class="w-2 h-full bg-on-surface"></span>
+<span class="w-0.5 h-full bg-transparent"></span>
+<span class="w-1.5 h-full bg-on-surface"></span>
+</div>
+<span class="font-mono-code text-[9px] text-secondary">*EN24109823-MH0981*</span>
+</div>
+<!-- QR Code Simulation -->
+<div class="flex items-center gap-2">
+<div class="w-12 h-12 bg-on-surface p-1 rounded flex items-center justify-center">
+<div class="w-full h-full bg-surface-container-lowest grid grid-cols-4 gap-0.5 p-0.5">
+<span class="bg-on-surface"></span><span class="bg-on-surface"></span><span></span><span class="bg-on-surface"></span>
+<span class="bg-on-surface"></span><span></span><span class="bg-on-surface"></span><span></span>
+<span></span><span class="bg-on-surface"></span><span></span><span class="bg-on-surface"></span>
+<span class="bg-on-surface"></span><span></span><span class="bg-on-surface"></span><span class="bg-on-surface"></span>
+</div>
+</div>
+<div class="flex flex-col">
+<span class="font-mono-code text-[9px] text-secondary">Digital Seal</span>
+<span class="font-mono-code text-[10px] text-primary font-bold">256-Bit SHA</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Signature Area -->
+<div class="pt-4 mt-2 border-t border-outline-variant flex items-end justify-between text-secondary">
+<div class="flex flex-col text-[10px] font-mono-code leading-tight">
+<span>PRINTED LOCALLY VIA CLERKMASTER SUITE</span>
+<span>SYSTEM DATE: 18-JULY-2024 • 14:32:09 IST</span>
+<span>AIR-GAPPED DESK NO: MH-FC-04</span>
+</div>
+<div class="flex flex-col items-center">
+<div class="w-28 h-6 border-b border-dashed border-outline-variant mb-1 flex items-center justify-center">
+<span class="font-mono-code text-[11px] text-primary italic font-serif">A. R. Kulkarni</span>
+</div>
+<span class="font-label-sm text-[10px] uppercase font-bold text-on-surface">Nodal Officer Signature</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Horizontal Thumbnail Strip for Quick Sheet Navigation -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-space-sm shadow-sm flex items-center gap-2 overflow-x-auto">
+<span class="font-mono-code text-label-sm text-secondary shrink-0 px-2 font-bold uppercase">Sheets:</span>
+<div class="flex items-center gap-2 min-w-0" id="thumbStrip">
+<!-- Sheet 1 Active -->
+<button class="thumb-btn active-thumb flex flex-col items-center gap-1 p-1 rounded-lg bg-primary-container text-on-primary transition-all shrink-0" data-page="1" type="button">
+<div class="w-10 h-14 bg-surface-container-lowest rounded flex items-center justify-center text-on-surface shadow-sm">
+<span class="font-mono-code text-[10px] font-bold">01</span>
+</div>
+<span class="font-mono-code text-[10px] font-bold">P. 1</span>
+</button>
+<!-- Sheet 2 -->
+<button class="thumb-btn flex flex-col items-center gap-1 p-1 rounded-lg hover:bg-surface-container text-on-surface-variant transition-all shrink-0" data-page="2" type="button">
+<div class="w-10 h-14 bg-surface-container-lowest rounded flex items-center justify-center text-on-surface shadow-sm">
+<span class="font-mono-code text-[10px] font-bold">02</span>
+</div>
+<span class="font-mono-code text-[10px]">P. 2</span>
+</button>
+<!-- Sheet 3 -->
+<button class="thumb-btn flex flex-col items-center gap-1 p-1 rounded-lg hover:bg-surface-container text-on-surface-variant transition-all shrink-0" data-page="3" type="button">
+<div class="w-10 h-14 bg-surface-container-lowest rounded flex items-center justify-center text-on-surface shadow-sm">
+<span class="font-mono-code text-[10px] font-bold">03</span>
+</div>
+<span class="font-mono-code text-[10px]">P. 3</span>
+</button>
+<!-- Sheet 4 -->
+<button class="thumb-btn flex flex-col items-center gap-1 p-1 rounded-lg hover:bg-surface-container text-on-surface-variant transition-all shrink-0" data-page="4" type="button">
+<div class="w-10 h-14 bg-surface-container-lowest rounded flex items-center justify-center text-on-surface shadow-sm">
+<span class="font-mono-code text-[10px] font-bold">04</span>
+</div>
+<span class="font-mono-code text-[10px]">P. 4</span>
+</button>
+<!-- Sheet 5 -->
+<button class="thumb-btn flex flex-col items-center gap-1 p-1 rounded-lg hover:bg-surface-container text-on-surface-variant transition-all shrink-0" data-page="5" type="button">
+<div class="w-10 h-14 bg-surface-container-lowest rounded flex items-center justify-center text-on-surface shadow-sm">
+<span class="font-mono-code text-[10px] font-bold">05</span>
+</div>
+<span class="font-mono-code text-[10px]">P. 5</span>
+</button>
+<!-- Sheet 6 -->
+<button class="thumb-btn flex flex-col items-center gap-1 p-1 rounded-lg hover:bg-surface-container text-on-surface-variant transition-all shrink-0" data-page="6" type="button">
+<div class="w-10 h-14 bg-surface-container-lowest rounded flex items-center justify-center text-on-surface shadow-sm">
+<span class="font-mono-code text-[10px] font-bold">06</span>
+</div>
+<span class="font-mono-code text-[10px]">P. 6</span>
+</button>
+<!-- Sheet 7 -->
+<button class="thumb-btn flex flex-col items-center gap-1 p-1 rounded-lg hover:bg-surface-container text-on-surface-variant transition-all shrink-0" data-page="7" type="button">
+<div class="w-10 h-14 bg-surface-container-lowest rounded flex items-center justify-center text-on-surface shadow-sm">
+<span class="font-mono-code text-[10px] font-bold">07</span>
+</div>
+<span class="font-mono-code text-[10px]">P. 7</span>
+</button>
+<!-- Sheet 8 -->
+<button class="thumb-btn flex flex-col items-center gap-1 p-1 rounded-lg hover:bg-surface-container text-on-surface-variant transition-all shrink-0" data-page="8" type="button">
+<div class="w-10 h-14 bg-surface-container-lowest rounded flex items-center justify-center text-on-surface shadow-sm">
+<span class="font-mono-code text-[10px] font-bold">08</span>
+</div>
+<span class="font-mono-code text-[10px]">P. 8</span>
+</button>
+<!-- Sheet 9 -->
+<button class="thumb-btn flex flex-col items-center gap-1 p-1 rounded-lg hover:bg-surface-container text-on-surface-variant transition-all shrink-0" data-page="9" type="button">
+<div class="w-10 h-14 bg-surface-container-lowest rounded flex items-center justify-center text-on-surface shadow-sm">
+<span class="font-mono-code text-[10px] font-bold">09</span>
+</div>
+<span class="font-mono-code text-[10px]">P. 9</span>
+</button>
+<!-- Sheet 10 -->
+<button class="thumb-btn flex flex-col items-center gap-1 p-1 rounded-lg hover:bg-surface-container text-on-surface-variant transition-all shrink-0" data-page="10" type="button">
+<div class="w-10 h-14 bg-surface-container-lowest rounded flex items-center justify-center text-on-surface shadow-sm">
+<span class="font-mono-code text-[10px] font-bold">10</span>
+</div>
+<span class="font-mono-code text-[10px]">P. 10</span>
+</button>
+<!-- Sheet 11 -->
+<button class="thumb-btn flex flex-col items-center gap-1 p-1 rounded-lg hover:bg-surface-container text-on-surface-variant transition-all shrink-0" data-page="11" type="button">
+<div class="w-10 h-14 bg-surface-container-lowest rounded flex items-center justify-center text-on-surface shadow-sm">
+<span class="font-mono-code text-[10px] font-bold">11</span>
+</div>
+<span class="font-mono-code text-[10px]">P. 11</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Interactive Execution Floating Bottom Dock -->
+<div class="w-full bg-inverse-surface text-inverse-on-surface rounded-xl p-space-md shadow-xl flex items-center justify-between gap-space-md mt-2">
+<!-- Status Left -->
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-tertiary-fixed animate-pulse"></span>
+<span class="font-headline-sm text-headline-sm text-surface-container-lowest">Ready for Batch Print</span>
+</div>
+<span class="hidden md:inline-block font-mono-code text-label-sm text-secondary-fixed-dim bg-on-secondary-fixed px-2.5 py-1 rounded">
+          8 Documents (11 Pages Loaded)
+        </span>
+</div>
+<!-- Center Keyboard Hints -->
+<div class="hidden xl:flex items-center gap-space-md text-secondary-fixed-dim font-mono-code text-label-sm">
+<span class="flex items-center gap-1">
+<kbd class="px-1.5 py-0.5 rounded bg-surface-container-lowest/15 text-surface-container-lowest font-bold">Ctrl+P</kbd> Print
+        </span>
+<span class="flex items-center gap-1">
+<kbd class="px-1.5 py-0.5 rounded bg-surface-container-lowest/15 text-surface-container-lowest font-bold">Alt+D</kbd> Add Files
+        </span>
+<span class="flex items-center gap-1">
+<kbd class="px-1.5 py-0.5 rounded bg-surface-container-lowest/15 text-surface-container-lowest font-bold">Tab</kbd> Next
+        </span>
+<span class="flex items-center gap-1">
+<kbd class="px-1.5 py-0.5 rounded bg-surface-container-lowest/15 text-surface-container-lowest font-bold">Esc</kbd> Cancel
+        </span>
+</div>
+<!-- Action Buttons Right -->
+<div class="flex items-center gap-space-sm">
+<button class="px-space-md py-2.5 rounded-lg bg-surface-container-lowest/10 hover:bg-surface-container-lowest/20 text-surface-container-lowest font-label-md text-label-md transition-colors" id="dockClearBtn" type="button">
+          Clear Queue
+        </button>
+<!-- Primary Print CTA Button -->
+<button class="inline-flex items-center gap-2 px-space-xl py-2.5 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-headline-sm text-headline-sm font-bold shadow-lg shadow-primary-container/30 transition-all active:scale-[0.98]" id="primaryPrintBtn" type="button">
+<span class="material-symbols-outlined text-[20px]">print</span>
+<span>Print Documents</span>
+<kbd class="ml-1 px-1.5 py-0.5 rounded bg-on-primary/20 text-on-primary font-mono-code text-[11px]">Ctrl+P / F8</kbd>
+</button>
+</div>
+</div>
+</div></div><footer class="shrink-0 left-0 right-0 h-16 bg-on-secondary-fixed text-on-secondary z-50 shadow-[0_-1px_8px_rgba(0,0,0,0.12)]"><div class="h-16 w-full px-margin flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md"><div class="flex items-center gap-1.5 bg-surface-container-lowest/10 px-space-sm py-1 rounded text-on-primary font-mono-code text-label-sm"><span class="w-2 h-2 rounded-full bg-tertiary-fixed"></span><span>SAFE BUFFER: &lt; 256 KB VALIDATED</span></div><span class="hidden lg:inline text-secondary-fixed-dim font-body-sm text-body-sm">Ready for MahaDBT Batch Export</span></div><div class="flex items-center gap-space-sm overflow-x-auto py-1"><span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-inverse-surface text-secondary-fixed font-mono-code text-label-sm"><kbd class="bg-surface-container-lowest/20 px-1 rounded text-surface-container-lowest font-bold">Ctrl+Z</kbd> Undo</span><span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-inverse-surface text-secondary-fixed font-mono-code text-label-sm"><kbd class="bg-surface-container-lowest/20 px-1 rounded text-surface-container-lowest font-bold">Tab</kbd> Next Field</span><span class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-primary-container text-on-primary font-mono-code text-label-sm font-bold shadow-sm"><kbd class="bg-on-primary/20 px-1 rounded text-on-primary font-bold">F8</kbd> Print Documents</span><span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-error-container text-on-error-container font-mono-code text-label-sm"><kbd class="bg-on-error-container/20 px-1 rounded font-bold">Esc</kbd> Close / Abort</span></div></div></footer>
+      </div>
+    </section>
+  
+      
+    <section id="view-follow-up" class="view-pane flex flex-col h-full overflow-hidden hidden">
+      <div class="flex flex-col w-full h-full min-h-0 overflow-hidden">
+        <div class="flex-1 overflow-y-auto px-margin py-space-md"><div class="flex flex-col w-full font-body-md text-on-surface"><!-- SIMPLIFIED HEADER STRIP -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm mb-space-md">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight">Follow-up Desk</h1>
+<p class="font-body-sm text-body-sm text-secondary">Track pending admission documents, candidate deadlines, and local student folders.</p>
+</div>
+<div class="flex items-center gap-space-sm">
+<div class="relative min-w-[280px]">
+<span class="material-symbols-outlined absolute left-2.5 top-2 text-[18px] text-secondary">search</span>
+<input class="w-full h-8 pl-8 pr-3 text-body-sm font-body-sm rounded-lg bg-surface-container-lowest border border-outline-variant text-on-surface placeholder:text-secondary focus:outline-none focus:ring-2 focus:ring-primary-container" placeholder="Search student or phone..." type="text"/>
+</div>
+<button class="h-8 px-space-md rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container transition-colors flex items-center gap-1.5 shadow-sm font-bold"><span class="material-symbols-outlined text-[16px]">folder_open</span><span>Open Batch Directory</span></button>
+</div>
+</div>
+<!-- MINIMAL & ULTRA-CLEAN FOLLOW-UP TABLE -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-secondary font-label-sm text-label-sm uppercase tracking-wider border-b border-outline-variant"><th class="py-3 px-space-md">Student Name &amp; Roll No</th><th class="py-3 px-space-md">Pending Document</th><th class="py-3 px-space-md">Deadline / Given Date</th><th class="py-3 px-space-md">Student Local Folder Location</th><th class="py-3 px-space-md text-right">Actions</th></tr>
+</thead>
+<tbody class="divide-y divide-surface-container text-body-sm font-body-sm"><tr class="hover:bg-surface-container-low transition-colors"><td class="py-3.5 px-space-md"><div class="font-headline-sm text-headline-sm font-bold text-on-surface">Vijay Ramesh Yadav</div><div class="font-mono-code text-label-sm text-secondary font-medium">FYJC-2026-084 • +91 98231 44510</div></td><td class="py-3.5 px-space-md"><span class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-error-container text-on-error-container font-label-sm text-label-sm font-bold"><span class="material-symbols-outlined text-[15px]">error</span> 12th Leaving Certificate (LC)</span></td><td class="py-3.5 px-space-md"><div class="font-mono-code font-bold text-error">24 Nov 2026</div><span class="text-[10px] font-bold uppercase tracking-wider text-error bg-error-container/40 px-1.5 py-0.5 rounded">(2 days left)</span></td><td class="py-3.5 px-space-md font-mono-code text-label-sm text-secondary"><div class="flex items-center gap-1.5 bg-surface-container-low px-2.5 py-1.5 rounded border border-outline-variant max-w-fit"><span class="material-symbols-outlined text-[16px] text-primary">folder</span><span class="truncate">E:\Admissions_2026\FYJC\Vijay_Yadav</span><button class="ml-1 text-primary hover:text-primary-container inline-flex items-center" title="Open Local Folder"><span class="material-symbols-outlined text-[16px]">folder_open</span></button></div></td><td class="py-3.5 px-space-md text-right"><div class="flex items-center justify-end gap-2"><button class="h-8 px-space-sm rounded-lg bg-tertiary text-on-tertiary hover:bg-tertiary-container font-label-sm text-label-sm transition-colors inline-flex items-center gap-1 font-semibold shadow-sm"><span class="material-symbols-outlined text-[16px]">check</span> Mark Done / Collected</button><button class="h-8 px-space-sm rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-sm text-label-sm transition-colors inline-flex items-center gap-1"><span class="material-symbols-outlined text-[15px]">edit_note</span> Edit Note</button></div></td></tr><tr class="hover:bg-surface-container-low transition-colors"><td class="py-3.5 px-space-md"><div class="font-headline-sm text-headline-sm font-bold text-on-surface">Aarti Santosh Patil</div><div class="font-mono-code text-label-sm text-secondary font-medium">FYJC-2026-112 • +91 94220 88201</div></td><td class="py-3.5 px-space-md"><span class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-error-container text-on-error-container font-label-sm text-label-sm font-bold"><span class="material-symbols-outlined text-[15px]">error</span> Caste Validity Certificate</span></td><td class="py-3.5 px-space-md"><div class="font-mono-code font-bold text-error">26 Nov 2026</div><span class="text-[10px] font-bold uppercase tracking-wider text-error bg-error-container/40 px-1.5 py-0.5 rounded">(4 days left)</span></td><td class="py-3.5 px-space-md font-mono-code text-label-sm text-secondary"><div class="flex items-center gap-1.5 bg-surface-container-low px-2.5 py-1.5 rounded border border-outline-variant max-w-fit"><span class="material-symbols-outlined text-[16px] text-primary">folder</span><span class="truncate">E:\Admissions_2026\FYJC\Aarti_Patil</span><button class="ml-1 text-primary hover:text-primary-container inline-flex items-center" title="Open Local Folder"><span class="material-symbols-outlined text-[16px]">folder_open</span></button></div></td><td class="py-3.5 px-space-md text-right"><div class="flex items-center justify-end gap-2"><button class="h-8 px-space-sm rounded-lg bg-tertiary text-on-tertiary hover:bg-tertiary-container font-label-sm text-label-sm transition-colors inline-flex items-center gap-1 font-semibold shadow-sm"><span class="material-symbols-outlined text-[16px]">check</span> Mark Done / Collected</button><button class="h-8 px-space-sm rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-sm text-label-sm transition-colors inline-flex items-center gap-1"><span class="material-symbols-outlined text-[15px]">edit_note</span> Edit Note</button></div></td></tr><tr class="hover:bg-surface-container-low transition-colors"><td class="py-3.5 px-space-md"><div class="font-headline-sm text-headline-sm font-bold text-on-surface">Pramod Ashok Shinde</div><div class="font-mono-code text-label-sm text-secondary font-medium">SYJC-2026-045 • +91 91750 33299</div></td><td class="py-3.5 px-space-md"><span class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm font-bold"><span class="material-symbols-outlined text-[15px] text-secondary">description</span> Income Certificate (Tahsildar)</span></td><td class="py-3.5 px-space-md"><div class="font-mono-code font-medium text-on-surface">28 Nov 2026</div><span class="text-[10px] font-medium text-secondary">Normal Priority</span></td><td class="py-3.5 px-space-md font-mono-code text-label-sm text-secondary"><div class="flex items-center gap-1.5 bg-surface-container-low px-2.5 py-1.5 rounded border border-outline-variant max-w-fit"><span class="material-symbols-outlined text-[16px] text-primary">folder</span><span class="truncate">E:\Admissions_2026\SYJC\Pramod_Shinde</span><button class="ml-1 text-primary hover:text-primary-container inline-flex items-center" title="Open Local Folder"><span class="material-symbols-outlined text-[16px]">folder_open</span></button></div></td><td class="py-3.5 px-space-md text-right"><div class="flex items-center justify-end gap-2"><button class="h-8 px-space-sm rounded-lg bg-tertiary text-on-tertiary hover:bg-tertiary-container font-label-sm text-label-sm transition-colors inline-flex items-center gap-1 font-semibold shadow-sm"><span class="material-symbols-outlined text-[16px]">check</span> Mark Done / Collected</button><button class="h-8 px-space-sm rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-sm text-label-sm transition-colors inline-flex items-center gap-1"><span class="material-symbols-outlined text-[15px]">edit_note</span> Edit Note</button></div></td></tr><tr class="hover:bg-surface-container-low transition-colors"><td class="py-3.5 px-space-md"><div class="font-headline-sm text-headline-sm font-bold text-on-surface">Snehal Dilip Deshmukh</div><div class="font-mono-code text-label-sm text-secondary font-medium">FYJC-2026-092 • +91 98902 12104</div></td><td class="py-3.5 px-space-md"><span class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm font-bold"><span class="material-symbols-outlined text-[15px] text-secondary">description</span> Domicile Certificate</span></td><td class="py-3.5 px-space-md"><div class="font-mono-code font-medium text-on-surface">01 Dec 2026</div><span class="text-[10px] font-medium text-secondary">Normal Priority</span></td><td class="py-3.5 px-space-md font-mono-code text-label-sm text-secondary"><div class="flex items-center gap-1.5 bg-surface-container-low px-2.5 py-1.5 rounded border border-outline-variant max-w-fit"><span class="material-symbols-outlined text-[16px] text-primary">folder</span><span class="truncate">E:\Admissions_2026\FYJC\Snehal_Deshmukh</span><button class="ml-1 text-primary hover:text-primary-container inline-flex items-center" title="Open Local Folder"><span class="material-symbols-outlined text-[16px]">folder_open</span></button></div></td><td class="py-3.5 px-space-md text-right"><div class="flex items-center justify-end gap-2"><button class="h-8 px-space-sm rounded-lg bg-tertiary text-on-tertiary hover:bg-tertiary-container font-label-sm text-label-sm transition-colors inline-flex items-center gap-1 font-semibold shadow-sm"><span class="material-symbols-outlined text-[16px]">check</span> Mark Done / Collected</button><button class="h-8 px-space-sm rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-sm text-label-sm transition-colors inline-flex items-center gap-1"><span class="material-symbols-outlined text-[15px]">edit_note</span> Edit Note</button></div></td></tr></tbody>
+</table>
+</div>
+<!-- SIMPLE MINIMAL PAGINATION / RECORD COUNT FOOTER -->
+<div class="py-2.5 px-space-md bg-surface-container-low flex items-center justify-between text-secondary font-label-sm text-label-sm">
+<span>Showing <strong>4 pending records</strong></span>
+<div class="flex items-center gap-1">
+<button class="px-2 py-1 rounded bg-surface-container hover:bg-surface-container-high transition-colors disabled:opacity-50" disabled="">Previous</button>
+<button class="px-2 py-1 rounded bg-surface-container hover:bg-surface-container-high transition-colors disabled:opacity-50" disabled="">Next</button>
+</div>
+</div>
+</div></div><footer class="shrink-0 left-0 right-0 h-16 bg-on-secondary-fixed text-on-secondary z-50 shadow-[0_-1px_8px_rgba(0,0,0,0.12)]"><div class="h-16 w-full px-margin flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-sm"><span class="w-2 h-2 rounded-full bg-tertiary-fixed"></span><span class="font-label-sm text-label-sm text-secondary-fixed">Air-Gapped Offline Mode Active</span></div><div class="flex items-center gap-space-sm text-secondary-fixed font-mono-code text-label-sm"><span class="bg-inverse-surface px-2 py-1 rounded text-tertiary-fixed font-bold">Localhost:3000</span><span class="bg-inverse-surface px-2 py-1 rounded"><kbd class="font-bold text-surface-container-lowest">Ctrl+F</kbd> Search</span><span class="bg-inverse-surface px-2 py-1 rounded"><kbd class="font-bold text-surface-container-lowest">Esc</kbd> Close</span></div></div></footer>
+      </div>
+    </section>
+  
+    </main>
+  </div>
+
+  <!-- Modal / Overlay Container -->
+  
+    <!-- Settings Modal Scrim Overlay -->
+    <div id="settings-modal-overlay" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 md:p-8 hidden">
+      <div class="w-full max-w-6xl max-h-[88vh] flex flex-col bg-white rounded-xl border border-slate-200 shadow-2xl overflow-hidden" id="settingsModal">
+<!-- Top Window Chrome / Header -->
+<div class="px-space-xl py-space-md bg-surface-container-lowest flex items-center justify-between border-b-0">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: &quot;FILL&quot; 1;">tune</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-sm">
+<h2 class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight">System Rules &amp; Configuration</h2>
+<span class="px-space-xs py-0.5 bg-primary-fixed text-on-primary-fixed rounded font-mono-code text-[11px] font-semibold">SYS_CFG_STRICT</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Configure canonical admission naming, shortcut keyword regex, portal checklists, and offline backup.</p>
+</div>
+</div>
+<!-- ESC Close Trigger -->
+<button class="flex items-center gap-space-xs px-space-sm py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors cursor-pointer group" id="closeSettingsBtn" type="button">
+<span class="font-mono-code text-[11px] font-semibold px-1.5 py-0.5 rounded bg-surface-container-lowest text-on-surface-variant group-hover:text-primary shadow-sm">Esc</span>
+<span class="font-label-sm text-label-sm text-on-surface font-medium">Close</span>
+<span class="material-symbols-outlined text-[18px] text-outline group-hover:text-error transition-colors">close</span>
+</button>
+</div>
+<!-- Institutional Tabs Strip -->
+
+<!-- Tab Content Scrollable Area (Tab 1 Active) -->
+<div class="flex-1 flex overflow-hidden bg-surface-container-lowest">
+  <!-- Dedicated Left Sidebar Submenu Navigation -->
+  <nav class="w-64 shrink-0 bg-slate-50/70 border-r border-slate-200 p-4 flex flex-col justify-between select-none"><div class="flex flex-col gap-space-xs"><div class="px-space-xs py-1 text-on-surface-variant font-mono-code text-[10px] uppercase font-bold tracking-wider">Configuration Sections</div><button type="button" class="settings-subnav-btn w-full flex items-center px-space-sm py-2.5 rounded-lg bg-surface-container-lowest text-primary font-semibold shadow-xs border-l-[3px] border-primary text-left transition-all" data-target-section="settings-section-canonical"><div class="flex items-center gap-space-xs"><span class="text-[15px]">🏷️</span><span class="font-label-md text-label-md">Canonical Rename</span></div></button><button type="button" class="settings-subnav-btn w-full flex items-center px-space-sm py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface text-left transition-colors" data-target-section="settings-section-keywords"><div class="flex items-center gap-space-xs"><span class="text-[15px]">⌨️</span><span class="font-label-md text-label-md">Keyword &amp; Matcher</span></div></button><button type="button" class="settings-subnav-btn w-full flex items-center px-space-sm py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface text-left transition-colors" data-target-section="settings-section-checklists"><div class="flex items-center gap-space-xs"><span class="text-[15px]">📋</span><span class="font-label-md text-label-md">Maharashtra Checklists</span></div></button><button type="button" class="settings-subnav-btn w-full flex items-center px-space-sm py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface text-left transition-colors" data-target-section="settings-section-backup"><div class="flex items-center gap-space-xs"><span class="text-[15px]">💾</span><span class="font-label-md text-label-md">Backup &amp; Restore</span></div></button><button type="button" class="settings-subnav-btn w-full flex items-center px-space-sm py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface text-left transition-colors" data-target-section="settings-section-about"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[18px] text-outline">info</span><span class="font-label-md text-label-md">About Us</span></div></button></div></nav>
+
+  <!-- Main Content Scrollable Area (Submenu Content) -->
+  <div class="flex-1 overflow-y-auto px-space-xl py-space-lg flex flex-col gap-space-lg bg-surface-container-lowest">
+      <div id="settings-section-canonical" class="settings-section flex flex-col gap-space-lg">
+    <!-- Info / Formula Banner -->
+    
+
+    <!-- Section: Rules Table Header & Add Trigger -->
+    <div class="flex flex-col gap-space-sm">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-space-xs">
+          <span class="material-symbols-outlined text-primary text-[20px]">rule_folder</span>
+          <span class="font-headline-sm text-headline-sm font-bold text-on-surface">Registered Canonical Naming Matchers</span>
+          <span class="ml-space-xs px-2 py-0.5 bg-surface-container text-on-surface-variant rounded-full font-mono-code text-label-sm font-semibold">6 Active</span>
+        </div>
+        <!-- Add New Rule Button -->
+        <button class="flex items-center gap-space-xs px-space-md py-1.5 bg-surface-container-high hover:bg-surface-container-highest text-primary font-label-md text-label-md font-bold rounded-lg transition-all cursor-pointer shadow-xs" id="addNewRuleBtn" type="button">
+          <span class="material-symbols-outlined text-[18px]">add_circle</span>
+          <span>+ Add New Custom Rule</span>
+        </button>
+      </div>
+
+      <!-- Rules Table Container -->
+      <div class="rounded-xl overflow-hidden bg-surface-container-low shadow-xs">
+        <div class="grid grid-cols-12 bg-surface-container px-space-md py-2.5 font-label-sm text-label-sm text-outline uppercase tracking-wider font-semibold">
+          <div class="col-span-1">SR. NO.</div>
+          <div class="col-span-4">Canonical Document Label</div>
+          <div class="col-span-2">Quick Shortcut</div>
+          <div class="col-span-4">Regex &amp; Dual-Script Keywords</div>
+          <div class="col-span-1 text-right">ACTIONS</div>
+        </div>
+        <!-- Table Rows List -->
+        <div class="flex flex-col divide-y-0" id="canonicalRuleRows">
+          <!-- Item 1 -->
+          <div class="grid grid-cols-12 items-center px-space-md py-space-sm bg-surface-container-lowest hover:bg-surface-container-low transition-colors group">
+            <div class="col-span-1">
+              <span class="px-2 py-0.5 rounded bg-surface-container-high text-primary font-mono-code text-[11px] font-bold">#01</span>
+            </div>
+            <div class="col-span-4 flex flex-col pr-space-sm">
+              <span class="font-label-lg text-label-lg font-bold text-on-surface group-hover:text-primary transition-colors">10TH MARKSHEET</span>
+              <span class="font-mono-code text-[10px] text-on-surface-variant">TOKEN_SSC_STATEMENT_MARKS</span>
+            </div>
+            <div class="col-span-2">
+              <span class="px-2 py-1 bg-surface-container-high rounded text-on-surface font-mono-code text-[12px] font-bold shadow-2xs">10M</span>
+            </div>
+            <div class="col-span-4 pr-space-sm">
+              <div class="flex flex-wrap gap-1">
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono-code text-[11px]">10th mark</span>
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono-code text-[11px]">ssc mark</span>
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono-code text-[11px]">marksheet</span>
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono-code text-[11px]">10th</span>
+              </div>
+            </div>
+            <div class="col-span-1 flex items-center justify-end gap-1"><button aria-label="Edit Rule" title="Edit Rule" class="p-1 text-on-surface-variant hover:text-primary hover:bg-surface-container-high rounded transition-colors" type="button"><span class="material-symbols-outlined text-[16px]">edit</span></button><button aria-label="Delete Rule" title="Delete Rule" class="p-1 text-on-surface-variant hover:text-error hover:bg-error-container hover:text-on-error-container rounded transition-colors" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button></div>
+          </div>
+          <!-- Item 2 -->
+          <div class="grid grid-cols-12 items-center px-space-md py-space-sm bg-surface-container-low/40 hover:bg-surface-container-low transition-colors group">
+            <div class="col-span-1">
+              <span class="px-2 py-0.5 rounded bg-surface-container-high text-primary font-mono-code text-[11px] font-bold">#02</span>
+            </div>
+            <div class="col-span-4 flex flex-col pr-space-sm">
+              <span class="font-label-lg text-label-lg font-bold text-on-surface group-hover:text-primary transition-colors">12TH LEAVING CERTIFICATE (LC)</span>
+              <span class="font-mono-code text-[10px] text-on-surface-variant">TOKEN_HSC_COLLEGE_LEAVING</span>
+            </div>
+            <div class="col-span-2">
+              <span class="px-2 py-1 bg-surface-container-high rounded text-on-surface font-mono-code text-[12px] font-bold shadow-2xs">12LC</span>
+            </div>
+            <div class="col-span-4 pr-space-sm">
+              <div class="flex flex-wrap gap-1">
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono-code text-[11px]">12lc</span>
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono-code text-[11px]">hsc lc</span>
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono-code text-[11px]">tc</span>
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono-code text-[11px]">leaving certificate</span>
+              </div>
+            </div>
+            <div class="col-span-1 flex items-center justify-end gap-1"><button aria-label="Edit Rule" title="Edit Rule" class="p-1 text-on-surface-variant hover:text-primary hover:bg-surface-container-high rounded transition-colors" type="button"><span class="material-symbols-outlined text-[16px]">edit</span></button><button aria-label="Delete Rule" title="Delete Rule" class="p-1 text-on-surface-variant hover:text-error hover:bg-error-container hover:text-on-error-container rounded transition-colors" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button></div>
+          </div>
+          <!-- Item 3: Marathi Script Included -->
+          <div class="grid grid-cols-12 items-center px-space-md py-space-sm bg-surface-container-lowest hover:bg-surface-container-low transition-colors group">
+            <div class="col-span-1">
+              <span class="px-2 py-0.5 rounded bg-surface-container-high text-primary font-mono-code text-[11px] font-bold">#03</span>
+            </div>
+            <div class="col-span-4 flex flex-col pr-space-sm">
+              <div class="flex items-center gap-space-xs">
+                <span class="font-label-lg text-label-lg font-bold text-on-surface group-hover:text-primary transition-colors">CASTE VALIDITY CERTIFICATE</span>
+                <span class="px-1.5 py-0.2 rounded bg-secondary-container text-on-secondary-container text-[9px] font-bold">DDU</span>
+              </div>
+              <span class="font-mono-code text-[10px] text-on-surface-variant">TOKEN_SOCIAL_JUSTICE_VLD</span>
+            </div>
+            <div class="col-span-2">
+              <span class="px-2 py-1 bg-surface-container-high rounded text-on-surface font-mono-code text-[12px] font-bold shadow-2xs">VLD</span>
+            </div>
+            <div class="col-span-4 pr-space-sm">
+              <div class="flex flex-wrap gap-1">
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono-code text-[11px]">validity</span>
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono-code text-[11px]">caste validity</span>
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono-code text-[11px]">vld</span>
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-primary font-semibold text-[11px]">वैधता</span>
+              </div>
+            </div>
+            <div class="col-span-1 flex items-center justify-end gap-1"><button aria-label="Edit Rule" title="Edit Rule" class="p-1 text-on-surface-variant hover:text-primary hover:bg-surface-container-high rounded transition-colors" type="button"><span class="material-symbols-outlined text-[16px]">edit</span></button><button aria-label="Delete Rule" title="Delete Rule" class="p-1 text-on-surface-variant hover:text-error hover:bg-error-container hover:text-on-error-container rounded transition-colors" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button></div>
+          </div>
+          <!-- Item 4: Aadhaar Card UID -->
+          <div class="grid grid-cols-12 items-center px-space-md py-space-sm bg-surface-container-low/40 hover:bg-surface-container-low transition-colors group">
+            <div class="col-span-1">
+              <span class="px-2 py-0.5 rounded bg-surface-container-high text-primary font-mono-code text-[11px] font-bold">#04</span>
+            </div>
+            <div class="col-span-4 flex flex-col pr-space-sm">
+              <span class="font-label-lg text-label-lg font-bold text-on-surface group-hover:text-primary transition-colors">AADHAAR CARD</span>
+              <span class="font-mono-code text-[10px] text-on-surface-variant">TOKEN_UIDAI_NATIONAL_ID</span>
+            </div>
+            <div class="col-span-2">
+              <span class="px-2 py-1 bg-surface-container-high rounded text-on-surface font-mono-code text-[12px] font-bold shadow-2xs">UID</span>
+            </div>
+            <div class="col-span-4 pr-space-sm">
+              <div class="flex flex-wrap gap-1">
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono-code text-[11px]">uid</span>
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono-code text-[11px]">adhar</span>
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono-code text-[11px]">aadhar</span>
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-primary font-semibold text-[11px]">आधार</span>
+              </div>
+            </div>
+            <div class="col-span-1 flex items-center justify-end gap-1"><button aria-label="Edit Rule" title="Edit Rule" class="p-1 text-on-surface-variant hover:text-primary hover:bg-surface-container-high rounded transition-colors" type="button"><span class="material-symbols-outlined text-[16px]">edit</span></button><button aria-label="Delete Rule" title="Delete Rule" class="p-1 text-on-surface-variant hover:text-error hover:bg-error-container hover:text-on-error-container rounded transition-colors" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button></div>
+          </div>
+          <!-- Item 5: Income Certificate -->
+          <div class="grid grid-cols-12 items-center px-space-md py-space-sm bg-surface-container-lowest hover:bg-surface-container-low transition-colors group">
+            <div class="col-span-1">
+              <span class="px-2 py-0.5 rounded bg-surface-container-high text-primary font-mono-code text-[11px] font-bold">#05</span>
+            </div>
+            <div class="col-span-4 flex flex-col pr-space-sm">
+              <span class="font-label-lg text-label-lg font-bold text-on-surface group-hover:text-primary transition-colors">INCOME CERTIFICATE (TAHSILDAR)</span>
+              <span class="font-mono-code text-[10px] text-on-surface-variant">TOKEN_REVENUE_TAHSIL_INC</span>
+            </div>
+            <div class="col-span-2">
+              <span class="px-2 py-1 bg-surface-container-high rounded text-on-surface font-mono-code text-[12px] font-bold shadow-2xs">INC</span>
+            </div>
+            <div class="col-span-4 pr-space-sm">
+              <div class="flex flex-wrap gap-1">
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono-code text-[11px]">income</span>
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono-code text-[11px]">inc</span>
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono-code text-[11px]">tahsildar</span>
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-primary font-semibold text-[11px]">उत्पन्न</span>
+              </div>
+            </div>
+            <div class="col-span-1 flex items-center justify-end gap-1"><button aria-label="Edit Rule" title="Edit Rule" class="p-1 text-on-surface-variant hover:text-primary hover:bg-surface-container-high rounded transition-colors" type="button"><span class="material-symbols-outlined text-[16px]">edit</span></button><button aria-label="Delete Rule" title="Delete Rule" class="p-1 text-on-surface-variant hover:text-error hover:bg-error-container hover:text-on-error-container rounded transition-colors" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button></div>
+          </div>
+          <!-- Item 6: Domicile Certificate -->
+          <div class="grid grid-cols-12 items-center px-space-md py-space-sm bg-surface-container-low/40 hover:bg-surface-container-low transition-colors group">
+            <div class="col-span-1">
+              <span class="px-2 py-0.5 rounded bg-surface-container-high text-primary font-mono-code text-[11px] font-bold">#06</span>
+            </div>
+            <div class="col-span-4 flex flex-col pr-space-sm">
+              <span class="font-label-lg text-label-lg font-bold text-on-surface group-hover:text-primary transition-colors">DOMICILE CERTIFICATE</span>
+              <span class="font-mono-code text-[10px] text-on-surface-variant">TOKEN_AGE_NATIONALITY_DOM</span>
+            </div>
+            <div class="col-span-2">
+              <span class="px-2 py-1 bg-surface-container-high rounded text-on-surface font-mono-code text-[12px] font-bold shadow-2xs">DOM</span>
+            </div>
+            <div class="col-span-4 pr-space-sm">
+              <div class="flex flex-wrap gap-1">
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono-code text-[11px]">dom</span>
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono-code text-[11px]">domicile</span>
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-mono-code text-[11px]">nationality</span>
+                <span class="px-1.5 py-0.5 rounded bg-surface-container text-primary font-semibold text-[11px]">अधिवास</span>
+              </div>
+            </div>
+            <div class="col-span-1 flex items-center justify-end gap-1"><button aria-label="Edit Rule" title="Edit Rule" class="p-1 text-on-surface-variant hover:text-primary hover:bg-surface-container-high rounded transition-colors" type="button"><span class="material-symbols-outlined text-[16px]">edit</span></button><button aria-label="Delete Rule" title="Delete Rule" class="p-1 text-on-surface-variant hover:text-error hover:bg-error-container hover:text-on-error-container rounded transition-colors" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section: Global Naming Settings Toggles -->
+    
+  </div>
+</div>
+<!-- Modal Bottom Action Bar (Persistent Sticky Footer) -->
+<div class="px-space-xl py-space-md bg-surface-container flex items-center justify-between border-t-0 select-none">
+<!-- Left: Reset Button -->
+<button class="flex items-center gap-space-xs px-space-md py-2 rounded-lg bg-surface-container-lowest hover:bg-error-container hover:text-on-error-container text-on-surface-variant font-label-md text-label-md font-semibold transition-all cursor-pointer shadow-2xs" id="resetRulesBtn" type="button">
+<span class="material-symbols-outlined text-[18px]">restart_alt</span>
+<span>Reset to Factory Defaults</span>
+</button>
+<!-- Right Action Cluster -->
+<div class="flex items-center gap-space-md">
+<button class="flex items-center gap-space-xs px-space-md py-2 rounded-lg bg-surface-container-lowest hover:bg-surface-container-high text-on-surface font-label-md text-label-md font-semibold transition-all cursor-pointer shadow-2xs" id="discardBtn" type="button">
+<span class="font-mono-code text-[10px] text-outline font-normal">Esc</span>
+<span>Discard Changes</span>
+</button>
+<button class="flex items-center gap-space-sm px-space-lg py-2.5 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-headline-sm text-headline-sm font-bold shadow-md hover:shadow-lg transition-all cursor-pointer" id="saveRulesBtn" type="button">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: &quot;FILL&quot; 1;">save</span>
+<span>Save Rules &amp; Apply</span>
+<span class="px-1.5 py-0.5 rounded bg-on-primary/20 text-on-primary font-mono-code text-[11px] font-medium">Ctrl+S</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Client-side Interactive Script for Keyboard Accelerators & Tab Switching -->
+
+</div>
+    </div>
+  
+
+  <!-- Toast Notification Hub -->
+  <div id="toast-container" class="fixed bottom-12 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- UI Shell Script (Modular UI Scripting) -->
+  <script type="module" src="assets/js/app.js"></script>
+</body>
+</html>

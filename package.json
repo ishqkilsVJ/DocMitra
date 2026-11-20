@@ -1,0 +1,26 @@
+{
+  "name": "docmitra",
+  "version": "1.0.0",
+  "description": "DocMitra - Administrative Bento Workstation for Maharashtra Admission Desks",
+  "main": "app/index.html",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build:ui": "node build-ui.js",
+    "build": "node build-ui.js",
+    "tauri": "cargo tauri"
+  },
+  "keywords": [
+    "tauri",
+    "desktop",
+    "mahadbt",
+    "admission",
+    "pdf",
+    "bento"
+  ],
+  "author": "Google Deepmind / Antigravity",
+  "license": "ISC",
+  "devDependencies": {
+    "vite": "^8.3.8"
+  }
+}

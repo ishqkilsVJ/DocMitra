@@ -1,0 +1,25 @@
+# Temporary design references
+_design_ref/
+
+# Build artifacts & releases
+releases/*.exe
+dist/
+*.exe
+
+# Node & package managers
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Rust & Tauri build outputs
+src-tauri/target/
+target/
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
