@@ -333,6 +333,17 @@ assert.strictEqual(learnedMatch.canonical, 'PARENT DECLARATION CERTIFICATE', 'Le
 assert.ok(learnedMatch.confidence >= 80, `Learned match confidence must be >= 80%, got ${learnedMatch.confidence}%`);
 assert.strictEqual(learnedMatch.isConfident, true, 'isConfident must be true for learned document');
 
+// Verify code collision safety: registering another doc with same code doesn't erase existing doc
+const collisionSig = registerDocumentSignature({
+  canonical: 'PARENT INCOME AFFIDAVIT',
+  code: 'PAR',
+  primaryKeywords: ['income affidavit', 'parent income'],
+  secondaryKeywords: ['annual']
+});
+assert.ok(collisionSig, 'registerDocumentSignature must register second doc with same code');
+const parentCheck = evaluateSmartOcrDocument(sampleParentOcr, 'Rahul Patil');
+assert.strictEqual(parentCheck.canonical, 'PARENT DECLARATION CERTIFICATE', 'Original signature must NOT be erased by code collision');
+
 // Verify keyword extraction helper
 const sampleText = 'Maharashtra State University Migration Certificate Transfer Student Department Government Approval';
 const extractedKws = extractSignatureKeywords(sampleText);
@@ -342,6 +353,19 @@ assert.ok(extractedKws.primary.length > 0, 'Must extract at least one primary ke
 // Verify persistence helper loads and saves presets to config/document_presets.json
 const currentPresets = await loadDocumentPresets();
 assert.ok(currentPresets && currentPresets.forms, 'Presets must load forms object');
+if (!currentPresets.customSignatures) currentPresets.customSignatures = [];
+currentPresets.customSignatures.push({
+  canonical: 'PARENT DECLARATION CERTIFICATE',
+  code: 'PAR',
+  primaryKeywords: ['parent declaration', 'guardian'],
+  secondaryKeywords: ['annual family']
+});
+await saveDocumentPresets(currentPresets);
+const reloadedPresets = await loadDocumentPresets();
+assert.ok(Array.isArray(reloadedPresets.customSignatures), 'Reloaded presets must contain customSignatures');
+const foundCustom = reloadedPresets.customSignatures.find(s => s.canonical === 'PARENT DECLARATION CERTIFICATE');
+assert.ok(foundCustom, 'Custom signature must persist in config/document_presets.json');
+assert.ok(foundCustom.primaryKeywords.includes('parent declaration'), 'Keywords must be preserved across persistence');
 console.log('✓ TC-12 Passed: "New Document Found" alert bar, Add Document modal, and dynamic self-learning engine verified.\n');
 
 // ---------------------------------------------------------------------------

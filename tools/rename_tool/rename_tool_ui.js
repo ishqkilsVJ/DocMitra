@@ -149,20 +149,41 @@ export class RenamerUIManager {
   init() {
     this.state.settings = loadSettings();
     loadDocumentPresets().then(presets => {
-      if (presets && presets.forms) {
-        this.state.documentPresets = presets.forms;
-        for (const formKey of Object.keys(presets.forms)) {
-          const list = presets.forms[formKey];
-          if (Array.isArray(list)) {
-            for (const item of list) {
-              if (item.name) {
-                registerDocumentSignature({
-                  canonical: item.name,
-                  code: item.code || '',
-                  primaryKeywords: [item.name.toLowerCase()],
-                  secondaryKeywords: []
-                });
+      if (presets) {
+        if (presets.forms) {
+          this.state.documentPresets = presets.forms;
+          for (const formKey of Object.keys(presets.forms)) {
+            const list = presets.forms[formKey];
+            if (Array.isArray(list)) {
+              for (const item of list) {
+                if (item.name) {
+                  registerDocumentSignature({
+                    canonical: item.name,
+                    code: item.code || '',
+                    primaryKeywords: item.primaryKeywords || [item.name.toLowerCase()],
+                    secondaryKeywords: item.secondaryKeywords || []
+                  });
+                  if (item.code && !this.shortcuts21.some(s => s.code.toUpperCase() === item.code.toUpperCase())) {
+                    this.shortcuts21.push({
+                      code: item.code.toUpperCase(),
+                      label: item.name,
+                      canonical: item.name
+                    });
+                  }
+                }
               }
+            }
+          }
+        }
+        if (Array.isArray(presets.customSignatures)) {
+          for (const sig of presets.customSignatures) {
+            registerDocumentSignature(sig);
+            if (sig.code && !this.shortcuts21.some(s => s.code.toUpperCase() === sig.code.toUpperCase())) {
+              this.shortcuts21.push({
+                code: sig.code.toUpperCase(),
+                label: sig.canonical,
+                canonical: sig.canonical
+              });
             }
           }
         }
@@ -399,6 +420,22 @@ export class RenamerUIManager {
 
       const modalOverlay = document.getElementById('settings-modal-overlay');
       if (modalOverlay && !modalOverlay.classList.contains('hidden')) return;
+
+      // Escape: Dismiss active modal if open
+      if (e.key === 'Escape') {
+        const modalAddDoc = document.getElementById('modalAddDocument');
+        if (modalAddDoc && !modalAddDoc.classList.contains('hidden')) {
+          e.preventDefault();
+          this.closeAddDocumentModal();
+          return;
+        }
+        const modalCrossCheck = document.getElementById('modalCrossCheck');
+        if (modalCrossCheck && !modalCrossCheck.classList.contains('hidden')) {
+          e.preventDefault();
+          this.closeCrossCheckModal();
+          return;
+        }
+      }
 
       // F2: Select folder
       if (e.key === 'F2') {
@@ -2591,10 +2628,11 @@ export class RenamerUIManager {
       btnSmart.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-primary">sync</span><span>Scanning (0/${pending.length})...</span>`;
     }
 
-    // Duplicate collision avoidance in Smart Scan: collect all used target names
+    // Duplicate collision avoidance in Smart Scan: collect all used target names and existing names
     const usedDestinations = new Set();
     for (const file of this.state.files) {
-      if (file.isRenamed || file.isKept) {
+      usedDestinations.add(file.name);
+      if (file.isRenamed || file.isKept || file.targetName) {
         usedDestinations.add(file.targetName || file.name);
       }
     }
@@ -2654,10 +2692,17 @@ export class RenamerUIManager {
             usedDestinations.add(uniqueTarget);
             f.targetName = uniqueTarget;
             f.status = 'matched';
+          } else {
+            f.isMatched = false;
+            f.docType = null;
+            f.status = (evalRes.confidence >= 60) ? 'needs_review' : 'unmatched';
           }
         } catch (err) {
           console.error('[DocMitra Renamer] OCR error on file:', f.name, err);
           f.smartConfidence = 0;
+          f.isMatched = false;
+          f.docType = null;
+          f.status = 'unmatched';
         } finally {
           f.isScanning = false;
         }
@@ -2728,10 +2773,22 @@ export class RenamerUIManager {
 
     if (inputName) {
       inputName.oninput = updatePreview;
+      inputName.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          this.handleSaveAndLearnDocument();
+        }
+      };
     }
     if (inputCode) {
       inputCode.oninput = () => {
         inputCode.value = inputCode.value.toUpperCase();
+      };
+      inputCode.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          inputName?.focus();
+        }
       };
     }
 
@@ -2802,22 +2859,56 @@ export class RenamerUIManager {
       secondaryKeywords: secondary
     });
 
+    if (code && !this.shortcuts21.some(s => s.code.toUpperCase() === code)) {
+      this.shortcuts21.push({
+        code: code,
+        label: name,
+        canonical: name
+      });
+    }
+
     // 2. Persist into config/document_presets.json via storage-service
     try {
       const presets = await loadDocumentPresets();
       if (!presets.forms) presets.forms = {};
       for (const formKey of Object.keys(presets.forms)) {
         const list = presets.forms[formKey];
-        if (Array.isArray(list) && !list.some(item => item.code === code || item.name === name)) {
-          list.push({ code, name, required: false });
+        if (Array.isArray(list)) {
+          const existing = list.find(item => item.code === code || item.name === name);
+          if (existing) {
+            existing.code = code;
+            existing.name = name;
+            existing.primaryKeywords = primary;
+            existing.secondaryKeywords = secondary;
+          } else {
+            list.push({ code, name, required: false, primaryKeywords: primary, secondaryKeywords: secondary });
+          }
         }
       }
+      if (!Array.isArray(presets.customSignatures)) {
+        presets.customSignatures = [];
+      }
+      const existingSigIdx = presets.customSignatures.findIndex(s => s.canonical === name);
+      if (existingSigIdx !== -1) {
+        presets.customSignatures[existingSigIdx] = { canonical: name, code, primaryKeywords: primary, secondaryKeywords: secondary };
+      } else {
+        presets.customSignatures.push({ canonical: name, code, primaryKeywords: primary, secondaryKeywords: secondary });
+      }
+
       await saveDocumentPresets(presets);
       if (this.state.documentPresets) {
         for (const formKey of Object.keys(this.state.documentPresets)) {
           const list = this.state.documentPresets[formKey];
-          if (Array.isArray(list) && !list.some(item => item.code === code || item.name === name)) {
-            list.push({ code, name, required: false });
+          if (Array.isArray(list)) {
+            const existing = list.find(item => item.code === code || item.name === name);
+            if (existing) {
+              existing.code = code;
+              existing.name = name;
+              existing.primaryKeywords = primary;
+              existing.secondaryKeywords = secondary;
+            } else {
+              list.push({ code, name, required: false, primaryKeywords: primary, secondaryKeywords: secondary });
+            }
           }
         }
       }
@@ -3176,7 +3267,7 @@ export class RenamerUIManager {
     // Render alert bar above center preview: displayed ONLY when active file is unrecognized/unmatched
     const newDocAlert = document.getElementById('newDocAlertBar');
     if (newDocAlert) {
-      const isUnmatched = currentFile && !currentFile.isRenamed && !currentFile.isKept && !currentFile.isMatched && (currentFile.smartConfidence === undefined || currentFile.smartConfidence < 80);
+      const isUnmatched = currentFile && !currentFile.isRenamed && !currentFile.isKept && !currentFile.isScanning && (!currentFile.isMatched || (currentFile.smartConfidence !== undefined && currentFile.smartConfidence < 80));
       if (isUnmatched) {
         newDocAlert.classList.remove('hidden');
       } else {

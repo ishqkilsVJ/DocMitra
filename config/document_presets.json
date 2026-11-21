@@ -1,47 +1,219 @@
 {
   "forms": {
     "MAHA DBT FORM": [
-      { "code": "ADR", "name": "AADHAAR CARD", "required": true },
-      { "code": "PIC", "name": "PHOTO", "required": true },
-      { "code": "10M", "name": "10TH MARKSHEET", "required": true },
-      { "code": "10P", "name": "10TH PASSING CERTIFICATE", "required": true },
-      { "code": "12M", "name": "12TH MARKSHEET", "required": true },
-      { "code": "12P", "name": "12TH PASSING CERTIFICATE", "required": true },
-      { "code": "12LC", "name": "12TH LC", "required": true },
-      { "code": "CST", "name": "CASTE CERTIFICATE", "required": true },
-      { "code": "VLD", "name": "VALIDITY CERTIFICATE", "required": true },
-      { "code": "INC", "name": "INCOME CERTIFICATE", "required": true },
-      { "code": "NAT", "name": "NATIONALITY CERTIFICATE", "required": true },
-      { "code": "DOM", "name": "DOMICILE CERTIFICATE", "required": true },
-      { "code": "BNK", "name": "PASSBOOK BANK", "required": true }
+      {
+        "code": "ADR",
+        "name": "AADHAAR CARD",
+        "required": true
+      },
+      {
+        "code": "PIC",
+        "name": "PHOTO",
+        "required": true
+      },
+      {
+        "code": "10M",
+        "name": "10TH MARKSHEET",
+        "required": true
+      },
+      {
+        "code": "10P",
+        "name": "10TH PASSING CERTIFICATE",
+        "required": true
+      },
+      {
+        "code": "12M",
+        "name": "12TH MARKSHEET",
+        "required": true
+      },
+      {
+        "code": "12P",
+        "name": "12TH PASSING CERTIFICATE",
+        "required": true
+      },
+      {
+        "code": "12LC",
+        "name": "12TH LC",
+        "required": true
+      },
+      {
+        "code": "CST",
+        "name": "CASTE CERTIFICATE",
+        "required": true
+      },
+      {
+        "code": "VLD",
+        "name": "VALIDITY CERTIFICATE",
+        "required": true
+      },
+      {
+        "code": "INC",
+        "name": "INCOME CERTIFICATE",
+        "required": true
+      },
+      {
+        "code": "NAT",
+        "name": "NATIONALITY CERTIFICATE",
+        "required": true
+      },
+      {
+        "code": "DOM",
+        "name": "DOMICILE CERTIFICATE",
+        "required": true
+      },
+      {
+        "code": "BNK",
+        "name": "PASSBOOK BANK",
+        "required": true
+      }
     ],
     "MH CET FORM": [
-      { "code": "PIC", "name": "PHOTO", "required": true },
-      { "code": "ADR", "name": "AADHAAR CARD", "required": true },
-      { "code": "10M", "name": "10TH MARKSHEET", "required": true },
-      { "code": "10P", "name": "10TH PASSING CERTIFICATE", "required": true },
-      { "code": "12M", "name": "12TH MARKSHEET", "required": true },
-      { "code": "12P", "name": "12TH PASSING CERTIFICATE", "required": true },
-      { "code": "12LC", "name": "12TH LC", "required": true },
-      { "code": "CST", "name": "CASTE CERTIFICATE", "required": true },
-      { "code": "VLD", "name": "VALIDITY CERTIFICATE", "required": true },
-      { "code": "DOM", "name": "DOMICILE CERTIFICATE", "required": true },
-      { "code": "NAT", "name": "NATIONALITY CERTIFICATE", "required": true },
-      { "code": "INC", "name": "INCOME CERTIFICATE", "required": true },
-      { "code": "ATM", "name": "ATTEMPT CERTIFICATE", "required": false }
+      {
+        "code": "PIC",
+        "name": "PHOTO",
+        "required": true
+      },
+      {
+        "code": "ADR",
+        "name": "AADHAAR CARD",
+        "required": true
+      },
+      {
+        "code": "10M",
+        "name": "10TH MARKSHEET",
+        "required": true
+      },
+      {
+        "code": "10P",
+        "name": "10TH PASSING CERTIFICATE",
+        "required": true
+      },
+      {
+        "code": "12M",
+        "name": "12TH MARKSHEET",
+        "required": true
+      },
+      {
+        "code": "12P",
+        "name": "12TH PASSING CERTIFICATE",
+        "required": true
+      },
+      {
+        "code": "12LC",
+        "name": "12TH LC",
+        "required": true
+      },
+      {
+        "code": "CST",
+        "name": "CASTE CERTIFICATE",
+        "required": true
+      },
+      {
+        "code": "VLD",
+        "name": "VALIDITY CERTIFICATE",
+        "required": true
+      },
+      {
+        "code": "DOM",
+        "name": "DOMICILE CERTIFICATE",
+        "required": true
+      },
+      {
+        "code": "NAT",
+        "name": "NATIONALITY CERTIFICATE",
+        "required": true
+      },
+      {
+        "code": "INC",
+        "name": "INCOME CERTIFICATE",
+        "required": true
+      },
+      {
+        "code": "ATM",
+        "name": "ATTEMPT CERTIFICATE",
+        "required": false
+      }
     ],
     "SWAYAM FORM": [
-      { "code": "PIC", "name": "PHOTO", "required": true },
-      { "code": "ADR", "name": "AADHAAR CARD", "required": true },
-      { "code": "10M", "name": "10TH MARKSHEET", "required": true },
-      { "code": "12M", "name": "12TH MARKSHEET", "required": true },
-      { "code": "12LC", "name": "12TH LC", "required": true },
-      { "code": "CST", "name": "CASTE CERTIFICATE", "required": true },
-      { "code": "DOM", "name": "DOMICILE CERTIFICATE", "required": true },
-      { "code": "SLF", "name": "SELF DECLARATION", "required": true },
-      { "code": "PAR", "name": "PARENT DECLARATION", "required": true },
-      { "code": "BNK", "name": "PASSBOOK BANK", "required": true },
-      { "code": "BNF", "name": "BONAFIDE CERTIFICATE", "required": true }
+      {
+        "code": "PIC",
+        "name": "PHOTO",
+        "required": true
+      },
+      {
+        "code": "ADR",
+        "name": "AADHAAR CARD",
+        "required": true
+      },
+      {
+        "code": "10M",
+        "name": "10TH MARKSHEET",
+        "required": true
+      },
+      {
+        "code": "12M",
+        "name": "12TH MARKSHEET",
+        "required": true
+      },
+      {
+        "code": "12LC",
+        "name": "12TH LC",
+        "required": true
+      },
+      {
+        "code": "CST",
+        "name": "CASTE CERTIFICATE",
+        "required": true
+      },
+      {
+        "code": "DOM",
+        "name": "DOMICILE CERTIFICATE",
+        "required": true
+      },
+      {
+        "code": "SLF",
+        "name": "SELF DECLARATION",
+        "required": true
+      },
+      {
+        "code": "PAR",
+        "name": "PARENT DECLARATION",
+        "required": true
+      },
+      {
+        "code": "BNK",
+        "name": "PASSBOOK BANK",
+        "required": true
+      },
+      {
+        "code": "BNF",
+        "name": "BONAFIDE CERTIFICATE",
+        "required": true
+      }
     ]
-  }
+  },
+  "customSignatures": [
+    {
+      "canonical": "PARENT DECLARATION CERTIFICATE",
+      "code": "PAR",
+      "primaryKeywords": [
+        "parent declaration",
+        "guardian"
+      ],
+      "secondaryKeywords": [
+        "annual family"
+      ]
+    },
+    {
+      "canonical": "PARENT DECLARATION CERTIFICATE",
+      "code": "PAR",
+      "primaryKeywords": [
+        "parent declaration",
+        "guardian"
+      ],
+      "secondaryKeywords": [
+        "annual family"
+      ]
+    }
+  ]
 }

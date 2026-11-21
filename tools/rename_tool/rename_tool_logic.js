@@ -1597,7 +1597,7 @@ export function registerDocumentSignature({ canonical, code = '', primaryKeyword
     secondaryKeywords: sec
   };
 
-  const existingIdx = SMART_DOC_SIGNATURES.findIndex(s => s.canonical === upperCanonical || (upperCode && s.code === upperCode));
+  const existingIdx = SMART_DOC_SIGNATURES.findIndex(s => s.canonical === upperCanonical);
   if (existingIdx !== -1) {
     SMART_DOC_SIGNATURES[existingIdx] = sig;
   } else {
