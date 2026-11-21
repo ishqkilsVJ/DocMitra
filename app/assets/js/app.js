@@ -2609,17 +2609,15 @@ var Ve = class {
 			let d = document.createElement("div");
 			d.className = "h-9 w-full rounded-lg bg-surface-container/60 border border-outline-variant/30 px-3 flex items-center justify-between text-secondary/40 font-mono-code text-[12px]";
 			let f = document.createElement("span");
-			f.className = "italic text-secondary/50", f.textContent = "Select student folder (F2) to rename...", d.appendChild(f);
-			let p = document.createElement("span");
-			p.className = "px-1.5 py-0.5 rounded bg-surface-container text-secondary text-[10px] font-bold font-mono-code", p.textContent = ".ext", d.appendChild(p), s.appendChild(d), n.appendChild(s), t.appendChild(n);
+			f.className = "italic text-secondary/50", f.textContent = "Select student folder (F2) to rename...", d.appendChild(f), s.appendChild(d), n.appendChild(s), t.appendChild(n);
+			let p = document.createElement("div");
+			p.className = "flex flex-col gap-1.5 pt-2 select-none";
 			let m = document.createElement("div");
-			m.className = "flex flex-col gap-1.5 pt-2 select-none";
-			let h = document.createElement("div");
-			h.className = "flex items-center justify-between px-1 text-label-sm pb-1";
+			m.className = "flex items-center justify-between px-1 text-label-sm pb-1";
+			let h = document.createElement("span");
+			h.className = "font-bold text-on-surface text-[12px]", h.textContent = "UPCOMING QUEUE (0 Files)", m.appendChild(h);
 			let g = document.createElement("span");
-			g.className = "font-bold text-on-surface text-[12px]", g.textContent = "UPCOMING QUEUE (0 Files)", h.appendChild(g);
-			let _ = document.createElement("span");
-			_.className = "text-secondary text-[11px] font-mono-code", _.textContent = "5 Slots Ready", h.appendChild(_), m.appendChild(h);
+			g.className = "text-secondary text-[11px] font-mono-code", g.textContent = "5 Slots Ready", m.appendChild(g), p.appendChild(m);
 			for (let e = 1; e <= 5; e++) {
 				let t = document.createElement("div");
 				t.className = "p-2 rounded-lg border border-outline-variant/20 bg-surface-container-lowest/50 flex items-center justify-between gap-2 opacity-50";
@@ -2628,13 +2626,11 @@ var Ve = class {
 				let r = document.createElement("span");
 				r.className = "w-5 h-5 rounded bg-surface-container text-secondary text-[10px] font-mono-code font-bold flex items-center justify-center shrink-0", r.textContent = String(e), n.appendChild(r);
 				let i = document.createElement("div");
-				i.className = "h-3 rounded bg-slate-300 dark:bg-slate-700/60 skeleton-bar flex-1 max-w-[160px]", n.appendChild(i), t.appendChild(n);
-				let a = document.createElement("div");
-				a.className = "h-4 w-12 rounded bg-slate-200 dark:bg-slate-800 skeleton-pill shrink-0", t.appendChild(a), m.appendChild(t);
+				i.className = "h-3 rounded bg-slate-300 dark:bg-slate-700/60 skeleton-bar flex-1 max-w-[160px]", n.appendChild(i), t.appendChild(n), p.appendChild(t);
 			}
-			t.appendChild(m), e.appendChild(t);
-			let v = document.getElementById("utilityScrollArea");
-			v && this.renderUtilityPanel(v);
+			t.appendChild(p), e.appendChild(t);
+			let _ = document.getElementById("utilityScrollArea");
+			_ && this.renderUtilityPanel(_);
 			return;
 		}
 		let n = this.state.files[this.state.currentIndex];

@@ -1070,11 +1070,6 @@ export class RenamerUIManager {
       italicPlaceholder.textContent = 'Select student folder (F2) to rename...';
       inputSkeleton.appendChild(italicPlaceholder);
 
-      const extBadge = document.createElement('span');
-      extBadge.className = 'px-1.5 py-0.5 rounded bg-surface-container text-secondary text-[10px] font-bold font-mono-code';
-      extBadge.textContent = '.ext';
-      inputSkeleton.appendChild(extBadge);
-
       heroCard.appendChild(inputSkeleton);
       heroSkeleton.appendChild(heroCard);
       scrollContainer.appendChild(heroSkeleton);
@@ -1113,10 +1108,6 @@ export class RenamerUIManager {
         leftSide.appendChild(bar);
 
         row.appendChild(leftSide);
-
-        const pill = document.createElement('div');
-        pill.className = 'h-4 w-12 rounded bg-slate-200 dark:bg-slate-800 skeleton-pill shrink-0';
-        row.appendChild(pill);
 
         queueFrame.appendChild(row);
       }
