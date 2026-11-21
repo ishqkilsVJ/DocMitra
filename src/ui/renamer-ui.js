@@ -31,7 +31,7 @@ import {
   openFolderInExplorer,
   isNativeAvailable
 } from '../services/native-bridge-service.js';
-import { matchDocument } from '../libraries/shortcut-keyword-library.js';
+import { matchDocument, getMatchingSuggestions } from '../libraries/shortcut-keyword-library.js';
 import { evaluateMatch } from '../libraries/document-matcher.js';
 import { buildName, cleanName, ext, validateFilename, executeRename, undoRename } from '../libraries/rename-library.js';
 import { uniqueDestination } from '../libraries/duplicate-name-library.js';
@@ -82,7 +82,11 @@ export class RenamerUIManager {
       panEnabled: false,
       splitCompare: false,
       watcherActive: true,
-      lastMtimeCheck: 0
+      lastMtimeCheck: 0,
+      currentPdfPage: 1,
+      totalPdfPages: 1,
+      activePdfDoc: null,
+      activePdfUrl: null
     };
 
     // 21 Canonical Shortcut Engine List
@@ -388,9 +392,20 @@ export class RenamerUIManager {
       });
     }
 
-    // Attach dragging to preview stage wrapper for pan navigation
+    // Attach dragging & Ctrl+Wheel zoom to preview stage wrapper
     const stageWrapper = colPreview.querySelector('.overflow-auto');
     if (stageWrapper) {
+      // Ctrl + Wheel zooming for smooth magnification (Feature 3)
+      stageWrapper.addEventListener('wheel', (e) => {
+        if (e.ctrlKey) {
+          e.preventDefault();
+          const delta = e.deltaY < 0 ? 15 : -15;
+          this.state.zoom = Math.max(40, Math.min(300, this.state.zoom + delta));
+          if (zoomSlider) zoomSlider.value = this.state.zoom;
+          this._applyPreviewTransform();
+        }
+      }, { passive: false });
+
       let isPanning = false;
       let startX = 0, startY = 0, scrollLeft = 0, scrollTop = 0;
 
@@ -438,6 +453,44 @@ export class RenamerUIManager {
         if (zoomSlider) zoomSlider.value = 100;
         this._applyPreviewTransform();
         toast.show('Filters Reset', 'Preview display restored to default', 'info');
+      });
+    }
+
+    // Multi-page PDF Navigation controls (Feature 2)
+    const btnPdfPrev = colPreview.querySelector('#btnPdfPrevPage');
+    const btnPdfNext = colPreview.querySelector('#btnPdfNextPage');
+    const pdfPageBadge = colPreview.querySelector('#renamerPdfPageBadge');
+
+    if (btnPdfPrev) {
+      btnPdfPrev.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (this.state.currentPdfPage > 1) {
+          this._renderPdfPage(this.state.currentPdfPage - 1);
+        }
+      });
+    }
+
+    if (btnPdfNext) {
+      btnPdfNext.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (this.state.currentPdfPage < this.state.totalPdfPages) {
+          this._renderPdfPage(this.state.currentPdfPage + 1);
+        }
+      });
+    }
+
+    if (pdfPageBadge) {
+      pdfPageBadge.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (this.state.totalPdfPages > 1) {
+          const targetStr = window.prompt(`Jump to Page (1 to ${this.state.totalPdfPages}):`, String(this.state.currentPdfPage));
+          if (targetStr) {
+            const targetNum = parseInt(targetStr, 10);
+            if (!isNaN(targetNum) && targetNum >= 1 && targetNum <= this.state.totalPdfPages) {
+              this._renderPdfPage(targetNum);
+            }
+          }
+        }
       });
     }
   }
@@ -1036,6 +1089,61 @@ export class RenamerUIManager {
         }
       });
 
+      // Dynamic Smart Suggestion Chips (Top-3 Cap - Feature 1)
+      const suggestionsWrapper = document.createElement('div');
+      suggestionsWrapper.className = 'flex items-center gap-1.5 flex-wrap pt-0.5';
+
+      const renderSuggestionChips = (typedText) => {
+        while (suggestionsWrapper.firstChild) {
+          suggestionsWrapper.removeChild(suggestionsWrapper.firstChild);
+        }
+
+        const baseOriginal = cleanName(currentFile.name);
+        const effectiveQuery = (typedText && typedText.trim() === baseOriginal) ? '' : (typedText || '').trim();
+        const suggestions = getMatchingSuggestions(effectiveQuery, this.state.settings?.groups, 3);
+
+        if (!suggestions || suggestions.length === 0) {
+          const noMatch = document.createElement('span');
+          noMatch.className = 'text-[10px] font-mono-code text-secondary italic py-0.5';
+          noMatch.textContent = `No shortcodes matching '${typedText}'`;
+          suggestionsWrapper.appendChild(noMatch);
+          return;
+        }
+
+        suggestions.forEach((s, sIdx) => {
+          const isTopMatch = (sIdx === 0 && effectiveQuery.length > 0);
+          const chipBtn = document.createElement('button');
+          chipBtn.type = 'button';
+          chipBtn.className = isTopMatch
+            ? 'px-2 py-1 rounded-md bg-primary text-on-primary font-mono-code text-[11px] font-bold shadow-xs transition-all flex items-center gap-1.5 ring-1 ring-primary/40 cursor-pointer active:scale-95'
+            : 'px-2 py-1 rounded-md bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[11px] font-semibold border border-outline-variant/40 hover:border-primary/50 transition-all flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95';
+
+          const codeBadge = document.createElement('span');
+          codeBadge.className = isTopMatch
+            ? 'px-1 py-0.2 rounded bg-surface-container-lowest/30 text-on-primary text-[9px] font-bold'
+            : 'px-1 py-0.2 rounded bg-surface-container-highest text-secondary text-[9px] font-bold';
+          codeBadge.textContent = s.code;
+          chipBtn.appendChild(codeBadge);
+
+          const lblSpan = document.createElement('span');
+          lblSpan.className = 'truncate max-w-[130px]';
+          lblSpan.textContent = s.displayName || s.name;
+          chipBtn.appendChild(lblSpan);
+
+          chipBtn.title = `Click to set ${s.code} (${s.name})`;
+
+          chipBtn.addEventListener('click', () => {
+            this.applyShortcutToCurrent({
+              code: s.code,
+              label: s.displayName || s.name,
+              canonical: s.name
+            });
+          });
+
+          suggestionsWrapper.appendChild(chipBtn);
+        });
+      };
+
       targetInput.addEventListener('input', (e) => {
         let val = e.target.value;
         // Sanitize pasted illegal characters
@@ -1089,6 +1197,8 @@ export class RenamerUIManager {
         if (stageTitle) {
           stageTitle.textContent = currentFile.targetName;
         }
+
+        renderSuggestionChips(val);
       });
 
       inputWrapper.appendChild(targetInput);
@@ -1100,6 +1210,11 @@ export class RenamerUIManager {
       inputWrapper.appendChild(extBadge);
 
       inputSection.appendChild(inputWrapper);
+
+      // Initial render of top-3 suggestion chips
+      renderSuggestionChips(targetInput.value);
+      inputSection.appendChild(suggestionsWrapper);
+
       card.appendChild(inputSection);
 
       // 21 Quick Document Presets Grid (One-Click Instant Rename)
@@ -1935,6 +2050,15 @@ export class RenamerUIManager {
       }
     }
 
+    const isCurrentPdf = /\.pdf$/i.test(currentFile.name);
+    if (!isCurrentPdf) {
+      this.state.activePdfDoc = null;
+      this.state.activePdfUrl = null;
+      this.state.currentPdfPage = 1;
+      this.state.totalPdfPages = 1;
+      this._updatePdfPageIndicator();
+    }
+
     if (this.state.splitCompare && this.state.files.length > 1) {
       const cmpIndex = this.state.currentIndex > 0 ? this.state.currentIndex - 1 : 1;
       const cmpFile = this.state.files[cmpIndex];
@@ -1979,42 +2103,104 @@ export class RenamerUIManager {
       img.alt = file.name;
       img.className = 'w-full h-full object-contain';
       stage.appendChild(img);
-    } else if (isPdf && window.pdfjsLib && file.url) {
+    } else if (isPdf && file.url) {
       const canvas = document.createElement('canvas');
+      canvas.id = 'previewPdfCanvas';
       canvas.className = 'w-full h-full object-contain';
       stage.appendChild(canvas);
 
-      window.pdfjsLib.getDocument(file.url).promise.then(pdf => {
-        pdf.getPage(1).then(page => {
-          const viewport = page.getViewport({ scale: 1.5 });
-          canvas.height = viewport.height;
-          canvas.width = viewport.width;
-          page.render({
-            canvasContext: canvas.getContext('2d'),
-            viewport: viewport
-          });
-        });
-      }).catch(err => {
-        console.warn('PDF.js render error:', err);
-        this._renderDocumentInfoFallback(stage, file);
-      });
-    } else {
-      if (isPdf && !window.pdfjsLib && !this._pdfLoading) {
-        this._pdfLoading = true;
-        const s = document.createElement('script');
-        s.src = 'assets/js/libs/pdf.min.js';
-        s.onload = () => {
-          if (window.pdfjsLib) {
-            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'assets/js/libs/pdf.worker.min.js';
-            this.renderCurrentPreview();
+      const loadAndRenderPdf = async () => {
+        try {
+          if (!window.pdfjsLib) {
+            this._loadPdfJs(() => loadAndRenderPdf());
+            return;
           }
-        };
-        document.head.appendChild(s);
+          if (!this.state.activePdfDoc || this.state.activePdfUrl !== file.url) {
+            this.state.activePdfDoc = await window.pdfjsLib.getDocument(file.url).promise;
+            this.state.activePdfUrl = file.url;
+            this.state.totalPdfPages = this.state.activePdfDoc.numPages || 1;
+            this.state.currentPdfPage = 1;
+          }
+          await this._renderPdfPage(this.state.currentPdfPage, canvas);
+        } catch (err) {
+          console.warn('PDF.js render error:', err);
+          this._renderDocumentInfoFallback(stage, file);
+        }
+      };
+
+      loadAndRenderPdf();
+    } else {
+      if (isPdf && !window.pdfjsLib) {
+        this._loadPdfJs(() => this.renderCurrentPreview());
       }
       this._renderDocumentInfoFallback(stage, file);
     }
 
     return stage;
+  }
+
+  async _renderPdfPage(pageNumber, canvasEl = null) {
+    if (!this.state.activePdfDoc) return;
+    const canvas = canvasEl || document.getElementById('previewPdfCanvas');
+    if (!canvas) return;
+
+    try {
+      const page = await this.state.activePdfDoc.getPage(pageNumber);
+      const viewport = page.getViewport({ scale: 2.0 });
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+      const ctx = canvas.getContext('2d');
+      await page.render({
+        canvasContext: ctx,
+        viewport: viewport
+      }).promise;
+
+      this.state.currentPdfPage = pageNumber;
+      this._updatePdfPageIndicator();
+    } catch (err) {
+      console.warn(`Error rendering PDF page ${pageNumber}:`, err);
+    }
+  }
+
+  _updatePdfPageIndicator() {
+    const colPreview = document.getElementById('col-preview');
+    if (!colPreview) return;
+    const badge = colPreview.querySelector('#renamerPdfPageBadge');
+    const btnPrev = colPreview.querySelector('#btnPdfPrevPage');
+    const btnNext = colPreview.querySelector('#btnPdfNextPage');
+
+    if (badge) {
+      badge.textContent = this.state.totalPdfPages > 1
+        ? `Page ${this.state.currentPdfPage} of ${this.state.totalPdfPages}`
+        : 'Page 1 of 1';
+      badge.style.cursor = this.state.totalPdfPages > 1 ? 'pointer' : 'default';
+      badge.title = this.state.totalPdfPages > 1 ? 'Click to jump to page' : 'Single page document';
+    }
+    if (btnPrev) {
+      btnPrev.disabled = (this.state.currentPdfPage <= 1);
+    }
+    if (btnNext) {
+      btnNext.disabled = (this.state.currentPdfPage >= this.state.totalPdfPages || this.state.totalPdfPages <= 1);
+    }
+  }
+
+  _loadPdfJs(callback) {
+    if (window.pdfjsLib) {
+      if (callback) callback();
+      return;
+    }
+    if (this._pdfLoading) return;
+    this._pdfLoading = true;
+    const s = document.createElement('script');
+    s.src = 'assets/js/libs/pdf.min.js';
+    s.onload = () => {
+      if (window.pdfjsLib) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'assets/js/libs/pdf.worker.min.js';
+        this._pdfLoading = false;
+        if (callback) callback();
+      }
+    };
+    document.head.appendChild(s);
   }
 
   _renderDocumentInfoFallback(stage, file) {

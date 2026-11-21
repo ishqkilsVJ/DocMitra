@@ -327,11 +327,12 @@ export function getMatchingSuggestions(query = '', groups = null, limit = 5) {
   const normalized = (query || '').trim().toLowerCase();
   const dict = getActiveShortcutDictionary(groups);
 
-  // If query is empty: Return top 5 popular active shortcuts
+  // If query is empty: Return top popular active shortcuts up to limit
   if (!normalized) {
     const preferredCodes = ['12M', 'ADR', 'PIC', '10M', 'CAST', 'INC', 'INCO', 'CAP'];
     const topMatches = dict.filter(d => preferredCodes.includes(d.primaryShortcut.toUpperCase()));
-    const finalSelection = topMatches.length >= 5 ? topMatches.slice(0, 5) : dict.slice(0, 5);
+    const pool = topMatches.length >= limit ? topMatches : [...topMatches, ...dict.filter(d => !topMatches.includes(d))];
+    const finalSelection = pool.slice(0, limit);
 
     return finalSelection.map(d => ({
       code: d.primaryShortcut,
