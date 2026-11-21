@@ -1,16 +1,36 @@
 /**
  * DocMitra Bulk Document Renamer UI Binding & Adapter
  * Connects the Stitch Renamer screen to pure logic in src/libraries, src/core, and src/services.
- * STRICT RULES:
- * 1. Zero dynamic innerHTML (safe DOM creation methods only).
- * 2. Never suppress or override window.alert.
- * 3. 21 Shortcuts: ADR, PAN, PIC, 10M, 10P, 12M, 12P, 12LC, 12MP, CST, VLD, DOM, NAT, INC, BNK, ATM, BRT, BNF, GAP, SLF, PAR.
- * 4. Safe Atomic Rename with Windows case-insensitive temp naming and reserved name / trailing dot/space checks.
- * 5. Multi-level Undo stack preserved across operations.
+ *
+ * SPECIFICATION APPROVED BEHAVIORS (docs/RENAMER_BEHAVIOR_SPEC.md):
+ * 1. Two top buttons: First: 'Add Files' (in-place append), Second: 'Select Folder' (F2).
+ * 2. In-Ribbon Folder Switcher (< Prev, > Next, folder counter pill, Ctrl+Left / Ctrl+Right).
+ * 3. Open in Windows Explorer on folder path text click and open icon button click.
+ * 4. Background Auto-Watcher detecting disk updates.
+ * 5. Empty folder warning toast (remains on previous folder).
+ * 6. Windows junk blacklist (Thumbs.db, desktop.ini, .DS_Store, ~$*, *.tmp).
+ * 7. Simplified telemetry strip (Files, Ready, Unmatched).
+ * 8. Base name only in input box + locked extension badge (.pdf/.jpg).
+ * 9. Live keystroke intercept for illegal Windows characters (\ / : * ? " < > |).
+ * 10. Simple binary status tag (Green 'Matched' / Red 'Unmatched').
+ * 11. Click original filename resets the input box back to clean original name.
+ * 12. Instant atomic rename on disk when Tab or Enter is pressed, auto-advancing to next file.
+ * 13. Shift+Tab navigates backward to previous card.
+ * 14. Pin active card to top on scroll.
+ * 15. Click upcoming item jumps & focuses; click completed item re-opens it for re-renaming.
+ * 16. Instant one-click rename on clicking any of the 21 shortcut buttons.
+ * 17. Zero dynamic innerHTML (safe DOM creation methods only).
  */
 
 import { toast } from './toast.js';
-import { selectNativeFolder, renameNativeFile, isNativeAvailable } from '../services/native-bridge-service.js';
+import {
+  selectNativeFolder,
+  selectNativeFiles,
+  listNativeDirectory,
+  renameNativeFile,
+  openFolderInExplorer,
+  isNativeAvailable
+} from '../services/native-bridge-service.js';
 import { matchDocument } from '../libraries/shortcut-keyword-library.js';
 import { evaluateMatch } from '../libraries/document-matcher.js';
 import { buildName, cleanName, ext, validateFilename, executeRename, undoRename } from '../libraries/rename-library.js';
@@ -21,10 +41,20 @@ import { generateBatchAuditCSV, downloadCSV } from '../libraries/export-reports-
 import { loadSettings, saveSettings } from '../services/storage-service.js';
 import { CANONICAL_NAMES, DEFAULT_SPELLING_RULES } from '../core/constants.js';
 
+export function isJunkFile(filename) {
+  if (!filename) return true;
+  const lower = filename.toLowerCase().trim();
+  if (lower === 'thumbs.db' || lower === 'ehthumbs.db' || lower === 'desktop.ini' || lower === '.ds_store') return true;
+  if (lower.startsWith('.') || lower.startsWith('~$') || lower.endsWith('.tmp')) return true;
+  return false;
+}
+
 export class RenamerUIManager {
   constructor() {
     this.state = {
       folder: null, // { name, path, nativePath }
+      subfolders: [],
+      currentSubfolderIndex: 0,
       files: [],    // Array of file models
       currentIndex: 0,
       studentName: '',
@@ -32,7 +62,9 @@ export class RenamerUIManager {
       settings: null,
       history: [],
       zoom: 100,
-      rotation: 0
+      rotation: 0,
+      watcherActive: true,
+      lastMtimeCheck: 0
     };
 
     // 21 Canonical Shortcut Engine List
@@ -66,37 +98,43 @@ export class RenamerUIManager {
     this.state.style = this.state.settings.style || 'preserve';
     this._bindDOM();
     this._bindKeyboardShortcuts();
+    this._startBackgroundWatcher();
     console.info('[DocMitra Renamer] Renamer UI manager initialized.');
   }
 
   _bindDOM() {
-    // Select Folder button
+    // 1. Select Folder button (F2)
     const btnSelect = document.getElementById('btnSelectFolder');
     if (btnSelect) {
       btnSelect.addEventListener('click', () => this.handleSelectFolder());
     }
 
-    // Add Files button
+    // 2. Add Files button
     const btnAdd = document.getElementById('btnAddFiles');
     if (btnAdd) {
       btnAdd.addEventListener('click', () => this.handleAddFiles());
     }
 
-    // Rescan Folder button
-    const btnRescan = document.getElementById('btnRescanFolder');
-    if (btnRescan) {
-      btnRescan.addEventListener('click', () => this.handleRescan());
+    // 3. In-Ribbon Folder Switcher (< Prev and > Next)
+    const btnPrev = document.getElementById('btnPrevFolder');
+    if (btnPrev) {
+      btnPrev.addEventListener('click', () => this.handlePrevFolder());
     }
 
-    // Copy Folder Path button
-    const btnCopy = document.getElementById('btnCopyFolderPath');
-    if (btnCopy) {
-      btnCopy.addEventListener('click', () => {
-        if (this.state.folder?.path) {
-          navigator.clipboard.writeText(this.state.folder.path);
-          toast.show('Copied to Clipboard', this.state.folder.path, 'info');
-        }
-      });
+    const btnNext = document.getElementById('btnNextFolder');
+    if (btnNext) {
+      btnNext.addEventListener('click', () => this.handleNextFolder());
+    }
+
+    // 4. Open in Windows Explorer (Path text click + icon button)
+    const pathText = document.getElementById('activeFolderPath');
+    if (pathText) {
+      pathText.addEventListener('click', () => this.handleOpenInExplorer());
+    }
+
+    const btnOpenExplorer = document.getElementById('btnOpenInExplorer');
+    if (btnOpenExplorer) {
+      btnOpenExplorer.addEventListener('click', () => this.handleOpenInExplorer());
     }
 
     // Rename All Button (F8)
@@ -141,7 +179,6 @@ export class RenamerUIManager {
 
   _bindKeyboardShortcuts() {
     window.addEventListener('keydown', (e) => {
-      // Only process when bulk renamer view is visible and not typing inside modal
       const renamerView = document.getElementById('view-bulk-renamer');
       if (!renamerView || renamerView.classList.contains('hidden')) return;
 
@@ -169,6 +206,20 @@ export class RenamerUIManager {
         return;
       }
 
+      // Ctrl+Left: Previous folder
+      if ((e.ctrlKey || e.metaKey) && e.key === 'ArrowLeft') {
+        e.preventDefault();
+        this.handlePrevFolder();
+        return;
+      }
+
+      // Ctrl+Right: Next folder
+      if ((e.ctrlKey || e.metaKey) && e.key === 'ArrowRight') {
+        e.preventDefault();
+        this.handleNextFolder();
+        return;
+      }
+
       // Ctrl+Z: Undo Rename
       if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z') && !e.shiftKey) {
         if (e.target.tagName !== 'INPUT') {
@@ -183,16 +234,6 @@ export class RenamerUIManager {
         e.preventDefault();
         this.handleSaveBatch();
         return;
-      }
-
-      // Tab: Keep Original & Next (when on active rename input)
-      if (e.key === 'Tab') {
-        const activeInput = document.getElementById('inputRenameTarget');
-        if (e.target === activeInput) {
-          e.preventDefault();
-          this.handleConfirmCurrentName(activeInput.value);
-          return;
-        }
       }
     });
   }
@@ -245,6 +286,54 @@ export class RenamerUIManager {
     }
   }
 
+  _startBackgroundWatcher() {
+    setInterval(async () => {
+      if (!this.state.watcherActive || !this.state.folder?.path) return;
+      try {
+        const res = await listNativeDirectory(this.state.folder.path);
+        if (res.success && Array.isArray(res.files)) {
+          const validDiskFiles = res.files.filter(f => !isJunkFile(f.name));
+          const currentFilenames = new Set(this.state.files.map(f => f.name));
+          const diskFilenames = new Set(validDiskFiles.map(f => f.name));
+          
+          let changed = false;
+          if (currentFilenames.size !== diskFilenames.size) {
+            changed = true;
+          } else {
+            for (const name of diskFilenames) {
+              if (!currentFilenames.has(name)) { changed = true; break; }
+            }
+          }
+
+          if (changed) {
+            this._syncDiskFiles(validDiskFiles);
+          }
+        }
+      } catch {
+        // Silent ignore for air-gapped watcher
+      }
+    }, 4000);
+  }
+
+  _syncDiskFiles(diskFiles) {
+    const preservedEdits = new Map();
+    this.state.files.forEach(f => {
+      preservedEdits.set(f.name, {
+        targetName: f.targetName,
+        isRenamed: f.isRenamed,
+        isKept: f.isKept,
+        docType: f.docType,
+        isMatched: f.isMatched
+      });
+    });
+
+    this.loadFolderData({
+      name: this.state.folder.name,
+      path: this.state.folder.path,
+      files: diskFiles
+    }, preservedEdits);
+  }
+
   /**
    * Triggers native OS folder picker with ZERO browser sandbox prompts
    */
@@ -259,18 +348,150 @@ export class RenamerUIManager {
         return;
       }
 
+      // Check for subfolders (Batch Parent Folder mode)
+      if (res.subfolders && res.subfolders.length > 0) {
+        this.state.subfolders = res.subfolders;
+        this.state.currentSubfolderIndex = 0;
+        await this.loadSubfolder(0);
+        toast.show('Batch Folder Loaded', `${res.subfolders.length} student folders detected`, 'success');
+        return;
+      }
+
+      // Single folder check for empty files
+      const validFiles = (res.files || []).filter(f => !isJunkFile(f.name));
+      if (validFiles.length === 0) {
+        toast.show('Selected Folder is Empty', 'Remaining on previous folder.', 'warning');
+        return;
+      }
+
+      res.files = validFiles;
+      this.state.subfolders = [];
       this.loadFolderData(res);
-      toast.show('Folder Loaded', `${res.files ? res.files.length : 0} files found`, 'success');
+      toast.show('Folder Loaded', `${validFiles.length} files found`, 'success');
     } catch (err) {
       toast.show('Folder Error', err.message, 'error');
     }
   }
 
-  loadFolderData(data) {
+  async loadSubfolder(index) {
+    if (index < 0 || index >= this.state.subfolders.length) return;
+    this.state.currentSubfolderIndex = index;
+    const sub = this.state.subfolders[index];
+    const subPath = typeof sub === 'string' ? sub : (sub.path || '');
+    
+    try {
+      const res = await listNativeDirectory(subPath);
+      if (res.success) {
+        const validFiles = (res.files || []).filter(f => !isJunkFile(f.name));
+        res.files = validFiles;
+        this.loadFolderData(res);
+      }
+    } catch (err) {
+      toast.show('Subfolder Error', err.message, 'error');
+    }
+  }
+
+  handlePrevFolder() {
+    if (this.state.subfolders.length === 0) {
+      toast.show('Single Folder Mode', 'No parent batch subfolders active.', 'info');
+      return;
+    }
+    if (this.state.currentSubfolderIndex > 0) {
+      this.loadSubfolder(this.state.currentSubfolderIndex - 1);
+    } else {
+      toast.show('First Folder', 'Already on the first student folder.', 'info');
+    }
+  }
+
+  handleNextFolder() {
+    if (this.state.subfolders.length === 0) {
+      toast.show('Single Folder Mode', 'No parent batch subfolders active.', 'info');
+      return;
+    }
+    if (this.state.currentSubfolderIndex < this.state.subfolders.length - 1) {
+      this.loadSubfolder(this.state.currentSubfolderIndex + 1);
+    } else {
+      toast.show('Last Folder', 'Already on the last student folder.', 'info');
+    }
+  }
+
+  /**
+   * Adds external files in-place to the current queue
+   */
+  async handleAddFiles() {
+    toast.show('Opening File Picker', 'Select files to append in-place...', 'info');
+    try {
+      const res = await selectNativeFiles('All Supported Files (*.pdf;*.jpg;*.jpeg;*.png;*.docx)|*.pdf;*.jpg;*.jpeg;*.png;*.docx|All Files (*.*)|*.*', 'Select Files to Add');
+      if (!res.success) return;
+
+      const newFiles = (res.files || []).filter(f => !isJunkFile(f.name));
+      if (newFiles.length === 0) {
+        toast.show('No Files Selected', '0 valid documents selected.', 'info');
+        return;
+      }
+
+      const folderPath = this.state.folder?.path || '';
+      const usedDestinations = new Set(this.state.files.map(f => f.targetName));
+
+      const mapped = newFiles.map((f, i) => {
+        const extension = f.ext || ext(f.name);
+        const baseName = cleanName(f.name);
+
+        const matchResult = evaluateMatch(baseName, this.state.settings?.groups);
+        const docType = matchResult.docType || matchDocument(baseName, this.state.settings?.groups) || null;
+
+        let suggested = baseName;
+        let isMatched = false;
+
+        if (docType) {
+          const canonical = CANONICAL_NAMES[docType.toUpperCase()] || docType;
+          suggested = buildName(canonical, this.state.studentName, this.state.settings?.groups, this.state.style);
+          isMatched = true;
+        }
+
+        const desiredWithExt = (suggested.endsWith(extension) ? suggested : suggested + extension);
+        const uniqueName = uniqueDestination(desiredWithExt, f.name, usedDestinations);
+        usedDestinations.add(uniqueName);
+
+        return {
+          id: `file_append_${Date.now()}_${i}`,
+          name: f.name,
+          path: f.path,
+          size: f.size || 0,
+          ext: extension,
+          url: f.url || (f.path ? `http://localhost:3000/api/serve-file?path=${encodeURIComponent(f.path)}` : null),
+          docType: docType,
+          isMatched: isMatched,
+          suggestedName: uniqueName,
+          targetName: uniqueName,
+          status: isMatched ? 'matched' : 'pending',
+          isRenamed: false,
+          isKept: false
+        };
+      });
+
+      this.state.files.push(...mapped);
+      this.updateTelemetry();
+      this.renderQueue();
+      toast.show('Files Appended', `${mapped.length} files added to queue in-place`, 'success');
+    } catch (err) {
+      toast.show('Add Files Error', err.message, 'error');
+    }
+  }
+
+  handleOpenInExplorer() {
+    if (this.state.folder?.path) {
+      openFolderInExplorer(this.state.folder.path);
+      toast.show('Opening Windows Explorer', this.state.folder.path, 'info');
+    } else {
+      toast.show('No Active Folder', 'Please select a folder first.', 'warning');
+    }
+  }
+
+  loadFolderData(data, preservedEdits = null) {
     const folderPath = data.path || '';
     const folderName = data.name || (folderPath ? folderPath.split(/[\\/]/).pop() : 'Selected Folder');
 
-    // Extract student name from folder if formatted like "Vijay_Ramesh_Yadav"
     const guessedStudent = folderName.replace(/_/g, ' ').trim();
 
     this.state.folder = {
@@ -280,13 +501,32 @@ export class RenamerUIManager {
     };
     this.state.studentName = guessedStudent;
 
-    const filesRaw = data.files || [];
+    const filesRaw = (data.files || []).filter(f => !isJunkFile(f.name));
     const usedDestinations = new Set();
 
-    // Map files and run matching algorithm
     this.state.files = filesRaw.map((f, idx) => {
       const extension = f.ext || ext(f.name);
       const baseName = cleanName(f.name);
+
+      const preserved = preservedEdits ? preservedEdits.get(f.name) : null;
+      if (preserved) {
+        usedDestinations.add(preserved.targetName);
+        return {
+          id: `file_${idx}_${Date.now()}`,
+          name: f.name,
+          path: f.path || `${folderPath}/${f.name}`,
+          size: f.size || 0,
+          ext: extension,
+          url: f.url || (f.path ? `http://localhost:3000/api/serve-file?path=${encodeURIComponent(f.path)}` : null),
+          docType: preserved.docType,
+          isMatched: preserved.isMatched,
+          suggestedName: preserved.targetName,
+          targetName: preserved.targetName,
+          status: preserved.isRenamed ? 'renamed' : (preserved.isKept ? 'kept' : (preserved.isMatched ? 'matched' : 'pending')),
+          isRenamed: preserved.isRenamed,
+          isKept: preserved.isKept
+        };
+      }
 
       // Match against 21 shortcuts & canonical rules
       const matchResult = evaluateMatch(baseName, this.state.settings?.groups);
@@ -301,7 +541,6 @@ export class RenamerUIManager {
         isMatched = true;
       }
 
-      // Unique destination check
       const desiredWithExt = (suggested.endsWith(extension) ? suggested : suggested + extension);
       const uniqueName = uniqueDestination(desiredWithExt, f.name, usedDestinations);
       usedDestinations.add(uniqueName);
@@ -317,7 +556,7 @@ export class RenamerUIManager {
         isMatched: isMatched,
         suggestedName: uniqueName,
         targetName: uniqueName,
-        status: isMatched ? 'matched' : 'pending', // 'matched' | 'pending' | 'renamed' | 'kept'
+        status: isMatched ? 'matched' : 'pending',
         isRenamed: false,
         isKept: false
       };
@@ -331,28 +570,32 @@ export class RenamerUIManager {
 
   updateTelemetry() {
     const total = this.state.files.length;
-    const matched = this.state.files.filter(f => f.isMatched || f.status === 'renamed' || f.status === 'kept').length;
-    const pending = total - matched;
-    const totalBytes = this.state.files.reduce((acc, f) => acc + (f.size || 0), 0);
-    const totalMB = (totalBytes / (1024 * 1024)).toFixed(1);
-    const pct = total > 0 ? Math.round((matched / total) * 100) : 0;
+    const ready = this.state.files.filter(f => f.isMatched || f.isRenamed || f.isKept).length;
+    const unmatched = total - ready;
+    const pct = total > 0 ? Math.round((ready / total) * 100) : 0;
 
     const pathEl = document.getElementById('activeFolderPath');
     if (pathEl) {
       pathEl.textContent = this.state.folder ? this.state.folder.path : 'No folder selected';
     }
 
+    const counterPill = document.getElementById('folderCounterPill');
+    if (counterPill) {
+      if (this.state.subfolders.length > 0) {
+        counterPill.textContent = `Folder ${this.state.currentSubfolderIndex + 1} of ${this.state.subfolders.length}`;
+      } else {
+        counterPill.textContent = 'Folder 1 of 1';
+      }
+    }
+
     const countEl = document.getElementById('telemetryTotalFiles');
     if (countEl) countEl.textContent = String(total);
 
-    const matchedEl = document.getElementById('telemetryMatchedFiles');
-    if (matchedEl) matchedEl.textContent = `${matched} (${pct}%)`;
+    const readyEl = document.getElementById('telemetryReadyFiles');
+    if (readyEl) readyEl.textContent = `${ready} (${pct}%)`;
 
-    const pendingEl = document.getElementById('telemetryPendingFiles');
-    if (pendingEl) pendingEl.textContent = String(pending);
-
-    const sizeEl = document.getElementById('telemetryTotalSize');
-    if (sizeEl) sizeEl.textContent = `${totalMB} MB`;
+    const unmatchedEl = document.getElementById('telemetryUnmatchedFiles');
+    if (unmatchedEl) unmatchedEl.textContent = String(unmatched);
 
     const renameAllBtn = document.getElementById('btnRenameAll');
     if (renameAllBtn) {
@@ -379,7 +622,7 @@ export class RenamerUIManager {
     if (this.state.files.length === 0) {
       const emptyCard = document.createElement('div');
       emptyCard.className = 'p-6 text-center text-secondary bg-surface-container-lowest rounded-xl border border-outline-variant/30 flex flex-col items-center gap-2';
-      
+
       const icon = document.createElement('span');
       icon.className = 'material-symbols-outlined text-[36px] text-primary opacity-60';
       icon.textContent = 'folder_open';
@@ -392,7 +635,7 @@ export class RenamerUIManager {
 
       const desc = document.createElement('div');
       desc.className = 'text-body-sm text-secondary';
-      desc.textContent = 'Click "Select Folder" (F2) above to load student files and run automated canonical matching.';
+      desc.textContent = 'Click "Select Folder" (F2) or "Add Files" to start renaming student admission documents.';
       emptyCard.appendChild(desc);
 
       scrollContainer.appendChild(emptyCard);
@@ -414,7 +657,7 @@ export class RenamerUIManager {
       badgeGroup.className = 'flex items-center gap-2';
       const editingBadge = document.createElement('span');
       editingBadge.className = 'px-2.5 py-1 rounded bg-primary text-on-primary font-bold text-[11px] flex items-center gap-1.5 shadow-sm';
-      
+
       const editIcon = document.createElement('span');
       editIcon.className = 'material-symbols-outlined text-[14px]';
       editIcon.textContent = 'edit_document';
@@ -425,11 +668,13 @@ export class RenamerUIManager {
       badgeGroup.appendChild(editingBadge);
       headerRow.appendChild(badgeGroup);
 
+      // Binary status tag: Green Matched or Red Unmatched
+      const isReady = currentFile.isMatched || currentFile.isRenamed || currentFile.isKept;
       const statusTag = document.createElement('span');
-      statusTag.className = currentFile.isMatched
+      statusTag.className = isReady
         ? 'px-2 py-0.5 rounded font-mono-code text-[10px] bg-tertiary-fixed text-on-tertiary-fixed font-bold'
         : 'px-2 py-0.5 rounded font-mono-code text-[10px] bg-error-container text-on-error-container font-bold';
-      statusTag.textContent = currentFile.isMatched ? 'Matched' : 'Unmatched';
+      statusTag.textContent = isReady ? 'Matched' : 'Unmatched';
       headerRow.appendChild(statusTag);
 
       activeCardWrapper.appendChild(headerRow);
@@ -437,14 +682,24 @@ export class RenamerUIManager {
       const card = document.createElement('article');
       card.className = 'bg-surface-container-lowest rounded-xl shadow-md p-space-md flex flex-col gap-space-md border-2 border-primary ring-2 ring-primary/20 relative';
 
-      // Original filename label
+      // Original filename label with click-to-reset
       const origRow = document.createElement('div');
       origRow.className = 'flex items-center justify-between text-[11px] font-mono-code text-secondary';
       const origLabel = document.createElement('span');
       origLabel.textContent = 'Original: ';
       const origVal = document.createElement('strong');
-      origVal.className = 'text-on-surface truncate max-w-[260px] inline-block';
+      origVal.className = 'text-on-surface truncate max-w-[260px] inline-block cursor-pointer hover:underline hover:text-primary transition-colors';
+      origVal.title = 'Click to reset input to original name';
       origVal.textContent = currentFile.name;
+
+      origVal.addEventListener('click', () => {
+        const cleanOriginal = cleanName(currentFile.name);
+        currentFile.targetName = currentFile.name;
+        this.updateTelemetry();
+        this.renderQueue();
+        toast.show('Input Reset', cleanOriginal, 'info');
+      });
+
       origLabel.appendChild(origVal);
       origRow.appendChild(origLabel);
 
@@ -453,7 +708,7 @@ export class RenamerUIManager {
       origRow.appendChild(sizeLabel);
       card.appendChild(origRow);
 
-      // Rename target input
+      // Rename target input (Base Name only + Locked Extension Badge)
       const inputSection = document.createElement('div');
       inputSection.className = 'flex flex-col gap-1.5';
 
@@ -471,37 +726,74 @@ export class RenamerUIManager {
       kbd.className = 'px-1.5 py-0.5 rounded bg-surface-container font-mono-code text-[10px] text-on-surface font-bold border border-outline-variant/40';
       kbd.textContent = 'Tab';
       tipSpan.appendChild(kbd);
+      tipSpan.appendChild(document.createTextNode(' or '));
+      const kbdEnter = document.createElement('kbd');
+      kbdEnter.className = 'px-1.5 py-0.5 rounded bg-surface-container font-mono-code text-[10px] text-on-surface font-bold border border-outline-variant/40';
+      kbdEnter.textContent = 'Enter';
+      tipSpan.appendChild(kbdEnter);
       tipSpan.appendChild(document.createTextNode(' to save'));
       labelRow.appendChild(tipSpan);
       inputSection.appendChild(labelRow);
 
       const inputWrapper = document.createElement('div');
-      inputWrapper.className = 'relative flex items-center';
+      inputWrapper.className = 'relative flex items-center w-full shadow-sm';
 
       const targetInput = document.createElement('input');
       targetInput.id = 'inputRenameTarget';
       targetInput.type = 'text';
-      targetInput.className = 'w-full h-11 px-3 rounded-lg bg-surface-container-lowest font-mono-code text-[14px] text-on-surface font-semibold border-2 border-primary focus:ring-2 focus:ring-primary outline-none shadow-sm transition-all';
-      targetInput.value = currentFile.targetName || currentFile.suggestedName || currentFile.name;
+      targetInput.className = 'flex-1 h-11 px-3 rounded-l-lg bg-surface-container-lowest font-mono-code text-[14px] text-on-surface font-semibold border-2 border-r-0 border-primary focus:ring-0 outline-none transition-all';
+      
+      // USER APPROVED SPEC: ONLY NAME WITHOUT EXTENSION IN EDIT FIELD
+      targetInput.value = cleanName(currentFile.targetName || currentFile.suggestedName || currentFile.name);
 
-      targetInput.addEventListener('input', (e) => {
-        const val = e.target.value;
-        currentFile.targetName = val;
-        this.updateTelemetry();
-      });
-
+      // Live keystroke filtering for illegal characters
       targetInput.addEventListener('keydown', (e) => {
+        // Tab key: confirm and advance
+        if (e.key === 'Tab' && !e.shiftKey) {
+          e.preventDefault();
+          this.handleConfirmCurrentName(targetInput.value.trim() + currentFile.ext);
+          return;
+        }
+
+        // Shift+Tab: navigate backward
+        if (e.key === 'Tab' && e.shiftKey) {
+          e.preventDefault();
+          this.handleNavigateBackward();
+          return;
+        }
+
+        // Enter key: confirm and advance (identical to Tab)
         if (e.key === 'Enter') {
           e.preventDefault();
-          this.handleConfirmCurrentName(targetInput.value);
+          this.handleConfirmCurrentName(targetInput.value.trim() + currentFile.ext);
+          return;
+        }
+
+        // Block illegal Windows characters
+        if (/[\\/:*?"<>|]/.test(e.key)) {
+          e.preventDefault();
+          toast.show('Character Not Allowed', `Windows filenames cannot contain ${e.key}`, 'warning');
         }
       });
 
+      targetInput.addEventListener('input', (e) => {
+        const val = e.target.value;
+        currentFile.targetName = val.trim() + currentFile.ext;
+        this.updateTelemetry();
+      });
+
       inputWrapper.appendChild(targetInput);
+
+      // Locked Extension Pill Badge
+      const extBadge = document.createElement('span');
+      extBadge.className = 'h-11 px-3 rounded-r-lg bg-surface-container text-secondary font-mono-code text-[13px] font-bold border-2 border-l-0 border-primary flex items-center select-none shadow-xs';
+      extBadge.textContent = currentFile.ext;
+      inputWrapper.appendChild(extBadge);
+
       inputSection.appendChild(inputWrapper);
       card.appendChild(inputSection);
 
-      // 21 Quick Document Presets Grid
+      // 21 Quick Document Presets Grid (One-Click Instant Rename)
       const presetsSection = document.createElement('div');
       presetsSection.className = 'flex flex-col gap-1.5 pt-2 border-t border-surface-container';
 
@@ -518,7 +810,7 @@ export class RenamerUIManager {
 
       const presetTip = document.createElement('span');
       presetTip.className = 'text-label-sm text-secondary font-mono-code text-[10px]';
-      presetTip.textContent = 'Click to rename';
+      presetTip.textContent = '1-Click Instant Rename';
       presetHeader.appendChild(presetTip);
       presetsSection.appendChild(presetHeader);
 
@@ -528,7 +820,7 @@ export class RenamerUIManager {
       this.shortcuts21.forEach(sc => {
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'px-2 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[11px] font-semibold border border-outline-variant/40 hover:border-primary/50 transition-all flex items-center gap-1 shadow-xs justify-center cursor-pointer';
+        btn.className = 'px-2 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[11px] font-semibold border border-outline-variant/40 hover:border-primary/50 transition-all flex items-center gap-1 shadow-xs justify-center cursor-pointer active:scale-95';
 
         const badge = document.createElement('span');
         badge.className = 'px-1 py-0.2 rounded bg-surface-container-highest text-secondary text-[9px] font-bold';
@@ -540,6 +832,7 @@ export class RenamerUIManager {
         lbl.textContent = sc.label;
         btn.appendChild(lbl);
 
+        // One-Click Instant Rename
         btn.addEventListener('click', () => {
           this.applyShortcutToCurrent(sc);
         });
@@ -552,6 +845,14 @@ export class RenamerUIManager {
 
       activeCardWrapper.appendChild(card);
       scrollContainer.appendChild(activeCardWrapper);
+
+      // Auto-focus and select all text in input box
+      requestAnimationFrame(() => {
+        targetInput.focus();
+        targetInput.select();
+        // Pin active card to top of view
+        activeCardWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
     }
 
     // 2. UPCOMING QUEUE
@@ -559,7 +860,7 @@ export class RenamerUIManager {
     if (upcomingFiles.length > 0) {
       const upHeader = document.createElement('div');
       upHeader.className = 'flex items-center justify-between px-2 py-1 rounded bg-surface-container border border-outline-variant/40 text-[11px] font-mono-code text-secondary shrink-0';
-      
+
       const leftPart = document.createElement('div');
       leftPart.className = 'flex items-center gap-1.5 text-primary font-semibold';
       const upIcon = document.createElement('span');
@@ -584,6 +885,7 @@ export class RenamerUIManager {
         const item = document.createElement('article');
         item.className = 'bg-surface-container-lowest rounded-xl shadow-xs px-space-md py-2 flex items-center justify-between gap-space-sm hover:bg-surface-container-low transition-colors border border-outline-variant/30 cursor-pointer';
 
+        // Click upcoming item to jump and focus
         item.addEventListener('click', () => {
           this.state.currentIndex = fIdx;
           this.renderQueue();
@@ -603,7 +905,7 @@ export class RenamerUIManager {
 
         const targetTitle = document.createElement('span');
         targetTitle.className = 'font-mono-code text-[12px] text-on-surface font-semibold truncate';
-        targetTitle.textContent = f.targetName || f.suggestedName || f.name;
+        targetTitle.textContent = cleanName(f.targetName || f.suggestedName || f.name);
         nameCol.appendChild(targetTitle);
 
         const origTitle = document.createElement('span');
@@ -635,7 +937,7 @@ export class RenamerUIManager {
 
       const bar = document.createElement('div');
       bar.className = 'flex items-center justify-between px-2 py-1 rounded bg-emerald-100 border border-emerald-300 text-[11px] font-mono-code text-emerald-900';
-      
+
       const leftBar = document.createElement('div');
       leftBar.className = 'flex items-center gap-1.5 font-bold';
       const chkIcon = document.createElement('span');
@@ -652,8 +954,17 @@ export class RenamerUIManager {
       compHeader.appendChild(bar);
 
       completedFiles.forEach(f => {
+        const fIdx = this.state.files.indexOf(f);
         const item = document.createElement('article');
-        item.className = 'bg-surface-container-lowest rounded-xl shadow-xs px-space-md py-1.5 flex items-center justify-between gap-space-sm border border-emerald-300';
+        item.className = 'bg-surface-container-lowest rounded-xl shadow-xs px-space-md py-1.5 flex items-center justify-between gap-space-sm border border-emerald-300 cursor-pointer hover:bg-emerald-50/50 transition-colors';
+        item.title = 'Click to re-open and re-rename in Active Card';
+
+        // USER APPROVED SPEC: Clicking completed item re-opens it in Active Card
+        item.addEventListener('click', () => {
+          this.state.currentIndex = fIdx;
+          this.renderQueue();
+          this.renderCurrentPreview();
+        });
 
         const left = document.createElement('div');
         left.className = 'flex items-center gap-2 min-w-0 flex-1';
@@ -686,7 +997,10 @@ export class RenamerUIManager {
     queueCol.appendChild(scrollContainer);
   }
 
-  applyShortcutToCurrent(shortcut) {
+  /**
+   * One-Click Instant Rename via Shortcut Button
+   */
+  async applyShortcutToCurrent(shortcut) {
     const current = this.state.files[this.state.currentIndex];
     if (!current) return;
 
@@ -705,14 +1019,14 @@ export class RenamerUIManager {
     current.isMatched = true;
     current.status = 'matched';
 
-    this.updateTelemetry();
-    this.renderQueue();
-
-    // Advance to next uncompleted file or focus
-    this.handleConfirmCurrentName(unique);
+    // USER APPROVED SPEC: Instant atomic rename & advance
+    await this.handleConfirmCurrentName(unique);
   }
 
-  handleConfirmCurrentName(newName) {
+  /**
+   * Tab & Enter Key Immediate Atomic Rename on Disk
+   */
+  async handleConfirmCurrentName(newName) {
     const current = this.state.files[this.state.currentIndex];
     if (!current) return;
 
@@ -722,15 +1036,45 @@ export class RenamerUIManager {
       return;
     }
 
-    current.targetName = newName;
-    toast.show('Target Updated', newName, 'info');
+    // Perform atomic rename on disk immediately
+    try {
+      if (this.state.folder?.nativePath || current.path) {
+        const oldPath = current.path;
+        const res = await renameNativeFile(oldPath, newName);
+        if (res.success) {
+          // Push to undo stack
+          undoManager.pushBatch(this.state.folder, [{
+            old: current.name,
+            next: newName,
+            file: current,
+            nativePath: current.path
+          }]);
 
-    // Move to next pending file
+          current.name = newName;
+          current.targetName = newName;
+          current.path = res.path || (oldPath.slice(0, oldPath.lastIndexOf('/')) + '/' + newName);
+          current.isRenamed = true;
+          current.status = 'renamed';
+          toast.show('Renamed', newName, 'success');
+        } else {
+          toast.show('Rename Error', res.error || 'Failed to rename on disk', 'error');
+        }
+      } else {
+        current.targetName = newName;
+        current.isRenamed = true;
+        current.status = 'renamed';
+      }
+    } catch (err) {
+      toast.show('Rename Failed', err.message, 'error');
+    }
+
+    this.updateTelemetry();
+
+    // Advance to next pending file
     const nextPending = this.state.files.findIndex((f, idx) => idx > this.state.currentIndex && !f.isRenamed && !f.isKept);
     if (nextPending !== -1) {
       this.state.currentIndex = nextPending;
     } else {
-      // Find first uncompleted from 0
       const firstPending = this.state.files.findIndex(f => !f.isRenamed && !f.isKept);
       if (firstPending !== -1) {
         this.state.currentIndex = firstPending;
@@ -739,6 +1083,16 @@ export class RenamerUIManager {
 
     this.renderQueue();
     this.renderCurrentPreview();
+  }
+
+  handleNavigateBackward() {
+    if (this.state.currentIndex > 0) {
+      this.state.currentIndex--;
+      this.renderQueue();
+      this.renderCurrentPreview();
+    } else {
+      toast.show('First Document', 'Already on the first document in queue.', 'info');
+    }
   }
 
   handleKeepOriginal() {
@@ -768,7 +1122,6 @@ export class RenamerUIManager {
       return;
     }
 
-    // Validate all target names
     for (const f of pending) {
       const err = validateFilename(f.targetName);
       if (err) {
@@ -777,7 +1130,6 @@ export class RenamerUIManager {
       }
     }
 
-    // Build plan
     const plan = pending.map(f => ({
       old: f.name,
       next: f.targetName,
@@ -792,10 +1144,8 @@ export class RenamerUIManager {
         console.log(`[Rename Progress] ${pct}%: ${status}`);
       });
 
-      // Record to undo manager
       undoManager.pushBatch(this.state.folder, plan);
 
-      // Update models
       pending.forEach(f => {
         f.name = f.targetName;
         f.isRenamed = true;
@@ -825,7 +1175,6 @@ export class RenamerUIManager {
         console.log(`[Undo Progress] ${pct}%: ${status}`);
       });
 
-      // Revert models
       batch.plan.forEach(item => {
         const f = this.state.files.find(x => x.targetName === item.next || x.name === item.next);
         if (f) {
@@ -916,7 +1265,6 @@ export class RenamerUIManager {
     const previewStageWrapper = previewCol.querySelector('.overflow-auto');
     if (!previewStageWrapper) return;
 
-    // Clear safely
     while (previewStageWrapper.firstChild) {
       previewStageWrapper.removeChild(previewStageWrapper.firstChild);
     }
@@ -954,7 +1302,6 @@ export class RenamerUIManager {
       canvas.className = 'w-full h-full object-contain';
       stage.appendChild(canvas);
 
-      // Render PDF.js page 1
       window.pdfjsLib.getDocument(currentFile.url).promise.then(pdf => {
         pdf.getPage(1).then(page => {
           const viewport = page.getViewport({ scale: 1.5 });

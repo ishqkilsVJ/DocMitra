@@ -135,3 +135,16 @@ export async function selectNativeFiles(filter = 'PDF Files (*.pdf)|*.pdf|All Fi
   }
 }
 
+/**
+ * Reveals a directory natively in Windows Explorer
+ */
+export async function openFolderInExplorer(folderPath) {
+  try {
+    const res = await fetch(`${BACKEND_BASE}/api/open-folder?path=${encodeURIComponent(folderPath)}`);
+    if (!res.ok) return { success: false, error: `Failed to open Explorer: ${res.status}` };
+    return await res.json();
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
