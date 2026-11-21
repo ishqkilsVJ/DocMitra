@@ -706,7 +706,7 @@ export function validateFilename(name) {
    5. Duplicate Name Handling (Non-colliding Suffixing)
    ========================================================================== */
 
-export function uniqueDestination(desired, currentName, usedNames) {
+export function uniqueDestination(desired, currentName, usedNames, studentName = '') {
   const usedLower = new Map();
   if (usedNames) {
     for (const name of usedNames) {
@@ -719,13 +719,26 @@ export function uniqueDestination(desired, currentName, usedNames) {
   }
 
   const suffix = ext(desired);
-  const base = cleanName(desired).replace(/\s+\d+$/, '');
+  const base = cleanName(desired);
   let counter = 1;
-  let candidate = `${base} ${counter}${suffix}`;
+  let candidate = '';
 
-  while (usedLower.has(candidate.toLowerCase()) && candidate.toLowerCase() !== (currentName || '').toLowerCase()) {
-    counter++;
-    candidate = `${base} ${counter}${suffix}`;
+  const sClean = (studentName || '').trim();
+  if (sClean && base.toLowerCase().endsWith(sClean.toLowerCase())) {
+    let docPart = base.slice(0, -sClean.length).trim();
+    docPart = docPart.replace(/\s+\d+$/, '').trim();
+    candidate = `${docPart} ${counter} ${sClean}${suffix}`;
+    while (usedLower.has(candidate.toLowerCase()) && candidate.toLowerCase() !== (currentName || '').toLowerCase()) {
+      counter++;
+      candidate = `${docPart} ${counter} ${sClean}${suffix}`;
+    }
+  } else {
+    const docPart = base.replace(/\s+\d+$/, '').trim();
+    candidate = `${docPart} ${counter}${suffix}`;
+    while (usedLower.has(candidate.toLowerCase()) && candidate.toLowerCase() !== (currentName || '').toLowerCase()) {
+      counter++;
+      candidate = `${docPart} ${counter}${suffix}`;
+    }
   }
 
   return candidate;

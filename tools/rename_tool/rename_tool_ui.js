@@ -138,16 +138,23 @@ export class RenamerUIManager {
 
   init() {
     this.state.settings = loadSettings();
-    this.state.style = this.state.settings.style || 'preserve';
+    const savedCasing = localStorage.getItem('docmitra_casing_style');
+    this.state.style = (savedCasing && ['upper', 'title', 'lower'].includes(savedCasing.toLowerCase()))
+      ? savedCasing.toLowerCase()
+      : 'upper';
     this._bindDOM();
     this._bindKeyboardShortcuts();
     this._startBackgroundWatcher();
 
     // Listen for external settings updates from Settings modal
     window.addEventListener('storage', (e) => {
-      if (e.key === 'docmitra_settings') {
+      if (e.key === 'docmitra_settings' || e.key === 'docmitra_casing_style') {
         this.state.settings = loadSettings();
-        this.state.style = this.state.settings?.style || 'preserve';
+        const sc = localStorage.getItem('docmitra_casing_style');
+        this.state.style = (sc && ['upper', 'title', 'lower'].includes(sc.toLowerCase())) ? sc.toLowerCase() : 'upper';
+        this._recalculateTargetNames();
+        this.renderQueue();
+        this.renderCurrentPreview();
       }
     });
 
@@ -239,6 +246,7 @@ export class RenamerUIManager {
       radio.addEventListener('change', (e) => {
         if (e.target.checked) {
           this.state.style = e.target.value;
+          localStorage.setItem('docmitra_casing_style', e.target.value);
           updateCasingPillStyles();
           this._recalculateTargetNames();
           this.renderQueue();
@@ -1162,13 +1170,16 @@ export class RenamerUIManager {
       const card = document.createElement('article');
       card.className = 'bg-surface-container-lowest rounded-xl shadow-sm p-3 flex flex-col gap-2.5 border border-outline-variant/30 border-l-4 border-l-primary relative';
 
-      // Original filename label with click-to-reset
+      // Original filename label with click-to-reset (Horizontal baseline alignment, zero KB, clean ellipsis)
       const origRow = document.createElement('div');
-      origRow.className = 'flex items-center justify-between text-[11px] font-mono-code text-secondary';
+      origRow.className = 'flex items-center gap-1.5 text-[11px] font-mono-code text-secondary w-full min-w-0 overflow-hidden';
       const origLabel = document.createElement('span');
-      origLabel.textContent = 'Original: ';
+      origLabel.className = 'shrink-0 select-none text-secondary';
+      origLabel.textContent = 'Original:';
+      origRow.appendChild(origLabel);
+
       const origVal = document.createElement('strong');
-      origVal.className = 'text-on-surface truncate max-w-[260px] inline-block cursor-pointer hover:underline hover:text-primary transition-colors';
+      origVal.className = 'text-on-surface truncate min-w-0 flex-1 cursor-pointer hover:underline hover:text-primary transition-colors font-medium';
       origVal.title = 'Click to reset input to original name';
       origVal.textContent = currentFile.name;
 
@@ -1180,12 +1191,7 @@ export class RenamerUIManager {
         toast.show('Input Reset', cleanOriginal, 'info');
       });
 
-      origLabel.appendChild(origVal);
-      origRow.appendChild(origLabel);
-
-      const sizeLabel = document.createElement('span');
-      sizeLabel.textContent = `${(currentFile.size / 1024).toFixed(0)} KB`;
-      origRow.appendChild(sizeLabel);
+      origRow.appendChild(origVal);
       card.appendChild(origRow);
 
       // Rename target input (Base Name only, extension preserved silently in background)
@@ -1390,13 +1396,6 @@ export class RenamerUIManager {
 
         item.appendChild(leftCol);
 
-        const tag = document.createElement('span');
-        tag.className = f.isMatched
-          ? 'px-1.5 py-0.2 rounded font-mono-code text-[9px] bg-tertiary-fixed text-on-tertiary-fixed font-bold uppercase shrink-0'
-          : 'px-1.5 py-0.2 rounded font-mono-code text-[9px] bg-surface-variant text-on-surface-variant font-bold uppercase shrink-0';
-        tag.textContent = f.docType || 'Select';
-        item.appendChild(tag);
-
         upList.appendChild(item);
       });
 
@@ -1456,11 +1455,6 @@ export class RenamerUIManager {
         txt.textContent = f.targetName;
         left.appendChild(txt);
         item.appendChild(left);
-
-        const sz = document.createElement('span');
-        sz.className = 'font-mono-code text-[10px] text-secondary shrink-0';
-        sz.textContent = `${(f.size / 1024).toFixed(0)} KB`;
-        item.appendChild(sz);
 
         compHeader.appendChild(item);
       });
@@ -2059,9 +2053,15 @@ export class RenamerUIManager {
     }
 
     // UNIQUE DESTINATION NUMBERING: Ensure no duplicate overwrites!
-    const used = new Set(this.state.files.map(f => f.targetName));
+    const used = new Set(this.state.files.map(f => f.targetName || f.name));
+    if (this.state.folder?.files) {
+      for (const diskFile of this.state.folder.files) {
+        if (diskFile.name) used.add(diskFile.name);
+      }
+    }
     used.delete(current.targetName);
-    targetFilename = uniqueDestination(targetFilename, current.name, used);
+    used.delete(current.name);
+    targetFilename = uniqueDestination(targetFilename, current.name, used, this.state.studentName);
 
     const error = validateFilename(targetFilename);
     if (error) {
@@ -2077,24 +2077,25 @@ export class RenamerUIManager {
       if (oldPath && current.name !== targetFilename) {
         const res = await renameNativeFile(oldPath, targetFilename);
         if (res.success) {
-          const updatedPath = res.path || (oldPath.replace(/\\/g, '/').replace(/\/[^\/]+$/, '') + '/' + targetFilename);
+          const actualFilename = res.name || targetFilename;
+          const updatedPath = res.path || (oldPath.replace(/\\/g, '/').replace(/\/[^\/]+$/, '') + '/' + actualFilename);
           // Push to undo stack
           undoManager.pushBatch(this.state.folder, [{
             old: current.name,
-            next: targetFilename,
+            next: actualFilename,
             file: current,
             nativePath: current.path
           }]);
 
-          current.name = targetFilename;
-          current.targetName = targetFilename;
+          current.name = actualFilename;
+          current.targetName = actualFilename;
           current.path = updatedPath;
           current.nativePath = updatedPath;
           current.url = `http://localhost:3000/api/serve-file?path=${encodeURIComponent(updatedPath)}`;
           current.isRenamed = true;
           current.status = 'renamed';
           recordRenameEvent(1);
-          toast.show('Renamed', targetFilename, 'success');
+          toast.show('Renamed', actualFilename, 'success');
         } else {
           toast.show('Rename Error', res.error || 'Failed to rename on disk', 'error');
           return;

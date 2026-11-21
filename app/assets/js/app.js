@@ -1187,13 +1187,19 @@ function D(e) {
 		"LPT9"
 	].includes(n) ? "This file name is reserved by Windows OS." : "";
 }
-function O(e, t, n) {
-	let r = /* @__PURE__ */ new Map();
-	if (n) for (let e of n) e && r.set(e.toLowerCase(), e);
-	if (!r.has(e.toLowerCase()) || e.toLowerCase() === (t || "").toLowerCase()) return e;
-	let i = S(e), a = C(e).replace(/\s+\d+$/, ""), o = 1, s = `${a} ${o}${i}`;
-	for (; r.has(s.toLowerCase()) && s.toLowerCase() !== (t || "").toLowerCase();) o++, s = `${a} ${o}${i}`;
-	return s;
+function O(e, t, n, r = "") {
+	let i = /* @__PURE__ */ new Map();
+	if (n) for (let e of n) e && i.set(e.toLowerCase(), e);
+	if (!i.has(e.toLowerCase()) || e.toLowerCase() === (t || "").toLowerCase()) return e;
+	let a = S(e), o = C(e), s = 1, c = "", l = (r || "").trim();
+	if (l && o.toLowerCase().endsWith(l.toLowerCase())) {
+		let e = o.slice(0, -l.length).trim();
+		for (e = e.replace(/\s+\d+$/, "").trim(), c = `${e} ${s} ${l}${a}`; i.has(c.toLowerCase()) && c.toLowerCase() !== (t || "").toLowerCase();) s++, c = `${e} ${s} ${l}${a}`;
+	} else {
+		let e = o.replace(/\s+\d+$/, "").trim();
+		for (c = `${e} ${s}${a}`; i.has(c.toLowerCase()) && c.toLowerCase() !== (t || "").toLowerCase();) s++, c = `${e} ${s}${a}`;
+	}
+	return c;
 }
 var k = new class {
 	constructor(e = 10) {
@@ -2188,8 +2194,22 @@ var Ve = class {
 		];
 	}
 	init() {
-		this.state.settings = R(), this.state.style = this.state.settings.style || "preserve", this._bindDOM(), this._bindKeyboardShortcuts(), this._startBackgroundWatcher(), window.addEventListener("storage", (e) => {
-			e.key === "docmitra_settings" && (this.state.settings = R(), this.state.style = this.state.settings?.style || "preserve");
+		this.state.settings = R();
+		let e = localStorage.getItem("docmitra_casing_style");
+		this.state.style = e && [
+			"upper",
+			"title",
+			"lower"
+		].includes(e.toLowerCase()) ? e.toLowerCase() : "upper", this._bindDOM(), this._bindKeyboardShortcuts(), this._startBackgroundWatcher(), window.addEventListener("storage", (e) => {
+			if (e.key === "docmitra_settings" || e.key === "docmitra_casing_style") {
+				this.state.settings = R();
+				let e = localStorage.getItem("docmitra_casing_style");
+				this.state.style = e && [
+					"upper",
+					"title",
+					"lower"
+				].includes(e.toLowerCase()) ? e.toLowerCase() : "upper", this._recalculateTargetNames(), this.renderQueue(), this.renderCurrentPreview();
+			}
 		}), console.info("[DocMitra Renamer] Renamer UI manager initialized.");
 	}
 	_bindDOM() {
@@ -2223,7 +2243,7 @@ var Ve = class {
 		};
 		document.querySelectorAll("input[name=\"casingStyleRadio\"]").forEach((e) => {
 			e.value === (this.state.style || "upper") && (e.checked = !0), e.addEventListener("change", (e) => {
-				e.target.checked && (this.state.style = e.target.value, f(), this._recalculateTargetNames(), this.renderQueue(), this.renderCurrentPreview(), r.show("Case Style Changed", `Applied ${e.target.value.toUpperCase()} casing to pending files`, "info"));
+				e.target.checked && (this.state.style = e.target.value, localStorage.setItem("docmitra_casing_style", e.target.value), f(), this._recalculateTargetNames(), this.renderQueue(), this.renderCurrentPreview(), r.show("Case Style Changed", `Applied ${e.target.value.toUpperCase()} casing to pending files`, "info"));
 			});
 		}), f();
 		let p = document.getElementById("btnClearWorkspace");
@@ -2636,34 +2656,32 @@ var Ve = class {
 			let d = document.createElement("article");
 			d.className = "bg-surface-container-lowest rounded-xl shadow-sm p-3 flex flex-col gap-2.5 border border-outline-variant/30 border-l-4 border-l-primary relative";
 			let f = document.createElement("div");
-			f.className = "flex items-center justify-between text-[11px] font-mono-code text-secondary";
+			f.className = "flex items-center gap-1.5 text-[11px] font-mono-code text-secondary w-full min-w-0 overflow-hidden";
 			let p = document.createElement("span");
-			p.textContent = "Original: ";
+			p.className = "shrink-0 select-none text-secondary", p.textContent = "Original:", f.appendChild(p);
 			let m = document.createElement("strong");
-			m.className = "text-on-surface truncate max-w-[260px] inline-block cursor-pointer hover:underline hover:text-primary transition-colors", m.title = "Click to reset input to original name", m.textContent = n.name, m.addEventListener("click", () => {
+			m.className = "text-on-surface truncate min-w-0 flex-1 cursor-pointer hover:underline hover:text-primary transition-colors font-medium", m.title = "Click to reset input to original name", m.textContent = n.name, m.addEventListener("click", () => {
 				let e = C(n.name);
 				n.targetName = n.name, this.updateTelemetry(), this.renderQueue(), r.show("Input Reset", e, "info");
-			}), p.appendChild(m), f.appendChild(p);
-			let h = document.createElement("span");
-			h.textContent = `${(n.size / 1024).toFixed(0)} KB`, f.appendChild(h), d.appendChild(f);
+			}), f.appendChild(m), d.appendChild(f);
+			let h = document.createElement("div");
+			h.className = "flex flex-col gap-1.5";
 			let g = document.createElement("div");
-			g.className = "flex flex-col gap-1.5";
-			let _ = document.createElement("div");
-			_.className = "flex items-center justify-between font-label-sm font-semibold";
-			let v = document.createElement("label");
-			v.className = "text-on-surface font-bold text-[13px]", v.textContent = "Rename To:", _.appendChild(v);
-			let y = document.createElement("span");
-			y.className = "text-secondary text-[11px] flex items-center gap-1", y.appendChild(document.createTextNode("Press "));
+			g.className = "flex items-center justify-between font-label-sm font-semibold";
+			let _ = document.createElement("label");
+			_.className = "text-on-surface font-bold text-[13px]", _.textContent = "Rename To:", g.appendChild(_);
+			let v = document.createElement("span");
+			v.className = "text-secondary text-[11px] flex items-center gap-1", v.appendChild(document.createTextNode("Press "));
+			let y = document.createElement("kbd");
+			y.className = "px-1.5 py-0.5 rounded bg-surface-container font-mono-code text-[10px] text-on-surface font-bold border border-outline-variant/40", y.textContent = "Tab", v.appendChild(y), v.appendChild(document.createTextNode(" or "));
 			let b = document.createElement("kbd");
-			b.className = "px-1.5 py-0.5 rounded bg-surface-container font-mono-code text-[10px] text-on-surface font-bold border border-outline-variant/40", b.textContent = "Tab", y.appendChild(b), y.appendChild(document.createTextNode(" or "));
-			let x = document.createElement("kbd");
-			x.className = "px-1.5 py-0.5 rounded bg-surface-container font-mono-code text-[10px] text-on-surface font-bold border border-outline-variant/40", x.textContent = "Enter", y.appendChild(x), y.appendChild(document.createTextNode(" to save")), _.appendChild(y), g.appendChild(_);
-			let S = document.createElement("div");
-			S.className = "relative flex items-center w-full shadow-sm";
-			let w = document.createElement("input");
-			w.id = "inputRenameTarget", w.type = "text", w.autocomplete = "new-password", w.setAttribute("autocomplete", "new-password"), w.setAttribute("autocorrect", "off"), w.setAttribute("autocapitalize", "off"), w.setAttribute("spellcheck", "false"), w.setAttribute("name", `docmitra_rename_${Date.now()}`), w.className = "w-full h-10 px-3 rounded-lg bg-surface-container-lowest font-mono-code text-[13px] text-on-surface font-semibold border-2 border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-xs", w.value = C(n.targetName || n.suggestedName || n.name), w.addEventListener("keydown", (e) => {
-				e.key === "Tab" && !e.shiftKey ? (e.preventDefault(), this.handleConfirmCurrentName(w.value.trim())) : e.key === "Tab" && e.shiftKey ? (e.preventDefault(), this.handleNavigateBackward()) : e.key === "Enter" ? (e.preventDefault(), this.handleConfirmCurrentName(w.value.trim())) : /[\\/:*?"<>|]/.test(e.key) && (e.preventDefault(), r.show("Character Not Allowed", `Windows filenames cannot contain ${e.key}`, "warning"));
-			}), w.addEventListener("input", (e) => {
+			b.className = "px-1.5 py-0.5 rounded bg-surface-container font-mono-code text-[10px] text-on-surface font-bold border border-outline-variant/40", b.textContent = "Enter", v.appendChild(b), v.appendChild(document.createTextNode(" to save")), g.appendChild(v), h.appendChild(g);
+			let x = document.createElement("div");
+			x.className = "relative flex items-center w-full shadow-sm";
+			let S = document.createElement("input");
+			S.id = "inputRenameTarget", S.type = "text", S.autocomplete = "new-password", S.setAttribute("autocomplete", "new-password"), S.setAttribute("autocorrect", "off"), S.setAttribute("autocapitalize", "off"), S.setAttribute("spellcheck", "false"), S.setAttribute("name", `docmitra_rename_${Date.now()}`), S.className = "w-full h-10 px-3 rounded-lg bg-surface-container-lowest font-mono-code text-[13px] text-on-surface font-semibold border-2 border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-xs", S.value = C(n.targetName || n.suggestedName || n.name), S.addEventListener("keydown", (e) => {
+				e.key === "Tab" && !e.shiftKey ? (e.preventDefault(), this.handleConfirmCurrentName(S.value.trim())) : e.key === "Tab" && e.shiftKey ? (e.preventDefault(), this.handleNavigateBackward()) : e.key === "Enter" ? (e.preventDefault(), this.handleConfirmCurrentName(S.value.trim())) : /[\\/:*?"<>|]/.test(e.key) && (e.preventDefault(), r.show("Character Not Allowed", `Windows filenames cannot contain ${e.key}`, "warning"));
+			}), S.addEventListener("input", (e) => {
 				let t = e.target.value;
 				/[\\/:*?"<>|]/.test(t) && (t = t.replace(/[\\/:*?"<>|]/g, ""), e.target.value = t, r.show("Character Not Allowed", "Illegal Windows filename characters removed", "warning"));
 				let i = t.trim(), a = n.ext;
@@ -2685,11 +2703,11 @@ var Ve = class {
 				this.updateTelemetry();
 				let s = document.querySelector("#previewContainerStage .font-headline-sm");
 				s && (s.textContent = n.targetName), this.renderCoreShortcuts(t);
-			}), S.appendChild(w), g.appendChild(S), d.appendChild(g), e.appendChild(d), t.appendChild(e), requestAnimationFrame(() => {
-				w.focus(), w.select(), e.scrollIntoView({
+			}), x.appendChild(S), h.appendChild(x), d.appendChild(h), e.appendChild(d), t.appendChild(e), requestAnimationFrame(() => {
+				S.focus(), S.select(), e.scrollIntoView({
 					behavior: "smooth",
 					block: "start"
-				}), this.renderCoreShortcuts(w.value);
+				}), this.renderCoreShortcuts(S.value);
 			});
 		}
 		let i = this.state.files.filter((e, t) => t > this.state.currentIndex && !e.isRenamed && !e.isKept);
@@ -2713,9 +2731,7 @@ var Ve = class {
 				let i = document.createElement("span");
 				i.className = "w-4 h-4 rounded bg-surface-container text-secondary font-mono-code font-bold text-[10px] flex items-center justify-center shrink-0", i.textContent = String(t + 1), r.appendChild(i);
 				let a = document.createElement("span");
-				a.className = "font-mono-code text-[11px] text-on-surface font-semibold truncate", a.textContent = C(e.targetName || e.suggestedName || e.name), r.appendChild(a), n.appendChild(r);
-				let s = document.createElement("span");
-				s.className = e.isMatched ? "px-1.5 py-0.2 rounded font-mono-code text-[9px] bg-tertiary-fixed text-on-tertiary-fixed font-bold uppercase shrink-0" : "px-1.5 py-0.2 rounded font-mono-code text-[9px] bg-surface-variant text-on-surface-variant font-bold uppercase shrink-0", s.textContent = e.docType || "Select", n.appendChild(s), o.appendChild(n);
+				a.className = "font-mono-code text-[11px] text-on-surface font-semibold truncate", a.textContent = C(e.targetName || e.suggestedName || e.name), r.appendChild(a), n.appendChild(r), o.appendChild(n);
 			}), t.appendChild(o);
 		}
 		let a = this.state.files.filter((e) => e.isRenamed || e.isKept);
@@ -2741,9 +2757,7 @@ var Ve = class {
 				let o = document.createElement("span");
 				o.className = "material-symbols-outlined text-[10px]", o.textContent = "check", a.appendChild(o), i.appendChild(a);
 				let s = document.createElement("span");
-				s.className = "font-mono-code text-[11px] text-tertiary font-bold truncate", s.textContent = t.targetName, i.appendChild(s), r.appendChild(i);
-				let c = document.createElement("span");
-				c.className = "font-mono-code text-[10px] text-secondary shrink-0", c.textContent = `${(t.size / 1024).toFixed(0)} KB`, r.appendChild(c), e.appendChild(r);
+				s.className = "font-mono-code text-[11px] text-tertiary font-bold truncate", s.textContent = t.targetName, i.appendChild(s), r.appendChild(i), e.appendChild(r);
 			}), t.appendChild(e);
 		}
 		e.appendChild(t);
@@ -3047,8 +3061,9 @@ var Ve = class {
 			let e = a;
 			this.state.studentName && !e.toLowerCase().includes(this.state.studentName.toLowerCase()) && (e = `${e} ${this.state.studentName}`), this.state.style === "upper" ? e = e.toUpperCase() : this.state.style === "lower" ? e = e.toLowerCase() : this.state.style === "title" && (e = e.toLowerCase().replace(/(^|\s)\S/g, (e) => e.toUpperCase())), n = e.endsWith(i) ? e : `${e}${i}`, t.docType = a, t.isMatched = !1;
 		}
-		let s = new Set(this.state.files.map((e) => e.targetName));
-		s.delete(t.targetName), n = O(n, t.name, s);
+		let s = new Set(this.state.files.map((e) => e.targetName || e.name));
+		if (this.state.folder?.files) for (let e of this.state.folder.files) e.name && s.add(e.name);
+		s.delete(t.targetName), s.delete(t.name), n = O(n, t.name, s, this.state.studentName);
 		let c = D(n);
 		if (c) {
 			r.show("Invalid Filename", c, "error");
@@ -3059,13 +3074,13 @@ var Ve = class {
 			if (i && t.name !== n) {
 				let e = await d(i, n);
 				if (e.success) {
-					let a = e.path || i.replace(/\\/g, "/").replace(/\/[^\/]+$/, "") + "/" + n;
+					let a = e.name || n, o = e.path || i.replace(/\\/g, "/").replace(/\/[^\/]+$/, "") + "/" + a;
 					k.pushBatch(this.state.folder, [{
 						old: t.name,
-						next: n,
+						next: a,
 						file: t,
 						nativePath: t.path
-					}]), t.name = n, t.targetName = n, t.path = a, t.nativePath = a, t.url = `http://localhost:3000/api/serve-file?path=${encodeURIComponent(a)}`, t.isRenamed = !0, t.status = "renamed", ge(1), r.show("Renamed", n, "success");
+					}]), t.name = a, t.targetName = a, t.path = o, t.nativePath = o, t.url = `http://localhost:3000/api/serve-file?path=${encodeURIComponent(o)}`, t.isRenamed = !0, t.status = "renamed", ge(1), r.show("Renamed", a, "success");
 				} else {
 					r.show("Rename Error", e.error || "Failed to rename on disk", "error");
 					return;

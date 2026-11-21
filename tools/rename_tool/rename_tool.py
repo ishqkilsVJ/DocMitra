@@ -71,10 +71,11 @@ def split_ext(name: str) -> Tuple[str, str]:
     return name, ""
 
 
-def unique_destination(desired_name: str, current_name: str, existing_names: Set[str]) -> str:
+def unique_destination(desired_name: str, current_name: str, existing_names: Set[str], student_name: str = '') -> str:
     """
     Generate a non-colliding filename with sequential suffixes (' 1', ' 2', etc.)
     Case-insensitive check against existing_names in the target directory.
+    If student_name is attached, number is inserted sequentially before the student name.
     """
     lower_map = {n.lower(): n for n in existing_names if n}
 
@@ -83,24 +84,32 @@ def unique_destination(desired_name: str, current_name: str, existing_names: Set
 
     stem, ext = split_ext(desired_name)
     import re
-    base = re.sub(r'\s+\d+$', '', stem)
     counter = 1
-    candidate = f"{base} {counter}{ext}"
-
-    while candidate.lower() in lower_map and candidate.lower() != (current_name or '').lower():
-        counter += 1
+    s_clean = student_name.strip() if student_name else ''
+    if s_clean and stem.lower().endswith(s_clean.lower()):
+        doc_part = stem[:-len(s_clean)].strip()
+        doc_part = re.sub(r'\s+\d+$', '', doc_part).strip()
+        candidate = f"{doc_part} {counter} {s_clean}{ext}"
+        while candidate.lower() in lower_map and candidate.lower() != (current_name or '').lower():
+            counter += 1
+            candidate = f"{doc_part} {counter} {s_clean}{ext}"
+        return candidate
+    else:
+        base = re.sub(r'\s+\d+$', '', stem).strip()
         candidate = f"{base} {counter}{ext}"
+        while candidate.lower() in lower_map and candidate.lower() != (current_name or '').lower():
+            counter += 1
+            candidate = f"{base} {counter}{ext}"
+        return candidate
 
-    return candidate
 
-
-def safe_rename_file(old_path: str, new_name: str) -> Dict[str, Any]:
+def safe_rename_file(old_path: str, new_name: str, student_name: str = '') -> Dict[str, Any]:
     """
     Perform a safe atomic rename of a single file on disk.
     Handles:
     1. Validation against illegal chars and Windows reserved names.
     2. Windows case-only rename via a safe temporary file (__tmp_...).
-    3. Duplicate collision prevention.
+    3. Auto-increment duplicate non-colliding sequential numbers (never fails with 'already exists').
     4. Exact same name no-op.
     """
     if not old_path or not os.path.isfile(old_path):
@@ -148,9 +157,14 @@ def safe_rename_file(old_path: str, new_name: str) -> Dict[str, Any]:
                 pass
             return {'success': False, 'error': f"Case-change rename failed: {str(e)}"}
 
-    # Collision guard
-    if os.path.exists(new_path):
-        return {'success': False, 'error': f"A file named '{new_name}' already exists in this folder"}
+    # Collision guard & auto-increment: never block with "already exists"
+    if os.path.exists(new_path) and os.path.normpath(old_path).lower() != os.path.normpath(new_path).lower():
+        try:
+            existing_in_dir = set(os.listdir(parent))
+        except Exception:
+            existing_in_dir = set()
+        new_name = unique_destination(new_name, os.path.basename(old_path), existing_in_dir, student_name)
+        new_path = os.path.join(parent, new_name)
 
     try:
         os.rename(old_path, new_path)
