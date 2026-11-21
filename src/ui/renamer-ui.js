@@ -37,9 +37,16 @@ import { buildName, cleanName, ext, validateFilename, executeRename, undoRename 
 import { uniqueDestination } from '../libraries/duplicate-name-library.js';
 import { undoManager } from '../libraries/undo-library.js';
 import { issuesFor, correctSpelling } from '../libraries/spelling-library.js';
+import { evaluateChecklistRule } from '../libraries/checklist-library.js';
 import { generateBatchAuditCSV, downloadCSV } from '../libraries/export-reports-library.js';
+import { recordRenameEvent } from '../services/analytics-service.js';
 import { loadSettings, saveSettings } from '../services/storage-service.js';
-import { CANONICAL_NAMES, DEFAULT_SPELLING_RULES } from '../core/constants.js';
+import {
+  CANONICAL_NAMES,
+  DEFAULT_SPELLING_RULES,
+  DEFAULT_LINKED_RULES,
+  DEFAULT_CHECKLISTS_DATA
+} from '../core/constants.js';
 
 export function isJunkFile(filename) {
   if (!filename) return true;
@@ -63,6 +70,8 @@ export class RenamerUIManager {
       history: [],
       zoom: 100,
       rotation: 0,
+      panEnabled: false,
+      splitCompare: false,
       watcherActive: true,
       lastMtimeCheck: 0
     };
@@ -99,6 +108,15 @@ export class RenamerUIManager {
     this._bindDOM();
     this._bindKeyboardShortcuts();
     this._startBackgroundWatcher();
+
+    // Listen for external settings updates from Settings modal
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'docmitra_settings') {
+        this.state.settings = loadSettings();
+        this.state.style = this.state.settings?.style || 'preserve';
+      }
+    });
+
     console.info('[DocMitra Renamer] Renamer UI manager initialized.');
   }
 
@@ -173,6 +191,36 @@ export class RenamerUIManager {
       btnClear.addEventListener('click', () => this.handleClearQueue());
     }
 
+    // Wire initial mockup elements if user interacts before selecting folder
+    const initialInput = document.querySelector('#col-queue input');
+    if (initialInput) {
+      initialInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab' || e.key === 'Enter') {
+          e.preventDefault();
+          toast.show('Intake Folder Needed', 'Press "Select Folder" (F2) to choose admission documents.', 'info');
+        }
+        if (/[\\/:*?"<>|]/.test(e.key)) {
+          e.preventDefault();
+          toast.show('Character Not Allowed', `Windows filenames cannot contain ${e.key}`, 'warning');
+        }
+      });
+      initialInput.addEventListener('input', (e) => {
+        if (/[\\/:*?"<>|]/.test(e.target.value)) {
+          e.target.value = e.target.value.replace(/[\\/:*?"<>|]/g, '');
+          toast.show('Character Not Allowed', 'Illegal characters removed', 'warning');
+        }
+      });
+    }
+
+    const initialPresetBtns = document.querySelectorAll('#col-queue .grid-cols-3 button');
+    initialPresetBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const code = btn.querySelector('span:first-child')?.textContent?.trim() || '';
+        const label = btn.querySelector('span:last-child')?.textContent?.trim() || '';
+        toast.show(`Preset Selected: ${code}`, `Press "Select Folder" (F2) to rename documents with ${label}.`, 'info');
+      });
+    });
+
     // Preview zoom controls
     this._bindPreviewControls();
   }
@@ -246,10 +294,16 @@ export class RenamerUIManager {
     const btnZoomOut = colPreview.querySelector('button[title*="Zoom Out"]');
     const btnReset = colPreview.querySelector('button[title*="Reset Zoom"]');
     const btnRotate = colPreview.querySelector('button[title*="Rotate"]');
+    const zoomSlider = colPreview.querySelector('input[type="range"]');
+    const btnFitA4 = colPreview.querySelector('button[title*="Fit to A4 Width"]');
+    const btnPan = colPreview.querySelector('button[title*="Pan Hand"]');
+    const btnSplit = colPreview.querySelector('button[title*="Split Compare"]');
+    const btnResetFilters = colPreview.querySelector('.border-t button');
 
     if (btnZoomIn) {
       btnZoomIn.addEventListener('click', () => {
         this.state.zoom = Math.min(300, this.state.zoom + 20);
+        if (zoomSlider) zoomSlider.value = this.state.zoom;
         this._applyPreviewTransform();
       });
     }
@@ -257,6 +311,14 @@ export class RenamerUIManager {
     if (btnZoomOut) {
       btnZoomOut.addEventListener('click', () => {
         this.state.zoom = Math.max(40, this.state.zoom - 20);
+        if (zoomSlider) zoomSlider.value = this.state.zoom;
+        this._applyPreviewTransform();
+      });
+    }
+
+    if (zoomSlider) {
+      zoomSlider.addEventListener('input', (e) => {
+        this.state.zoom = Number(e.target.value);
         this._applyPreviewTransform();
       });
     }
@@ -265,6 +327,7 @@ export class RenamerUIManager {
       btnReset.addEventListener('click', () => {
         this.state.zoom = 100;
         this.state.rotation = 0;
+        if (zoomSlider) zoomSlider.value = 100;
         this._applyPreviewTransform();
       });
     }
@@ -275,6 +338,82 @@ export class RenamerUIManager {
         this._applyPreviewTransform();
       });
     }
+
+    if (btnFitA4) {
+      btnFitA4.addEventListener('click', () => {
+        this.state.zoom = 120;
+        if (zoomSlider) zoomSlider.value = 120;
+        this._applyPreviewTransform();
+        toast.show('Fit to A4 Width', 'Zoom set to 120% standard document view', 'info');
+      });
+    }
+
+    if (btnPan) {
+      btnPan.addEventListener('click', () => {
+        this.state.panEnabled = !this.state.panEnabled;
+        const stageWrapper = colPreview.querySelector('.overflow-auto');
+        if (stageWrapper) {
+          stageWrapper.classList.toggle('cursor-grab', this.state.panEnabled);
+          stageWrapper.classList.toggle('bg-primary/5', this.state.panEnabled);
+        }
+        btnPan.classList.toggle('bg-primary/20', this.state.panEnabled);
+        btnPan.classList.toggle('text-primary', this.state.panEnabled);
+        toast.show('Pan Hand', this.state.panEnabled ? 'Pan mode active: click & drag preview' : 'Pan mode disabled', 'info');
+      });
+    }
+
+    // Attach dragging to preview stage wrapper for pan navigation
+    const stageWrapper = colPreview.querySelector('.overflow-auto');
+    if (stageWrapper) {
+      let isPanning = false;
+      let startX = 0, startY = 0, scrollLeft = 0, scrollTop = 0;
+
+      stageWrapper.addEventListener('mousedown', (e) => {
+        if (!this.state.panEnabled) return;
+        isPanning = true;
+        stageWrapper.classList.add('cursor-grabbing');
+        startX = e.pageX - stageWrapper.offsetLeft;
+        startY = e.pageY - stageWrapper.offsetTop;
+        scrollLeft = stageWrapper.scrollLeft;
+        scrollTop = stageWrapper.scrollTop;
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isPanning) return;
+        e.preventDefault();
+        const x = e.pageX - stageWrapper.offsetLeft;
+        const y = e.pageY - stageWrapper.offsetTop;
+        stageWrapper.scrollLeft = scrollLeft - (x - startX);
+        stageWrapper.scrollTop = scrollTop - (y - startY);
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (isPanning) {
+          isPanning = false;
+          stageWrapper.classList.remove('cursor-grabbing');
+        }
+      });
+    }
+
+    if (btnSplit) {
+      btnSplit.addEventListener('click', () => {
+        this.state.splitCompare = !this.state.splitCompare;
+        btnSplit.classList.toggle('bg-primary/20', this.state.splitCompare);
+        btnSplit.classList.toggle('text-primary', this.state.splitCompare);
+        this.renderCurrentPreview();
+        toast.show('Split Compare', this.state.splitCompare ? 'Split compare mode active' : 'Single view restored', 'info');
+      });
+    }
+
+    if (btnResetFilters) {
+      btnResetFilters.addEventListener('click', () => {
+        this.state.zoom = 100;
+        this.state.rotation = 0;
+        if (zoomSlider) zoomSlider.value = 100;
+        this._applyPreviewTransform();
+        toast.show('Filters Reset', 'Preview display restored to default', 'info');
+      });
+    }
   }
 
   _applyPreviewTransform() {
@@ -282,7 +421,15 @@ export class RenamerUIManager {
     if (stage) {
       stage.style.transform = `scale(${this.state.zoom / 100}) rotate(${this.state.rotation}deg)`;
       stage.style.transformOrigin = 'center center';
-      stage.style.transition = 'transform 0.2s ease-out';
+      stage.style.transition = 'transform 0.15s ease-out';
+    }
+
+    const colPreview = document.getElementById('col-preview');
+    if (colPreview) {
+      const zoomLabel = colPreview.querySelector('.font-mono-code.text-label-sm');
+      if (zoomLabel) {
+        zoomLabel.textContent = this.state.zoom === 100 ? 'Fit to Page' : `${this.state.zoom}%`;
+      }
     }
   }
 
@@ -348,20 +495,11 @@ export class RenamerUIManager {
         return;
       }
 
-      // Check for direct files first
+      // Check for direct files and student subfolders
       const validFiles = (res.files || []).filter(f => !isJunkFile(f.name));
 
-      // 1. If folder has direct document files, treat as Single Student Folder
-      if (validFiles.length > 0) {
-        res.files = validFiles;
-        this.state.subfolders = [];
-        this.loadFolderData(res);
-        toast.show('Folder Loaded', `${validFiles.length} files found`, 'success');
-        return;
-      }
-
-      // 2. If folder has 0 direct files, but has student subfolders, treat as Batch Parent Folder
-      if (res.subfolders && res.subfolders.length > 0) {
+      // 1. If folder has 2 or more student subfolders, treat as Batch Parent Folder
+      if (res.subfolders && res.subfolders.length > 1) {
         this.state.subfolders = res.subfolders;
         this.state.currentSubfolderIndex = 0;
         await this.loadSubfolder(0);
@@ -369,7 +507,25 @@ export class RenamerUIManager {
         return;
       }
 
-      // 3. Otherwise folder is empty
+      // 2. If folder has 1 subfolder and 0 direct files, navigate into it
+      if (res.subfolders && res.subfolders.length === 1 && validFiles.length === 0) {
+        this.state.subfolders = res.subfolders;
+        this.state.currentSubfolderIndex = 0;
+        await this.loadSubfolder(0);
+        toast.show('Student Folder Loaded', res.subfolders[0].name, 'success');
+        return;
+      }
+
+      // 3. If folder has direct document files, treat as Single Student Folder
+      if (validFiles.length > 0) {
+        res.files = validFiles;
+        this.state.subfolders = res.subfolders || [];
+        this.loadFolderData(res);
+        toast.show('Folder Loaded', `${validFiles.length} files found`, 'success');
+        return;
+      }
+
+      // 4. Otherwise folder is empty
       toast.show('Selected Folder is Empty', 'Remaining on previous folder.', 'warning');
     } catch (err) {
       toast.show('Folder Error', err.message, 'error');
@@ -439,9 +595,16 @@ export class RenamerUIManager {
       const mapped = newFiles.map((f, i) => {
         const extension = f.ext || ext(f.name);
         const baseName = cleanName(f.name);
+        const spellingFixed = correctSpelling(baseName, DEFAULT_SPELLING_RULES);
 
-        const matchResult = evaluateMatch(baseName, this.state.settings?.groups);
-        const docType = matchResult.docType || matchDocument(baseName, this.state.settings?.groups) || null;
+        let matchResult = evaluateMatch(spellingFixed, this.state.settings?.groups);
+        if (!matchResult.docType) {
+          matchResult = evaluateMatch(baseName, this.state.settings?.groups);
+        }
+        const docType = matchResult.docType ||
+                        matchDocument(spellingFixed, this.state.settings?.groups) ||
+                        matchDocument(baseName, this.state.settings?.groups) ||
+                        null;
 
         let suggested = baseName;
         let isMatched = false;
@@ -496,7 +659,8 @@ export class RenamerUIManager {
     const folderPath = data.path || '';
     const folderName = data.name || (folderPath ? folderPath.split(/[\\/]/).pop() : 'Selected Folder');
 
-    const guessedStudent = folderName.replace(/_/g, ' ').trim();
+    const cleanFolderName = folderName.replace(/^[0-9]+[_\.\s-]+/, '').trim();
+    const guessedStudent = cleanFolderName.replace(/_/g, ' ').trim();
 
     this.state.folder = {
       name: folderName,
@@ -532,9 +696,18 @@ export class RenamerUIManager {
         };
       }
 
-      // Match against 21 shortcuts & canonical rules
-      const matchResult = evaluateMatch(baseName, this.state.settings?.groups);
-      const docType = matchResult.docType || matchDocument(baseName, this.state.settings?.groups) || null;
+      // Batch spelling auto-correction: correct scanner typos before matching
+      const spellingFixed = correctSpelling(baseName, DEFAULT_SPELLING_RULES);
+
+      // Match against 21 shortcuts, patterns & canonical rules
+      let matchResult = evaluateMatch(spellingFixed, this.state.settings?.groups);
+      if (!matchResult.docType) {
+        matchResult = evaluateMatch(baseName, this.state.settings?.groups);
+      }
+      const docType = matchResult.docType ||
+                      matchDocument(spellingFixed, this.state.settings?.groups) ||
+                      matchDocument(baseName, this.state.settings?.groups) ||
+                      null;
 
       let suggested = baseName;
       let isMatched = false;
@@ -755,7 +928,7 @@ export class RenamerUIManager {
         // Tab key: confirm and advance
         if (e.key === 'Tab' && !e.shiftKey) {
           e.preventDefault();
-          this.handleConfirmCurrentName(targetInput.value.trim() + currentFile.ext);
+          this.handleConfirmCurrentName(targetInput.value.trim());
           return;
         }
 
@@ -769,7 +942,7 @@ export class RenamerUIManager {
         // Enter key: confirm and advance (identical to Tab)
         if (e.key === 'Enter') {
           e.preventDefault();
-          this.handleConfirmCurrentName(targetInput.value.trim() + currentFile.ext);
+          this.handleConfirmCurrentName(targetInput.value.trim());
           return;
         }
 
@@ -781,9 +954,58 @@ export class RenamerUIManager {
       });
 
       targetInput.addEventListener('input', (e) => {
-        const val = e.target.value;
-        currentFile.targetName = val.trim() + currentFile.ext;
+        let val = e.target.value;
+        // Sanitize pasted illegal characters
+        if (/[\\/:*?"<>|]/.test(val)) {
+          val = val.replace(/[\\/:*?"<>|]/g, '');
+          e.target.value = val;
+          toast.show('Character Not Allowed', 'Illegal Windows filename characters removed', 'warning');
+        }
+
+        const trimmedVal = val.trim();
+        const currentExt = currentFile.ext;
+
+        if (!trimmedVal) {
+          currentFile.targetName = currentFile.name;
+          currentFile.docType = null;
+          currentFile.isMatched = false;
+          statusTag.className = 'px-2 py-0.5 rounded font-mono-code text-[10px] bg-error-container text-on-error-container font-bold';
+          statusTag.textContent = 'Unmatched';
+          this.updateTelemetry();
+          return;
+        }
+
+        // Live evaluation formula & smart keyword matching
+        const spellingFixed = correctSpelling(trimmedVal, DEFAULT_SPELLING_RULES);
+        const matchResult = evaluateMatch(spellingFixed, this.state.settings?.groups);
+        const shortDoc = matchDocument(spellingFixed, this.state.settings?.groups) || matchDocument(trimmedVal, this.state.settings?.groups);
+        const recognized = shortDoc || matchResult.docType || null;
+
+        if (recognized) {
+          const canonical = CANONICAL_NAMES[recognized.toUpperCase()] || recognized;
+          currentFile.docType = canonical;
+          currentFile.isMatched = true;
+          statusTag.className = 'px-2 py-0.5 rounded font-mono-code text-[10px] bg-tertiary-fixed text-on-tertiary-fixed font-bold';
+          statusTag.textContent = `Matched: ${canonical}`;
+
+          // Live formula calculation
+          const formulaBase = buildName(canonical, this.state.studentName, this.state.settings?.groups, this.state.style);
+          currentFile.targetName = formulaBase.endsWith(currentExt) ? formulaBase : `${formulaBase}${currentExt}`;
+        } else {
+          currentFile.docType = null;
+          currentFile.isMatched = false;
+          statusTag.className = 'px-2 py-0.5 rounded font-mono-code text-[10px] bg-error-container text-on-error-container font-bold';
+          statusTag.textContent = 'Unmatched';
+          currentFile.targetName = trimmedVal.endsWith(currentExt) ? trimmedVal : `${trimmedVal}${currentExt}`;
+        }
+
         this.updateTelemetry();
+
+        // Update live preview document title in canvas if present
+        const stageTitle = document.querySelector('#previewContainerStage .font-headline-sm');
+        if (stageTitle) {
+          stageTitle.textContent = currentFile.targetName;
+        }
       });
 
       inputWrapper.appendChild(targetInput);
@@ -1037,14 +1259,25 @@ export class RenamerUIManager {
     let targetFilename = (rawInput || '').trim();
     const currentExt = current.ext || ('.' + current.name.split('.').pop()).toLowerCase();
 
+    // If empty input, keep original name
+    if (!targetFilename) {
+      this.handleKeepOriginal();
+      return;
+    }
+
     // 1. Check if user typed a short keyword e.g. "12m", "pan", "adr"
     const baseTyped = targetFilename.endsWith(currentExt)
       ? targetFilename.slice(0, -currentExt.length).trim()
       : targetFilename;
 
-    const matchedDoc = matchDocument(baseTyped, this.state.settings?.groups);
-    if (matchedDoc) {
-      const canonical = CANONICAL_NAMES[matchedDoc.toUpperCase()] || matchedDoc;
+    const spellingFixed = correctSpelling(baseTyped, DEFAULT_SPELLING_RULES);
+    const matchedDoc = matchDocument(spellingFixed, this.state.settings?.groups) ||
+                       matchDocument(baseTyped, this.state.settings?.groups);
+    const evalResult = evaluateMatch(spellingFixed, this.state.settings?.groups);
+    const recognized = matchedDoc || evalResult.docType || null;
+
+    if (recognized) {
+      const canonical = CANONICAL_NAMES[recognized.toUpperCase()] || recognized;
       const formatted = buildName(canonical, this.state.studentName, this.state.settings?.groups, this.state.style);
       targetFilename = formatted.endsWith(currentExt) ? formatted : `${formatted}${currentExt}`;
       current.docType = canonical;
@@ -1052,6 +1285,11 @@ export class RenamerUIManager {
     } else if (!targetFilename.endsWith(currentExt)) {
       targetFilename = `${targetFilename}${currentExt}`;
     }
+
+    // UNIQUE DESTINATION NUMBERING: Ensure no duplicate overwrites!
+    const used = new Set(this.state.files.map(f => f.targetName));
+    used.delete(current.targetName);
+    targetFilename = uniqueDestination(targetFilename, current.name, used);
 
     const error = validateFilename(targetFilename);
     if (error) {
@@ -1064,7 +1302,7 @@ export class RenamerUIManager {
       const dirPath = this.state.folder?.path || '';
       const oldPath = current.path || (dirPath ? `${dirPath}/${current.name}` : null);
 
-      if (oldPath) {
+      if (oldPath && current.name !== targetFilename) {
         const res = await renameNativeFile(oldPath, targetFilename);
         if (res.success) {
           const updatedPath = res.path || (oldPath.replace(/\\/g, '/').replace(/\/[^\/]+$/, '') + '/' + targetFilename);
@@ -1080,8 +1318,10 @@ export class RenamerUIManager {
           current.targetName = targetFilename;
           current.path = updatedPath;
           current.nativePath = updatedPath;
+          current.url = `http://localhost:3000/api/serve-file?path=${encodeURIComponent(updatedPath)}`;
           current.isRenamed = true;
           current.status = 'renamed';
+          recordRenameEvent(1);
           toast.show('Renamed', targetFilename, 'success');
         } else {
           toast.show('Rename Error', res.error || 'Failed to rename on disk', 'error');
@@ -1092,6 +1332,7 @@ export class RenamerUIManager {
         current.targetName = targetFilename;
         current.isRenamed = true;
         current.status = 'renamed';
+        toast.show('Name Confirmed', targetFilename, 'info');
       }
     } catch (err) {
       toast.show('Rename Failed', err.message, 'error');
@@ -1135,9 +1376,15 @@ export class RenamerUIManager {
 
     toast.show('Kept Original', current.name, 'info');
 
-    // Move to next
-    if (this.state.currentIndex < this.state.files.length - 1) {
-      this.state.currentIndex++;
+    // Advance to next pending file
+    const nextPending = this.state.files.findIndex((f, idx) => idx > this.state.currentIndex && !f.isRenamed && !f.isKept);
+    if (nextPending !== -1) {
+      this.state.currentIndex = nextPending;
+    } else {
+      const firstPending = this.state.files.findIndex(f => !f.isRenamed && !f.isKept);
+      if (firstPending !== -1) {
+        this.state.currentIndex = firstPending;
+      }
     }
 
     this.updateTelemetry();
@@ -1206,12 +1453,18 @@ export class RenamerUIManager {
       });
 
       batch.plan.forEach(item => {
-        const f = this.state.files.find(x => x.targetName === item.next || x.name === item.next);
+        const f = this.state.files.find(x => x.targetName === item.next || x.name === item.next || (item.file && x.id === item.file.id));
         if (f) {
           f.name = item.old;
           f.targetName = item.old;
           f.isRenamed = false;
           f.status = 'pending';
+          const restoredPath = item.nativePath || (this.state.folder?.path ? `${this.state.folder.path}/${item.old}` : f.path?.replace(/[^\\\/]+$/, item.old));
+          if (restoredPath) {
+            f.path = restoredPath;
+            f.nativePath = restoredPath;
+            f.url = `http://localhost:3000/api/serve-file?path=${encodeURIComponent(restoredPath)}`;
+          }
         }
       });
 
@@ -1253,28 +1506,50 @@ export class RenamerUIManager {
       return;
     }
 
+    const checklistName = this.state.settings?.activeChecklist || 'MAHA DBT FORM';
+    const checklistsData = this.state.settings?.checklists || DEFAULT_CHECKLISTS_DATA;
+    const rawRules = checklistsData[checklistName] || DEFAULT_CHECKLISTS_DATA['MAHA DBT FORM'] || [];
+
+    const rules = rawRules.map(r => {
+      if (Array.isArray(r)) {
+        return { name: r[0], keywords: r[1] || [r[0].toLowerCase()] };
+      }
+      return r;
+    });
+
+    const fileNames = this.state.files.map(f => f.targetName || f.name);
+    const activeLinks = this.state.settings?.linkedRules || DEFAULT_LINKED_RULES;
+    const evaluations = rules.map(rule => evaluateChecklistRule(fileNames, rule, activeLinks));
+
+    const foundCount = evaluations.filter(e => e.status === 'green').length;
+    const missingCount = evaluations.length - foundCount;
+    const percentComplete = rules.length > 0 ? Math.round((foundCount / rules.length) * 100) : 0;
+    const missingList = evaluations
+      .map((e, idx) => (e.status !== 'green' ? rules[idx].name : null))
+      .filter(Boolean);
+
     const batchResults = [{
       studentName: this.state.studentName || 'Student',
       folderName: this.state.folder?.name || 'Folder',
       summary: {
-        evaluations: this.state.files.map(f => ({
-          rule: { name: f.docType || f.name },
-          status: f.isMatched || f.isRenamed ? 'green' : 'missing',
-          isLinked: false
+        evaluations: evaluations.map((ev, idx) => ({
+          rule: rules[idx],
+          status: ev.status,
+          isLinked: ev.isLinked
         })),
-        foundCount: this.state.files.filter(f => f.isMatched || f.isRenamed).length,
-        missingCount: this.state.files.filter(f => !f.isMatched && !f.isRenamed).length,
-        totalRequired: this.state.files.length,
-        percentComplete: Math.round((this.state.files.filter(f => f.isMatched || f.isRenamed).length / this.state.files.length) * 100),
-        isReady: this.state.files.every(f => f.isMatched || f.isRenamed),
-        missingList: this.state.files.filter(f => !f.isMatched && !f.isRenamed).map(f => f.name)
+        foundCount,
+        missingCount,
+        totalRequired: rules.length,
+        percentComplete,
+        isReady: missingCount === 0,
+        missingList
       }
     }];
 
-    const rules = this.state.files.map(f => ({ name: f.docType || f.name }));
-    const csvContent = generateBatchAuditCSV(batchResults, rules, 'Admission Audit');
-    downloadCSV(`DocMitra_Audit_${(this.state.studentName || 'Batch').replace(/\s+/g, '_')}.csv`, csvContent);
-    toast.show('Audit Exported', 'CSV report downloaded with UTF-8 BOM.', 'success');
+    const csvContent = generateBatchAuditCSV(batchResults, rules, checklistName);
+    const filename = `DocMitra_Audit_${(this.state.studentName || 'Batch').replace(/\s+/g, '_')}.csv`;
+    downloadCSV(filename, csvContent);
+    toast.show('Audit Exported', `CSV report for ${rules.length} admission rules downloaded.`, 'success');
   }
 
   handleClearQueue() {
@@ -1314,25 +1589,69 @@ export class RenamerUIManager {
       return;
     }
 
+    // Update target buffer telemetry
+    const bufferEl = previewCol.querySelector('strong.text-tertiary, strong.text-error');
+    if (bufferEl) {
+      const sizeKb = (currentFile.size / 1024).toFixed(0);
+      if (currentFile.size <= 256 * 1024) {
+        bufferEl.className = 'text-tertiary font-bold';
+        bufferEl.textContent = `${sizeKb} KB / 256 KB Safe`;
+      } else {
+        bufferEl.className = 'text-error font-bold';
+        bufferEl.textContent = `${sizeKb} KB (>256 KB Safe Buffer)`;
+      }
+    }
+
+    if (this.state.splitCompare && this.state.files.length > 1) {
+      const cmpIndex = this.state.currentIndex > 0 ? this.state.currentIndex - 1 : 1;
+      const cmpFile = this.state.files[cmpIndex];
+
+      const splitGrid = document.createElement('div');
+      splitGrid.id = 'previewContainerStage';
+      splitGrid.className = 'flex flex-row gap-space-md items-center justify-center h-full max-h-[calc(100vh-175px)]';
+
+      const leftStage = this._createStageElement(cmpFile, `Compare: ${cmpFile.name}`);
+      const rightStage = this._createStageElement(currentFile, `Active: ${currentFile.targetName || currentFile.name}`);
+
+      splitGrid.appendChild(leftStage);
+      splitGrid.appendChild(rightStage);
+      previewStageWrapper.appendChild(splitGrid);
+      this._applyPreviewTransform();
+      return;
+    }
+
+    const stage = this._createStageElement(currentFile);
+    previewStageWrapper.appendChild(stage);
+    this._applyPreviewTransform();
+  }
+
+  _createStageElement(file, compareLabel = null) {
     const stage = document.createElement('div');
-    stage.id = 'previewContainerStage';
+    if (!compareLabel) stage.id = 'previewContainerStage';
     stage.className = 'h-full max-h-[calc(100vh-175px)] aspect-[1/1.414] bg-surface-container-lowest rounded shadow-2xl p-space-md flex flex-col justify-between relative overflow-hidden select-text border border-outline-variant/40 shrink-0';
 
-    const isImage = /\.(jpe?g|png|webp|bmp|gif)$/i.test(currentFile.name);
-    const isPdf = /\.pdf$/i.test(currentFile.name);
+    if (compareLabel) {
+      const topBadge = document.createElement('div');
+      topBadge.className = 'absolute top-2 left-2 z-10 px-2 py-0.5 rounded bg-surface-container-highest text-on-surface font-mono-code text-[10px] font-bold shadow-xs';
+      topBadge.textContent = compareLabel;
+      stage.appendChild(topBadge);
+    }
 
-    if (isImage && currentFile.url) {
+    const isImage = /\.(jpe?g|png|webp|bmp|gif)$/i.test(file.name);
+    const isPdf = /\.pdf$/i.test(file.name);
+
+    if (isImage && file.url) {
       const img = document.createElement('img');
-      img.src = currentFile.url;
-      img.alt = currentFile.name;
+      img.src = file.url;
+      img.alt = file.name;
       img.className = 'w-full h-full object-contain';
       stage.appendChild(img);
-    } else if (isPdf && window.pdfjsLib && currentFile.url) {
+    } else if (isPdf && window.pdfjsLib && file.url) {
       const canvas = document.createElement('canvas');
       canvas.className = 'w-full h-full object-contain';
       stage.appendChild(canvas);
 
-      window.pdfjsLib.getDocument(currentFile.url).promise.then(pdf => {
+      window.pdfjsLib.getDocument(file.url).promise.then(pdf => {
         pdf.getPage(1).then(page => {
           const viewport = page.getViewport({ scale: 1.5 });
           canvas.height = viewport.height;
@@ -1344,13 +1663,25 @@ export class RenamerUIManager {
         });
       }).catch(err => {
         console.warn('PDF.js render error:', err);
-        this._renderDocumentInfoFallback(stage, currentFile);
+        this._renderDocumentInfoFallback(stage, file);
       });
     } else {
-      this._renderDocumentInfoFallback(stage, currentFile);
+      if (isPdf && !window.pdfjsLib && !this._pdfLoading) {
+        this._pdfLoading = true;
+        const s = document.createElement('script');
+        s.src = 'assets/js/libs/pdf.min.js';
+        s.onload = () => {
+          if (window.pdfjsLib) {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'assets/js/libs/pdf.worker.min.js';
+            this.renderCurrentPreview();
+          }
+        };
+        document.head.appendChild(s);
+      }
+      this._renderDocumentInfoFallback(stage, file);
     }
 
-    previewStageWrapper.appendChild(stage);
+    return stage;
   }
 
   _renderDocumentInfoFallback(stage, file) {

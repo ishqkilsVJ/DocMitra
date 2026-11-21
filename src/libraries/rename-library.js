@@ -113,6 +113,7 @@ export async function executeRename(dir, plan, onProgress = null) {
           if (newPath) {
             item.file.path = newPath;
             item.file.nativePath = newPath;
+            item.file.url = `http://localhost:3000/api/serve-file?path=${encodeURIComponent(newPath)}`;
           }
           item.file.name = item.next;
           item.file.targetName = item.next;
@@ -216,9 +217,25 @@ export async function undoRename(dir, plan, onProgress = null) {
   let completed = 0;
   
   for (const item of reversed) {
-    if (dir && dir.nativePath) {
-      const currentPath = `${dir.nativePath}/${item.next}`;
-      await renameNativeFile(currentPath, item.old);
+    const dirPath = dir ? (dir.nativePath || dir.path || '') : '';
+    const currentPath = (item.file && (item.file.path || item.file.nativePath)) ||
+                        (dirPath ? `${dirPath}/${item.next}` : null) ||
+                        (item.nativePath ? item.nativePath.replace(/[^\\\/]+$/, item.next) : null);
+
+    if (currentPath) {
+      const res = await renameNativeFile(currentPath, item.old);
+      if (res && res.success) {
+        const restoredPath = res.path || (item.nativePath || (dirPath ? `${dirPath}/${item.old}` : currentPath.replace(/[^\\\/]+$/, item.old)));
+        if (item.file) {
+          item.file.path = restoredPath;
+          item.file.nativePath = restoredPath;
+          item.file.name = item.old;
+          item.file.targetName = item.old;
+          item.file.url = `http://localhost:3000/api/serve-file?path=${encodeURIComponent(restoredPath)}`;
+          item.file.isRenamed = false;
+          item.file.status = 'pending';
+        }
+      }
       completed++;
       if (onProgress) {
         onProgress(Math.round((completed / reversed.length) * 100), `Undo: ${completed}/${reversed.length}`);
