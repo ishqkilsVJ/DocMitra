@@ -8,7 +8,7 @@ import { NavigationManager } from './navigation.js';
 import { SettingsModalManager } from './modal.js';
 import { wirePlaceholderActions } from './placeholders.js';
 import { toast } from './toast.js';
-import { initRenamerUI } from './renamer-ui.js';
+import { initRenamerUI } from '../../tools/rename_tool/rename_tool_ui.js';
 import { initSettingsUI } from './settings-ui.js';
 import { initPdfStudioUI } from './pdf-studio-ui.js';
 import { initImageStudioUI } from './image-studio-ui.js';
@@ -27,6 +27,22 @@ export function initAppShell() {
 
   // Initialize Bulk Renamer UI
   const renamerUI = initRenamerUI();
+  if (typeof window !== 'undefined') {
+    window.renamerUI = renamerUI;
+    if (window.location.search.includes('test_loaded=1')) {
+      setTimeout(() => {
+        renamerUI.state.folder = { name: 'Vijay_Ramesh_Yadav', path: 'E:/Students/Vijay_Ramesh_Yadav' };
+        renamerUI.state.studentName = 'Vijay Ramesh Yadav';
+        renamerUI.state.files = [
+          { name: '10th_marksheet.pdf', size: 184320, ext: '.pdf', status: 'pending', targetName: '10TH MARKSHEET VIJAY RAMESH YADAV.pdf', isRenamed: false, matchConfidence: 95 },
+          { name: 'adhar_card.pdf', size: 215040, ext: '.pdf', status: 'pending', targetName: 'AADHAAR CARD VIJAY RAMESH YADAV.pdf', isRenamed: false, matchConfidence: 90 },
+          { name: 'photo_scan.jpg', size: 95400, ext: '.jpg', status: 'pending', targetName: 'PHOTO VIJAY RAMESH YADAV.jpg', isRenamed: false, matchConfidence: 95 }
+        ];
+        renamerUI.state.currentIndex = 0;
+        renamerUI.renderQueue();
+      }, 200);
+    }
+  }
 
   // Reset Bulk Renamer whenever navigating away to a different tool tab
   nav.onViewChange = (newView, oldView) => {

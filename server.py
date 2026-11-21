@@ -255,7 +255,17 @@ def list_native_directory(dir_path):
         'files': files
     }
 
+# Dedicated Tool Integrations: Bulk Document Renamer
+try:
+    from tools.rename_tool.rename_tool import safe_rename_file, batch_rename_files, scan_student_folder
+except ImportError:
+    safe_rename_file = None
+    batch_rename_files = None
+    scan_student_folder = None
+
 def rename_native_file(old_path, new_name):
+    if safe_rename_file is not None:
+        return safe_rename_file(old_path, new_name)
     if not old_path or not os.path.isfile(old_path):
         return {'success': False, 'error': 'Source file not found on disk'}
     parent = os.path.dirname(old_path)

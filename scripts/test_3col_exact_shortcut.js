@@ -58,7 +58,10 @@ console.log('✅ Passed Test 1: Strict case rules enforced 100% across all 4 sty
 
 // 2. Test Live Suggestions Relocation to Right Panel (Requirement 2)
 console.log('Test 2: Dynamic Live Suggestions Relocation to Right-Side CORE SHORTCUTS...');
-const renamerJs = fs.readFileSync('src/ui/renamer-ui.js', 'utf8');
+const renamerFilePath = fs.existsSync('tools/rename_tool/rename_tool_ui.js')
+  ? 'tools/rename_tool/rename_tool_ui.js'
+  : 'src/ui/renamer-ui.js';
+const renamerJs = fs.readFileSync(renamerFilePath, 'utf8');
 
 // Verify Hero card no longer contains suggestion chips
 assert.ok(!renamerJs.includes('suggestionsWrapper.appendChild(chipBtn)'), 'Hero Card must not have suggestion chips');
@@ -107,7 +110,7 @@ console.log('✅ Passed Test 4: Tab navigation reset cleanly wired.\n');
 console.log('Test 5: Zero Marathi in UI files...');
 const marathiRegex = /[\u0900-\u097F]/;
 assert.ok(!marathiRegex.test(indexHtml), 'app/index.html must have 0 Marathi characters');
-assert.ok(!marathiRegex.test(renamerJs), 'src/ui/renamer-ui.js must have 0 Marathi characters');
-console.log('✅ Passed Test 5: 0 Marathi characters in app/index.html and src/ui/renamer-ui.js.\n');
+assert.ok(!marathiRegex.test(renamerJs), `${renamerFilePath} must have 0 Marathi characters`);
+console.log(`✅ Passed Test 5: 0 Marathi characters in app/index.html and ${renamerFilePath}.\n`);
 
 console.log('🎉 ALL 5 TEST SUITES PASSED FLAWLESSLY!');
