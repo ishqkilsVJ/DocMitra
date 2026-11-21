@@ -1461,7 +1461,7 @@ async function le(e, t, n = null) {
 		i++, n && n(Math.round(i / r.length * 100), `Undo: ${i}/${r.length}`);
 	}
 }
-var ue = [
+var M = [
 	{
 		canonical: "AADHAAR CARD",
 		code: "ADR",
@@ -1770,7 +1770,7 @@ var ue = [
 		]
 	}
 ];
-function de(e, t = "") {
+function ue(e, t = "") {
 	if (!e || typeof e != "string") return {
 		docType: null,
 		canonical: null,
@@ -1781,7 +1781,7 @@ function de(e, t = "") {
 		reason: "No text extracted"
 	};
 	let n = e.replace(/\s+/g, " "), r = null, i = 0;
-	for (let e of ue) {
+	for (let e of M) {
 		let t = 0, a = [];
 		for (let r of e.patterns) if (r.test(n)) {
 			t += 35;
@@ -1819,6 +1819,32 @@ function de(e, t = "") {
 		matchedKeywords: r ? r.matchedKeywords : []
 	};
 }
+function de({ canonical: e, code: t = "", primaryKeywords: n = [], secondaryKeywords: r = [] }) {
+	if (!e || typeof e != "string") return null;
+	let i = e.trim().toUpperCase(), a = (t || "").trim().toUpperCase() || i.slice(0, 3);
+	h[i] = i;
+	let o = (e) => e.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), s = [RegExp(`\\b${o(i)}\\b`, "i")];
+	a && a.length >= 2 && s.push(RegExp(`\\b${o(a)}\\b`, "i"));
+	for (let e of n) e && e.trim().length >= 3 && s.push(RegExp(`\\b${o(e.trim())}\\b`, "i"));
+	let c = [i.toLowerCase()];
+	for (let e of n) if (e && typeof e == "string" && e.trim().length >= 3) {
+		let t = e.trim().toLowerCase();
+		c.includes(t) || c.push(t);
+	}
+	let l = [];
+	for (let e of r) if (e && typeof e == "string" && e.trim().length >= 3) {
+		let t = e.trim().toLowerCase();
+		!c.includes(t) && !l.includes(t) && l.push(t);
+	}
+	let u = {
+		canonical: i,
+		code: a,
+		patterns: s,
+		primaryKeywords: c,
+		secondaryKeywords: l
+	}, d = M.findIndex((e) => e.canonical === i || a && e.code === a);
+	return d === -1 ? M.push(u) : M[d] = u, u;
+}
 // src/services/analytics-service.js
 var fe = "cm_user_productivity_stats_v1", pe = 60, me = 240, he = 120;
 function ge() {
@@ -1838,42 +1864,42 @@ function ge() {
 		})
 	};
 }
-function _e() {
+function N() {
 	try {
 		let e = localStorage.getItem(fe);
 		if (!e) {
 			let e = ge();
-			return ve(e), e;
+			return _e(e), e;
 		}
 		return JSON.parse(e);
 	} catch {
 		return ge();
 	}
 }
-function ve(e) {
+function _e(e) {
 	try {
 		localStorage.setItem(fe, JSON.stringify(e));
 	} catch (e) {
 		console.warn("Could not save stats to localStorage", e);
 	}
 }
-function ye(e = 1) {
-	let t = _e();
+function ve(e = 1) {
+	let t = N();
 	t.renamedCount = (t.renamedCount || 0) + e, t.lastActiveDate = (/* @__PURE__ */ new Date()).toLocaleDateString("en-IN", {
 		day: "2-digit",
 		month: "short",
 		year: "numeric"
-	}), ve(t), Se();
+	}), _e(t), xe();
 }
-function M(e) {
+function P(e) {
 	let t = Math.floor(e / 3600), n = Math.floor(e % 3600 / 60);
 	return t === 0 ? `${n}m` : `${t}h ${n}m`;
 }
-function be(e) {
-	let t = e || _e(), n = (t.renamedCount || 0) * pe + (t.pdfProcessedCount || 0) * me + (t.imagesProcessedCount || 0) * he, r = Math.floor(n / 3600), i = Math.floor(n % 3600 / 60);
+function ye(e) {
+	let t = e || N(), n = (t.renamedCount || 0) * pe + (t.pdfProcessedCount || 0) * me + (t.imagesProcessedCount || 0) * he, r = Math.floor(n / 3600), i = Math.floor(n % 3600 / 60);
 	return r === 0 ? `${i} Mins` : `${r}h ${i}m`;
 }
-async function xe() {
+async function be() {
 	try {
 		return await (await fetch("http://localhost:3000/api/license-status")).json();
 	} catch {
@@ -1885,12 +1911,12 @@ async function xe() {
 		};
 	}
 }
-async function Se() {
+async function xe() {
 	if (typeof document > "u") return;
-	let e = _e(), t = document.getElementById("dashTimeSaved"), n = document.getElementById("dashRenamingTimeSaved"), r = document.getElementById("dashPdfTimeSaved"), i = document.getElementById("dashImageTimeSaved"), a = document.getElementById("dashRenamedCount"), o = document.getElementById("dashPdfCount"), s = document.getElementById("dashImageCount"), c = document.getElementById("dashInstallDate");
-	t && (t.textContent = be(e)), n && (n.textContent = M((e.renamedCount || 0) * pe)), r && (r.textContent = M((e.pdfProcessedCount || 0) * me)), i && (i.textContent = M((e.imagesProcessedCount || 0) * he)), a && (a.textContent = `${e.renamedCount || 0} Files`), o && (o.textContent = `${e.pdfProcessedCount || 0} Docs`), s && (s.textContent = `${e.imagesProcessedCount || 0} Images`), c && (c.textContent = e.firstInstalledDate || "Today");
+	let e = N(), t = document.getElementById("dashTimeSaved"), n = document.getElementById("dashRenamingTimeSaved"), r = document.getElementById("dashPdfTimeSaved"), i = document.getElementById("dashImageTimeSaved"), a = document.getElementById("dashRenamedCount"), o = document.getElementById("dashPdfCount"), s = document.getElementById("dashImageCount"), c = document.getElementById("dashInstallDate");
+	t && (t.textContent = ye(e)), n && (n.textContent = P((e.renamedCount || 0) * pe)), r && (r.textContent = P((e.pdfProcessedCount || 0) * me)), i && (i.textContent = P((e.imagesProcessedCount || 0) * he)), a && (a.textContent = `${e.renamedCount || 0} Files`), o && (o.textContent = `${e.pdfProcessedCount || 0} Docs`), s && (s.textContent = `${e.imagesProcessedCount || 0} Images`), c && (c.textContent = e.firstInstalledDate || "Today");
 	try {
-		let e = await xe(), t = document.getElementById("dashGreetingName"), n = document.getElementById("topbarUserName"), r = document.getElementById("dashLicBadge"), i = document.getElementById("dashSystemKey"), a = document.getElementById("dashDaysLeft"), o = e.customer || localStorage.getItem("cm_user_display_name") || "Vijay";
+		let e = await be(), t = document.getElementById("dashGreetingName"), n = document.getElementById("topbarUserName"), r = document.getElementById("dashLicBadge"), i = document.getElementById("dashSystemKey"), a = document.getElementById("dashDaysLeft"), o = e.customer || localStorage.getItem("cm_user_display_name") || "Vijay";
 		t && (t.textContent = o), n && (n.textContent = o), i && (i.textContent = e.systemKey || "CM-SYS-D83E-714F-3E56-D773"), r && (e.validity === "LIFETIME" ? (r.textContent = "🌟 Lifetime License", r.style.background = "#065f46", r.style.color = "#34d399") : r.textContent = `📅 ${e.validity || "Active"} Subscription`), a && (e.validity === "LIFETIME" ? (a.textContent = "Unlimited (Never Expires)", a.style.color = "#10b981") : (a.textContent = "342 Days Remaining", a.style.color = "#38bdf8"));
 	} catch {
 		let e = document.getElementById("dashGreetingName"), t = document.getElementById("topbarUserName");
@@ -1898,7 +1924,7 @@ async function Se() {
 	}
 }
 // src/core/constants.js
-var Ce = {
+var Se = {
 	marskheet: "marksheet",
 	markshet: "marksheet",
 	markshit: "marksheet",
@@ -1922,7 +1948,7 @@ var Ce = {
 	atempt: "attempt",
 	attmpt: "attempt",
 	phot: "photo"
-}, we = [
+}, Ce = [
 	{
 		id: "12th-marksheet-passing-link",
 		part1: "12TH MARKSHEET",
@@ -1951,7 +1977,7 @@ var Ce = {
 		combined: "12TH LC",
 		type: "alias"
 	}
-], Te = "2026.11.passing_canonical_v2", N = {
+], we = "2026.11.passing_canonical_v2", F = {
 	"MAHA DBT FORM": [
 		["AADHAAR CARD", ["aadhaar card"]],
 		["PHOTO", ["photo"]],
@@ -1995,7 +2021,7 @@ var Ce = {
 		["PASSBOOK BANK", ["passbook bank", "bank passbook"]],
 		["BONAFIDE CERTIFICATE", ["bonafide certificate"]]
 	]
-}, Ee = {
+}, Te = {
 	"MAHA DBT FORM": [
 		"AADHAAR CARD",
 		"PHOTO",
@@ -2041,12 +2067,12 @@ var Ce = {
 		"PASSBOOK BANK",
 		"BONAFIDE CERTIFICATE"
 	]
-}, P = {
+}, I = {
 	name: "BulkStudentRenamerSettingsDB",
 	version: 1,
 	store: "settings",
 	key: "current"
-}, De = [
+}, Ee = [
 	{
 		id: "aadhaar-card",
 		displayName: "Aadhaar Card",
@@ -2258,13 +2284,13 @@ var Ce = {
 		outputName: "CAP ALLOTMENT LETTER"
 	}
 ];
-function Oe(e = De) {
+function De(e = Ee) {
 	let t = {};
 	for (let n of e) t[n.outputName] = [n.primaryShortcut.toLowerCase(), ...(n.alternateKeywords || []).map((e) => e.toLowerCase())];
 	return t;
 }
 // src/libraries/checklist-library.js
-function ke(e) {
+function Oe(e) {
 	return Object.fromEntries(Object.entries(e).map(([e, t]) => [e, t.map((e) => Array.isArray(e) ? {
 		name: e[0],
 		keywords: e[1],
@@ -2272,18 +2298,18 @@ function ke(e) {
 	} : e)]));
 }
 // src/services/storage-service.js
-var Ae = "v3_exact_single", F = Oe(), I = (e, t) => {
+var ke = "v3_exact_single", L = De(), R = (e, t) => {
 	try {
 		let n = localStorage.getItem(e);
 		return n ? JSON.parse(n) : t;
 	} catch {
 		return t;
 	}
-}, L = (e, t) => {
+}, z = (e, t) => {
 	try {
 		localStorage.setItem(e, JSON.stringify(t));
 	} catch {}
-}, je = (e) => {
+}, Ae = (e) => {
 	let t = {};
 	Object.entries(e || {}).forEach(([e, n]) => {
 		let r = /^12\s*LC$/i.test(e) || e === "12TH LEAVING CERTIFICATE" ? "12TH LC" : e;
@@ -2293,7 +2319,7 @@ var Ae = "v3_exact_single", F = Oe(), I = (e, t) => {
 	return Object.entries(t).forEach(([e, r]) => {
 		e !== "12TH MARKSHEET AND PASSING" && (n[e] = r, e === "12TH PASSING CERTIFICATE" && t["12TH MARKSHEET AND PASSING"] && (n["12TH MARKSHEET AND PASSING"] = t["12TH MARKSHEET AND PASSING"]));
 	}), n;
-}, R = (e) => {
+}, B = (e) => {
 	let t = e.name === "12TH LEAVING CERTIFICATE" ? "12TH LC" : e.name;
 	return {
 		...e,
@@ -2301,32 +2327,32 @@ var Ae = "v3_exact_single", F = Oe(), I = (e, t) => {
 		keywords: [...new Set(e.keywords || [])],
 		short: e.short || t.slice(0, 18)
 	};
-}, Me = (e) => {
+}, je = (e) => {
 	let t = e.filter((e) => e.name === "12TH MARKSHEET AND PASSING");
 	if (!t.length) return e;
 	let n = e.filter((e) => e.name !== "12TH MARKSHEET AND PASSING"), r = n.findIndex((e) => e.name === "12TH PASSING CERTIFICATE");
 	return n.splice(r < 0 ? n.length : r + 1, 0, ...t), n;
-}, Ne = (e) => {
-	let t = ke(N), n = e || {}, r = {};
+}, Me = (e) => {
+	let t = Oe(F), n = e || {}, r = {};
 	return Object.keys(t).forEach((e) => {
-		let i = Array.isArray(n[e]) ? n[e].map(R) : [], a = new Map(i.map((e) => [e.name.toUpperCase(), e]));
+		let i = Array.isArray(n[e]) ? n[e].map(B) : [], a = new Map(i.map((e) => [e.name.toUpperCase(), e]));
 		t[e].forEach((e) => {
-			let t = R(e);
+			let t = B(e);
 			a.has(t.name.toUpperCase()) || i.push(t);
-		}), r[e] = Me(i);
+		}), r[e] = je(i);
 	}), Object.entries(n).forEach(([e, t]) => {
-		r[e] || (r[e] = Me(t.map(R)));
+		r[e] || (r[e] = je(t.map(B)));
 	}), r;
 };
-function z() {
+function V() {
 	let e = localStorage.getItem("dictVersion"), t, n;
-	e === Ae ? (t = je(I("renameSettings", F)), n = I("renameProfiles", { Default: F })) : (t = F, n = { Default: F }, L("renameSettings", t), L("renameProfiles", n), localStorage.setItem("dictVersion", Ae));
+	e === ke ? (t = Ae(R("renameSettings", L)), n = R("renameProfiles", { Default: L })) : (t = L, n = { Default: L }, z("renameSettings", t), z("renameProfiles", n), localStorage.setItem("dictVersion", ke));
 	let r = localStorage.getItem("checklistVersion"), i;
-	r === "2026.11.passing_canonical_v2" ? i = Ne(I("checklists", null)) : (i = ke(N), L("checklists", i), localStorage.setItem("checklistVersion", Te));
+	r === "2026.11.passing_canonical_v2" ? i = Me(R("checklists", null)) : (i = Oe(F), z("checklists", i), localStorage.setItem("checklistVersion", we));
 	let a = {
-		...Ce,
-		...I("spellingCorrections", {}) || {}
-	}, o = I("linkedRules", we);
+		...Se,
+		...R("spellingCorrections", {}) || {}
+	}, o = R("linkedRules", Ce);
 	return {
 		groups: t,
 		checklists: i,
@@ -2337,22 +2363,22 @@ function z() {
 		active: Object.keys(n)[0] || "Default"
 	};
 }
-function Pe() {
+function Ne() {
 	return new Promise((e, t) => {
 		if (!("indexedDB" in window)) return t(/* @__PURE__ */ Error("IndexedDB unavailable"));
-		let n = indexedDB.open(P.name, P.version);
+		let n = indexedDB.open(I.name, I.version);
 		n.onupgradeneeded = () => {
-			n.result.objectStoreNames.contains(P.store) || n.result.createObjectStore(P.store);
+			n.result.objectStoreNames.contains(I.store) || n.result.createObjectStore(I.store);
 		}, n.onsuccess = () => e(n.result), n.onerror = () => t(n.error || /* @__PURE__ */ Error("IndexedDB open failed"));
 	});
 }
-function Fe(e) {
-	return Pe().then((t) => new Promise((n, r) => {
-		let i = t.transaction(P.store, "readwrite");
-		i.objectStore(P.store).put(e, P.key), i.oncomplete = () => n(!0), i.onerror = () => r(i.error);
+function Pe(e) {
+	return Ne().then((t) => new Promise((n, r) => {
+		let i = t.transaction(I.store, "readwrite");
+		i.objectStore(I.store).put(e, I.key), i.oncomplete = () => n(!0), i.onerror = () => r(i.error);
 	}));
 }
-function B(e) {
+function H(e) {
 	let t = {
 		groups: e.groups,
 		checklists: e.checklists,
@@ -2362,19 +2388,19 @@ function B(e) {
 		style: e.style,
 		savedAt: (/* @__PURE__ */ new Date()).toISOString()
 	};
-	L("renameSettings", t.groups), L("checklists", t.checklists), L("spellingCorrections", t.spelling), L("renameProfiles", t.profiles), L("linkedRules", t.linkedRules), localStorage.setItem("nameStyle", t.style), Fe(t).catch(() => {});
+	z("renameSettings", t.groups), z("checklists", t.checklists), z("spellingCorrections", t.spelling), z("renameProfiles", t.profiles), z("linkedRules", t.linkedRules), localStorage.setItem("nameStyle", t.style), Pe(t).catch(() => {});
 }
-async function Ie() {
+async function Fe() {
 	try {
 		let e = await (await fetch("http://localhost:3000/api/load-document-presets")).json();
 		if (e && e.success && e.data && e.data.forms) return e.data;
 	} catch (e) {
 		console.warn("[StorageService] Failed to load document presets from backend:", e);
 	}
-	return I("documentPresets", { forms: N });
+	return R("documentPresets", { forms: F });
 }
-async function Le(e) {
-	L("documentPresets", e);
+async function Ie(e) {
+	z("documentPresets", e);
 	try {
 		await fetch("http://localhost:3000/api/save-document-presets", {
 			method: "POST",
@@ -2386,56 +2412,56 @@ async function Le(e) {
 	}
 }
 // src/services/followup-service.js
-var Re = "studentDocumentFollowUps", V = [];
-function H() {
+var Le = "studentDocumentFollowUps", Re = [];
+function U() {
 	try {
 		if (typeof localStorage < "u") {
-			let e = localStorage.getItem(Re);
+			let e = localStorage.getItem(Le);
 			return e ? JSON.parse(e) : [];
 		}
-		return V;
+		return Re;
 	} catch {
-		return V;
+		return Re;
 	}
 }
-function U(e) {
+function W(e) {
 	try {
-		V = e, typeof localStorage < "u" && localStorage.setItem(Re, JSON.stringify(e));
+		Re = e, typeof localStorage < "u" && localStorage.setItem(Le, JSON.stringify(e));
 	} catch (e) {
 		console.error("Failed to save follow-ups:", e);
 	}
 }
-function W({ folderName: e, studentName: t, documentName: n, promisedDate: r, note: i = "" }) {
-	let a = H(), o = (e || "").trim(), s = (n || "").trim().toUpperCase(), c = (t || e || "").trim(), l = a.findIndex((e) => e.folderName.toLowerCase() === o.toLowerCase() && e.documentName.toUpperCase() === s && e.status === "pending"), u = Date.now();
-	if (l >= 0) return a[l].promisedDate = r, a[l].note = i, a[l].updatedAt = u, U(a), a[l];
+function G({ folderName: e, studentName: t, documentName: n, promisedDate: r, note: i = "" }) {
+	let a = U(), o = (e || "").trim(), s = (n || "").trim().toUpperCase(), c = (t || e || "").trim(), l = a.findIndex((e) => e.folderName.toLowerCase() === o.toLowerCase() && e.documentName.toUpperCase() === s && e.status === "pending"), u = Date.now();
+	if (l >= 0) return a[l].promisedDate = r, a[l].note = i, a[l].updatedAt = u, W(a), a[l];
 	let d = {
 		id: `fu_${u}_${Math.random().toString(36).slice(2, 7)}`,
 		folderName: o,
 		studentName: c,
 		documentName: s,
-		promisedDate: r || q(),
+		promisedDate: r || J(),
 		note: i || "",
 		status: "pending",
 		createdAt: u,
 		resolvedAt: null
 	};
-	return a.push(d), U(a), d;
+	return a.push(d), W(a), d;
 }
 function ze(e, t) {
-	let n = H(), r = (e || "").trim().toLowerCase(), i = (t || "").trim().toUpperCase(), a = !1;
+	let n = U(), r = (e || "").trim().toLowerCase(), i = (t || "").trim().toUpperCase(), a = !1;
 	return n.forEach((e) => {
 		e.folderName.trim().toLowerCase() === r && e.documentName.trim().toUpperCase() === i && e.status === "pending" && (e.status = "resolved", e.resolvedAt = Date.now(), a = !0);
-	}), a && U(n), a;
+	}), a && W(n), a;
 }
 function Be(e, t) {
-	let n = H(), r = (e || "").trim().toLowerCase(), i = (t || "").trim().toUpperCase();
+	let n = U(), r = (e || "").trim().toLowerCase(), i = (t || "").trim().toUpperCase();
 	return n.find((e) => e.folderName.trim().toLowerCase() === r && e.documentName.trim().toUpperCase() === i && e.status === "pending") || null;
 }
-function Ve(e, t = K()) {
+function Ve(e, t = q()) {
 	let n = Ue(e, t);
 	return n < 0 ? "overdue" : n === 0 ? "today" : "upcoming";
 }
-function G(e) {
+function K(e) {
 	if (!e) return "";
 	let t = e.split("-");
 	return t.length === 3 ? new Date(Number(t[0]), Number(t[1]) - 1, Number(t[2])).toLocaleDateString("en-IN", {
@@ -2444,11 +2470,11 @@ function G(e) {
 		year: "numeric"
 	}) : e;
 }
-function K() {
+function q() {
 	let e = /* @__PURE__ */ new Date();
 	return `${e.getFullYear()}-${String(e.getMonth() + 1).padStart(2, "0")}-${String(e.getDate()).padStart(2, "0")}`;
 }
-function q(e = 1) {
+function J(e = 1) {
 	let t = /* @__PURE__ */ new Date();
 	return t.setDate(t.getDate() + e), `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
 }
@@ -2460,7 +2486,7 @@ function Ue(e, t) {
 	return e === t ? 0 : e < t ? -1 : 1;
 }
 // tools/rename_tool/rename_tool_ui.js
-function J(e) {
+function Y(e) {
 	if (!e) return !0;
 	let t = e.toLowerCase().trim();
 	return !!(t === "thumbs.db" || t === "ehthumbs.db" || t === "desktop.ini" || t === ".ds_store" || t.startsWith(".") || t.startsWith("~$") || t.endsWith(".tmp"));
@@ -2627,8 +2653,20 @@ var Ge = class {
 		];
 	}
 	init() {
-		this.state.settings = z(), Ie().then((e) => {
-			e && e.forms && (this.state.documentPresets = e.forms, this.renderQueue());
+		this.state.settings = V(), Fe().then((e) => {
+			if (e && e.forms) {
+				this.state.documentPresets = e.forms;
+				for (let t of Object.keys(e.forms)) {
+					let n = e.forms[t];
+					if (Array.isArray(n)) for (let e of n) e.name && de({
+						canonical: e.name,
+						code: e.code || "",
+						primaryKeywords: [e.name.toLowerCase()],
+						secondaryKeywords: []
+					});
+				}
+				this.renderQueue();
+			}
 		}).catch(() => {});
 		let e = localStorage.getItem("docmitra_casing_style");
 		this.state.style = e && [
@@ -2637,7 +2675,7 @@ var Ge = class {
 			"lower"
 		].includes(e.toLowerCase()) ? e.toLowerCase() : "upper", this._bindDOM(), this._bindKeyboardShortcuts(), this._startBackgroundWatcher(), window.addEventListener("storage", (e) => {
 			if (e.key === "docmitra_settings" || e.key === "docmitra_casing_style") {
-				this.state.settings = z();
+				this.state.settings = V();
 				let e = localStorage.getItem("docmitra_casing_style");
 				this.state.style = e && [
 					"upper",
@@ -2673,10 +2711,24 @@ var Ge = class {
 		let f = document.getElementById("btnSmartScanBatch");
 		f && f.addEventListener("click", () => this.handleSmartScanBatch());
 		let p = document.getElementById("btnRenameMatched");
-		p && p.addEventListener("click", () => this.handleRenameAllMatched());
+		p && p.addEventListener("click", () => this.openCrossCheckModal());
 		let m = document.getElementById("btnReviewUnmatched");
 		m && m.addEventListener("click", () => this.handleReviewUnmatched());
-		let h = () => {
+		let h = document.getElementById("btnAddNewDocument");
+		h && h.addEventListener("click", () => this.openAddDocumentModal());
+		let g = document.getElementById("btnCloseAddDocModal");
+		g && g.addEventListener("click", () => this.closeAddDocumentModal());
+		let _ = document.getElementById("btnCancelAddDoc");
+		_ && _.addEventListener("click", () => this.closeAddDocumentModal());
+		let v = document.getElementById("btnSaveAddDoc");
+		v && v.addEventListener("click", () => this.handleSaveAndLearnDocument());
+		let y = document.getElementById("btnCloseCrossCheckModal");
+		y && y.addEventListener("click", () => this.closeCrossCheckModal());
+		let b = document.getElementById("btnCancelCrossCheck");
+		b && b.addEventListener("click", () => this.closeCrossCheckModal());
+		let x = document.getElementById("btnConfirmBatchRename");
+		x && x.addEventListener("click", () => this.handleConfirmCrossCheckRename());
+		let S = () => {
 			document.querySelectorAll("#casingRadiosGroup label").forEach((e) => {
 				let t = e.querySelector("input");
 				e.className = t && t.checked ? "flex items-center cursor-pointer text-white bg-primary font-mono-code text-[11px] px-2 py-0.5 rounded shadow-xs select-none font-bold transition-all casing-pill-active" : "flex items-center cursor-pointer text-secondary hover:text-on-surface font-mono-code text-[11px] px-2 py-0.5 rounded transition-all select-none";
@@ -2684,21 +2736,21 @@ var Ge = class {
 		};
 		document.querySelectorAll("input[name=\"casingStyleRadio\"]").forEach((e) => {
 			e.value === (this.state.style || "upper") && (e.checked = !0), e.addEventListener("change", (e) => {
-				e.target.checked && (this.state.style = e.target.value, localStorage.setItem("docmitra_casing_style", e.target.value), h(), this._recalculateTargetNames(), this.renderQueue(), this.renderCurrentPreview(), r.show("Case Style Changed", `Applied ${e.target.value.toUpperCase()} casing to pending files`, "info"));
+				e.target.checked && (this.state.style = e.target.value, localStorage.setItem("docmitra_casing_style", e.target.value), S(), this._recalculateTargetNames(), this.renderQueue(), this.renderCurrentPreview(), r.show("Case Style Changed", `Applied ${e.target.value.toUpperCase()} casing to pending files`, "info"));
 			});
-		}), h();
-		let g = document.getElementById("btnClearWorkspace");
-		g && g.addEventListener("click", () => this.handleClearQueue());
-		let _ = document.getElementById("btnClearQueue");
-		_ && _.addEventListener("click", () => this.handleClearQueue());
-		let v = document.getElementById("btnEmptySelectFolder");
-		v && v.addEventListener("click", () => this.handleSelectFolder());
-		let y = document.getElementById("btnEmptyAddFiles");
-		y && y.addEventListener("click", () => this.handleAddFiles());
-		let b = document.querySelector("#col-queue input");
-		b && (b.addEventListener("keydown", (e) => {
+		}), S();
+		let C = document.getElementById("btnClearWorkspace");
+		C && C.addEventListener("click", () => this.handleClearQueue());
+		let w = document.getElementById("btnClearQueue");
+		w && w.addEventListener("click", () => this.handleClearQueue());
+		let T = document.getElementById("btnEmptySelectFolder");
+		T && T.addEventListener("click", () => this.handleSelectFolder());
+		let E = document.getElementById("btnEmptyAddFiles");
+		E && E.addEventListener("click", () => this.handleAddFiles());
+		let D = document.querySelector("#col-queue input");
+		D && (D.addEventListener("keydown", (e) => {
 			(e.key === "Tab" || e.key === "Enter") && (e.preventDefault(), r.show("Intake Folder Needed", "Press \"Select Folder\" (F2) to choose admission documents.", "info")), /[\\/:*?"<>|]/.test(e.key) && (e.preventDefault(), r.show("Character Not Allowed", `Windows filenames cannot contain ${e.key}`, "warning"));
-		}), b.addEventListener("input", (e) => {
+		}), D.addEventListener("input", (e) => {
 			/[\\/:*?"<>|]/.test(e.target.value) && (e.target.value = e.target.value.replace(/[\\/:*?"<>|]/g, ""), r.show("Character Not Allowed", "Illegal characters removed", "warning"));
 		})), document.querySelectorAll("#col-queue .grid-cols-3 button").forEach((e) => {
 			e.addEventListener("click", () => {
@@ -2794,7 +2846,7 @@ var Ge = class {
 			if (this.state.watcherActive && this.state.folder?.path) try {
 				let e = await u(this.state.folder.path);
 				if (e.success && Array.isArray(e.files)) {
-					let t = e.files.filter((e) => !J(e.name)), n = new Set(this.state.files.map((e) => e.name)), r = new Set(t.map((e) => e.name)), i = !1;
+					let t = e.files.filter((e) => !Y(e.name)), n = new Set(this.state.files.map((e) => e.name)), r = new Set(t.map((e) => e.name)), i = !1;
 					if (n.size !== r.size) i = !0;
 					else for (let e of r) if (!n.has(e)) {
 						i = !0;
@@ -2829,7 +2881,7 @@ var Ge = class {
 				e.cancelled || r.show("Folder Select Error", e.error || "Failed to select folder", "error");
 				return;
 			}
-			let t = (e.files || []).filter((e) => !J(e.name));
+			let t = (e.files || []).filter((e) => !Y(e.name));
 			if (e.subfolders && e.subfolders.length > 1) {
 				this.state.subfolders = e.subfolders, this.state.currentSubfolderIndex = 0, await this.loadSubfolder(0), r.show("Batch Folder Loaded", `${e.subfolders.length} student folders detected`, "success");
 				return;
@@ -2853,7 +2905,7 @@ var Ge = class {
 		let t = this.state.subfolders[e], n = typeof t == "string" ? t : t.path || "";
 		try {
 			let e = await u(n);
-			e.success && (e.files = (e.files || []).filter((e) => !J(e.name)), this.loadFolderData(e));
+			e.success && (e.files = (e.files || []).filter((e) => !Y(e.name)), this.loadFolderData(e));
 		} catch (e) {
 			r.show("Subfolder Error", e.message, "error");
 		}
@@ -2869,7 +2921,7 @@ var Ge = class {
 		try {
 			let e = await l("All Supported Files (*.pdf;*.jpg;*.jpeg;*.png;*.docx)|*.pdf;*.jpg;*.jpeg;*.png;*.docx|All Files (*.*)|*.*", "Select Files to Add");
 			if (!e.success) return;
-			let t = (e.files || []).filter((e) => !J(e.name));
+			let t = (e.files || []).filter((e) => !Y(e.name));
 			if (t.length === 0) {
 				r.show("No Files Selected", "0 valid documents selected.", "info");
 				return;
@@ -2899,7 +2951,7 @@ var Ge = class {
 					isScanning: !1
 				};
 			});
-			this.state.files.push(...i), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), r.show("Files Appended", `${i.length} files added to queue in-place`, "success");
+			this.state.files.push(...i), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), r.show("Files Appended", `${i.length} files added to queue in-place`, "success"), i.length > 0 && this.handleSmartScanBatch();
 		} catch (e) {
 			r.show("Add Files Error", e.message, "error");
 		}
@@ -2914,7 +2966,7 @@ var Ge = class {
 			path: n,
 			nativePath: n
 		}, this.state.studentName = i;
-		let a = (e.files || []).filter((e) => !J(e.name)), o = /* @__PURE__ */ new Set();
+		let a = (e.files || []).filter((e) => !Y(e.name)), o = /* @__PURE__ */ new Set();
 		this.state.files = a.map((e, r) => {
 			let i = e.ext || w(e.name), a = T(e.name), s = t ? t.get(e.name) : null;
 			if (s) return o.add(s.targetName), {
@@ -2954,7 +3006,7 @@ var Ge = class {
 				rotation: 0,
 				isScanning: !1
 			};
-		}), this._scanAbortController &&= (this._scanAbortController.abort(), null), this.state.currentIndex = 0, this.state.rotation = 0, this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview();
+		}), this._scanAbortController &&= (this._scanAbortController.abort(), null), this.state.currentIndex = 0, this.state.rotation = 0, this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.state.files.length > 0 && this.handleSmartScanBatch();
 	}
 	_recalculateTargetNames() {
 		let e = /* @__PURE__ */ new Set();
@@ -3113,7 +3165,7 @@ var Ge = class {
 				e.className = "confidence-badge confidence-badge-med", e.textContent = "🟡 Needs Review", l.appendChild(e);
 			} else if (n.smartConfidence !== void 0) {
 				let e = document.createElement("span");
-				n.smartConfidence >= 80 ? (e.className = "confidence-badge confidence-badge-high", e.textContent = `🟢 ${n.smartConfidence}% ${n.smartDocType || "MATCH"}`) : n.smartConfidence >= 60 ? (e.className = "confidence-badge confidence-badge-med", e.textContent = `🟡 ${n.smartConfidence}% ${n.smartDocType || "REVIEW"}`) : (e.className = "confidence-badge confidence-badge-low", e.textContent = `🔴 ${n.smartConfidence}% UNMATCHED`), l.appendChild(e);
+				n.smartConfidence >= 80 ? (e.className = "confidence-badge confidence-badge-high", e.textContent = `🟢 ${n.smartConfidence}% ${n.smartDocType || n.docType || "AADHAAR CARD"}`) : n.smartConfidence >= 60 ? (e.className = "confidence-badge confidence-badge-med", e.textContent = `🟡 ${n.smartConfidence}% REVIEW`) : (e.className = "confidence-badge confidence-badge-low", e.textContent = "🔴 UNMATCHED"), l.appendChild(e);
 			}
 			let u = (n.isMatched || n.isRenamed || n.isKept) && n.status !== "needs_review", d = document.createElement("span");
 			d.className = n.status === "needs_review" ? "px-2 py-0.5 rounded font-mono-code text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold" : u ? "px-2 py-0.5 rounded font-mono-code text-[10px] bg-tertiary-fixed text-on-tertiary-fixed font-bold" : "px-2 py-0.5 rounded font-mono-code text-[10px] bg-error-container text-on-error-container font-bold", d.textContent = n.status === "needs_review" ? "Needs Review" : u ? "Matched" : "Unmatched", l.appendChild(d), i.appendChild(l), e.appendChild(i);
@@ -3316,7 +3368,7 @@ var Ge = class {
 					let u = this.state.studentName || this.state.folder?.name || "Student", d = Be(u, n);
 					if (d) {
 						let e = document.createElement("span");
-						e.className = "px-1.5 py-0.2 rounded font-mono-code text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold shrink-0 flex items-center gap-0.5", e.textContent = `📅 ${G(d.promisedDate)}`, o.appendChild(e);
+						e.className = "px-1.5 py-0.2 rounded font-mono-code text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold shrink-0 flex items-center gap-0.5", e.textContent = `📅 ${K(d.promisedDate)}`, o.appendChild(e);
 					}
 					a.appendChild(o);
 					let f = document.createElement("div");
@@ -3330,28 +3382,28 @@ var Ge = class {
 					let _ = document.createElement("div");
 					_.className = "hidden absolute right-0 bottom-full mb-1 w-48 bg-surface-container-lowest rounded-lg shadow-lg border border-outline-variant/40 p-2 z-50 flex flex-col gap-1 text-[11px] font-mono-code";
 					let v = document.createElement("button");
-					v.type = "button", v.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", v.textContent = `Today (${G(K())})`, v.onclick = (e) => {
-						e.stopPropagation(), W({
+					v.type = "button", v.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", v.textContent = `Today (${K(q())})`, v.onclick = (e) => {
+						e.stopPropagation(), G({
 							folderName: u,
 							studentName: u,
 							documentName: n,
-							promisedDate: K(),
+							promisedDate: q(),
 							note: `Missing ${n} during intake`
 						}), _.classList.add("hidden"), r.show("Follow-up Scheduled", `${n} promise date set for Today`, "success"), this.renderQueue();
 					}, _.appendChild(v);
 					let y = document.createElement("button");
-					y.type = "button", y.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", y.textContent = `Tomorrow (${G(q(1))})`, y.onclick = (e) => {
-						e.stopPropagation(), W({
+					y.type = "button", y.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", y.textContent = `Tomorrow (${K(J(1))})`, y.onclick = (e) => {
+						e.stopPropagation(), G({
 							folderName: u,
 							studentName: u,
 							documentName: n,
-							promisedDate: q(1),
+							promisedDate: J(1),
 							note: `Missing ${n} during intake`
 						}), _.classList.add("hidden"), r.show("Follow-up Scheduled", `${n} promise date set for Tomorrow`, "success"), this.renderQueue();
 					}, _.appendChild(y);
 					let b = document.createElement("button");
-					b.type = "button", b.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", b.textContent = `Monday (${G(He())})`, b.onclick = (e) => {
-						e.stopPropagation(), W({
+					b.type = "button", b.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", b.textContent = `Monday (${K(He())})`, b.onclick = (e) => {
+						e.stopPropagation(), G({
 							folderName: u,
 							studentName: u,
 							documentName: n,
@@ -3365,7 +3417,7 @@ var Ge = class {
 					C.type = "date", C.className = "flex-1 text-[10px] p-1 rounded bg-surface-container text-on-surface border border-outline-variant/40 outline-none";
 					let E = document.createElement("button");
 					E.type = "button", E.className = "px-2 py-1 rounded bg-primary text-on-primary text-[10px] font-bold cursor-pointer", E.textContent = "Set", E.onclick = (e) => {
-						e.stopPropagation(), C.value && (W({
+						e.stopPropagation(), C.value && (G({
 							folderName: u,
 							studentName: u,
 							documentName: n,
@@ -3386,7 +3438,7 @@ var Ge = class {
 							let t = e.files[0], i = t.ext || w(t.name), a = this.state.folder?.path || "", o = this.state.studentName || this.state.folder?.name || "", s = n, c = !0, u = null;
 							try {
 								let e = await this.extractTextFromFile(t);
-								if (e && e.length >= 20) u = de(e, o), u && u.docType ? n && u.docType.toUpperCase() === n.toUpperCase() ? (s = n, c = u.confidence >= 50) : n ? c = !1 : (s = u.docType, c = u.confidence >= 70) : c = !1;
+								if (e && e.length >= 20) u = ue(e, o), u && u.docType ? n && u.docType.toUpperCase() === n.toUpperCase() ? (s = n, c = u.confidence >= 50) : n ? c = !1 : (s = u.docType, c = u.confidence >= 70) : c = !1;
 								else {
 									let e = x(T(t.name), this.state.settings?.groups);
 									e ? (s = n || e, c = !0) : c = !1;
@@ -3551,7 +3603,7 @@ var Ge = class {
 						next: a,
 						file: t,
 						nativePath: t.path
-					}]), t.name = a, t.targetName = a, t.path = o, t.nativePath = o, t.url = `http://localhost:3000/api/serve-file?path=${encodeURIComponent(o)}`, t.isRenamed = !0, t.status = "renamed", t.rotation = 0, ye(1), r.show("Renamed", T(a), "success");
+					}]), t.name = a, t.targetName = a, t.path = o, t.nativePath = o, t.url = `http://localhost:3000/api/serve-file?path=${encodeURIComponent(o)}`, t.isRenamed = !0, t.status = "renamed", t.rotation = 0, ve(1), r.show("Renamed", T(a), "success");
 				} else {
 					r.show("Rename Error", e.error || "Failed to rename on disk", "error");
 					return;
@@ -3707,7 +3759,7 @@ var Ge = class {
 				let r = o[t];
 				if (r.isScanning = !0, n && (n.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-primary">sync</span><span>Scanning (${t + 1}/${o.length})...</span>`), this.renderQueue(), await new Promise((e) => setTimeout(e, 40)), e.aborted) break;
 				try {
-					let e = await this.extractTextFromFile(r), t = de(e, this.state.studentName);
+					let e = await this.extractTextFromFile(r), t = ue(e, this.state.studentName);
 					r.smartEvaluation = t, r.smartConfidence = t.confidence, r.smartDocType = t.docType, r.smartText = e, t.isConfident && t.docType && (a++, r.docType = t.docType, r.isMatched = !0, r.targetName = `${O(t.docType, this.state.studentName, this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim()}${r.ext || ("." + r.name.split(".").pop()).toLowerCase()}`, r.status = "matched");
 				} catch (e) {
 					console.error("[DocMitra Renamer] OCR error on file:", r.name, e), r.smartConfidence = 0;
@@ -3984,9 +4036,9 @@ var Ye = class {
 		await this.loadState(), this._bindButtons(), this.renderAll(), console.info("[DocMitra Settings] Settings UI manager initialized.");
 	}
 	async loadState() {
-		this.state = z();
+		this.state = V();
 		try {
-			let e = await Ie();
+			let e = await Fe();
 			e && e.forms && Object.keys(e.forms).length > 0 && (this.state.checklists = e.forms);
 		} catch (e) {
 			console.warn("[SettingsUI] Could not load presets from server:", e);
@@ -4014,7 +4066,7 @@ var Ye = class {
 		o && s && (o.addEventListener("click", () => s.click()), s.addEventListener("change", async (e) => {
 			let t = e.target.files?.[0];
 			if (t) try {
-				await Je(t, this.state), B(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Import Successful", "System configuration restored and verified.", "success");
+				await Je(t, this.state), H(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Import Successful", "System configuration restored and verified.", "success");
 			} catch (e) {
 				r.show("Import Failed", e.message || "Invalid settings JSON format.", "error");
 			} finally {
@@ -4045,7 +4097,7 @@ var Ye = class {
 			d.className = "font-mono-code text-[10px] text-on-surface-variant", d.textContent = `TOKEN_${t.replace(/[^A-Z0-9]/gi, "_").toUpperCase()}`, l.appendChild(d), o.appendChild(l);
 			let f = document.createElement("div");
 			f.className = "col-span-2";
-			let p = De.find((e) => e.outputName.toUpperCase() === t.toUpperCase()), m = p ? p.primaryShortcut : (n[0] || "DOC").toUpperCase().slice(0, 4), h = document.createElement("span");
+			let p = Ee.find((e) => e.outputName.toUpperCase() === t.toUpperCase()), m = p ? p.primaryShortcut : (n[0] || "DOC").toUpperCase().slice(0, 4), h = document.createElement("span");
 			h.className = "px-2 py-1 bg-surface-container-high rounded text-on-surface font-mono-code text-[12px] font-bold shadow-2xs", h.textContent = m, f.appendChild(h), o.appendChild(f);
 			let g = document.createElement("div");
 			g.className = "col-span-4 pr-space-sm";
@@ -4239,7 +4291,7 @@ var Ye = class {
 		if (!e || !t) return;
 		for (; e.firstChild;) e.removeChild(e.firstChild);
 		for (; t.firstChild;) t.removeChild(t.firstChild);
-		let n = this.state.checklists || N;
+		let n = this.state.checklists || F;
 		Object.keys(n).forEach((t) => {
 			let n = document.createElement("button");
 			n.type = "button", n.className = t === this.activeChecklist ? "px-3 py-1.5 rounded-lg bg-primary text-on-primary font-label-sm font-bold shadow-xs cursor-pointer" : "px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm font-semibold cursor-pointer", n.textContent = t, n.addEventListener("click", () => {
@@ -4306,12 +4358,12 @@ var Ye = class {
 		});
 	}
 	async handleSave() {
-		B(this.state), await Le({ forms: this.state.checklists }), this.initialState = JSON.parse(JSON.stringify(this.state)), r.show("Settings Saved", "System rules updated and applied to workstation.", "success");
+		H(this.state), await Ie({ forms: this.state.checklists }), this.initialState = JSON.parse(JSON.stringify(this.state)), r.show("Settings Saved", "System rules updated and applied to workstation.", "success");
 		let e = document.getElementById("settings-modal-overlay");
 		e && e.classList.add("hidden"), document.body.style.overflow = "";
 	}
 	handleReset() {
-		window.confirm("Reset all rules, shortcuts, and checklists to factory defaults?") && (this.state.groups = Oe(), this.state.checklists = JSON.parse(JSON.stringify(N)), B(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Factory Defaults Restored", "All default rules loaded.", "info"));
+		window.confirm("Reset all rules, shortcuts, and checklists to factory defaults?") && (this.state.groups = De(), this.state.checklists = JSON.parse(JSON.stringify(F)), H(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Factory Defaults Restored", "All default rules loaded.", "info"));
 	}
 	handleDiscard() {
 		this.state = JSON.parse(JSON.stringify(this.initialState)), this.renderAll(), r.show("Changes Discarded", "Reverted to previous configuration.", "info");
@@ -4324,7 +4376,7 @@ function Xe() {
 	return e.init(), e;
 }
 // src/modules/pdf-studio.js
-var Y = {
+var X = {
 	A4_PORTRAIT: {
 		width: 595.28,
 		height: 841.89,
@@ -4358,7 +4410,7 @@ function Ze(e) {
 		height: 842
 	};
 }
-function X(e = [], t = "portrait", n = 0) {
+function Z(e = [], t = "portrait", n = 0) {
 	if (!e.length) throw Error("No images provided for PDF creation.");
 	let r = [], i = 0, a = (e) => new TextEncoder().encode(e), o = [], s = (e) => {
 		o.push(e), i += e.length;
@@ -4368,8 +4420,8 @@ function X(e = [], t = "portrait", n = 0) {
 	for (let e = 0; e < c; e++) l.push(3 + e * 3);
 	r.push(i), s(a(`2 0 obj\n<< /Type /Pages /Kids [ ${l.map((e) => `${e} 0 R`).join(" ")} ] /Count ${c} >>\nendobj\n`));
 	for (let o = 0; o < c; o++) {
-		let c = e[o], l = 3 + o * 3, u = l + 1, d = l + 2, f = c.bytes, { width: p, height: m } = c.width && c.height ? c : Ze(f), h = Y.A4_PORTRAIT.width, g = Y.A4_PORTRAIT.height;
-		(t === "landscape" || t === "fit" && p > m) && (h = Y.A4_LANDSCAPE.width, g = Y.A4_LANDSCAPE.height);
+		let c = e[o], l = 3 + o * 3, u = l + 1, d = l + 2, f = c.bytes, { width: p, height: m } = c.width && c.height ? c : Ze(f), h = X.A4_PORTRAIT.width, g = X.A4_PORTRAIT.height;
+		(t === "landscape" || t === "fit" && p > m) && (h = X.A4_LANDSCAPE.width, g = X.A4_LANDSCAPE.height);
 		let _ = h - 36, v = g - 36, y = Math.min(_ / p, v / m), b = p * y, x = m * y, S = (h - b) / 2, C = (g - x) / 2, w = n ? ` /Rotate ${n}` : "";
 		r.push(i), s(a(`${l} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${h.toFixed(2)} ${g.toFixed(2)}]${w} /Contents ${u} 0 R /Resources << /XObject << /Im${o + 1} ${d} 0 R >> >> >>\nendobj\n`));
 		let T = `q ${b.toFixed(2)} 0 0 ${x.toFixed(2)} ${S.toFixed(2)} ${C.toFixed(2)} cm /Im${o + 1} Do Q\n`, E = T.length;
@@ -4399,7 +4451,7 @@ function Qe(e) {
 	} else r++;
 	return t;
 }
-function Z(e) {
+function Q(e) {
 	let t = Qe(e);
 	if (!t.length) return [];
 	if (t.length === 1) return t;
@@ -4413,7 +4465,7 @@ function Z(e) {
 	});
 }
 function $e(e, t = "Document.pdf") {
-	let n = Z(e), r = t.replace(/\.pdf$/i, "");
+	let n = Q(e), r = t.replace(/\.pdf$/i, "");
 	return n.length ? n.map((e, t) => {
 		let i = n.length === 1 ? `${r}.jpg` : `${r}_page_${t + 1}.jpg`, a = new Blob([e.bytes], { type: "image/jpeg" });
 		return {
@@ -4427,9 +4479,9 @@ function $e(e, t = "Document.pdf") {
 	}) : [];
 }
 function et(e, t = "Document.pdf") {
-	let n = Z(e), r = t.replace(/\.pdf$/i, "");
+	let n = Q(e), r = t.replace(/\.pdf$/i, "");
 	return n.length ? n.map((e, t) => {
-		let n = `${r}_page_${t + 1}.pdf`, i = X([e], "portrait");
+		let n = `${r}_page_${t + 1}.pdf`, i = Z([e], "portrait");
 		return {
 			fileName: n,
 			blob: i,
@@ -4441,17 +4493,17 @@ function et(e, t = "Document.pdf") {
 function tt(e = [], t = "portrait") {
 	let n = [];
 	for (let t of e) {
-		let e = Z(t);
+		let e = Q(t);
 		n.push(...e);
 	}
 	if (!n.length) throw Error("No document images could be extracted to merge PDFs.");
-	return X(n, t);
+	return Z(n, t);
 }
 function nt(e, t = 90) {
 	let n = (t % 360 + 360) % 360;
 	if (n === 0) return new Blob([e], { type: "application/pdf" });
-	let r = Z(e);
-	if (r.length > 0) return X(r, "portrait", n);
+	let r = Q(e);
+	if (r.length > 0) return Z(r, "portrait", n);
 	try {
 		let t = "", r = 65536;
 		for (let n = 0; n < e.length; n += r) t += String.fromCharCode.apply(null, e.subarray(n, n + r));
@@ -4739,8 +4791,8 @@ var it = class {
 				let e = 0;
 				for (let t of this.files) {
 					if (!t.bytes) continue;
-					let n = Z(t.bytes), r;
-					r = n.length > 0 ? X(n, "portrait") : new Blob([t.bytes], { type: "application/pdf" });
+					let n = Q(t.bytes), r;
+					r = n.length > 0 ? Z(n, "portrait") : new Blob([t.bytes], { type: "application/pdf" });
 					let i = rt(t.name, r.size);
 					this._downloadBlob(r, i), e++;
 				}
@@ -4769,7 +4821,7 @@ var it = class {
 				let e = 0;
 				for (let t of this.files) {
 					if (!t.bytes) continue;
-					let n = X(Z(t.bytes), "portrait");
+					let n = Z(Q(t.bytes), "portrait");
 					this._downloadBlob(n, t.name), e++;
 				}
 				r.show("Enhancement Complete!", `Watermarks filtered and ${e} PDFs enhanced.`, "success");
@@ -4815,7 +4867,7 @@ function st(e, t = 0) {
 	let s = n.getContext("2d");
 	return s.save(), s.translate(n.width / 2, n.height / 2), s.rotate(r * Math.PI / 180), s.drawImage(e, -e.width / 2, -e.height / 2), s.restore(), n;
 }
-async function Q(e, t = 250, n = {}) {
+async function $(e, t = 250, n = {}) {
 	let { rotation: r = 0, filterMode: i = "none", outputMime: a = "image/jpeg", maxDimension: o = 2400 } = n;
 	return new Promise((n, s) => {
 		let c = new Image(), l = URL.createObjectURL(e);
@@ -5128,23 +5180,23 @@ var lt = class {
 				let r = n.fileOrBlob;
 				if (!r && n.url && (r = await (await fetch(n.url)).blob()), r) {
 					if (e === "compress_photo_sign") {
-						let e = /sign|signature|स्वाक्षरी/i.test(n.name) ? 18 : 45, i = await Q(r, e);
+						let e = /sign|signature|स्वाक्षरी/i.test(n.name) ? 18 : 45, i = await $(r, e);
 						this._downloadBlob(i.blob, `Compressed_${n.name}`), t++;
 					} else if (e === "passport_crop") {
-						let e = await Q(await this._cropPassport(r), 48);
+						let e = await $(await this._cropPassport(r), 48);
 						this._downloadBlob(e.blob, `Passport_${n.name}`), t++;
 					} else if (e === "sign_clean_invert") {
-						let e = await Q(r, 18, { filterMode: "sharp_contrast" });
+						let e = await $(r, 18, { filterMode: "sharp_contrast" });
 						this._downloadBlob(e.blob, `Clean_Sign_${n.name}`), t++;
 					} else if (e === "image_to_pdf") {
-						let e = await r.arrayBuffer(), i = X([{
+						let e = await r.arrayBuffer(), i = Z([{
 							bytes: new Uint8Array(e),
 							width: 0,
 							height: 0
 						}], "portrait"), a = n.name.replace(/\.[a-zA-Z0-9]+$/, "") + ".pdf";
 						this._downloadBlob(i, a), t++;
 					} else if (e === "magic_color") {
-						let e = await Q(r, 240, { filterMode: "enhanced" });
+						let e = await $(r, 240, { filterMode: "enhanced" });
 						this._downloadBlob(e.blob, `Magic_${n.name}`), t++;
 					} else {
 						let e = await ct(r, "image/jpeg");
@@ -5549,7 +5601,7 @@ function ft(e, t = null) {
 		status: "none"
 	};
 }
-({ ...Ee });
+({ ...Te });
 function pt(e) {
 	if (!e || typeof e != "string") return "";
 	let t = ft(e);
@@ -5586,7 +5638,7 @@ function ht(e, t = []) {
 // src/ui/print-studio-ui.js
 var gt = class {
 	constructor() {
-		this.presets = { ...Ee }, this.activePresetKey = "MAHA DBT FORM", this.documents = [], this.activeDocIndex = 0, this.zoomLevel = 100;
+		this.presets = { ...Te }, this.activePresetKey = "MAHA DBT FORM", this.documents = [], this.activeDocIndex = 0, this.zoomLevel = 100;
 	}
 	init() {
 		this._seedDemoDocumentsIfEmpty(), this._bindControls(), this.renderPresetSelector(), this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), console.info("[DocMitra Print Studio] Print Studio UI manager initialized.");
@@ -5848,12 +5900,12 @@ var vt = class {
 		this.items = [], this.searchQuery = "";
 	}
 	init() {
-		this._seedDemoDataIfEmpty(), this.items = H(), this._bindControls(), this.renderTable(), console.info("[DocMitra Follow-up Desk] Follow-up UI manager initialized.");
+		this._seedDemoDataIfEmpty(), this.items = U(), this._bindControls(), this.renderTable(), console.info("[DocMitra Follow-up Desk] Follow-up UI manager initialized.");
 	}
 	_seedDemoDataIfEmpty() {
-		if (H().length === 0) {
-			let e = K(), t = q(2);
-			U([
+		if (U().length === 0) {
+			let e = q(), t = J(2);
+			W([
 				{
 					id: "fu_demo_1",
 					folderName: "Vijay_Ramesh_Yadav",
@@ -5963,7 +6015,7 @@ var vt = class {
 			let d = document.createElement("td");
 			d.className = "py-3.5 px-space-md";
 			let f = Ve(t.promisedDate), p = document.createElement("div");
-			p.className = f === "overdue" ? "font-mono-code font-bold text-error" : f === "today" ? "font-mono-code font-bold text-amber-700" : "font-mono-code font-bold text-emerald-700", p.textContent = G(t.promisedDate), d.appendChild(p);
+			p.className = f === "overdue" ? "font-mono-code font-bold text-error" : f === "today" ? "font-mono-code font-bold text-amber-700" : "font-mono-code font-bold text-emerald-700", p.textContent = K(t.promisedDate), d.appendChild(p);
 			let m = document.createElement("span");
 			f === "overdue" ? (m.className = "text-[10px] font-bold uppercase tracking-wider text-error bg-error-container/40 px-1.5 py-0.5 rounded", m.textContent = "OVERDUE") : f === "today" ? (m.className = "text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded", m.textContent = "DUE TODAY") : (m.className = "text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded", m.textContent = "UPCOMING"), d.appendChild(m), n.appendChild(d);
 			let h = document.createElement("td");
@@ -6009,7 +6061,7 @@ var vt = class {
 		});
 	}
 	generateMarathiNotice(e) {
-		let t = G(e.promisedDate);
+		let t = K(e.promisedDate);
 		return `सस्नेह नमस्कार,
 विद्यार्थी नाव: ${e.studentName} (${e.rollNo || "Admission 2026"})
 
@@ -6039,7 +6091,7 @@ function yt() {
 	return e.init(), e;
 }
 // src/ui/index.js
-function $() {
+function bt() {
 	let e = new n();
 	e.init(), new i().init(), Xe();
 	let t = Ke();
@@ -6086,5 +6138,5 @@ function $() {
 		r.show(e ? "Dark Theme Enabled" : "Light Theme Enabled", "UI Preference Updated", "info");
 	}), console.info("[DocMitra] UI Shell & Modules initialized successfully.");
 }
-document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", $) : $();
-export { $ as initAppShell };
+document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", bt) : bt();
+export { bt as initAppShell };

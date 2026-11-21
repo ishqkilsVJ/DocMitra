@@ -55,10 +55,12 @@ import {
   DEFAULT_LINKED_RULES,
   DEFAULT_CHECKLISTS_DATA,
   evaluateSmartOcrDocument,
-  SMART_DOC_SIGNATURES
+  SMART_DOC_SIGNATURES,
+  registerDocumentSignature,
+  extractSignatureKeywords
 } from './rename_tool_logic.js';
 import { recordRenameEvent } from '../../src/services/analytics-service.js';
-import { loadSettings, saveSettings, loadDocumentPresets } from '../../src/services/storage-service.js';
+import { loadSettings, saveSettings, loadDocumentPresets, saveDocumentPresets } from '../../src/services/storage-service.js';
 import {
   addOrUpdateFollowUp,
   getPendingFollowUp,
@@ -149,6 +151,21 @@ export class RenamerUIManager {
     loadDocumentPresets().then(presets => {
       if (presets && presets.forms) {
         this.state.documentPresets = presets.forms;
+        for (const formKey of Object.keys(presets.forms)) {
+          const list = presets.forms[formKey];
+          if (Array.isArray(list)) {
+            for (const item of list) {
+              if (item.name) {
+                registerDocumentSignature({
+                  canonical: item.name,
+                  code: item.code || '',
+                  primaryKeywords: [item.name.toLowerCase()],
+                  secondaryKeywords: []
+                });
+              }
+            }
+          }
+        }
         this.renderQueue();
       }
     }).catch(() => {});
@@ -248,12 +265,44 @@ export class RenamerUIManager {
 
     const btnRenameMatched = document.getElementById('btnRenameMatched');
     if (btnRenameMatched) {
-      btnRenameMatched.addEventListener('click', () => this.handleRenameAllMatched());
+      btnRenameMatched.addEventListener('click', () => this.openCrossCheckModal());
     }
 
     const btnReviewUnmatched = document.getElementById('btnReviewUnmatched');
     if (btnReviewUnmatched) {
       btnReviewUnmatched.addEventListener('click', () => this.handleReviewUnmatched());
+    }
+
+    // Modal: Add Document (Self-Learning Flow)
+    const btnAddDoc = document.getElementById('btnAddNewDocument');
+    if (btnAddDoc) {
+      btnAddDoc.addEventListener('click', () => this.openAddDocumentModal());
+    }
+    const btnCloseAddDoc = document.getElementById('btnCloseAddDocModal');
+    if (btnCloseAddDoc) {
+      btnCloseAddDoc.addEventListener('click', () => this.closeAddDocumentModal());
+    }
+    const btnCancelAddDoc = document.getElementById('btnCancelAddDoc');
+    if (btnCancelAddDoc) {
+      btnCancelAddDoc.addEventListener('click', () => this.closeAddDocumentModal());
+    }
+    const btnSaveAddDoc = document.getElementById('btnSaveAddDoc');
+    if (btnSaveAddDoc) {
+      btnSaveAddDoc.addEventListener('click', () => this.handleSaveAndLearnDocument());
+    }
+
+    // Modal: Cross-Check Preview
+    const btnCloseCrossCheck = document.getElementById('btnCloseCrossCheckModal');
+    if (btnCloseCrossCheck) {
+      btnCloseCrossCheck.addEventListener('click', () => this.closeCrossCheckModal());
+    }
+    const btnCancelCrossCheck = document.getElementById('btnCancelCrossCheck');
+    if (btnCancelCrossCheck) {
+      btnCancelCrossCheck.addEventListener('click', () => this.closeCrossCheckModal());
+    }
+    const btnConfirmRename = document.getElementById('btnConfirmBatchRename');
+    if (btnConfirmRename) {
+      btnConfirmRename.addEventListener('click', () => this.handleConfirmCrossCheckRename());
     }
 
     // Casing Style Radios (UPPER, Title, lower, As Is)
@@ -829,6 +878,11 @@ export class RenamerUIManager {
       this.renderQueue();
       this.renderCurrentPreview();
       toast.show('Files Appended', `${mapped.length} files added to queue in-place`, 'success');
+
+      // AUTOMATIC SMART SCAN ONLY: auto-start sequential scan on file addition
+      if (mapped.length > 0) {
+        this.handleSmartScanBatch();
+      }
     } catch (err) {
       toast.show('Add Files Error', err.message, 'error');
     }
@@ -941,6 +995,11 @@ export class RenamerUIManager {
     this.updateTelemetry();
     this.renderQueue();
     this.renderCurrentPreview();
+
+    // AUTOMATIC SMART SCAN ONLY: auto-start sequential scan on folder load
+    if (this.state.files.length > 0) {
+      this.handleSmartScanBatch();
+    }
   }
 
   _recalculateTargetNames() {
@@ -1243,13 +1302,13 @@ export class RenamerUIManager {
         const smartConfBadge = document.createElement('span');
         if (currentFile.smartConfidence >= 80) {
           smartConfBadge.className = 'confidence-badge confidence-badge-high';
-          smartConfBadge.textContent = `🟢 ${currentFile.smartConfidence}% ${currentFile.smartDocType || 'MATCH'}`;
+          smartConfBadge.textContent = `🟢 ${currentFile.smartConfidence}% ${currentFile.smartDocType || currentFile.docType || 'AADHAAR CARD'}`;
         } else if (currentFile.smartConfidence >= 60) {
           smartConfBadge.className = 'confidence-badge confidence-badge-med';
-          smartConfBadge.textContent = `🟡 ${currentFile.smartConfidence}% ${currentFile.smartDocType || 'REVIEW'}`;
+          smartConfBadge.textContent = `🟡 ${currentFile.smartConfidence}% REVIEW`;
         } else {
           smartConfBadge.className = 'confidence-badge confidence-badge-low';
-          smartConfBadge.textContent = `🔴 ${currentFile.smartConfidence}% UNMATCHED`;
+          smartConfBadge.textContent = `🔴 UNMATCHED`;
         }
         rightBadgeGroup.appendChild(smartConfBadge);
       }
@@ -1492,6 +1551,20 @@ export class RenamerUIManager {
         numBadge.textContent = String(fIdx + 1);
         leftCol.appendChild(numBadge);
 
+        // Original filename (without extension)
+        const origTitle = document.createElement('span');
+        origTitle.className = 'text-[10px] text-secondary truncate max-w-[100px] hidden sm:inline font-mono-code';
+        origTitle.textContent = cleanName(f.name);
+        leftCol.appendChild(origTitle);
+
+        if (f.isMatched || (f.targetName && f.targetName !== f.name)) {
+          const arrow = document.createElement('span');
+          arrow.className = 'text-[10px] text-outline-variant select-none hidden sm:inline';
+          arrow.textContent = '→';
+          leftCol.appendChild(arrow);
+        }
+
+        // Matched document name / Target title
         const targetTitle = document.createElement('span');
         targetTitle.className = 'font-mono-code text-[11px] text-on-surface font-semibold truncate';
         targetTitle.textContent = cleanName(f.targetName || f.suggestedName || f.name);
@@ -1517,13 +1590,13 @@ export class RenamerUIManager {
           const confBadge = document.createElement('span');
           if (f.smartConfidence >= 80) {
             confBadge.className = 'confidence-badge confidence-badge-high';
-            confBadge.textContent = `🟢 ${f.smartConfidence}% ${f.smartDocType || 'MATCH'}`;
+            confBadge.textContent = `🟢 ${f.smartConfidence}% ${f.smartDocType || f.docType || 'AADHAAR CARD'}`;
           } else if (f.smartConfidence >= 60) {
             confBadge.className = 'confidence-badge confidence-badge-med';
-            confBadge.textContent = `🟡 ${f.smartConfidence}% ${f.smartDocType || 'REVIEW'}`;
+            confBadge.textContent = `🟡 ${f.smartConfidence}% REVIEW`;
           } else {
             confBadge.className = 'confidence-badge confidence-badge-low';
-            confBadge.textContent = `🔴 ${f.smartConfidence}% UNMATCHED`;
+            confBadge.textContent = `🔴 UNMATCHED`;
           }
           item.appendChild(confBadge);
         }
@@ -2771,6 +2844,18 @@ export class RenamerUIManager {
 
     const currentFile = this.state.files[this.state.currentIndex];
     this.state.rotation = currentFile ? (currentFile.rotation || 0) : 0;
+
+    // Render alert bar above center preview: displayed ONLY when active file is unrecognized/unmatched
+    const newDocAlert = document.getElementById('newDocAlertBar');
+    if (newDocAlert) {
+      const isUnmatched = currentFile && !currentFile.isRenamed && !currentFile.isKept && !currentFile.isMatched && (currentFile.smartConfidence === undefined || currentFile.smartConfidence < 80);
+      if (isUnmatched) {
+        newDocAlert.classList.remove('hidden');
+      } else {
+        newDocAlert.classList.add('hidden');
+      }
+    }
+
     const previewStageWrapper = previewCol.querySelector('.overflow-auto');
     if (!previewStageWrapper) return;
 

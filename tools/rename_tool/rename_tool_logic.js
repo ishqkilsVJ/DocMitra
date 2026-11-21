@@ -1549,3 +1549,93 @@ export function evaluateSmartOcrDocument(text, studentName = '') {
     matchedKeywords: bestMatch ? bestMatch.matchedKeywords : []
   };
 }
+
+/**
+ * Register a new document type dynamically into in-memory signatures and canonical names
+ */
+export function registerDocumentSignature({ canonical, code = '', primaryKeywords = [], secondaryKeywords = [] }) {
+  if (!canonical || typeof canonical !== 'string') return null;
+  const upperCanonical = canonical.trim().toUpperCase();
+  const upperCode = (code || '').trim().toUpperCase() || upperCanonical.slice(0, 3);
+
+  CANONICAL_NAMES[upperCanonical] = upperCanonical;
+
+  const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const patterns = [
+    new RegExp(`\\b${escapeRegex(upperCanonical)}\\b`, 'i')
+  ];
+  if (upperCode && upperCode.length >= 2) {
+    patterns.push(new RegExp(`\\b${escapeRegex(upperCode)}\\b`, 'i'));
+  }
+  for (const kw of primaryKeywords) {
+    if (kw && kw.trim().length >= 3) {
+      patterns.push(new RegExp(`\\b${escapeRegex(kw.trim())}\\b`, 'i'));
+    }
+  }
+
+  const prim = [upperCanonical.toLowerCase()];
+  for (const kw of primaryKeywords) {
+    if (kw && typeof kw === 'string' && kw.trim().length >= 3) {
+      const k = kw.trim().toLowerCase();
+      if (!prim.includes(k)) prim.push(k);
+    }
+  }
+
+  const sec = [];
+  for (const kw of secondaryKeywords) {
+    if (kw && typeof kw === 'string' && kw.trim().length >= 3) {
+      const k = kw.trim().toLowerCase();
+      if (!prim.includes(k) && !sec.includes(k)) sec.push(k);
+    }
+  }
+
+  const sig = {
+    canonical: upperCanonical,
+    code: upperCode,
+    patterns,
+    primaryKeywords: prim,
+    secondaryKeywords: sec
+  };
+
+  const existingIdx = SMART_DOC_SIGNATURES.findIndex(s => s.canonical === upperCanonical || (upperCode && s.code === upperCode));
+  if (existingIdx !== -1) {
+    SMART_DOC_SIGNATURES[existingIdx] = sig;
+  } else {
+    SMART_DOC_SIGNATURES.push(sig);
+  }
+
+  return sig;
+}
+
+/**
+ * Extract candidate OCR signature keywords from document text
+ */
+export function extractSignatureKeywords(text, docName = '') {
+  if (!text || typeof text !== 'string') return { primary: [], secondary: [] };
+
+  const stopWords = new Set([
+    'the', 'and', 'for', 'with', 'that', 'this', 'from', 'have', 'has', 'had',
+    'what', 'when', 'where', 'who', 'which', 'why', 'how', 'all', 'any', 'both',
+    'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not',
+    'only', 'own', 'same', 'so', 'than', 'too', 'very', 'can', 'will', 'just',
+    'should', 'now', 'page', 'date', 'number', 'govt', 'government', 'state',
+    'signature', 'verified', 'copy', 'true', 'name', 'sign', 'photo', 'form'
+  ]);
+
+  const clean = text.replace(/[^a-zA-Z0-9\s]/g, ' ').toLowerCase();
+  const tokens = clean.split(/\s+/).filter(t => t.length >= 4 && !stopWords.has(t));
+  const counts = new Map();
+  for (const t of tokens) {
+    counts.set(t, (counts.get(t) || 0) + 1);
+  }
+
+  const sorted = Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(e => e[0]);
+
+  const primary = sorted.slice(0, 6);
+  const secondary = sorted.slice(6, 14);
+
+  return { primary, secondary };
+}
+
