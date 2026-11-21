@@ -220,6 +220,17 @@ export class RenamerUIManager {
     }
 
     // Casing Style Radios (UPPER, Title, lower, As Is)
+    const updateCasingPillStyles = () => {
+      document.querySelectorAll('#casingRadiosGroup label').forEach(lbl => {
+        const inp = lbl.querySelector('input');
+        if (inp && inp.checked) {
+          lbl.className = 'flex items-center cursor-pointer text-white bg-primary font-mono-code text-[11px] px-2 py-0.5 rounded shadow-xs select-none font-bold transition-all casing-pill-active';
+        } else {
+          lbl.className = 'flex items-center cursor-pointer text-secondary hover:text-on-surface font-mono-code text-[11px] px-2 py-0.5 rounded transition-all select-none';
+        }
+      });
+    };
+
     const casingRadios = document.querySelectorAll('input[name="casingStyleRadio"]');
     casingRadios.forEach(radio => {
       if (radio.value === (this.state.style || 'upper')) {
@@ -228,6 +239,7 @@ export class RenamerUIManager {
       radio.addEventListener('change', (e) => {
         if (e.target.checked) {
           this.state.style = e.target.value;
+          updateCasingPillStyles();
           this._recalculateTargetNames();
           this.renderQueue();
           this.renderCurrentPreview();
@@ -235,6 +247,7 @@ export class RenamerUIManager {
         }
       });
     });
+    updateCasingPillStyles();
 
     // Clear Workspace (Top-Right Action Button & Footer Legacy)
     const btnClearWs = document.getElementById('btnClearWorkspace');
@@ -882,14 +895,17 @@ export class RenamerUIManager {
     const unmatched = total - ready;
     const pct = total > 0 ? Math.round((ready / total) * 100) : 0;
 
-    // Interactive Clickable Breadcrumbs (Feature 8)
+    // Interactive Clickable Breadcrumbs (Single-Line Middle Truncation, Zero Hover Underline)
     const pathEl = document.getElementById('activeFolderPath');
     if (pathEl) {
       while (pathEl.firstChild) pathEl.removeChild(pathEl.firstChild);
       if (this.state.folder?.path) {
+        pathEl.title = this.state.folder.path;
         const fullPath = this.state.folder.path.replace(/\\/g, '/');
         const parts = fullPath.split('/').filter(Boolean);
 
+        // Build target paths for each segment
+        const segmentPaths = [];
         let accumulated = '';
         parts.forEach((seg, idx) => {
           if (idx === 0 && (seg.includes(':') || fullPath.startsWith('/'))) {
@@ -897,33 +913,60 @@ export class RenamerUIManager {
           } else {
             accumulated = accumulated ? `${accumulated}/${seg}` : seg;
           }
-          const targetPath = accumulated;
+          segmentPaths.push(accumulated);
+        });
 
-          const segSpan = document.createElement('span');
-          segSpan.className = idx === parts.length - 1
-            ? 'text-on-surface font-bold truncate select-text'
-            : 'text-secondary hover:text-primary transition-colors cursor-pointer hover:underline';
-          segSpan.textContent = seg;
-          segSpan.title = idx === parts.length - 1 ? targetPath : `Click to jump to parent folder: ${targetPath}`;
+        // Smart Middle Truncation if path has more than 3 segments
+        let segmentsToRender = [];
+        if (parts.length > 3) {
+          segmentsToRender = [
+            { seg: parts[0], path: segmentPaths[0], isLast: false },
+            { isEllipsis: true, title: segmentPaths.slice(1, parts.length - 2).join(' / ') },
+            { seg: parts[parts.length - 2], path: segmentPaths[parts.length - 2], isLast: false },
+            { seg: parts[parts.length - 1], path: segmentPaths[parts.length - 1], isLast: true }
+          ];
+        } else {
+          segmentsToRender = parts.map((seg, idx) => ({
+            seg,
+            path: segmentPaths[idx],
+            isLast: idx === parts.length - 1
+          }));
+        }
 
-          if (idx < parts.length - 1) {
-            segSpan.addEventListener('click', async (e) => {
-              e.stopPropagation();
-              toast.show('Navigating Folder', `Opening ${targetPath}...`, 'info');
-              const res = await listNativeDirectory(targetPath);
-              if (res && res.success) {
-                this.loadFolderData(res);
-                toast.show('Navigated to Folder', targetPath, 'success');
-              } else {
-                toast.show('Navigation Failed', res?.error || 'Could not read directory', 'error');
-              }
-            });
+        segmentsToRender.forEach((item, rIdx) => {
+          if (item.isEllipsis) {
+            const ellSpan = document.createElement('span');
+            ellSpan.className = 'text-secondary/70 font-mono-code px-1 py-0.5 rounded hover:bg-surface-container cursor-default select-none text-[11px]';
+            ellSpan.textContent = '...';
+            ellSpan.title = `Intermediate folders: ${item.title}`;
+            pathEl.appendChild(ellSpan);
+          } else {
+            const segSpan = document.createElement('span');
+            segSpan.className = item.isLast
+              ? 'text-on-surface font-bold truncate select-text px-1 py-0.5 rounded'
+              : 'text-secondary hover:text-primary transition-colors cursor-pointer px-1 py-0.5 rounded hover:bg-surface-container';
+            segSpan.textContent = item.seg;
+            segSpan.title = item.isLast ? item.path : `Click to jump to parent folder: ${item.path}`;
+
+            if (!item.isLast) {
+              segSpan.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                toast.show('Navigating Folder', `Opening ${item.path}...`, 'info');
+                const res = await listNativeDirectory(item.path);
+                if (res && res.success) {
+                  this.loadFolderData(res);
+                  toast.show('Navigated to Folder', item.path, 'success');
+                } else {
+                  toast.show('Navigation Failed', res?.error || 'Could not read directory', 'error');
+                }
+              });
+            }
+            pathEl.appendChild(segSpan);
           }
-          pathEl.appendChild(segSpan);
 
-          if (idx < parts.length - 1) {
+          if (rIdx < segmentsToRender.length - 1) {
             const sep = document.createElement('span');
-            sep.className = 'text-outline-variant/60 mx-1 select-none font-normal';
+            sep.className = 'text-outline-variant/60 mx-0.5 select-none font-normal text-[10px]';
             sep.textContent = '>';
             pathEl.appendChild(sep);
           }
@@ -976,25 +1019,101 @@ export class RenamerUIManager {
     scrollContainer.className = 'flex flex-col gap-space-sm overflow-y-auto pr-1 flex-1 min-h-0 custom-pan-scroll pan-grab-active queue-scroll-area';
 
     if (this.state.files.length === 0) {
-      const emptyCard = document.createElement('div');
-      emptyCard.className = 'p-6 text-center text-secondary bg-surface-container-lowest rounded-xl border border-outline-variant/30 flex flex-col items-center gap-2 select-none';
+      // 1. Structural Hero Card Skeleton Frame (Awaiting Files)
+      const heroSkeleton = document.createElement('div');
+      heroSkeleton.className = 'flex flex-col gap-space-xs shrink-0 select-none';
 
-      const icon = document.createElement('span');
-      icon.className = 'material-symbols-outlined text-[36px] text-primary opacity-60';
-      icon.textContent = 'folder_open';
-      emptyCard.appendChild(icon);
+      const headerRow = document.createElement('div');
+      headerRow.className = 'flex items-center justify-between px-1 text-label-sm';
+      const badgeGroup = document.createElement('div');
+      badgeGroup.className = 'flex items-center gap-2';
+      const editingBadge = document.createElement('span');
+      editingBadge.className = 'px-2 py-0.5 rounded bg-surface-container-high text-secondary font-bold text-[11px] flex items-center gap-1.5 shadow-xs';
+      const editIcon = document.createElement('span');
+      editIcon.className = 'material-symbols-outlined text-[13px]';
+      editIcon.textContent = 'edit_document';
+      editingBadge.appendChild(editIcon);
+      editingBadge.appendChild(document.createTextNode('Standby (0 / 0)'));
+      badgeGroup.appendChild(editingBadge);
+      headerRow.appendChild(badgeGroup);
+      heroSkeleton.appendChild(headerRow);
 
-      const title = document.createElement('div');
-      title.className = 'font-headline-sm font-bold text-on-surface';
-      title.textContent = 'No Active Queue';
-      emptyCard.appendChild(title);
+      const heroCard = document.createElement('div');
+      heroCard.className = 'p-space-sm bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-xs flex flex-col gap-2 relative';
+      
+      const labelRow = document.createElement('div');
+      labelRow.className = 'flex items-center justify-between text-label-sm';
+      const renameLabel = document.createElement('label');
+      renameLabel.className = 'font-bold text-on-surface text-[12px]';
+      renameLabel.textContent = 'Rename To:';
+      labelRow.appendChild(renameLabel);
 
-      const desc = document.createElement('div');
-      desc.className = 'text-body-sm text-secondary';
-      desc.textContent = 'Select a student folder (F2) or add document files to begin admission renaming.';
-      emptyCard.appendChild(desc);
+      const helperSpan = document.createElement('span');
+      helperSpan.className = 'text-[11px] text-secondary font-mono-code';
+      helperSpan.textContent = 'Awaiting intake files';
+      labelRow.appendChild(helperSpan);
+      heroCard.appendChild(labelRow);
 
-      scrollContainer.appendChild(emptyCard);
+      // Frosted / blurred input skeleton (NO dummy student name!)
+      const inputSkeleton = document.createElement('div');
+      inputSkeleton.className = 'h-9 w-full rounded-lg bg-surface-container/60 border border-outline-variant/30 px-3 flex items-center justify-between text-secondary/40 font-mono-code text-[12px]';
+      const italicPlaceholder = document.createElement('span');
+      italicPlaceholder.className = 'italic text-secondary/50';
+      italicPlaceholder.textContent = 'Select student folder (F2) to rename...';
+      inputSkeleton.appendChild(italicPlaceholder);
+
+      const extBadge = document.createElement('span');
+      extBadge.className = 'px-1.5 py-0.5 rounded bg-surface-container text-secondary text-[10px] font-bold font-mono-code';
+      extBadge.textContent = '.ext';
+      inputSkeleton.appendChild(extBadge);
+
+      heroCard.appendChild(inputSkeleton);
+      heroSkeleton.appendChild(heroCard);
+      scrollContainer.appendChild(heroSkeleton);
+
+      // 2. Structural Upcoming Queue Skeleton Frame (5 Blank Placeholder Rows)
+      const queueFrame = document.createElement('div');
+      queueFrame.className = 'flex flex-col gap-1.5 pt-2 select-none';
+
+      const qHeader = document.createElement('div');
+      qHeader.className = 'flex items-center justify-between px-1 text-label-sm pb-1';
+      const qTitle = document.createElement('span');
+      qTitle.className = 'font-bold text-on-surface text-[12px]';
+      qTitle.textContent = 'UPCOMING QUEUE (0 Files)';
+      qHeader.appendChild(qTitle);
+
+      const qSlotCount = document.createElement('span');
+      qSlotCount.className = 'text-secondary text-[11px] font-mono-code';
+      qSlotCount.textContent = '5 Slots Ready';
+      qHeader.appendChild(qSlotCount);
+      queueFrame.appendChild(qHeader);
+
+      for (let i = 1; i <= 5; i++) {
+        const row = document.createElement('div');
+        row.className = 'p-2 rounded-lg border border-outline-variant/20 bg-surface-container-lowest/50 flex items-center justify-between gap-2 opacity-50';
+        
+        const leftSide = document.createElement('div');
+        leftSide.className = 'flex items-center gap-2 flex-1 min-w-0';
+        
+        const numPill = document.createElement('span');
+        numPill.className = 'w-5 h-5 rounded bg-surface-container text-secondary text-[10px] font-mono-code font-bold flex items-center justify-center shrink-0';
+        numPill.textContent = String(i);
+        leftSide.appendChild(numPill);
+
+        const bar = document.createElement('div');
+        bar.className = 'h-3 rounded bg-slate-300 dark:bg-slate-700/60 skeleton-bar flex-1 max-w-[160px]';
+        leftSide.appendChild(bar);
+
+        row.appendChild(leftSide);
+
+        const pill = document.createElement('div');
+        pill.className = 'h-4 w-12 rounded bg-slate-200 dark:bg-slate-800 skeleton-pill shrink-0';
+        row.appendChild(pill);
+
+        queueFrame.appendChild(row);
+      }
+
+      scrollContainer.appendChild(queueFrame);
       queueCol.appendChild(scrollContainer);
 
       const utilityScroll = document.getElementById('utilityScrollArea');
@@ -1367,21 +1486,113 @@ export class RenamerUIManager {
     }
 
     if (this.state.files.length === 0) {
-      const emptyCard = document.createElement('div');
-      emptyCard.className = 'p-4 text-center text-secondary bg-surface-container-lowest rounded-xl border border-outline-variant/30 flex flex-col items-center gap-2';
-      const icon = document.createElement('span');
-      icon.className = 'material-symbols-outlined text-[32px] text-primary opacity-50';
-      icon.textContent = 'checklist';
-      emptyCard.appendChild(icon);
-      const title = document.createElement('div');
-      title.className = 'font-label-md font-bold text-on-surface';
-      title.textContent = 'No Documents Loaded';
-      emptyCard.appendChild(title);
-      const desc = document.createElement('div');
-      desc.className = 'text-[11px] text-secondary leading-relaxed';
-      desc.textContent = 'Load a student folder to audit missing documents and view quick shortcuts.';
-      emptyCard.appendChild(desc);
-      container.appendChild(emptyCard);
+      // 1. Missing Documents Checklist Frame (Blurred / Skeleton Empty State — 0 Dummy Documents)
+      const missingSection = document.createElement('div');
+      missingSection.className = 'flex flex-col gap-1.5 shrink-0 select-none';
+
+      const missingHeader = document.createElement('div');
+      missingHeader.className = 'flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-surface-container border border-outline-variant/30 text-[11px] font-mono-code text-secondary shrink-0';
+      const mLeft = document.createElement('div');
+      mLeft.className = 'flex items-center gap-1.5 font-bold';
+      const mIcon = document.createElement('span');
+      mIcon.className = 'material-symbols-outlined text-[15px] text-secondary';
+      mIcon.textContent = 'checklist';
+      mLeft.appendChild(mIcon);
+      const mTitle = document.createElement('span');
+      mTitle.textContent = 'MISSING DOCUMENTS (Checklist)';
+      mLeft.appendChild(mTitle);
+      missingHeader.appendChild(mLeft);
+
+      const mStatus = document.createElement('span');
+      mStatus.className = 'text-[10px] text-secondary/70';
+      mStatus.textContent = 'Standby';
+      missingHeader.appendChild(mStatus);
+      missingSection.appendChild(missingHeader);
+
+      const missingSkeletonBox = document.createElement('div');
+      missingSkeletonBox.className = 'p-3 rounded-xl border border-dashed border-outline-variant/40 bg-surface-container-lowest/60 flex flex-col gap-2 select-none';
+      const sBar1 = document.createElement('div');
+      sBar1.className = 'h-3 w-3/4 bg-slate-300 dark:bg-slate-700/50 rounded skeleton-bar';
+      missingSkeletonBox.appendChild(sBar1);
+      const sBar2 = document.createElement('div');
+      sBar2.className = 'h-3 w-1/2 bg-slate-300 dark:bg-slate-700/50 rounded skeleton-bar';
+      missingSkeletonBox.appendChild(sBar2);
+      const sNote = document.createElement('span');
+      sNote.className = 'text-[11px] text-secondary/60 italic pt-1';
+      sNote.textContent = 'Checklist audit will verify missing records upon folder load.';
+      missingSkeletonBox.appendChild(sNote);
+      missingSection.appendChild(missingSkeletonBox);
+      container.appendChild(missingSection);
+
+      // 2. CORE SHORTCUTS (100% Crisp, Sharp, Unblurred & Locked in Position)
+      const shortcutsCard = document.createElement('div');
+      shortcutsCard.className = 'flex flex-col gap-1.5 bg-surface-container-lowest p-space-sm rounded-xl border border-outline-variant/30 shadow-xs shrink-0 select-none';
+
+      const shortcutsHeader = document.createElement('div');
+      shortcutsHeader.className = 'flex items-center justify-between px-1 text-label-sm pb-1';
+      const scLeft = document.createElement('div');
+      scLeft.className = 'flex items-center gap-1.5 font-bold text-on-surface text-[12px]';
+      const scIcon = document.createElement('span');
+      scIcon.className = 'material-symbols-outlined text-[15px] text-primary';
+      scIcon.textContent = 'bolt';
+      scLeft.appendChild(scIcon);
+      const scTitle = document.createElement('span');
+      scTitle.textContent = 'CORE SHORTCUTS';
+      scLeft.appendChild(scTitle);
+      shortcutsHeader.appendChild(scLeft);
+
+      const scSub = document.createElement('span');
+      scSub.className = 'text-[10px] font-mono-code text-secondary';
+      scSub.textContent = 'Top 5 Keys';
+      shortcutsHeader.appendChild(scSub);
+      shortcutsCard.appendChild(shortcutsHeader);
+
+      const shortcutsList = document.createElement('div');
+      shortcutsList.id = 'coreShortcutsList';
+      shortcutsList.className = 'flex flex-col gap-1';
+
+      // Top-5 Identity & Schooling shortcuts confirmed in Decision A6
+      const default5 = [
+        { code: 'ADR', doc: 'AADHAAR CARD' },
+        { code: 'PIC', doc: 'PASSPORT PHOTO' },
+        { code: 'SIG', doc: 'STUDENT SIGNATURE' },
+        { code: '10M', doc: '10TH MARKSHEET' },
+        { code: '12LC', doc: '12TH LEAVING CERTIFICATE' }
+      ];
+
+      for (const sc of default5) {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'w-full px-2.5 py-1.5 rounded-lg border border-outline-variant/20 hover:border-primary/40 bg-surface-container-lowest hover:bg-surface-container flex items-center justify-between text-left transition-all cursor-pointer group shadow-xs';
+        
+        const badgeColor = getShortcutBadgeColor(sc.code);
+        const itemLeft = document.createElement('div');
+        itemLeft.className = 'flex items-center gap-2 min-w-0';
+
+        const codeSpan = document.createElement('span');
+        codeSpan.className = `px-2 py-0.5 rounded font-mono-code font-bold text-[11px] ${badgeColor} shrink-0`;
+        codeSpan.textContent = sc.code;
+        itemLeft.appendChild(codeSpan);
+
+        const docSpan = document.createElement('span');
+        docSpan.className = 'text-[11px] font-semibold text-on-surface truncate group-hover:text-primary transition-colors';
+        docSpan.textContent = sc.doc;
+        itemLeft.appendChild(docSpan);
+        item.appendChild(itemLeft);
+
+        const arrowIcon = document.createElement('span');
+        arrowIcon.className = 'material-symbols-outlined text-[14px] text-secondary opacity-0 group-hover:opacity-100 transition-opacity';
+        arrowIcon.textContent = 'arrow_forward';
+        item.appendChild(arrowIcon);
+
+        item.addEventListener('click', () => {
+          toast.show('Shortcut Preview', `Press "Select Folder" (F2) to start admission renaming with ${sc.code}`, 'info');
+        });
+        shortcutsList.appendChild(item);
+      }
+
+      shortcutsCard.appendChild(shortcutsList);
+      container.appendChild(shortcutsCard);
       return;
     }
 
@@ -2158,49 +2369,21 @@ export class RenamerUIManager {
       const textGroup = document.createElement('div');
       textGroup.className = 'flex flex-col gap-1 max-w-xs';
       const h3 = document.createElement('h3');
-      h3.className = 'font-headline-sm text-[18px] font-bold text-on-surface';
-      h3.textContent = 'Bulk Document Renamer';
+      h3.className = 'font-headline-sm text-[17px] font-bold text-on-surface';
+      h3.textContent = 'No Document Loaded for Preview';
       textGroup.appendChild(h3);
       const p = document.createElement('p');
       p.className = 'text-body-sm text-secondary text-[12px] leading-relaxed';
-      p.textContent = 'Fast, automated admission document renaming with MahaDBT checklist verification.';
+      p.textContent = 'Select a student folder (F2) from the top-right toolbar to begin admission document renaming.';
       textGroup.appendChild(p);
       emptyStage.appendChild(textGroup);
 
-      const btnGroup = document.createElement('div');
-      btnGroup.className = 'flex items-center gap-3 pt-2';
+      // Status telemetry strip (Minimalist blueprint status — NO duplicate buttons)
+      const statusStrip = document.createElement('div');
+      statusStrip.className = 'flex items-center gap-2 font-mono-code text-[11px] text-secondary opacity-60 mt-1 select-none';
+      statusStrip.innerHTML = '<span>DPI: Standby</span><span>•</span><span>Buffer: Empty</span><span>•</span><span>Zero Zoom</span>';
+      emptyStage.appendChild(statusStrip);
 
-      const btnSelect = document.createElement('button');
-      btnSelect.type = 'button';
-      btnSelect.className = 'px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-on-primary font-label-md font-semibold transition-all flex items-center gap-2 shadow-sm cursor-pointer active:scale-98';
-      const fldIcon = document.createElement('span');
-      fldIcon.className = 'material-symbols-outlined text-[18px]';
-      fldIcon.textContent = 'folder_open';
-      btnSelect.appendChild(fldIcon);
-      const spanSelect = document.createElement('span');
-      spanSelect.textContent = 'Select Folder';
-      btnSelect.appendChild(spanSelect);
-      const kbd = document.createElement('kbd');
-      kbd.className = 'px-1.5 py-0.5 rounded bg-surface-container-lowest/20 font-mono-code text-[10px] text-on-primary font-bold shadow-xs';
-      kbd.textContent = 'F2';
-      btnSelect.appendChild(kbd);
-      btnSelect.addEventListener('click', () => this.handleSelectFolder());
-      btnGroup.appendChild(btnSelect);
-
-      const btnAdd = document.createElement('button');
-      btnAdd.type = 'button';
-      btnAdd.className = 'px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md font-medium border border-outline-variant/40 transition-all flex items-center gap-2 shadow-xs cursor-pointer active:scale-98';
-      const addIcon = document.createElement('span');
-      addIcon.className = 'material-symbols-outlined text-[18px] text-primary';
-      addIcon.textContent = 'note_add';
-      btnAdd.appendChild(addIcon);
-      const spanAdd = document.createElement('span');
-      spanAdd.textContent = 'Add Files';
-      btnAdd.appendChild(spanAdd);
-      btnAdd.addEventListener('click', () => this.handleAddFiles());
-      btnGroup.appendChild(btnAdd);
-
-      emptyStage.appendChild(btnGroup);
       previewStageWrapper.appendChild(emptyStage);
       return;
     }

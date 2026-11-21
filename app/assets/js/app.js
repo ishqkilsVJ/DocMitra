@@ -2214,23 +2214,30 @@ var Ve = class {
 		let u = document.getElementById("btnSaveBatch");
 		u && u.addEventListener("click", () => this.handleSaveBatch());
 		let d = document.getElementById("btnExportAudit");
-		d && d.addEventListener("click", () => this.handleExportAudit()), document.querySelectorAll("input[name=\"casingStyleRadio\"]").forEach((e) => {
-			e.value === (this.state.style || "upper") && (e.checked = !0), e.addEventListener("change", (e) => {
-				e.target.checked && (this.state.style = e.target.value, this._recalculateTargetNames(), this.renderQueue(), this.renderCurrentPreview(), r.show("Case Style Changed", `Applied ${e.target.value.toUpperCase()} casing to pending files`, "info"));
+		d && d.addEventListener("click", () => this.handleExportAudit());
+		let f = () => {
+			document.querySelectorAll("#casingRadiosGroup label").forEach((e) => {
+				let t = e.querySelector("input");
+				e.className = t && t.checked ? "flex items-center cursor-pointer text-white bg-primary font-mono-code text-[11px] px-2 py-0.5 rounded shadow-xs select-none font-bold transition-all casing-pill-active" : "flex items-center cursor-pointer text-secondary hover:text-on-surface font-mono-code text-[11px] px-2 py-0.5 rounded transition-all select-none";
 			});
-		});
-		let f = document.getElementById("btnClearWorkspace");
-		f && f.addEventListener("click", () => this.handleClearQueue());
-		let p = document.getElementById("btnClearQueue");
+		};
+		document.querySelectorAll("input[name=\"casingStyleRadio\"]").forEach((e) => {
+			e.value === (this.state.style || "upper") && (e.checked = !0), e.addEventListener("change", (e) => {
+				e.target.checked && (this.state.style = e.target.value, f(), this._recalculateTargetNames(), this.renderQueue(), this.renderCurrentPreview(), r.show("Case Style Changed", `Applied ${e.target.value.toUpperCase()} casing to pending files`, "info"));
+			});
+		}), f();
+		let p = document.getElementById("btnClearWorkspace");
 		p && p.addEventListener("click", () => this.handleClearQueue());
-		let m = document.getElementById("btnEmptySelectFolder");
-		m && m.addEventListener("click", () => this.handleSelectFolder());
-		let h = document.getElementById("btnEmptyAddFiles");
-		h && h.addEventListener("click", () => this.handleAddFiles());
-		let g = document.querySelector("#col-queue input");
-		g && (g.addEventListener("keydown", (e) => {
+		let m = document.getElementById("btnClearQueue");
+		m && m.addEventListener("click", () => this.handleClearQueue());
+		let h = document.getElementById("btnEmptySelectFolder");
+		h && h.addEventListener("click", () => this.handleSelectFolder());
+		let g = document.getElementById("btnEmptyAddFiles");
+		g && g.addEventListener("click", () => this.handleAddFiles());
+		let _ = document.querySelector("#col-queue input");
+		_ && (_.addEventListener("keydown", (e) => {
 			(e.key === "Tab" || e.key === "Enter") && (e.preventDefault(), r.show("Intake Folder Needed", "Press \"Select Folder\" (F2) to choose admission documents.", "info")), /[\\/:*?"<>|]/.test(e.key) && (e.preventDefault(), r.show("Character Not Allowed", `Windows filenames cannot contain ${e.key}`, "warning"));
-		}), g.addEventListener("input", (e) => {
+		}), _.addEventListener("input", (e) => {
 			/[\\/:*?"<>|]/.test(e.target.value) && (e.target.value = e.target.value.replace(/[\\/:*?"<>|]/g, ""), r.show("Character Not Allowed", "Illegal characters removed", "warning"));
 		})), document.querySelectorAll("#col-queue .grid-cols-3 button").forEach((e) => {
 			e.addEventListener("click", () => {
@@ -2492,17 +2499,51 @@ var Ve = class {
 		if (a) {
 			for (; a.firstChild;) a.removeChild(a.firstChild);
 			if (this.state.folder?.path) {
-				let e = this.state.folder.path.replace(/\\/g, "/"), t = e.split("/").filter(Boolean), n = "";
-				t.forEach((i, o) => {
-					n = o === 0 && (i.includes(":") || e.startsWith("/")) ? i : n ? `${n}/${i}` : i;
-					let s = n, c = document.createElement("span");
-					if (c.className = o === t.length - 1 ? "text-on-surface font-bold truncate select-text" : "text-secondary hover:text-primary transition-colors cursor-pointer hover:underline", c.textContent = i, c.title = o === t.length - 1 ? s : `Click to jump to parent folder: ${s}`, o < t.length - 1 && c.addEventListener("click", async (e) => {
-						e.stopPropagation(), r.show("Navigating Folder", `Opening ${s}...`, "info");
-						let t = await u(s);
-						t && t.success ? (this.loadFolderData(t), r.show("Navigated to Folder", s, "success")) : r.show("Navigation Failed", t?.error || "Could not read directory", "error");
-					}), a.appendChild(c), o < t.length - 1) {
+				a.title = this.state.folder.path;
+				let e = this.state.folder.path.replace(/\\/g, "/"), t = e.split("/").filter(Boolean), n = [], i = "";
+				t.forEach((t, r) => {
+					i = r === 0 && (t.includes(":") || e.startsWith("/")) ? t : i ? `${i}/${t}` : t, n.push(i);
+				});
+				let o = [];
+				o = t.length > 3 ? [
+					{
+						seg: t[0],
+						path: n[0],
+						isLast: !1
+					},
+					{
+						isEllipsis: !0,
+						title: n.slice(1, t.length - 2).join(" / ")
+					},
+					{
+						seg: t[t.length - 2],
+						path: n[t.length - 2],
+						isLast: !1
+					},
+					{
+						seg: t[t.length - 1],
+						path: n[t.length - 1],
+						isLast: !0
+					}
+				] : t.map((e, r) => ({
+					seg: e,
+					path: n[r],
+					isLast: r === t.length - 1
+				})), o.forEach((e, t) => {
+					if (e.isEllipsis) {
+						let t = document.createElement("span");
+						t.className = "text-secondary/70 font-mono-code px-1 py-0.5 rounded hover:bg-surface-container cursor-default select-none text-[11px]", t.textContent = "...", t.title = `Intermediate folders: ${e.title}`, a.appendChild(t);
+					} else {
+						let t = document.createElement("span");
+						t.className = e.isLast ? "text-on-surface font-bold truncate select-text px-1 py-0.5 rounded" : "text-secondary hover:text-primary transition-colors cursor-pointer px-1 py-0.5 rounded hover:bg-surface-container", t.textContent = e.seg, t.title = e.isLast ? e.path : `Click to jump to parent folder: ${e.path}`, e.isLast || t.addEventListener("click", async (t) => {
+							t.stopPropagation(), r.show("Navigating Folder", `Opening ${e.path}...`, "info");
+							let n = await u(e.path);
+							n && n.success ? (this.loadFolderData(n), r.show("Navigated to Folder", e.path, "success")) : r.show("Navigation Failed", n?.error || "Could not read directory", "error");
+						}), a.appendChild(t);
+					}
+					if (t < o.length - 1) {
 						let e = document.createElement("span");
-						e.className = "text-outline-variant/60 mx-1 select-none font-normal", e.textContent = ">", a.appendChild(e);
+						e.className = "text-outline-variant/60 mx-0.5 select-none font-normal text-[10px]", e.textContent = ">", a.appendChild(e);
 					}
 				});
 			} else a.textContent = "No folder selected";
@@ -2528,15 +2569,52 @@ var Ve = class {
 		let t = document.createElement("div");
 		if (t.className = "flex flex-col gap-space-sm overflow-y-auto pr-1 flex-1 min-h-0 custom-pan-scroll pan-grab-active queue-scroll-area", this.state.files.length === 0) {
 			let n = document.createElement("div");
-			n.className = "p-6 text-center text-secondary bg-surface-container-lowest rounded-xl border border-outline-variant/30 flex flex-col items-center gap-2 select-none";
-			let r = document.createElement("span");
-			r.className = "material-symbols-outlined text-[36px] text-primary opacity-60", r.textContent = "folder_open", n.appendChild(r);
+			n.className = "flex flex-col gap-space-xs shrink-0 select-none";
+			let r = document.createElement("div");
+			r.className = "flex items-center justify-between px-1 text-label-sm";
 			let i = document.createElement("div");
-			i.className = "font-headline-sm font-bold text-on-surface", i.textContent = "No Active Queue", n.appendChild(i);
-			let a = document.createElement("div");
-			a.className = "text-body-sm text-secondary", a.textContent = "Select a student folder (F2) or add document files to begin admission renaming.", n.appendChild(a), t.appendChild(n), e.appendChild(t);
-			let o = document.getElementById("utilityScrollArea");
-			o && this.renderUtilityPanel(o);
+			i.className = "flex items-center gap-2";
+			let a = document.createElement("span");
+			a.className = "px-2 py-0.5 rounded bg-surface-container-high text-secondary font-bold text-[11px] flex items-center gap-1.5 shadow-xs";
+			let o = document.createElement("span");
+			o.className = "material-symbols-outlined text-[13px]", o.textContent = "edit_document", a.appendChild(o), a.appendChild(document.createTextNode("Standby (0 / 0)")), i.appendChild(a), r.appendChild(i), n.appendChild(r);
+			let s = document.createElement("div");
+			s.className = "p-space-sm bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-xs flex flex-col gap-2 relative";
+			let c = document.createElement("div");
+			c.className = "flex items-center justify-between text-label-sm";
+			let l = document.createElement("label");
+			l.className = "font-bold text-on-surface text-[12px]", l.textContent = "Rename To:", c.appendChild(l);
+			let u = document.createElement("span");
+			u.className = "text-[11px] text-secondary font-mono-code", u.textContent = "Awaiting intake files", c.appendChild(u), s.appendChild(c);
+			let d = document.createElement("div");
+			d.className = "h-9 w-full rounded-lg bg-surface-container/60 border border-outline-variant/30 px-3 flex items-center justify-between text-secondary/40 font-mono-code text-[12px]";
+			let f = document.createElement("span");
+			f.className = "italic text-secondary/50", f.textContent = "Select student folder (F2) to rename...", d.appendChild(f);
+			let p = document.createElement("span");
+			p.className = "px-1.5 py-0.5 rounded bg-surface-container text-secondary text-[10px] font-bold font-mono-code", p.textContent = ".ext", d.appendChild(p), s.appendChild(d), n.appendChild(s), t.appendChild(n);
+			let m = document.createElement("div");
+			m.className = "flex flex-col gap-1.5 pt-2 select-none";
+			let h = document.createElement("div");
+			h.className = "flex items-center justify-between px-1 text-label-sm pb-1";
+			let g = document.createElement("span");
+			g.className = "font-bold text-on-surface text-[12px]", g.textContent = "UPCOMING QUEUE (0 Files)", h.appendChild(g);
+			let _ = document.createElement("span");
+			_.className = "text-secondary text-[11px] font-mono-code", _.textContent = "5 Slots Ready", h.appendChild(_), m.appendChild(h);
+			for (let e = 1; e <= 5; e++) {
+				let t = document.createElement("div");
+				t.className = "p-2 rounded-lg border border-outline-variant/20 bg-surface-container-lowest/50 flex items-center justify-between gap-2 opacity-50";
+				let n = document.createElement("div");
+				n.className = "flex items-center gap-2 flex-1 min-w-0";
+				let r = document.createElement("span");
+				r.className = "w-5 h-5 rounded bg-surface-container text-secondary text-[10px] font-mono-code font-bold flex items-center justify-center shrink-0", r.textContent = String(e), n.appendChild(r);
+				let i = document.createElement("div");
+				i.className = "h-3 rounded bg-slate-300 dark:bg-slate-700/60 skeleton-bar flex-1 max-w-[160px]", n.appendChild(i), t.appendChild(n);
+				let a = document.createElement("div");
+				a.className = "h-4 w-12 rounded bg-slate-200 dark:bg-slate-800 skeleton-pill shrink-0", t.appendChild(a), m.appendChild(t);
+			}
+			t.appendChild(m), e.appendChild(t);
+			let v = document.getElementById("utilityScrollArea");
+			v && this.renderUtilityPanel(v);
 			return;
 		}
 		let n = this.state.files[this.state.currentIndex];
@@ -2676,13 +2754,75 @@ var Ve = class {
 		for (; e.firstChild;) e.removeChild(e.firstChild);
 		if (this.state.files.length === 0) {
 			let t = document.createElement("div");
-			t.className = "p-4 text-center text-secondary bg-surface-container-lowest rounded-xl border border-outline-variant/30 flex flex-col items-center gap-2";
-			let n = document.createElement("span");
-			n.className = "material-symbols-outlined text-[32px] text-primary opacity-50", n.textContent = "checklist", t.appendChild(n);
-			let r = document.createElement("div");
-			r.className = "font-label-md font-bold text-on-surface", r.textContent = "No Documents Loaded", t.appendChild(r);
+			t.className = "flex flex-col gap-1.5 shrink-0 select-none";
+			let n = document.createElement("div");
+			n.className = "flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-surface-container border border-outline-variant/30 text-[11px] font-mono-code text-secondary shrink-0";
 			let i = document.createElement("div");
-			i.className = "text-[11px] text-secondary leading-relaxed", i.textContent = "Load a student folder to audit missing documents and view quick shortcuts.", t.appendChild(i), e.appendChild(t);
+			i.className = "flex items-center gap-1.5 font-bold";
+			let a = document.createElement("span");
+			a.className = "material-symbols-outlined text-[15px] text-secondary", a.textContent = "checklist", i.appendChild(a);
+			let o = document.createElement("span");
+			o.textContent = "MISSING DOCUMENTS (Checklist)", i.appendChild(o), n.appendChild(i);
+			let s = document.createElement("span");
+			s.className = "text-[10px] text-secondary/70", s.textContent = "Standby", n.appendChild(s), t.appendChild(n);
+			let c = document.createElement("div");
+			c.className = "p-3 rounded-xl border border-dashed border-outline-variant/40 bg-surface-container-lowest/60 flex flex-col gap-2 select-none";
+			let l = document.createElement("div");
+			l.className = "h-3 w-3/4 bg-slate-300 dark:bg-slate-700/50 rounded skeleton-bar", c.appendChild(l);
+			let u = document.createElement("div");
+			u.className = "h-3 w-1/2 bg-slate-300 dark:bg-slate-700/50 rounded skeleton-bar", c.appendChild(u);
+			let d = document.createElement("span");
+			d.className = "text-[11px] text-secondary/60 italic pt-1", d.textContent = "Checklist audit will verify missing records upon folder load.", c.appendChild(d), t.appendChild(c), e.appendChild(t);
+			let f = document.createElement("div");
+			f.className = "flex flex-col gap-1.5 bg-surface-container-lowest p-space-sm rounded-xl border border-outline-variant/30 shadow-xs shrink-0 select-none";
+			let p = document.createElement("div");
+			p.className = "flex items-center justify-between px-1 text-label-sm pb-1";
+			let m = document.createElement("div");
+			m.className = "flex items-center gap-1.5 font-bold text-on-surface text-[12px]";
+			let h = document.createElement("span");
+			h.className = "material-symbols-outlined text-[15px] text-primary", h.textContent = "bolt", m.appendChild(h);
+			let g = document.createElement("span");
+			g.textContent = "CORE SHORTCUTS", m.appendChild(g), p.appendChild(m);
+			let _ = document.createElement("span");
+			_.className = "text-[10px] font-mono-code text-secondary", _.textContent = "Top 5 Keys", p.appendChild(_), f.appendChild(p);
+			let v = document.createElement("div");
+			v.id = "coreShortcutsList", v.className = "flex flex-col gap-1";
+			for (let e of [
+				{
+					code: "ADR",
+					doc: "AADHAAR CARD"
+				},
+				{
+					code: "PIC",
+					doc: "PASSPORT PHOTO"
+				},
+				{
+					code: "SIG",
+					doc: "STUDENT SIGNATURE"
+				},
+				{
+					code: "10M",
+					doc: "10TH MARKSHEET"
+				},
+				{
+					code: "12LC",
+					doc: "12TH LEAVING CERTIFICATE"
+				}
+			]) {
+				let t = document.createElement("button");
+				t.type = "button", t.className = "w-full px-2.5 py-1.5 rounded-lg border border-outline-variant/20 hover:border-primary/40 bg-surface-container-lowest hover:bg-surface-container flex items-center justify-between text-left transition-all cursor-pointer group shadow-xs";
+				let n = Be(e.code), i = document.createElement("div");
+				i.className = "flex items-center gap-2 min-w-0";
+				let a = document.createElement("span");
+				a.className = `px-2 py-0.5 rounded font-mono-code font-bold text-[11px] ${n} shrink-0`, a.textContent = e.code, i.appendChild(a);
+				let o = document.createElement("span");
+				o.className = "text-[11px] font-semibold text-on-surface truncate group-hover:text-primary transition-colors", o.textContent = e.doc, i.appendChild(o), t.appendChild(i);
+				let s = document.createElement("span");
+				s.className = "material-symbols-outlined text-[14px] text-secondary opacity-0 group-hover:opacity-100 transition-opacity", s.textContent = "arrow_forward", t.appendChild(s), t.addEventListener("click", () => {
+					r.show("Shortcut Preview", `Press "Select Folder" (F2) to start admission renaming with ${e.code}`, "info");
+				}), v.appendChild(t);
+			}
+			f.appendChild(v), e.appendChild(f);
 			return;
 		}
 		let t = g["MAHA DBT FORM"] || [], n = new Set(this.state.files.map((e) => (e.docType || "").toUpperCase()).filter(Boolean)), i = t.filter(([e]) => {
@@ -3076,25 +3216,11 @@ var Ve = class {
 			let i = document.createElement("div");
 			i.className = "flex flex-col gap-1 max-w-xs";
 			let a = document.createElement("h3");
-			a.className = "font-headline-sm text-[18px] font-bold text-on-surface", a.textContent = "Bulk Document Renamer", i.appendChild(a);
+			a.className = "font-headline-sm text-[17px] font-bold text-on-surface", a.textContent = "No Document Loaded for Preview", i.appendChild(a);
 			let o = document.createElement("p");
-			o.className = "text-body-sm text-secondary text-[12px] leading-relaxed", o.textContent = "Fast, automated admission document renaming with MahaDBT checklist verification.", i.appendChild(o), e.appendChild(i);
+			o.className = "text-body-sm text-secondary text-[12px] leading-relaxed", o.textContent = "Select a student folder (F2) from the top-right toolbar to begin admission document renaming.", i.appendChild(o), e.appendChild(i);
 			let s = document.createElement("div");
-			s.className = "flex items-center gap-3 pt-2";
-			let c = document.createElement("button");
-			c.type = "button", c.className = "px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-on-primary font-label-md font-semibold transition-all flex items-center gap-2 shadow-sm cursor-pointer active:scale-98";
-			let l = document.createElement("span");
-			l.className = "material-symbols-outlined text-[18px]", l.textContent = "folder_open", c.appendChild(l);
-			let u = document.createElement("span");
-			u.textContent = "Select Folder", c.appendChild(u);
-			let d = document.createElement("kbd");
-			d.className = "px-1.5 py-0.5 rounded bg-surface-container-lowest/20 font-mono-code text-[10px] text-on-primary font-bold shadow-xs", d.textContent = "F2", c.appendChild(d), c.addEventListener("click", () => this.handleSelectFolder()), s.appendChild(c);
-			let f = document.createElement("button");
-			f.type = "button", f.className = "px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md font-medium border border-outline-variant/40 transition-all flex items-center gap-2 shadow-xs cursor-pointer active:scale-98";
-			let p = document.createElement("span");
-			p.className = "material-symbols-outlined text-[18px] text-primary", p.textContent = "note_add", f.appendChild(p);
-			let m = document.createElement("span");
-			m.textContent = "Add Files", f.appendChild(m), f.addEventListener("click", () => this.handleAddFiles()), s.appendChild(f), e.appendChild(s), n.appendChild(e);
+			s.className = "flex items-center gap-2 font-mono-code text-[11px] text-secondary opacity-60 mt-1 select-none", s.innerHTML = "<span>DPI: Standby</span><span>•</span><span>Buffer: Empty</span><span>•</span><span>Zero Zoom</span>", e.appendChild(s), n.appendChild(e);
 			return;
 		}
 		let r = e.querySelector("strong.text-tertiary, strong.text-error");
