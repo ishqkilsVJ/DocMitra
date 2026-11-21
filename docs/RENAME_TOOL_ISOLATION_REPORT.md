@@ -83,7 +83,9 @@ Headless Chromium screenshots were rendered at `1440x900` resolution against the
 
 - Verified live `server.py` delegate to `tools.rename_tool.rename_tool.safe_rename_file`.
 - Tested real disk atomic rename via `POST /api/native-rename` (`test_tmp_rename.txt` -> `test_tmp_renamed.txt`).
-- Tested Windows case-only temporary swap via `POST /api/native-rename` (`test_case.txt` -> `TEST_CASE.txt`).
+- Tested Windows case-only temporary swap via `POST /api/native-rename` (`test_case.txt` -> `TEST_CASE.txt`) with safe temporary swap rollback guard.
+- Tested Windows reserved name guard against stem spacing variants (`"CON .pdf"`, `"AUX .txt"`) and ASCII control characters (`\x00`–`\x1f`).
+- Delegated `/api/native-batch-rename` to `batch_rename_files` with flexible parameter mapping.
 
 ---
 

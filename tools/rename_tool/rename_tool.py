@@ -49,14 +49,14 @@ def validate_filename(name: str) -> Tuple[bool, str]:
     if name.endswith('.') or name.endswith(' ') or trimmed.endswith('.'):
         return False, "File name cannot end with a period or space."
 
-    if any(char in ILLEGAL_CHARS for char in name):
-        return False, "File name cannot contain \\ / : * ? \" < > |."
+    if any(char in ILLEGAL_CHARS or ord(char) < 32 for char in name):
+        return False, "File name cannot contain \\ / : * ? \" < > | or control characters."
 
     if trimmed in ('.', '..'):
         return False, "Invalid file name."
 
-    # Windows reserved device check (e.g. CON.pdf, AUX.jpg)
-    base_stem = trimmed.upper().split('.')[0]
+    # Windows reserved device check (e.g. CON.pdf, AUX.jpg, "CON .pdf")
+    base_stem = trimmed.upper().split('.')[0].strip()
     if base_stem in WINDOWS_RESERVED_NAMES:
         return False, "This file name is reserved by Windows OS."
 
@@ -125,10 +125,14 @@ def safe_rename_file(old_path: str, new_name: str) -> Dict[str, Any]:
     # Windows case-only rename: Windows filesystem is case-insensitive, so renaming
     # "DOC.pdf" to "doc.pdf" directly fails or no-ops without an intermediate temp name.
     if os.path.normpath(old_path).lower() == os.path.normpath(new_path).lower():
-        temp_name = f"__tmp_{int(time.time() * 1000)}_{new_name}"
+        temp_name = f"__tmp_{int(time.time() * 1000)}_{os.getpid()}_{new_name}"
         temp_path = os.path.join(parent, temp_name)
         try:
             os.rename(old_path, temp_path)
+        except Exception as e:
+            return {'success': False, 'error': f"Case-change temporary rename failed: {str(e)}"}
+
+        try:
             os.rename(temp_path, new_path)
             return {
                 'success': True,
@@ -137,6 +141,11 @@ def safe_rename_file(old_path: str, new_name: str) -> Dict[str, Any]:
                 'name': new_name
             }
         except Exception as e:
+            # Safe rollback: never leave document stranded as temporary file
+            try:
+                os.rename(temp_path, old_path)
+            except Exception:
+                pass
             return {'success': False, 'error': f"Case-change rename failed: {str(e)}"}
 
     # Collision guard
@@ -159,8 +168,8 @@ def batch_rename_files(renames: List[Dict[str, str]]) -> Dict[str, Any]:
     """Execute batch atomic renames sequentially."""
     results = []
     for item in renames:
-        old_path = item.get('oldPath', '')
-        new_name = item.get('newName', '')
+        old_path = item.get('oldPath') or item.get('old_path') or item.get('path') or ''
+        new_name = item.get('newName') or item.get('new_name') or item.get('targetName') or ''
         res = safe_rename_file(old_path, new_name)
         results.append(res)
     return {'success': True, 'results': results}
@@ -233,7 +242,7 @@ def get_sibling_folders(current_folder_path: str) -> List[Dict[str, str]]:
     siblings = []
     try:
         for entry in os.scandir(parent):
-            if entry.is_dir(follow_symlinks=False) and not entry.name.startswith('.'):
+            if entry.is_dir(follow_symlinks=False) and not entry.name.startswith('.') and not is_junk_file(entry.name):
                 siblings.append({
                     'name': entry.name,
                     'path': os.path.normpath(entry.path).replace('\\', '/')

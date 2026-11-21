@@ -88,10 +88,12 @@ console.log('✓ All 21 core shortcuts resolved with strict word-boundary safety
 // 3. Windows Reserved Names & Collision Prevention
 console.log('\n[Test 3] Windows Reserved Names & Duplicate Suffixing...');
 assert.ok(validateFilename('CON.pdf').length > 0, 'CON must be blocked');
+assert.ok(validateFilename('CON .pdf').length > 0, 'CON with stem spacing must be blocked');
 assert.ok(validateFilename('PRN.jpg').length > 0, 'PRN must be blocked');
 assert.ok(validateFilename('AUX.png').length > 0, 'AUX must be blocked');
 assert.ok(validateFilename('NUL.docx').length > 0, 'NUL must be blocked');
 assert.ok(validateFilename('invalid/char.pdf').length > 0, 'Slash must be blocked');
+assert.ok(validateFilename('bad\x01char.pdf').length > 0, 'Control character must be blocked');
 assert.strictEqual(validateFilename('Valid Clean Document.pdf'), '');
 
 const existing = new Set(['10TH MARKSHEET Vijay Yadav.pdf']);
@@ -199,11 +201,15 @@ console.log('✓ Markup is 100% English and CSS is strictly scoped under .rename
 console.log('\n[Test 8] Python Backend (tools/rename_tool/rename_tool.py)...');
 const pyOutput = execSync('python -c "import tools.rename_tool.rename_tool as rt; ' +
   'assert rt.validate_filename(\'CON.pdf\')[0] == False; ' +
+  'assert rt.validate_filename(\'CON .pdf\')[0] == False; ' +
+  'assert rt.validate_filename(\'bad\\x01char.pdf\')[0] == False; ' +
   'assert rt.validate_filename(\'Valid.pdf\')[0] == True; ' +
   'assert rt.unique_destination(\'doc.pdf\', \'doc.pdf\', {\'doc.pdf\'}) == \'doc.pdf\'; ' +
   'assert rt.unique_destination(\'doc.pdf\', \'other.pdf\', {\'doc.pdf\'}) == \'doc 1.pdf\'; ' +
   'assert rt.is_junk_file(\'Thumbs.db\') == True; ' +
   'assert rt.is_junk_file(\'doc.pdf\') == False; ' +
+  'batch_res = rt.batch_rename_files([{\'path\': \'fake.pdf\', \'targetName\': \'CON.pdf\'}]); ' +
+  'assert batch_res[\'results\'][0][\'success\'] == False; ' +
   'print(\'PYTHON_BACKEND_OK\');"').toString().trim();
 assert.ok(pyOutput.includes('PYTHON_BACKEND_OK'), 'Python backend verification must pass');
 console.log('✓ Python backend safe atomic operations, reserved names, and junk filter verified.');

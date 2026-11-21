@@ -1159,9 +1159,9 @@ function D(e) {
 	if (!e || !e.trim()) return "File name cannot be empty.";
 	let t = e.trim();
 	if (e.endsWith(".") || e.endsWith(" ") || t.endsWith(".")) return "File name cannot end with a period or space.";
-	if (/[\\/:*?"<>|]/.test(e)) return "File name cannot contain \\ / : * ? \" < > |.";
+	if (/[\x00-\x1f\\/:*?"<>|]/.test(e)) return "File name cannot contain \\ / : * ? \" < > | or control characters.";
 	if (t === "." || t === "..") return "Invalid file name.";
-	let n = t.toUpperCase().split(".")[0];
+	let n = t.toUpperCase().split(".")[0].trim();
 	return [
 		"CON",
 		"PRN",

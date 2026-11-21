@@ -273,14 +273,22 @@ def rename_native_file(old_path, new_name):
     if os.path.normpath(old_path) == os.path.normpath(new_path):
         return {'success': True, 'path': new_path.replace('\\', '/'), 'name': new_name}
     
-    # Windows Case-Insensitive Rename Handling via safe temp rename
+    # Windows Case-Insensitive Rename Handling via safe temp rename with rollback
     if os.path.normpath(old_path).lower() == os.path.normpath(new_path).lower():
-        temp_path = os.path.join(parent, f"__tmp_{int(time.time()*1000)}_{new_name}")
+        temp_path = os.path.join(parent, f"__tmp_{int(time.time()*1000)}_{os.getpid()}_{new_name}")
         try:
             os.rename(old_path, temp_path)
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+
+        try:
             os.rename(temp_path, new_path)
             return {'success': True, 'oldPath': old_path.replace('\\', '/'), 'path': new_path.replace('\\', '/'), 'name': new_name}
         except Exception as e:
+            try:
+                os.rename(temp_path, old_path)
+            except Exception:
+                pass
             return {'success': False, 'error': str(e)}
 
     if os.path.exists(new_path):
@@ -334,6 +342,13 @@ class DocMitraHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 length = int(self.headers.get('Content-Length', 0))
                 body = json.loads(self.rfile.read(length).decode('utf-8'))
+                if batch_rename_files is not None:
+                    res = batch_rename_files(body.get('renames', []))
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps(res).encode('utf-8'))
+                    return
                 results = [rename_native_file(item.get('oldPath', ''), item.get('newName', '')) for item in body.get('renames', [])]
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')

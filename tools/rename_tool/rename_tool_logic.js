@@ -686,10 +686,10 @@ export function validateFilename(name) {
   if (name.endsWith('.') || name.endsWith(' ') || trimmed.endsWith('.')) {
     return 'File name cannot end with a period or space.';
   }
-  if (/[\\/:*?"<>|]/.test(name)) return 'File name cannot contain \\ / : * ? " < > |.';
+  if (/[\x00-\x1f\\/:*?"<>|]/.test(name)) return 'File name cannot contain \\ / : * ? " < > | or control characters.';
   if (trimmed === '.' || trimmed === '..') return 'Invalid file name.';
 
-  const base = trimmed.toUpperCase().split('.')[0];
+  const base = trimmed.toUpperCase().split('.')[0].trim();
   const reserved = [
     'CON', 'PRN', 'AUX', 'NUL',
     'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9',
