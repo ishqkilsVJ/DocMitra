@@ -28,7 +28,7 @@
 ## 🔒 Rule 2: Rename Tool Lock (`tools/rename_tool/`)
 
 1. **Locked by Default:**  
-   `tools/rename_tool/` is **LOCKED**. Currently, 90% of the Bulk Renamer is fully verified and operational; 10% polish remains for future work.
+   `tools/rename_tool/` is **STRICTLY LOCKED**. 100% of the Bulk Renamer (UI, Casing, Auto-increment Duplicates, 21 Shortcuts, Preview, Checklist, and Scoped CSS) is fully verified, operational, and locked.
 2. **Zero Modification During Other Work:**  
    When working on ANY other tool (PDF Studio, Image Studio, Print Studio, Follow-up Desk, settings modal, or app shell), AI agents are strictly forbidden from modifying, refactoring, reformatting, or deleting any file inside `tools/rename_tool/`.
 3. **Explicit Unlock Protocol:**  
@@ -46,8 +46,8 @@
    Build new or migrated tool implementations in shadow paths first.
 3. **Deep Verification Before Cutover:**  
    Test functionality, edge cases, and visual layout (including screenshot and DOM geometry checks) before switching routing.
-4. **Quarantine to `_backup_archive/`:**  
-   After full verification passes, move replaced or obsolete prototype files into `_backup_archive/` rather than deleting them permanently.
+4. **Quarantine to `_recycle_bin/`:**  
+   After full verification passes, move replaced or obsolete prototype files into `_recycle_bin/` rather than deleting them permanently.
 
 ---
 

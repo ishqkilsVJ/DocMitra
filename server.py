@@ -266,38 +266,7 @@ except ImportError:
 def rename_native_file(old_path, new_name):
     if safe_rename_file is not None:
         return safe_rename_file(old_path, new_name)
-    if not old_path or not os.path.isfile(old_path):
-        return {'success': False, 'error': 'Source file not found on disk'}
-    parent = os.path.dirname(old_path)
-    new_path = os.path.join(parent, new_name)
-    if os.path.normpath(old_path) == os.path.normpath(new_path):
-        return {'success': True, 'path': new_path.replace('\\', '/'), 'name': new_name}
-    
-    # Windows Case-Insensitive Rename Handling via safe temp rename with rollback
-    if os.path.normpath(old_path).lower() == os.path.normpath(new_path).lower():
-        temp_path = os.path.join(parent, f"__tmp_{int(time.time()*1000)}_{os.getpid()}_{new_name}")
-        try:
-            os.rename(old_path, temp_path)
-        except Exception as e:
-            return {'success': False, 'error': str(e)}
-
-        try:
-            os.rename(temp_path, new_path)
-            return {'success': True, 'oldPath': old_path.replace('\\', '/'), 'path': new_path.replace('\\', '/'), 'name': new_name}
-        except Exception as e:
-            try:
-                os.rename(temp_path, old_path)
-            except Exception:
-                pass
-            return {'success': False, 'error': str(e)}
-
-    if os.path.exists(new_path):
-        return {'success': False, 'error': f"A file named '{new_name}' already exists in this folder"}
-    try:
-        os.rename(old_path, new_path)
-        return {'success': True, 'oldPath': old_path.replace('\\', '/'), 'path': new_path.replace('\\', '/'), 'name': new_name}
-    except Exception as e:
-        return {'success': False, 'error': str(e)}
+    return {'success': False, 'error': 'tools.rename_tool.rename_tool backend module not loaded'}
 
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 

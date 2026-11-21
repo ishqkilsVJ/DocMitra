@@ -1,6 +1,7 @@
-# Temporary design references
+# Temporary design references & quarantine
 _design_ref/
 _backup_archive/
+_recycle_bin/
 
 # Build artifacts & releases
 releases/*.exe
