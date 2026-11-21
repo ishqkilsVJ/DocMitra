@@ -267,7 +267,23 @@ async function s() {
 		};
 	}
 }
-async function c(e, t) {
+async function c(e) {
+	try {
+		let t = await fetch(`${o}/api/list-directory?path=${encodeURIComponent(e)}`);
+		return t.ok ? await t.json() : {
+			success: !1,
+			errorCode: "CM-104",
+			error: `Server error: ${t.status}`
+		};
+	} catch (e) {
+		return {
+			success: !1,
+			errorCode: "CM-104",
+			error: e.message
+		};
+	}
+}
+async function l(e, t) {
 	try {
 		return await (await fetch(`${o}/api/native-rename`, {
 			method: "POST",
@@ -284,8 +300,38 @@ async function c(e, t) {
 		};
 	}
 }
+async function u(e = "PDF Files (*.pdf)|*.pdf|All Files (*.*)|*.*", t = "Select Files") {
+	try {
+		let n = await fetch(`${o}/api/native-select-files?filter=${encodeURIComponent(e)}&title=${encodeURIComponent(t)}`);
+		return n.ok ? await n.json() : {
+			success: !1,
+			errorCode: "CM-106",
+			error: `Server error: ${n.status}`
+		};
+	} catch (e) {
+		return {
+			success: !1,
+			errorCode: "CM-106",
+			error: e.message
+		};
+	}
+}
+async function d(e) {
+	try {
+		let t = await fetch(`${o}/api/open-folder?path=${encodeURIComponent(e)}`);
+		return t.ok ? await t.json() : {
+			success: !1,
+			error: `Failed to open Explorer: ${t.status}`
+		};
+	} catch (e) {
+		return {
+			success: !1,
+			error: e.message
+		};
+	}
+}
 // src/libraries/shortcut-keyword-library.js
-var l = [
+var f = [
 	{
 		id: "aadhaar-card",
 		displayName: "Aadhaar Card",
@@ -497,15 +543,15 @@ var l = [
 		outputName: "CAP ALLOTMENT LETTER"
 	}
 ];
-function u(e = l) {
+function p(e = f) {
 	let t = {};
 	for (let n of e) t[n.outputName] = [n.primaryShortcut.toLowerCase(), ...(n.alternateKeywords || []).map((e) => e.toLowerCase())];
 	return t;
 }
-function d(e = null) {
-	if (!e || typeof e != "object" || !Object.keys(e).length) return l;
+function m(e = null) {
+	if (!e || typeof e != "object" || !Object.keys(e).length) return f;
 	let t = /* @__PURE__ */ new Map();
-	for (let e of l) t.set(e.outputName.toUpperCase(), e), e.canonicalKey && t.set(e.canonicalKey.toUpperCase(), e);
+	for (let e of f) t.set(e.outputName.toUpperCase(), e), e.canonicalKey && t.set(e.canonicalKey.toUpperCase(), e);
 	let n = [];
 	for (let [r, i] of Object.entries(e)) {
 		if (!r) continue;
@@ -528,7 +574,7 @@ function d(e = null) {
 	}
 	return n;
 }
-function f(e, t = null) {
+function h(e, t = null) {
 	if (!e || typeof e != "string") return null;
 	let n = e.trim().toLowerCase();
 	if (t && typeof t == "object") {
@@ -536,13 +582,13 @@ function f(e, t = null) {
 			for (let t of r) if (n === t.toLowerCase().trim()) return e;
 		}
 	}
-	let r = d(t);
+	let r = m(t);
 	for (let e of r) if (n === e.primaryShortcut.toLowerCase()) return e.outputName;
-	for (let e of l) if (n === e.primaryShortcut.toLowerCase()) return e.outputName;
+	for (let e of f) if (n === e.primaryShortcut.toLowerCase()) return e.outputName;
 	return null;
 }
 // src/libraries/document-matcher.js
-var p = [
+var g = [
 	{
 		id: "12th-marksheet-passing-combined",
 		outputName: "12TH MARKSHEET AND PASSING",
@@ -852,7 +898,7 @@ var p = [
 		]
 	}
 ];
-function m(e, t = null) {
+function _(e, t = null) {
 	if (!e || typeof e != "string") return {
 		docType: null,
 		percentage: 0,
@@ -861,7 +907,7 @@ function m(e, t = null) {
 		status: "none"
 	};
 	let n = e.trim().toLowerCase(), r = n.replace(/[-_.]+/g, " ");
-	for (let e of p) if (n === e.shortcut.toLowerCase() || r.trim() === e.shortcut.toLowerCase()) return {
+	for (let e of g) if (n === e.shortcut.toLowerCase() || r.trim() === e.shortcut.toLowerCase()) return {
 		docType: e.outputName,
 		percentage: 100,
 		badgeText: `100% Match: ${e.outputName}`,
@@ -879,7 +925,7 @@ function m(e, t = null) {
 			};
 		}
 	}
-	for (let e of p) for (let t of e.patterns) if (t.test(n) || t.test(r)) return {
+	for (let e of g) for (let t of e.patterns) if (t.test(n) || t.test(r)) return {
 		docType: e.outputName,
 		percentage: 100,
 		badgeText: `100% Match: ${e.outputName}`,
@@ -907,7 +953,7 @@ function m(e, t = null) {
 	};
 }
 // src/core/constants.js
-var h = {
+var v = {
 	"AADHAAR CARD": "Aadhaar Card",
 	"AADHAR CARD": "Aadhaar Card",
 	"PAN CARD": "PAN Card",
@@ -940,7 +986,7 @@ var h = {
 	"GAP CERTIFICATE": "Gap Certificate",
 	"ATTEMPT CERTIFICATE": "Attempt Certificate",
 	"CAP ALLOTMENT LETTER": "CAP Allotment Letter"
-}, g = {
+}, y = {
 	marskheet: "marksheet",
 	markshet: "marksheet",
 	markshit: "marksheet",
@@ -964,7 +1010,7 @@ var h = {
 	atempt: "attempt",
 	attmpt: "attempt",
 	phot: "photo"
-}, _ = [
+}, b = [
 	{
 		id: "12th-marksheet-passing-link",
 		part1: "12TH MARKSHEET",
@@ -993,7 +1039,7 @@ var h = {
 		combined: "12TH LC",
 		type: "alias"
 	}
-], v = "2026.11.passing_canonical_v2", y = {
+], x = "2026.11.passing_canonical_v2", S = {
 	"MAHA DBT FORM": [
 		["AADHAAR CARD", ["aadhaar card"]],
 		["PHOTO", ["photo"]],
@@ -1037,7 +1083,7 @@ var h = {
 		["PASSBOOK BANK", ["passbook bank", "bank passbook"]],
 		["BONAFIDE CERTIFICATE", ["bonafide certificate"]]
 	]
-}, b = {
+}, C = {
 	"MAHA DBT FORM": [
 		"AADHAAR CARD",
 		"PHOTO",
@@ -1083,47 +1129,47 @@ var h = {
 		"PASSBOOK BANK",
 		"BONAFIDE CERTIFICATE"
 	]
-}, x = {
+}, w = {
 	name: "BulkStudentRenamerSettingsDB",
 	version: 1,
 	store: "settings",
 	key: "current"
 };
 // src/libraries/duplicate-name-library.js
-function S(e, t, n) {
+function T(e, t, n) {
 	let r = /* @__PURE__ */ new Map();
 	if (n) for (let e of n) e && r.set(e.toLowerCase(), e);
 	if (!r.has(e.toLowerCase()) || e.toLowerCase() === (t || "").toLowerCase()) return e;
-	let i = C(e), a = w(e).replace(/\s+\d+$/, ""), o = 1, s = `${a} ${o}${i}`;
+	let i = E(e), a = D(e).replace(/\s+\d+$/, ""), o = 1, s = `${a} ${o}${i}`;
 	for (; r.has(s.toLowerCase()) && s.toLowerCase() !== (t || "").toLowerCase();) o++, s = `${a} ${o}${i}`;
 	return s;
 }
 // src/libraries/rename-library.js
-function C(e) {
+function E(e) {
 	let t = e.lastIndexOf(".");
 	return t > 0 ? e.slice(t) : "";
 }
-function w(e) {
-	let t = C(e);
+function D(e) {
+	let t = E(e);
 	return t ? e.slice(0, -t.length) : e;
 }
-function T(e, t) {
-	let n = m(e, t);
-	return n.docType ? n.docType : f(e, t) || null;
+function O(e, t) {
+	let n = _(e, t);
+	return n.docType ? n.docType : h(e, t) || null;
 }
-function E(e, t, n = "preserve") {
+function k(e, t, n = "preserve") {
 	return n === "upper" ? t.toUpperCase() : n === "lower" ? t.toLowerCase() : n === "title" ? t.toLowerCase().replace(/(^|\s)\S/g, (e) => e.toUpperCase()) : e === e.toUpperCase() ? t.toUpperCase() : e === e.toLowerCase() ? t.toLowerCase() : t;
 }
-function D(e, t, n, r = "preserve") {
-	let i = T(e, n);
+function A(e, t, n, r = "preserve") {
+	let i = O(e, n);
 	if (!i) {
-		let n = w(e);
+		let n = D(e);
 		return !t || n.toLowerCase().includes(t.toLowerCase()) ? n : `${n} ${t}`;
 	}
-	let a = h[i.toUpperCase()] || i, o = E(w(e), a, r);
+	let a = v[i.toUpperCase()] || i, o = k(D(e), a, r);
 	return !t || o.toLowerCase().includes(t.toLowerCase()) ? o : `${o} ${t}`;
 }
-function O(e) {
+function j(e) {
 	if (!e || !e.trim()) return "File name cannot be empty.";
 	let t = e.trim();
 	if (e.endsWith(".") || e.endsWith(" ") || t.endsWith(".")) return "File name cannot end with a period or space.";
@@ -1161,7 +1207,7 @@ async function ee(e, t, n = null) {
 		let i = 0;
 		for (let a of t) {
 			if (e && e.nativePath) {
-				let o = await c(a.nativePath || a.file && a.file.nativePath || `${e.nativePath}/${a.old}`, a.next);
+				let o = await l(a.nativePath || a.file && a.file.nativePath || `${e.nativePath}/${a.old}`, a.next);
 				if (!o.success) throw Error(o.error || `Failed to rename ${a.old}`);
 				r.push(a), i++, n && n(Math.round(i / t.length * 100), `Renamed ${i} of ${t.length} files...`);
 				continue;
@@ -1170,24 +1216,24 @@ async function ee(e, t, n = null) {
 			if (!o) {
 				let t = a.next, n = await e.getFileHandle(t, { create: !1 }).catch(() => null);
 				if (n) {
-					let r = C(t), i = w(t).replace(/\s+\d+$/, ""), o = 1;
+					let r = E(t), i = D(t).replace(/\s+\d+$/, ""), o = 1;
 					for (t = `${i} ${o}${r}`, n = await e.getFileHandle(t, { create: !1 }).catch(() => null); n;) o++, t = `${i} ${o}${r}`, n = await e.getFileHandle(t, { create: !1 }).catch(() => null);
 					a.next = t;
 				}
 			}
 			let s = a.handle;
 			s ||= await e.getFileHandle(a.old, { create: !1 }).catch(() => null);
-			let l = !1;
+			let c = !1;
 			if (s && typeof s.move == "function") try {
 				if (o) {
 					let e = `__tmp_${Date.now()}_${a.next}`;
 					await s.move(e), await s.move(a.next);
 				} else await s.move(a.next);
-				l = !0, r.push(a);
+				c = !0, r.push(a);
 			} catch (e) {
-				console.warn("sourceHandle.move() not supported on this handle, falling back to stream copy:", e), l = !1;
+				console.warn("sourceHandle.move() not supported on this handle, falling back to stream copy:", e), c = !1;
 			}
-			if (!l) {
+			if (!c) {
 				let t = await a.file.arrayBuffer(), n;
 				if (o) {
 					let r = `__tmp_${Date.now()}_${a.next}`, i = await (await e.getFileHandle(r, { create: !0 })).createWritable();
@@ -1212,7 +1258,7 @@ async function te(e, t, n = null) {
 	let r = [...t].reverse(), i = 0;
 	for (let t of r) {
 		if (e && e.nativePath) {
-			await c(`${e.nativePath}/${t.next}`, t.old), i++, n && n(Math.round(i / r.length * 100), `Undo: ${i}/${r.length}`);
+			await l(`${e.nativePath}/${t.next}`, t.old), i++, n && n(Math.round(i / r.length * 100), `Undo: ${i}/${r.length}`);
 			continue;
 		}
 		let a = t.old.toLowerCase() === t.next.toLowerCase() && t.old !== t.next, o = await e.getFileHandle(t.next, { create: !1 }).catch(() => null);
@@ -1228,7 +1274,7 @@ async function te(e, t, n = null) {
 		i++, n && n(Math.round(i / r.length * 100), `Undo: ${i}/${r.length}`);
 	}
 }
-var k = new class {
+var M = new class {
 	constructor(e = 10) {
 		this.history = [], this.maxHistory = e;
 	}
@@ -1258,7 +1304,7 @@ function ne(e, t) {
 	let n = new Blob(["﻿" + t], { type: "text/csv;charset=utf-8;" }), r = URL.createObjectURL(n), i = document.createElement("a");
 	i.setAttribute("href", r), i.setAttribute("download", e), i.style.display = "none", document.body.appendChild(i), i.click(), document.body.removeChild(i), URL.revokeObjectURL(r);
 }
-function A(e) {
+function N(e) {
 	if (e == null) return "\"\"";
 	let t = String(e);
 	return t.includes("\"") || t.includes(",") || t.includes("\n") || t.includes("\r") ? `"${t.replace(/"/g, "\"\"")}"` : `"${t}"`;
@@ -1275,7 +1321,7 @@ function re(e, t, n = "Checklist") {
 		"Completion %",
 		"Readiness Status",
 		"Missing Documents"
-	].map(A).join(",")];
+	].map(N).join(",")];
 	return e.forEach((e, n) => {
 		let i = {};
 		(e.summary.evaluations || []).forEach((e) => {
@@ -1294,11 +1340,11 @@ function re(e, t, n = "Checklist") {
 			e.summary.isReady ? "READY FOR SUBMISSION" : "ACTION NEEDED",
 			(e.summary.missingList || []).join("; ")
 		];
-		r.push(o.map(A).join(","));
+		r.push(o.map(N).join(","));
 	}), r.join("\r\n");
 }
 // src/libraries/checklist-library.js
-function j(e) {
+function P(e) {
 	return Object.fromEntries(Object.entries(e).map(([e, t]) => [e, t.map((e) => Array.isArray(e) ? {
 		name: e[0],
 		keywords: e[1],
@@ -1306,14 +1352,14 @@ function j(e) {
 	} : e)]));
 }
 // src/services/storage-service.js
-var M = "v3_exact_single", N = u(), P = (e, t) => {
+var F = "v3_exact_single", I = p(), L = (e, t) => {
 	try {
 		let n = localStorage.getItem(e);
 		return n ? JSON.parse(n) : t;
 	} catch {
 		return t;
 	}
-}, F = (e, t) => {
+}, R = (e, t) => {
 	try {
 		localStorage.setItem(e, JSON.stringify(t));
 	} catch {}
@@ -1327,7 +1373,7 @@ var M = "v3_exact_single", N = u(), P = (e, t) => {
 	return Object.entries(t).forEach(([e, r]) => {
 		e !== "12TH MARKSHEET AND PASSING" && (n[e] = r, e === "12TH PASSING CERTIFICATE" && t["12TH MARKSHEET AND PASSING"] && (n["12TH MARKSHEET AND PASSING"] = t["12TH MARKSHEET AND PASSING"]));
 	}), n;
-}, I = (e) => {
+}, z = (e) => {
 	let t = e.name === "12TH LEAVING CERTIFICATE" ? "12TH LC" : e.name;
 	return {
 		...e,
@@ -1335,32 +1381,32 @@ var M = "v3_exact_single", N = u(), P = (e, t) => {
 		keywords: [...new Set(e.keywords || [])],
 		short: e.short || t.slice(0, 18)
 	};
-}, L = (e) => {
+}, B = (e) => {
 	let t = e.filter((e) => e.name === "12TH MARKSHEET AND PASSING");
 	if (!t.length) return e;
 	let n = e.filter((e) => e.name !== "12TH MARKSHEET AND PASSING"), r = n.findIndex((e) => e.name === "12TH PASSING CERTIFICATE");
 	return n.splice(r < 0 ? n.length : r + 1, 0, ...t), n;
 }, ae = (e) => {
-	let t = j(y), n = e || {}, r = {};
+	let t = P(S), n = e || {}, r = {};
 	return Object.keys(t).forEach((e) => {
-		let i = Array.isArray(n[e]) ? n[e].map(I) : [], a = new Map(i.map((e) => [e.name.toUpperCase(), e]));
+		let i = Array.isArray(n[e]) ? n[e].map(z) : [], a = new Map(i.map((e) => [e.name.toUpperCase(), e]));
 		t[e].forEach((e) => {
-			let t = I(e);
+			let t = z(e);
 			a.has(t.name.toUpperCase()) || i.push(t);
-		}), r[e] = L(i);
+		}), r[e] = B(i);
 	}), Object.entries(n).forEach(([e, t]) => {
-		r[e] || (r[e] = L(t.map(I)));
+		r[e] || (r[e] = B(t.map(z)));
 	}), r;
 };
-function R() {
+function oe() {
 	let e = localStorage.getItem("dictVersion"), t, n;
-	e === M ? (t = ie(P("renameSettings", N)), n = P("renameProfiles", { Default: N })) : (t = N, n = { Default: N }, F("renameSettings", t), F("renameProfiles", n), localStorage.setItem("dictVersion", M));
+	e === F ? (t = ie(L("renameSettings", I)), n = L("renameProfiles", { Default: I })) : (t = I, n = { Default: I }, R("renameSettings", t), R("renameProfiles", n), localStorage.setItem("dictVersion", F));
 	let r = localStorage.getItem("checklistVersion"), i;
-	r === "2026.11.passing_canonical_v2" ? i = ae(P("checklists", null)) : (i = j(y), F("checklists", i), localStorage.setItem("checklistVersion", v));
+	r === "2026.11.passing_canonical_v2" ? i = ae(L("checklists", null)) : (i = P(S), R("checklists", i), localStorage.setItem("checklistVersion", x));
 	let a = {
-		...g,
-		...P("spellingCorrections", {}) || {}
-	}, o = P("linkedRules", _);
+		...y,
+		...L("spellingCorrections", {}) || {}
+	}, o = L("linkedRules", b);
 	return {
 		groups: t,
 		checklists: i,
@@ -1371,22 +1417,22 @@ function R() {
 		active: Object.keys(n)[0] || "Default"
 	};
 }
-function oe() {
+function se() {
 	return new Promise((e, t) => {
 		if (!("indexedDB" in window)) return t(/* @__PURE__ */ Error("IndexedDB unavailable"));
-		let n = indexedDB.open(x.name, x.version);
+		let n = indexedDB.open(w.name, w.version);
 		n.onupgradeneeded = () => {
-			n.result.objectStoreNames.contains(x.store) || n.result.createObjectStore(x.store);
+			n.result.objectStoreNames.contains(w.store) || n.result.createObjectStore(w.store);
 		}, n.onsuccess = () => e(n.result), n.onerror = () => t(n.error || /* @__PURE__ */ Error("IndexedDB open failed"));
 	});
 }
-function se(e) {
-	return oe().then((t) => new Promise((n, r) => {
-		let i = t.transaction(x.store, "readwrite");
-		i.objectStore(x.store).put(e, x.key), i.oncomplete = () => n(!0), i.onerror = () => r(i.error);
+function ce(e) {
+	return se().then((t) => new Promise((n, r) => {
+		let i = t.transaction(w.store, "readwrite");
+		i.objectStore(w.store).put(e, w.key), i.oncomplete = () => n(!0), i.onerror = () => r(i.error);
 	}));
 }
-function z(e) {
+function V(e) {
 	let t = {
 		groups: e.groups,
 		checklists: e.checklists,
@@ -1396,13 +1442,20 @@ function z(e) {
 		style: e.style,
 		savedAt: (/* @__PURE__ */ new Date()).toISOString()
 	};
-	F("renameSettings", t.groups), F("checklists", t.checklists), F("spellingCorrections", t.spelling), F("renameProfiles", t.profiles), F("linkedRules", t.linkedRules), localStorage.setItem("nameStyle", t.style), se(t).catch(() => {});
+	R("renameSettings", t.groups), R("checklists", t.checklists), R("spellingCorrections", t.spelling), R("renameProfiles", t.profiles), R("linkedRules", t.linkedRules), localStorage.setItem("nameStyle", t.style), ce(t).catch(() => {});
 }
 // src/ui/renamer-ui.js
-var ce = class {
+function H(e) {
+	if (!e) return !0;
+	let t = e.toLowerCase().trim();
+	return !!(t === "thumbs.db" || t === "ehthumbs.db" || t === "desktop.ini" || t === ".ds_store" || t.startsWith(".") || t.startsWith("~$") || t.endsWith(".tmp"));
+}
+var le = class {
 	constructor() {
 		this.state = {
 			folder: null,
+			subfolders: [],
+			currentSubfolderIndex: 0,
 			files: [],
 			currentIndex: 0,
 			studentName: "",
@@ -1410,7 +1463,9 @@ var ce = class {
 			settings: null,
 			history: [],
 			zoom: 100,
-			rotation: 0
+			rotation: 0,
+			watcherActive: !0,
+			lastMtimeCheck: 0
 		}, this.shortcuts21 = [
 			{
 				code: "ADR",
@@ -1520,51 +1575,40 @@ var ce = class {
 		];
 	}
 	init() {
-		this.state.settings = R(), this.state.style = this.state.settings.style || "preserve", this._bindDOM(), this._bindKeyboardShortcuts(), console.info("[DocMitra Renamer] Renamer UI manager initialized.");
+		this.state.settings = oe(), this.state.style = this.state.settings.style || "preserve", this._bindDOM(), this._bindKeyboardShortcuts(), this._startBackgroundWatcher(), console.info("[DocMitra Renamer] Renamer UI manager initialized.");
 	}
 	_bindDOM() {
 		let e = document.getElementById("btnSelectFolder");
 		e && e.addEventListener("click", () => this.handleSelectFolder());
 		let t = document.getElementById("btnAddFiles");
 		t && t.addEventListener("click", () => this.handleAddFiles());
-		let n = document.getElementById("btnRescanFolder");
-		n && n.addEventListener("click", () => this.handleRescan());
-		let i = document.getElementById("btnCopyFolderPath");
-		i && i.addEventListener("click", () => {
-			this.state.folder?.path && (navigator.clipboard.writeText(this.state.folder.path), r.show("Copied to Clipboard", this.state.folder.path, "info"));
-		});
-		let a = document.getElementById("btnRenameAll");
-		a && a.addEventListener("click", () => this.handleRenameAll());
-		let o = document.getElementById("btnUndoRename");
-		o && o.addEventListener("click", () => this.handleUndo());
-		let s = document.getElementById("btnKeepOriginal");
-		s && s.addEventListener("click", () => this.handleKeepOriginal());
-		let c = document.getElementById("btnSaveBatch");
-		c && c.addEventListener("click", () => this.handleSaveBatch());
-		let l = document.getElementById("btnExportAudit");
-		l && l.addEventListener("click", () => this.handleExportAudit());
-		let u = document.getElementById("btnClearQueue");
-		u && u.addEventListener("click", () => this.handleClearQueue()), this._bindPreviewControls();
+		let n = document.getElementById("btnPrevFolder");
+		n && n.addEventListener("click", () => this.handlePrevFolder());
+		let r = document.getElementById("btnNextFolder");
+		r && r.addEventListener("click", () => this.handleNextFolder());
+		let i = document.getElementById("activeFolderPath");
+		i && i.addEventListener("click", () => this.handleOpenInExplorer());
+		let a = document.getElementById("btnOpenInExplorer");
+		a && a.addEventListener("click", () => this.handleOpenInExplorer());
+		let o = document.getElementById("btnRenameAll");
+		o && o.addEventListener("click", () => this.handleRenameAll());
+		let s = document.getElementById("btnUndoRename");
+		s && s.addEventListener("click", () => this.handleUndo());
+		let c = document.getElementById("btnKeepOriginal");
+		c && c.addEventListener("click", () => this.handleKeepOriginal());
+		let l = document.getElementById("btnSaveBatch");
+		l && l.addEventListener("click", () => this.handleSaveBatch());
+		let u = document.getElementById("btnExportAudit");
+		u && u.addEventListener("click", () => this.handleExportAudit());
+		let d = document.getElementById("btnClearQueue");
+		d && d.addEventListener("click", () => this.handleClearQueue()), this._bindPreviewControls();
 	}
 	_bindKeyboardShortcuts() {
 		window.addEventListener("keydown", (e) => {
 			let t = document.getElementById("view-bulk-renamer");
 			if (!t || t.classList.contains("hidden")) return;
 			let n = document.getElementById("settings-modal-overlay");
-			if (!n || n.classList.contains("hidden")) {
-				if (e.key === "F2") e.preventDefault(), this.handleSelectFolder();
-				else if (e.key === "F8") e.preventDefault(), this.handleRenameAll();
-				else if (e.key === "F9") e.preventDefault(), this.handleExportAudit();
-				else if ((e.ctrlKey || e.metaKey) && (e.key === "z" || e.key === "Z") && !e.shiftKey && e.target.tagName !== "INPUT") e.preventDefault(), this.handleUndo();
-				else if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) e.preventDefault(), this.handleSaveBatch();
-				else if (e.key === "Tab") {
-					let t = document.getElementById("inputRenameTarget");
-					if (e.target === t) {
-						e.preventDefault(), this.handleConfirmCurrentName(t.value);
-						return;
-					}
-				}
-			}
+			(!n || n.classList.contains("hidden")) && (e.key === "F2" ? (e.preventDefault(), this.handleSelectFolder()) : e.key === "F8" ? (e.preventDefault(), this.handleRenameAll()) : e.key === "F9" ? (e.preventDefault(), this.handleExportAudit()) : (e.ctrlKey || e.metaKey) && e.key === "ArrowLeft" ? (e.preventDefault(), this.handlePrevFolder()) : (e.ctrlKey || e.metaKey) && e.key === "ArrowRight" ? (e.preventDefault(), this.handleNextFolder()) : (e.ctrlKey || e.metaKey) && (e.key === "z" || e.key === "Z") && !e.shiftKey && e.target.tagName !== "INPUT" ? (e.preventDefault(), this.handleUndo()) : (e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S") && (e.preventDefault(), this.handleSaveBatch()));
 		});
 	}
 	_bindPreviewControls() {
@@ -1585,6 +1629,38 @@ var ce = class {
 		let e = document.getElementById("previewContainerStage");
 		e && (e.style.transform = `scale(${this.state.zoom / 100}) rotate(${this.state.rotation}deg)`, e.style.transformOrigin = "center center", e.style.transition = "transform 0.2s ease-out");
 	}
+	_startBackgroundWatcher() {
+		setInterval(async () => {
+			if (this.state.watcherActive && this.state.folder?.path) try {
+				let e = await c(this.state.folder.path);
+				if (e.success && Array.isArray(e.files)) {
+					let t = e.files.filter((e) => !H(e.name)), n = new Set(this.state.files.map((e) => e.name)), r = new Set(t.map((e) => e.name)), i = !1;
+					if (n.size !== r.size) i = !0;
+					else for (let e of r) if (!n.has(e)) {
+						i = !0;
+						break;
+					}
+					i && this._syncDiskFiles(t);
+				}
+			} catch {}
+		}, 4e3);
+	}
+	_syncDiskFiles(e) {
+		let t = /* @__PURE__ */ new Map();
+		this.state.files.forEach((e) => {
+			t.set(e.name, {
+				targetName: e.targetName,
+				isRenamed: e.isRenamed,
+				isKept: e.isKept,
+				docType: e.docType,
+				isMatched: e.isMatched
+			});
+		}), this.loadFolderData({
+			name: this.state.folder.name,
+			path: this.state.folder.path,
+			files: e
+		}, t);
+	}
 	async handleSelectFolder() {
 		r.show("Opening Folder Picker", "Navigating Windows Explorer...", "info");
 		try {
@@ -1593,54 +1669,135 @@ var ce = class {
 				e.cancelled || r.show("Folder Select Error", e.error || "Failed to select folder", "error");
 				return;
 			}
-			this.loadFolderData(e), r.show("Folder Loaded", `${e.files ? e.files.length : 0} files found`, "success");
+			if (e.subfolders && e.subfolders.length > 0) {
+				this.state.subfolders = e.subfolders, this.state.currentSubfolderIndex = 0, await this.loadSubfolder(0), r.show("Batch Folder Loaded", `${e.subfolders.length} student folders detected`, "success");
+				return;
+			}
+			let t = (e.files || []).filter((e) => !H(e.name));
+			if (t.length === 0) {
+				r.show("Selected Folder is Empty", "Remaining on previous folder.", "warning");
+				return;
+			}
+			e.files = t, this.state.subfolders = [], this.loadFolderData(e), r.show("Folder Loaded", `${t.length} files found`, "success");
 		} catch (e) {
 			r.show("Folder Error", e.message, "error");
 		}
 	}
-	loadFolderData(e) {
-		let t = e.path || "", n = e.name || (t ? t.split(/[\\/]/).pop() : "Selected Folder"), r = n.replace(/_/g, " ").trim();
+	async loadSubfolder(e) {
+		if (e < 0 || e >= this.state.subfolders.length) return;
+		this.state.currentSubfolderIndex = e;
+		let t = this.state.subfolders[e], n = typeof t == "string" ? t : t.path || "";
+		try {
+			let e = await c(n);
+			e.success && (e.files = (e.files || []).filter((e) => !H(e.name)), this.loadFolderData(e));
+		} catch (e) {
+			r.show("Subfolder Error", e.message, "error");
+		}
+	}
+	handlePrevFolder() {
+		this.state.subfolders.length === 0 ? r.show("Single Folder Mode", "No parent batch subfolders active.", "info") : this.state.currentSubfolderIndex > 0 ? this.loadSubfolder(this.state.currentSubfolderIndex - 1) : r.show("First Folder", "Already on the first student folder.", "info");
+	}
+	handleNextFolder() {
+		this.state.subfolders.length === 0 ? r.show("Single Folder Mode", "No parent batch subfolders active.", "info") : this.state.currentSubfolderIndex < this.state.subfolders.length - 1 ? this.loadSubfolder(this.state.currentSubfolderIndex + 1) : r.show("Last Folder", "Already on the last student folder.", "info");
+	}
+	async handleAddFiles() {
+		r.show("Opening File Picker", "Select files to append in-place...", "info");
+		try {
+			let e = await u("All Supported Files (*.pdf;*.jpg;*.jpeg;*.png;*.docx)|*.pdf;*.jpg;*.jpeg;*.png;*.docx|All Files (*.*)|*.*", "Select Files to Add");
+			if (!e.success) return;
+			let t = (e.files || []).filter((e) => !H(e.name));
+			if (t.length === 0) {
+				r.show("No Files Selected", "0 valid documents selected.", "info");
+				return;
+			}
+			this.state.folder?.path;
+			let n = new Set(this.state.files.map((e) => e.targetName)), i = t.map((e, t) => {
+				let r = e.ext || E(e.name), i = D(e.name), a = _(i, this.state.settings?.groups).docType || h(i, this.state.settings?.groups) || null, o = i, s = !1;
+				a && (o = A(v[a.toUpperCase()] || a, this.state.studentName, this.state.settings?.groups, this.state.style), s = !0);
+				let c = T(o.endsWith(r) ? o : o + r, e.name, n);
+				return n.add(c), {
+					id: `file_append_${Date.now()}_${t}`,
+					name: e.name,
+					path: e.path,
+					size: e.size || 0,
+					ext: r,
+					url: e.url || (e.path ? `http://localhost:3000/api/serve-file?path=${encodeURIComponent(e.path)}` : null),
+					docType: a,
+					isMatched: s,
+					suggestedName: c,
+					targetName: c,
+					status: s ? "matched" : "pending",
+					isRenamed: !1,
+					isKept: !1
+				};
+			});
+			this.state.files.push(...i), this.updateTelemetry(), this.renderQueue(), r.show("Files Appended", `${i.length} files added to queue in-place`, "success");
+		} catch (e) {
+			r.show("Add Files Error", e.message, "error");
+		}
+	}
+	handleOpenInExplorer() {
+		this.state.folder?.path ? (d(this.state.folder.path), r.show("Opening Windows Explorer", this.state.folder.path, "info")) : r.show("No Active Folder", "Please select a folder first.", "warning");
+	}
+	loadFolderData(e, t = null) {
+		let n = e.path || "", r = e.name || (n ? n.split(/[\\/]/).pop() : "Selected Folder"), i = r.replace(/_/g, " ").trim();
 		this.state.folder = {
-			name: n,
-			path: t,
-			nativePath: t
-		}, this.state.studentName = r;
-		let i = e.files || [], a = /* @__PURE__ */ new Set();
-		this.state.files = i.map((e, n) => {
-			let r = e.ext || C(e.name), i = w(e.name), o = m(i, this.state.settings?.groups).docType || f(i, this.state.settings?.groups) || null, s = i, c = !1;
-			o && (s = D(h[o.toUpperCase()] || o, this.state.studentName, this.state.settings?.groups, this.state.style), c = !0);
-			let l = S(s.endsWith(r) ? s : s + r, e.name, a);
-			return a.add(l), {
-				id: `file_${n}_${Date.now()}`,
+			name: r,
+			path: n,
+			nativePath: n
+		}, this.state.studentName = i;
+		let a = (e.files || []).filter((e) => !H(e.name)), o = /* @__PURE__ */ new Set();
+		this.state.files = a.map((e, r) => {
+			let i = e.ext || E(e.name), a = D(e.name), s = t ? t.get(e.name) : null;
+			if (s) return o.add(s.targetName), {
+				id: `file_${r}_${Date.now()}`,
 				name: e.name,
-				path: e.path || `${t}/${e.name}`,
+				path: e.path || `${n}/${e.name}`,
 				size: e.size || 0,
-				ext: r,
+				ext: i,
 				url: e.url || (e.path ? `http://localhost:3000/api/serve-file?path=${encodeURIComponent(e.path)}` : null),
-				docType: o,
-				isMatched: c,
-				suggestedName: l,
-				targetName: l,
-				status: c ? "matched" : "pending",
+				docType: s.docType,
+				isMatched: s.isMatched,
+				suggestedName: s.targetName,
+				targetName: s.targetName,
+				status: s.isRenamed ? "renamed" : s.isKept ? "kept" : s.isMatched ? "matched" : "pending",
+				isRenamed: s.isRenamed,
+				isKept: s.isKept
+			};
+			let c = _(a, this.state.settings?.groups).docType || h(a, this.state.settings?.groups) || null, l = a, u = !1;
+			c && (l = A(v[c.toUpperCase()] || c, this.state.studentName, this.state.settings?.groups, this.state.style), u = !0);
+			let d = T(l.endsWith(i) ? l : l + i, e.name, o);
+			return o.add(d), {
+				id: `file_${r}_${Date.now()}`,
+				name: e.name,
+				path: e.path || `${n}/${e.name}`,
+				size: e.size || 0,
+				ext: i,
+				url: e.url || (e.path ? `http://localhost:3000/api/serve-file?path=${encodeURIComponent(e.path)}` : null),
+				docType: c,
+				isMatched: u,
+				suggestedName: d,
+				targetName: d,
+				status: u ? "matched" : "pending",
 				isRenamed: !1,
 				isKept: !1
 			};
 		}), this.state.currentIndex = 0, this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview();
 	}
 	updateTelemetry() {
-		let e = this.state.files.length, t = this.state.files.filter((e) => e.isMatched || e.status === "renamed" || e.status === "kept").length, n = e - t, r = (this.state.files.reduce((e, t) => e + (t.size || 0), 0) / 1048576).toFixed(1), i = e > 0 ? Math.round(t / e * 100) : 0, a = document.getElementById("activeFolderPath");
-		a && (a.textContent = this.state.folder ? this.state.folder.path : "No folder selected");
+		let e = this.state.files.length, t = this.state.files.filter((e) => e.isMatched || e.isRenamed || e.isKept).length, n = e - t, r = e > 0 ? Math.round(t / e * 100) : 0, i = document.getElementById("activeFolderPath");
+		i && (i.textContent = this.state.folder ? this.state.folder.path : "No folder selected");
+		let a = document.getElementById("folderCounterPill");
+		a && (a.textContent = this.state.subfolders.length > 0 ? `Folder ${this.state.currentSubfolderIndex + 1} of ${this.state.subfolders.length}` : "Folder 1 of 1");
 		let o = document.getElementById("telemetryTotalFiles");
 		o && (o.textContent = String(e));
-		let s = document.getElementById("telemetryMatchedFiles");
-		s && (s.textContent = `${t} (${i}%)`);
-		let c = document.getElementById("telemetryPendingFiles");
+		let s = document.getElementById("telemetryReadyFiles");
+		s && (s.textContent = `${t} (${r}%)`);
+		let c = document.getElementById("telemetryUnmatchedFiles");
 		c && (c.textContent = String(n));
-		let l = document.getElementById("telemetryTotalSize");
-		l && (l.textContent = `${r} MB`);
-		let u = document.getElementById("btnRenameAll");
-		if (u) {
-			let e = this.state.files.filter((e) => !e.isRenamed && !e.isKept && e.targetName !== e.name), t = u.querySelector(".font-bold");
+		let l = document.getElementById("btnRenameAll");
+		if (l) {
+			let e = this.state.files.filter((e) => !e.isRenamed && !e.isKept && e.targetName !== e.name), t = l.querySelector(".font-bold");
 			t && (t.textContent = `Rename All (${e.length} Files)`);
 		}
 	}
@@ -1657,88 +1814,100 @@ var ce = class {
 			let i = document.createElement("div");
 			i.className = "font-headline-sm font-bold text-on-surface", i.textContent = "No Intake Folder Selected", n.appendChild(i);
 			let a = document.createElement("div");
-			a.className = "text-body-sm text-secondary", a.textContent = "Click \"Select Folder\" (F2) above to load student files and run automated canonical matching.", n.appendChild(a), t.appendChild(n), e.appendChild(t);
+			a.className = "text-body-sm text-secondary", a.textContent = "Click \"Select Folder\" (F2) or \"Add Files\" to start renaming student admission documents.", n.appendChild(a), t.appendChild(n), e.appendChild(t);
 			return;
 		}
 		let n = this.state.files[this.state.currentIndex];
 		if (n) {
 			let e = document.createElement("div");
 			e.className = "flex flex-col gap-space-xs shrink-0";
-			let r = document.createElement("div");
-			r.className = "flex items-center justify-between px-1 text-label-sm";
 			let i = document.createElement("div");
-			i.className = "flex items-center gap-2";
-			let a = document.createElement("span");
-			a.className = "px-2.5 py-1 rounded bg-primary text-on-primary font-bold text-[11px] flex items-center gap-1.5 shadow-sm";
+			i.className = "flex items-center justify-between px-1 text-label-sm";
+			let a = document.createElement("div");
+			a.className = "flex items-center gap-2";
 			let o = document.createElement("span");
-			o.className = "material-symbols-outlined text-[14px]", o.textContent = "edit_document", a.appendChild(o);
-			let s = document.createTextNode(`Editing ${this.state.currentIndex + 1} of ${this.state.files.length}`);
-			a.appendChild(s), i.appendChild(a), r.appendChild(i);
-			let c = document.createElement("span");
-			c.className = n.isMatched ? "px-2 py-0.5 rounded font-mono-code text-[10px] bg-tertiary-fixed text-on-tertiary-fixed font-bold" : "px-2 py-0.5 rounded font-mono-code text-[10px] bg-error-container text-on-error-container font-bold", c.textContent = n.isMatched ? "Matched" : "Unmatched", r.appendChild(c), e.appendChild(r);
-			let l = document.createElement("article");
-			l.className = "bg-surface-container-lowest rounded-xl shadow-md p-space-md flex flex-col gap-space-md border-2 border-primary ring-2 ring-primary/20 relative";
-			let u = document.createElement("div");
-			u.className = "flex items-center justify-between text-[11px] font-mono-code text-secondary";
-			let d = document.createElement("span");
-			d.textContent = "Original: ";
-			let f = document.createElement("strong");
-			f.className = "text-on-surface truncate max-w-[260px] inline-block", f.textContent = n.name, d.appendChild(f), u.appendChild(d);
+			o.className = "px-2.5 py-1 rounded bg-primary text-on-primary font-bold text-[11px] flex items-center gap-1.5 shadow-sm";
+			let s = document.createElement("span");
+			s.className = "material-symbols-outlined text-[14px]", s.textContent = "edit_document", o.appendChild(s);
+			let c = document.createTextNode(`Editing ${this.state.currentIndex + 1} of ${this.state.files.length}`);
+			o.appendChild(c), a.appendChild(o), i.appendChild(a);
+			let l = n.isMatched || n.isRenamed || n.isKept, u = document.createElement("span");
+			u.className = l ? "px-2 py-0.5 rounded font-mono-code text-[10px] bg-tertiary-fixed text-on-tertiary-fixed font-bold" : "px-2 py-0.5 rounded font-mono-code text-[10px] bg-error-container text-on-error-container font-bold", u.textContent = l ? "Matched" : "Unmatched", i.appendChild(u), e.appendChild(i);
+			let d = document.createElement("article");
+			d.className = "bg-surface-container-lowest rounded-xl shadow-md p-space-md flex flex-col gap-space-md border-2 border-primary ring-2 ring-primary/20 relative";
+			let f = document.createElement("div");
+			f.className = "flex items-center justify-between text-[11px] font-mono-code text-secondary";
 			let p = document.createElement("span");
-			p.textContent = `${(n.size / 1024).toFixed(0)} KB`, u.appendChild(p), l.appendChild(u);
-			let m = document.createElement("div");
-			m.className = "flex flex-col gap-1.5";
-			let h = document.createElement("div");
-			h.className = "flex items-center justify-between font-label-sm font-semibold";
-			let g = document.createElement("label");
-			g.className = "text-on-surface font-bold text-[13px]", g.textContent = "Rename To:", h.appendChild(g);
-			let _ = document.createElement("span");
-			_.className = "text-secondary text-[11px] flex items-center gap-1", _.appendChild(document.createTextNode("Press "));
-			let v = document.createElement("kbd");
-			v.className = "px-1.5 py-0.5 rounded bg-surface-container font-mono-code text-[10px] text-on-surface font-bold border border-outline-variant/40", v.textContent = "Tab", _.appendChild(v), _.appendChild(document.createTextNode(" to save")), h.appendChild(_), m.appendChild(h);
-			let y = document.createElement("div");
-			y.className = "relative flex items-center";
-			let b = document.createElement("input");
-			b.id = "inputRenameTarget", b.type = "text", b.className = "w-full h-11 px-3 rounded-lg bg-surface-container-lowest font-mono-code text-[14px] text-on-surface font-semibold border-2 border-primary focus:ring-2 focus:ring-primary outline-none shadow-sm transition-all", b.value = n.targetName || n.suggestedName || n.name, b.addEventListener("input", (e) => {
-				let t = e.target.value;
-				n.targetName = t, this.updateTelemetry();
-			}), b.addEventListener("keydown", (e) => {
-				e.key === "Enter" && (e.preventDefault(), this.handleConfirmCurrentName(b.value));
-			}), y.appendChild(b), m.appendChild(y), l.appendChild(m);
-			let x = document.createElement("div");
-			x.className = "flex flex-col gap-1.5 pt-2 border-t border-surface-container";
+			p.textContent = "Original: ";
+			let m = document.createElement("strong");
+			m.className = "text-on-surface truncate max-w-[260px] inline-block cursor-pointer hover:underline hover:text-primary transition-colors", m.title = "Click to reset input to original name", m.textContent = n.name, m.addEventListener("click", () => {
+				let e = D(n.name);
+				n.targetName = n.name, this.updateTelemetry(), this.renderQueue(), r.show("Input Reset", e, "info");
+			}), p.appendChild(m), f.appendChild(p);
+			let h = document.createElement("span");
+			h.textContent = `${(n.size / 1024).toFixed(0)} KB`, f.appendChild(h), d.appendChild(f);
+			let g = document.createElement("div");
+			g.className = "flex flex-col gap-1.5";
+			let _ = document.createElement("div");
+			_.className = "flex items-center justify-between font-label-sm font-semibold";
+			let v = document.createElement("label");
+			v.className = "text-on-surface font-bold text-[13px]", v.textContent = "Rename To:", _.appendChild(v);
+			let y = document.createElement("span");
+			y.className = "text-secondary text-[11px] flex items-center gap-1", y.appendChild(document.createTextNode("Press "));
+			let b = document.createElement("kbd");
+			b.className = "px-1.5 py-0.5 rounded bg-surface-container font-mono-code text-[10px] text-on-surface font-bold border border-outline-variant/40", b.textContent = "Tab", y.appendChild(b), y.appendChild(document.createTextNode(" or "));
+			let x = document.createElement("kbd");
+			x.className = "px-1.5 py-0.5 rounded bg-surface-container font-mono-code text-[10px] text-on-surface font-bold border border-outline-variant/40", x.textContent = "Enter", y.appendChild(x), y.appendChild(document.createTextNode(" to save")), _.appendChild(y), g.appendChild(_);
 			let S = document.createElement("div");
-			S.className = "flex items-center justify-between";
-			let C = document.createElement("span");
-			C.className = "font-label-sm text-secondary font-semibold flex items-center gap-1.5";
+			S.className = "relative flex items-center w-full shadow-sm";
+			let C = document.createElement("input");
+			C.id = "inputRenameTarget", C.type = "text", C.className = "flex-1 h-11 px-3 rounded-l-lg bg-surface-container-lowest font-mono-code text-[14px] text-on-surface font-semibold border-2 border-r-0 border-primary focus:ring-0 outline-none transition-all", C.value = D(n.targetName || n.suggestedName || n.name), C.addEventListener("keydown", (e) => {
+				e.key === "Tab" && !e.shiftKey ? (e.preventDefault(), this.handleConfirmCurrentName(C.value.trim() + n.ext)) : e.key === "Tab" && e.shiftKey ? (e.preventDefault(), this.handleNavigateBackward()) : e.key === "Enter" ? (e.preventDefault(), this.handleConfirmCurrentName(C.value.trim() + n.ext)) : /[\\/:*?"<>|]/.test(e.key) && (e.preventDefault(), r.show("Character Not Allowed", `Windows filenames cannot contain ${e.key}`, "warning"));
+			}), C.addEventListener("input", (e) => {
+				let t = e.target.value;
+				n.targetName = t.trim() + n.ext, this.updateTelemetry();
+			}), S.appendChild(C);
 			let w = document.createElement("span");
-			w.className = "material-symbols-outlined text-[15px] text-primary", w.textContent = "bolt", C.appendChild(w), C.appendChild(document.createTextNode("Quick 21-Shortcut Presets:")), S.appendChild(C);
-			let T = document.createElement("span");
-			T.className = "text-label-sm text-secondary font-mono-code text-[10px]", T.textContent = "Click to rename", S.appendChild(T), x.appendChild(S);
+			w.className = "h-11 px-3 rounded-r-lg bg-surface-container text-secondary font-mono-code text-[13px] font-bold border-2 border-l-0 border-primary flex items-center select-none shadow-xs", w.textContent = n.ext, S.appendChild(w), g.appendChild(S), d.appendChild(g);
+			let T = document.createElement("div");
+			T.className = "flex flex-col gap-1.5 pt-2 border-t border-surface-container";
 			let E = document.createElement("div");
-			E.className = "grid grid-cols-3 gap-1.5 max-h-48 overflow-y-auto pr-0.5", this.shortcuts21.forEach((e) => {
+			E.className = "flex items-center justify-between";
+			let O = document.createElement("span");
+			O.className = "font-label-sm text-secondary font-semibold flex items-center gap-1.5";
+			let k = document.createElement("span");
+			k.className = "material-symbols-outlined text-[15px] text-primary", k.textContent = "bolt", O.appendChild(k), O.appendChild(document.createTextNode("Quick 21-Shortcut Presets:")), E.appendChild(O);
+			let A = document.createElement("span");
+			A.className = "text-label-sm text-secondary font-mono-code text-[10px]", A.textContent = "1-Click Instant Rename", E.appendChild(A), T.appendChild(E);
+			let j = document.createElement("div");
+			j.className = "grid grid-cols-3 gap-1.5 max-h-48 overflow-y-auto pr-0.5", this.shortcuts21.forEach((e) => {
 				let t = document.createElement("button");
-				t.type = "button", t.className = "px-2 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[11px] font-semibold border border-outline-variant/40 hover:border-primary/50 transition-all flex items-center gap-1 shadow-xs justify-center cursor-pointer";
+				t.type = "button", t.className = "px-2 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[11px] font-semibold border border-outline-variant/40 hover:border-primary/50 transition-all flex items-center gap-1 shadow-xs justify-center cursor-pointer active:scale-95";
 				let n = document.createElement("span");
 				n.className = "px-1 py-0.2 rounded bg-surface-container-highest text-secondary text-[9px] font-bold", n.textContent = e.code, t.appendChild(n);
 				let r = document.createElement("span");
 				r.className = "truncate", r.textContent = e.label, t.appendChild(r), t.addEventListener("click", () => {
 					this.applyShortcutToCurrent(e);
-				}), E.appendChild(t);
-			}), x.appendChild(E), l.appendChild(x), e.appendChild(l), t.appendChild(e);
+				}), j.appendChild(t);
+			}), T.appendChild(j), d.appendChild(T), e.appendChild(d), t.appendChild(e), requestAnimationFrame(() => {
+				C.focus(), C.select(), e.scrollIntoView({
+					behavior: "smooth",
+					block: "start"
+				});
+			});
 		}
-		let r = this.state.files.filter((e, t) => t > this.state.currentIndex && !e.isRenamed && !e.isKept);
-		if (r.length > 0) {
+		let i = this.state.files.filter((e, t) => t > this.state.currentIndex && !e.isRenamed && !e.isKept);
+		if (i.length > 0) {
 			let e = document.createElement("div");
 			e.className = "flex items-center justify-between px-2 py-1 rounded bg-surface-container border border-outline-variant/40 text-[11px] font-mono-code text-secondary shrink-0";
 			let n = document.createElement("div");
 			n.className = "flex items-center gap-1.5 text-primary font-semibold";
-			let i = document.createElement("span");
-			i.className = "material-symbols-outlined text-[15px]", i.textContent = "north", n.appendChild(i), n.appendChild(document.createTextNode("UPCOMING QUEUE")), e.appendChild(n);
+			let r = document.createElement("span");
+			r.className = "material-symbols-outlined text-[15px]", r.textContent = "north", n.appendChild(r), n.appendChild(document.createTextNode("UPCOMING QUEUE")), e.appendChild(n);
 			let a = document.createElement("span");
-			a.className = "text-[10px] text-secondary font-medium uppercase", a.textContent = `${r.length} files waiting`, e.appendChild(a), t.appendChild(e);
+			a.className = "text-[10px] text-secondary font-medium uppercase", a.textContent = `${i.length} files waiting`, e.appendChild(a), t.appendChild(e);
 			let o = document.createElement("div");
-			o.className = "flex flex-col gap-1.5 shrink-0", r.slice(0, 10).forEach((e) => {
+			o.className = "flex flex-col gap-1.5 shrink-0", i.slice(0, 10).forEach((e) => {
 				let t = this.state.files.indexOf(e), n = document.createElement("article");
 				n.className = "bg-surface-container-lowest rounded-xl shadow-xs px-space-md py-2 flex items-center justify-between gap-space-sm hover:bg-surface-container-low transition-colors border border-outline-variant/30 cursor-pointer", n.addEventListener("click", () => {
 					this.state.currentIndex = t, this.renderQueue(), this.renderCurrentPreview();
@@ -1750,58 +1919,73 @@ var ce = class {
 				let a = document.createElement("div");
 				a.className = "flex flex-col min-w-0";
 				let s = document.createElement("span");
-				s.className = "font-mono-code text-[12px] text-on-surface font-semibold truncate", s.textContent = e.targetName || e.suggestedName || e.name, a.appendChild(s);
+				s.className = "font-mono-code text-[12px] text-on-surface font-semibold truncate", s.textContent = D(e.targetName || e.suggestedName || e.name), a.appendChild(s);
 				let c = document.createElement("span");
 				c.className = "text-[10px] font-mono-code text-secondary truncate", c.textContent = e.name, a.appendChild(c), r.appendChild(a), n.appendChild(r);
 				let l = document.createElement("span");
 				l.className = e.isMatched ? "px-1.5 py-0.5 rounded font-mono-code text-[9px] bg-tertiary-fixed text-on-tertiary-fixed font-bold uppercase shrink-0" : "px-1.5 py-0.5 rounded font-mono-code text-[9px] bg-surface-variant text-on-surface-variant font-bold uppercase shrink-0", l.textContent = e.docType || "Select", n.appendChild(l), o.appendChild(n);
 			}), t.appendChild(o);
 		}
-		let i = this.state.files.filter((e) => e.isRenamed || e.isKept);
-		if (i.length > 0) {
+		let a = this.state.files.filter((e) => e.isRenamed || e.isKept);
+		if (a.length > 0) {
 			let e = document.createElement("div");
 			e.className = "mt-auto pt-2 flex flex-col gap-1.5 shrink-0";
 			let n = document.createElement("div");
 			n.className = "flex items-center justify-between px-2 py-1 rounded bg-emerald-100 border border-emerald-300 text-[11px] font-mono-code text-emerald-900";
 			let r = document.createElement("div");
 			r.className = "flex items-center gap-1.5 font-bold";
-			let a = document.createElement("span");
-			a.className = "material-symbols-outlined text-[15px] text-tertiary", a.textContent = "south", r.appendChild(a), r.appendChild(document.createTextNode("COMPLETED FILES")), n.appendChild(r);
+			let i = document.createElement("span");
+			i.className = "material-symbols-outlined text-[15px] text-tertiary", i.textContent = "south", r.appendChild(i), r.appendChild(document.createTextNode("COMPLETED FILES")), n.appendChild(r);
 			let o = document.createElement("span");
-			o.className = "text-[10px] font-semibold text-tertiary uppercase", o.textContent = `${i.length} finished`, n.appendChild(o), e.appendChild(n), i.forEach((t) => {
-				let n = document.createElement("article");
-				n.className = "bg-surface-container-lowest rounded-xl shadow-xs px-space-md py-1.5 flex items-center justify-between gap-space-sm border border-emerald-300";
-				let r = document.createElement("div");
-				r.className = "flex items-center gap-2 min-w-0 flex-1";
-				let i = document.createElement("span");
-				i.className = "w-4 h-4 rounded-full bg-emerald-500 text-on-primary font-mono-code font-bold text-[9px] flex items-center justify-center shrink-0";
+			o.className = "text-[10px] font-semibold text-tertiary uppercase", o.textContent = `${a.length} finished`, n.appendChild(o), e.appendChild(n), a.forEach((t) => {
+				let n = this.state.files.indexOf(t), r = document.createElement("article");
+				r.className = "bg-surface-container-lowest rounded-xl shadow-xs px-space-md py-1.5 flex items-center justify-between gap-space-sm border border-emerald-300 cursor-pointer hover:bg-emerald-50/50 transition-colors", r.title = "Click to re-open and re-rename in Active Card", r.addEventListener("click", () => {
+					this.state.currentIndex = n, this.renderQueue(), this.renderCurrentPreview();
+				});
+				let i = document.createElement("div");
+				i.className = "flex items-center gap-2 min-w-0 flex-1";
 				let a = document.createElement("span");
-				a.className = "material-symbols-outlined text-[11px]", a.textContent = "check", i.appendChild(a), r.appendChild(i);
+				a.className = "w-4 h-4 rounded-full bg-emerald-500 text-on-primary font-mono-code font-bold text-[9px] flex items-center justify-center shrink-0";
 				let o = document.createElement("span");
-				o.className = "font-mono-code text-[11px] text-tertiary font-bold truncate", o.textContent = t.targetName, r.appendChild(o), n.appendChild(r);
+				o.className = "material-symbols-outlined text-[11px]", o.textContent = "check", a.appendChild(o), i.appendChild(a);
 				let s = document.createElement("span");
-				s.className = "font-mono-code text-[10px] text-secondary shrink-0", s.textContent = `${(t.size / 1024).toFixed(0)} KB`, n.appendChild(s), e.appendChild(n);
+				s.className = "font-mono-code text-[11px] text-tertiary font-bold truncate", s.textContent = t.targetName, i.appendChild(s), r.appendChild(i);
+				let c = document.createElement("span");
+				c.className = "font-mono-code text-[10px] text-secondary shrink-0", c.textContent = `${(t.size / 1024).toFixed(0)} KB`, r.appendChild(c), e.appendChild(r);
 			}), t.appendChild(e);
 		}
 		e.appendChild(t);
 	}
-	applyShortcutToCurrent(e) {
+	async applyShortcutToCurrent(e) {
 		let t = this.state.files[this.state.currentIndex];
 		if (!t) return;
-		let n = e.canonical, r = t.ext, i = D(n, this.state.studentName, this.state.settings?.groups, this.state.style), a = i.endsWith(r) ? i : `${i}${r}`, o = new Set(this.state.files.map((e) => e.targetName));
+		let n = e.canonical, r = t.ext, i = A(n, this.state.studentName, this.state.settings?.groups, this.state.style), a = i.endsWith(r) ? i : `${i}${r}`, o = new Set(this.state.files.map((e) => e.targetName));
 		o.delete(t.targetName);
-		let s = S(a, t.name, o);
-		t.targetName = s, t.docType = n, t.isMatched = !0, t.status = "matched", this.updateTelemetry(), this.renderQueue(), this.handleConfirmCurrentName(s);
+		let s = T(a, t.name, o);
+		t.targetName = s, t.docType = n, t.isMatched = !0, t.status = "matched", await this.handleConfirmCurrentName(s);
 	}
-	handleConfirmCurrentName(e) {
+	async handleConfirmCurrentName(e) {
 		let t = this.state.files[this.state.currentIndex];
 		if (!t) return;
-		let n = O(e);
+		let n = j(e);
 		if (n) {
 			r.show("Invalid Filename", n, "error");
 			return;
 		}
-		t.targetName = e, r.show("Target Updated", e, "info");
+		try {
+			if (this.state.folder?.nativePath || t.path) {
+				let n = t.path, i = await l(n, e);
+				i.success ? (M.pushBatch(this.state.folder, [{
+					old: t.name,
+					next: e,
+					file: t,
+					nativePath: t.path
+				}]), t.name = e, t.targetName = e, t.path = i.path || n.slice(0, n.lastIndexOf("/")) + "/" + e, t.isRenamed = !0, t.status = "renamed", r.show("Renamed", e, "success")) : r.show("Rename Error", i.error || "Failed to rename on disk", "error");
+			} else t.targetName = e, t.isRenamed = !0, t.status = "renamed";
+		} catch (e) {
+			r.show("Rename Failed", e.message, "error");
+		}
+		this.updateTelemetry();
 		let i = this.state.files.findIndex((e, t) => t > this.state.currentIndex && !e.isRenamed && !e.isKept);
 		if (i !== -1) this.state.currentIndex = i;
 		else {
@@ -1809,6 +1993,9 @@ var ce = class {
 			e !== -1 && (this.state.currentIndex = e);
 		}
 		this.renderQueue(), this.renderCurrentPreview();
+	}
+	handleNavigateBackward() {
+		this.state.currentIndex > 0 ? (this.state.currentIndex--, this.renderQueue(), this.renderCurrentPreview()) : r.show("First Document", "Already on the first document in queue.", "info");
 	}
 	handleKeepOriginal() {
 		let e = this.state.files[this.state.currentIndex];
@@ -1821,7 +2008,7 @@ var ce = class {
 			return;
 		}
 		for (let t of e) {
-			let e = O(t.targetName);
+			let e = j(t.targetName);
 			if (e) {
 				r.show("Validation Error", `${t.name}: ${e}`, "error");
 				return;
@@ -1837,7 +2024,7 @@ var ce = class {
 		try {
 			await ee(this.state.folder, t, (e, t) => {
 				console.log(`[Rename Progress] ${e}%: ${t}`);
-			}), k.pushBatch(this.state.folder, t), e.forEach((e) => {
+			}), M.pushBatch(this.state.folder, t), e.forEach((e) => {
 				e.name = e.targetName, e.isRenamed = !0, e.status = "renamed";
 			}), r.show("Batch Complete!", `Successfully renamed ${t.length} files.`, "success"), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview();
 		} catch (e) {
@@ -1845,11 +2032,11 @@ var ce = class {
 		}
 	}
 	async handleUndo() {
-		if (!k.canUndo()) {
+		if (!M.canUndo()) {
 			r.show("Undo Stack Empty", "No previous rename batch to undo.", "info");
 			return;
 		}
-		let e = k.pop();
+		let e = M.pop();
 		r.show("Reverting Changes", `Restoring ${e.plan.length} files...`, "info");
 		try {
 			await te(e.dir, e.plan, (e, t) => {
@@ -1965,12 +2152,12 @@ var ce = class {
 		l.className = "text-center border-t pt-2 border-outline-variant/30 text-[10px] font-mono-code text-secondary", l.textContent = "Air-Gapped High-Precision Preview Stage", e.appendChild(l);
 	}
 };
-function le() {
-	let e = new ce();
+function ue() {
+	let e = new le();
 	return e.init(), e;
 }
 // src/services/export-import-service.js
-function ue(e) {
+function de(e) {
 	let t = {
 		format: "BulkStudentRenamerSettings",
 		version: 1,
@@ -1983,7 +2170,7 @@ function ue(e) {
 	}, n = new Blob([JSON.stringify(t, null, 2)], { type: "application/json" }), r = URL.createObjectURL(n), i = document.createElement("a");
 	i.href = r, i.download = `student-renamer-settings-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.json`, i.click(), setTimeout(() => URL.revokeObjectURL(r), 1e3);
 }
-function de(e, t) {
+function fe(e, t) {
 	return new Promise((n, r) => {
 		if (!e) return r(/* @__PURE__ */ Error("No backup file selected."));
 		if (e.size > 5242880) return r(/* @__PURE__ */ Error("Backup file exceeds maximum allowed size (5 MB)."));
@@ -2006,7 +2193,7 @@ function de(e, t) {
 	});
 }
 // src/ui/settings-ui.js
-var fe = class {
+var pe = class {
 	constructor() {
 		this.state = null, this.initialState = null, this.activeChecklist = "11th / 12th (FYJC / SYJC)";
 	}
@@ -2014,7 +2201,7 @@ var fe = class {
 		this.loadState(), this._bindButtons(), this.renderAll(), console.info("[DocMitra Settings] Settings UI manager initialized.");
 	}
 	loadState() {
-		this.state = R(), this.initialState = JSON.parse(JSON.stringify(this.state));
+		this.state = oe(), this.initialState = JSON.parse(JSON.stringify(this.state));
 	}
 	_bindButtons() {
 		let e = document.getElementById("saveRulesBtn");
@@ -2028,7 +2215,7 @@ var fe = class {
 		let a = document.getElementById("btnExportSettingsJSON");
 		a && a.addEventListener("click", () => {
 			try {
-				ue(this.state), r.show("Settings Exported", "Configuration JSON file downloaded.", "success");
+				de(this.state), r.show("Settings Exported", "Configuration JSON file downloaded.", "success");
 			} catch (e) {
 				r.show("Export Error", e.message, "error");
 			}
@@ -2037,7 +2224,7 @@ var fe = class {
 		o && s && (o.addEventListener("click", () => s.click()), s.addEventListener("change", async (e) => {
 			let t = e.target.files?.[0];
 			if (t) try {
-				await de(t, this.state), z(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Import Successful", "System configuration restored and verified.", "success");
+				await fe(t, this.state), V(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Import Successful", "System configuration restored and verified.", "success");
 			} catch (e) {
 				r.show("Import Failed", e.message || "Invalid settings JSON format.", "error");
 			} finally {
@@ -2060,15 +2247,15 @@ var fe = class {
 			s.className = "col-span-1";
 			let c = document.createElement("span");
 			c.className = "px-2 py-0.5 rounded bg-surface-container-high text-primary font-mono-code text-[11px] font-bold", c.textContent = `#${String(i + 1).padStart(2, "0")}`, s.appendChild(c), o.appendChild(s);
-			let u = document.createElement("div");
-			u.className = "col-span-4 flex flex-col pr-space-sm";
+			let l = document.createElement("div");
+			l.className = "col-span-4 flex flex-col pr-space-sm";
+			let u = document.createElement("span");
+			u.className = "font-label-lg text-label-lg font-bold text-on-surface group-hover:text-primary transition-colors", u.textContent = t, l.appendChild(u);
 			let d = document.createElement("span");
-			d.className = "font-label-lg text-label-lg font-bold text-on-surface group-hover:text-primary transition-colors", d.textContent = t, u.appendChild(d);
-			let f = document.createElement("span");
-			f.className = "font-mono-code text-[10px] text-on-surface-variant", f.textContent = `TOKEN_${t.replace(/[^A-Z0-9]/gi, "_").toUpperCase()}`, u.appendChild(f), o.appendChild(u);
+			d.className = "font-mono-code text-[10px] text-on-surface-variant", d.textContent = `TOKEN_${t.replace(/[^A-Z0-9]/gi, "_").toUpperCase()}`, l.appendChild(d), o.appendChild(l);
 			let p = document.createElement("div");
 			p.className = "col-span-2";
-			let m = l.find((e) => e.outputName.toUpperCase() === t.toUpperCase()), h = m ? m.primaryShortcut : (n[0] || "DOC").toUpperCase().slice(0, 4), g = document.createElement("span");
+			let m = f.find((e) => e.outputName.toUpperCase() === t.toUpperCase()), h = m ? m.primaryShortcut : (n[0] || "DOC").toUpperCase().slice(0, 4), g = document.createElement("span");
 			g.className = "px-2 py-1 bg-surface-container-high rounded text-on-surface font-mono-code text-[12px] font-bold shadow-2xs", g.textContent = h, p.appendChild(g), o.appendChild(p);
 			let _ = document.createElement("div");
 			_.className = "col-span-4 pr-space-sm";
@@ -2262,7 +2449,7 @@ var fe = class {
 		if (!e || !t) return;
 		for (; e.firstChild;) e.removeChild(e.firstChild);
 		for (; t.firstChild;) t.removeChild(t.firstChild);
-		let n = this.state.checklists || y;
+		let n = this.state.checklists || S;
 		Object.keys(n).forEach((t) => {
 			let n = document.createElement("button");
 			n.type = "button", n.className = t === this.activeChecklist ? "px-3 py-1.5 rounded-lg bg-primary text-on-primary font-label-sm font-bold shadow-xs cursor-pointer" : "px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm font-semibold cursor-pointer", n.textContent = t, n.addEventListener("click", () => {
@@ -2284,12 +2471,12 @@ var fe = class {
 		});
 	}
 	handleSave() {
-		z(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), r.show("Settings Saved", "System rules updated and applied to workstation.", "success");
+		V(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), r.show("Settings Saved", "System rules updated and applied to workstation.", "success");
 		let e = document.getElementById("settings-modal-overlay");
 		e && e.classList.add("hidden"), document.body.style.overflow = "";
 	}
 	handleReset() {
-		window.confirm("Reset all rules, shortcuts, and checklists to factory defaults?") && (this.state.groups = u(), this.state.checklists = JSON.parse(JSON.stringify(y)), z(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Factory Defaults Restored", "All default rules loaded.", "info"));
+		window.confirm("Reset all rules, shortcuts, and checklists to factory defaults?") && (this.state.groups = p(), this.state.checklists = JSON.parse(JSON.stringify(S)), V(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Factory Defaults Restored", "All default rules loaded.", "info"));
 	}
 	handleDiscard() {
 		this.state = JSON.parse(JSON.stringify(this.initialState)), this.renderAll(), r.show("Changes Discarded", "Reverted to previous configuration.", "info");
@@ -2297,12 +2484,12 @@ var fe = class {
 		e && e.classList.add("hidden"), document.body.style.overflow = "";
 	}
 };
-function pe() {
-	let e = new fe();
+function me() {
+	let e = new pe();
 	return e.init(), e;
 }
 // src/modules/pdf-studio.js
-var B = {
+var U = {
 	A4_PORTRAIT: {
 		width: 595.28,
 		height: 841.89,
@@ -2314,7 +2501,7 @@ var B = {
 		label: "A4 Landscape"
 	}
 };
-function V(e) {
+function W(e) {
 	let t = 2, n = e.length;
 	for (; t < n && e[t] === 255;) {
 		let r = e[t + 1];
@@ -2336,7 +2523,7 @@ function V(e) {
 		height: 842
 	};
 }
-function H(e = [], t = "portrait", n = 0) {
+function G(e = [], t = "portrait", n = 0) {
 	if (!e.length) throw Error("No images provided for PDF creation.");
 	let r = [], i = 0, a = (e) => new TextEncoder().encode(e), o = [], s = (e) => {
 		o.push(e), i += e.length;
@@ -2346,8 +2533,8 @@ function H(e = [], t = "portrait", n = 0) {
 	for (let e = 0; e < c; e++) l.push(3 + e * 3);
 	r.push(i), s(a(`2 0 obj\n<< /Type /Pages /Kids [ ${l.map((e) => `${e} 0 R`).join(" ")} ] /Count ${c} >>\nendobj\n`));
 	for (let o = 0; o < c; o++) {
-		let c = e[o], l = 3 + o * 3, u = l + 1, d = l + 2, f = c.bytes, { width: p, height: m } = c.width && c.height ? c : V(f), h = B.A4_PORTRAIT.width, g = B.A4_PORTRAIT.height;
-		(t === "landscape" || t === "fit" && p > m) && (h = B.A4_LANDSCAPE.width, g = B.A4_LANDSCAPE.height);
+		let c = e[o], l = 3 + o * 3, u = l + 1, d = l + 2, f = c.bytes, { width: p, height: m } = c.width && c.height ? c : W(f), h = U.A4_PORTRAIT.width, g = U.A4_PORTRAIT.height;
+		(t === "landscape" || t === "fit" && p > m) && (h = U.A4_LANDSCAPE.width, g = U.A4_LANDSCAPE.height);
 		let _ = h - 36, v = g - 36, y = Math.min(_ / p, v / m), b = p * y, x = m * y, S = (h - b) / 2, C = (g - x) / 2, w = n ? ` /Rotate ${n}` : "";
 		r.push(i), s(a(`${l} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${h.toFixed(2)} ${g.toFixed(2)}]${w} /Contents ${u} 0 R /Resources << /XObject << /Im${o + 1} ${d} 0 R >> >> >>\nendobj\n`));
 		let T = `q ${b.toFixed(2)} 0 0 ${x.toFixed(2)} ${S.toFixed(2)} ${C.toFixed(2)} cm /Im${o + 1} Do Q\n`, E = T.length;
@@ -2358,13 +2545,13 @@ function H(e = [], t = "portrait", n = 0) {
 	for (let e of r) s(a(`${String(e).padStart(10, "0")} 00000 n \n`));
 	return s(a(`trailer\n<< /Size ${d} /Root 1 0 R >>\nstartxref\n${u}\n%%EOF\n`)), new Blob(o, { type: "application/pdf" });
 }
-function me(e) {
+function he(e) {
 	let t = [], n = e.length, r = 0;
 	for (; r < n - 3;) if (e[r] === 255 && e[r + 1] === 216 && e[r + 2] === 255) {
 		let i = r;
 		for (r += 2; r < n - 1;) {
 			if (e[r] === 255 && e[r + 1] === 217) {
-				let n = r + 2, a = e.slice(i, n), o = V(a);
+				let n = r + 2, a = e.slice(i, n), o = W(a);
 				t.push({
 					bytes: a,
 					width: o.width,
@@ -2377,8 +2564,8 @@ function me(e) {
 	} else r++;
 	return t;
 }
-function U(e) {
-	let t = me(e);
+function K(e) {
+	let t = he(e);
 	if (!t.length) return [];
 	if (t.length === 1) return t;
 	let n = Math.max(...t.map((e) => (e.width || 0) * (e.height || 0))), r = Math.max(...t.map((e) => e.bytes?.length || 0)), i = t.filter((e) => {
@@ -2390,8 +2577,8 @@ function U(e) {
 		return r === n ? (t.bytes?.length || 0) - (e.bytes?.length || 0) : r - n;
 	});
 }
-function he(e, t = "Document.pdf") {
-	let n = U(e), r = t.replace(/\.pdf$/i, "");
+function ge(e, t = "Document.pdf") {
+	let n = K(e), r = t.replace(/\.pdf$/i, "");
 	return n.length ? n.map((e, t) => {
 		let i = n.length === 1 ? `${r}.jpg` : `${r}_page_${t + 1}.jpg`, a = new Blob([e.bytes], { type: "image/jpeg" });
 		return {
@@ -2404,10 +2591,10 @@ function he(e, t = "Document.pdf") {
 		};
 	}) : [];
 }
-function ge(e, t = "Document.pdf") {
-	let n = U(e), r = t.replace(/\.pdf$/i, "");
+function _e(e, t = "Document.pdf") {
+	let n = K(e), r = t.replace(/\.pdf$/i, "");
 	return n.length ? n.map((e, t) => {
-		let n = `${r}_page_${t + 1}.pdf`, i = H([e], "portrait");
+		let n = `${r}_page_${t + 1}.pdf`, i = G([e], "portrait");
 		return {
 			fileName: n,
 			blob: i,
@@ -2416,20 +2603,20 @@ function ge(e, t = "Document.pdf") {
 		};
 	}) : [];
 }
-function _e(e = [], t = "portrait") {
+function ve(e = [], t = "portrait") {
 	let n = [];
 	for (let t of e) {
-		let e = U(t);
+		let e = K(t);
 		n.push(...e);
 	}
 	if (!n.length) throw Error("No document images could be extracted to merge PDFs.");
-	return H(n, t);
+	return G(n, t);
 }
-function W(e, t = 90) {
+function q(e, t = 90) {
 	let n = (t % 360 + 360) % 360;
 	if (n === 0) return new Blob([e], { type: "application/pdf" });
-	let r = U(e);
-	if (r.length > 0) return H(r, "portrait", n);
+	let r = K(e);
+	if (r.length > 0) return G(r, "portrait", n);
 	try {
 		let t = "", r = 65536;
 		for (let n = 0; n < e.length; n += r) t += String.fromCharCode.apply(null, e.subarray(n, n + r));
@@ -2444,13 +2631,13 @@ function W(e, t = 90) {
 	}
 	throw Error("No pages found in PDF to rotate.");
 }
-function ve(e, t, n = "auto") {
+function ye(e, t, n = "auto") {
 	if (!e) return "document.pdf";
 	let r = e.lastIndexOf("."), i = r === -1 ? e : e.slice(0, r), a = r === -1 ? "" : e.slice(r), o = i.replace(/[\s_-]+\d+\s*(?:KB|MB)$/i, "").trim();
 	return n === "MB" || n === "auto" && t >= 10485760 ? `${o} ${Math.max(1, Math.round(Number(t || 0) / 1048576))} MB${a}` : `${o} ${Math.max(1, Math.round(Number(t || 0) / 1024))} KB${a}`;
 }
 // src/ui/pdf-studio-ui.js
-var ye = class {
+var be = class {
 	constructor() {
 		this.activeTool = "compress_pdf", this.files = [], this.isProcessing = !1;
 	}
@@ -2667,7 +2854,7 @@ var ye = class {
 	rotateSingleFile(e) {
 		let t = this.files[e];
 		if (t && t.bytes) try {
-			let e = W(t.bytes, 90);
+			let e = q(t.bytes, 90);
 			e.arrayBuffer().then((n) => {
 				t.bytes = new Uint8Array(n), t.size = e.size, this.renderQueue(), r.show("Page Rotated", `${t.name} rotated 90° clockwise.`, "info");
 			});
@@ -2686,7 +2873,7 @@ var ye = class {
 		let e = 0;
 		this.files.forEach((t) => {
 			if (t.bytes) try {
-				let n = W(t.bytes, 90);
+				let n = q(t.bytes, 90);
 				n.arrayBuffer().then((i) => {
 					t.bytes = new Uint8Array(i), t.size = n.size, e++, e === this.files.length && (this.renderQueue(), r.show("All Rotated", `Rotated all ${this.files.length} PDFs by 90°.`, "success"));
 				});
@@ -2711,27 +2898,27 @@ var ye = class {
 		r.show("Processing Started", `Running ${this._getToolDisplayName(e)} on ${this.files.length} files...`, "info");
 		try {
 			if (e === "merge_pdf") {
-				let e = _e(this.files.map((e) => e.bytes).filter(Boolean), "portrait");
+				let e = ve(this.files.map((e) => e.bytes).filter(Boolean), "portrait");
 				this._downloadBlob(e, "Merged_Admission_Dossier.pdf"), r.show("Merge Complete!", "Merged PDF Dossier generated and saved.", "success");
 			} else if (e === "compress_pdf") {
 				let e = 0;
 				for (let t of this.files) {
 					if (!t.bytes) continue;
-					let n = U(t.bytes), r;
-					r = n.length > 0 ? H(n, "portrait") : new Blob([t.bytes], { type: "application/pdf" });
-					let i = ve(t.name, r.size);
+					let n = K(t.bytes), r;
+					r = n.length > 0 ? G(n, "portrait") : new Blob([t.bytes], { type: "application/pdf" });
+					let i = ye(t.name, r.size);
 					this._downloadBlob(r, i), e++;
 				}
 				r.show("Compression Complete!", `Compressed ${e} files to safe MahaDBT thresholds.`, "success");
 			} else if (e === "split_pdf") {
 				let e = 0;
-				for (let t of this.files) t.bytes && ge(t.bytes, t.name).forEach((t) => {
+				for (let t of this.files) t.bytes && _e(t.bytes, t.name).forEach((t) => {
 					this._downloadBlob(t.blob, t.fileName), e++;
 				});
 				r.show("Split Complete!", `Extracted ${e} individual PDF pages.`, "success");
 			} else if (e === "pdf_to_jpg") {
 				let e = 0;
-				for (let t of this.files) t.bytes && he(t.bytes, t.name).forEach((t) => {
+				for (let t of this.files) t.bytes && ge(t.bytes, t.name).forEach((t) => {
 					this._downloadBlob(t.blob, t.fileName), e++;
 				});
 				r.show("Conversion Complete!", `Extracted ${e} high-resolution JPG pages.`, "success");
@@ -2739,7 +2926,7 @@ var ye = class {
 				let e = 0;
 				for (let t of this.files) {
 					if (!t.bytes) continue;
-					let n = W(t.bytes, 90);
+					let n = q(t.bytes, 90);
 					this._downloadBlob(n, t.name), e++;
 				}
 				r.show("Rotation Complete!", `Rotated and saved ${e} PDF documents.`, "success");
@@ -2747,7 +2934,7 @@ var ye = class {
 				let e = 0;
 				for (let t of this.files) {
 					if (!t.bytes) continue;
-					let n = H(U(t.bytes), "portrait");
+					let n = G(K(t.bytes), "portrait");
 					this._downloadBlob(n, t.name), e++;
 				}
 				r.show("Enhancement Complete!", `Watermarks filtered and ${e} PDFs enhanced.`, "success");
@@ -2765,12 +2952,12 @@ var ye = class {
 		}, 1e3);
 	}
 };
-function be() {
-	let e = new ye();
+function xe() {
+	let e = new be();
 	return e.init(), e;
 }
 // src/modules/image-studio.js
-function xe(e, t, n, r = "magic_color") {
+function Se(e, t, n, r = "magic_color") {
 	if (!e || r === "none" || r === "original") return;
 	let i = e.getImageData(0, 0, t, n), a = i.data;
 	for (let e = 0; e < a.length; e += 4) {
@@ -2787,13 +2974,13 @@ function xe(e, t, n, r = "magic_color") {
 	}
 	e.putImageData(i, 0, 0);
 }
-function G(e, t = 0) {
+function Ce(e, t = 0) {
 	let n = document.createElement("canvas"), r = (t % 360 + 360) % 360, i = r === 90 || r === 270, a = i ? e.height : e.width, o = i ? e.width : e.height;
 	n.width = a, n.height = o;
 	let s = n.getContext("2d");
 	return s.save(), s.translate(n.width / 2, n.height / 2), s.rotate(r * Math.PI / 180), s.drawImage(e, -e.width / 2, -e.height / 2), s.restore(), n;
 }
-async function K(e, t = 250, n = {}) {
+async function J(e, t = 250, n = {}) {
 	let { rotation: r = 0, filterMode: i = "none", outputMime: a = "image/jpeg", maxDimension: o = 2400 } = n;
 	return new Promise((n, s) => {
 		let c = new Image(), l = URL.createObjectURL(e);
@@ -2806,7 +2993,7 @@ async function K(e, t = 250, n = {}) {
 					e = Math.round(e * t), s = Math.round(s * t);
 				}
 				let l;
-				if (r === 0 ? (l = document.createElement("canvas"), l.width = e, l.height = s, l.getContext("2d").drawImage(c, 0, 0, e, s)) : l = G(c, r), i && i !== "none" && xe(l.getContext("2d"), l.width, l.height, i), !t || t <= 0) {
+				if (r === 0 ? (l = document.createElement("canvas"), l.width = e, l.height = s, l.getContext("2d").drawImage(c, 0, 0, e, s)) : l = Ce(c, r), i && i !== "none" && Se(l.getContext("2d"), l.width, l.height, i), !t || t <= 0) {
 					let e = await new Promise((e) => l.toBlob(e, a, .9));
 					return n({
 						blob: e,
@@ -2850,7 +3037,7 @@ async function K(e, t = 250, n = {}) {
 		}, c.src = l;
 	});
 }
-async function Se(e, t = "image/png") {
+async function we(e, t = "image/png") {
 	return new Promise((n, r) => {
 		let i = new Image(), a = URL.createObjectURL(e);
 		i.onload = () => {
@@ -2876,7 +3063,7 @@ async function Se(e, t = "image/png") {
 	});
 }
 // src/ui/image-studio-ui.js
-var Ce = class {
+var Te = class {
 	constructor() {
 		this.activeTool = "compress_photo_sign", this.files = [], this.isProcessing = !1;
 	}
@@ -3073,7 +3260,7 @@ var Ce = class {
 		if (!t || !t.url) return;
 		let n = new Image();
 		n.crossOrigin = "anonymous", n.onload = () => {
-			G(n, 90).toBlob((e) => {
+			Ce(n, 90).toBlob((e) => {
 				t.url = URL.createObjectURL(e), t.size = e.size, t.fileOrBlob = e, this.renderQueue(), r.show("Image Rotated", `${t.name} rotated 90° clockwise.`, "info");
 			}, "image/jpeg", .92);
 		}, n.src = t.url;
@@ -3106,26 +3293,26 @@ var Ce = class {
 				let r = n.fileOrBlob;
 				if (!r && n.url && (r = await (await fetch(n.url)).blob()), r) {
 					if (e === "compress_photo_sign") {
-						let e = /sign|signature|स्वाक्षरी/i.test(n.name) ? 18 : 45, i = await K(r, e);
+						let e = /sign|signature|स्वाक्षरी/i.test(n.name) ? 18 : 45, i = await J(r, e);
 						this._downloadBlob(i.blob, `Compressed_${n.name}`), t++;
 					} else if (e === "passport_crop") {
-						let e = await K(await this._cropPassport(r), 48);
+						let e = await J(await this._cropPassport(r), 48);
 						this._downloadBlob(e.blob, `Passport_${n.name}`), t++;
 					} else if (e === "sign_clean_invert") {
-						let e = await K(r, 18, { filterMode: "sharp_contrast" });
+						let e = await J(r, 18, { filterMode: "sharp_contrast" });
 						this._downloadBlob(e.blob, `Clean_Sign_${n.name}`), t++;
 					} else if (e === "image_to_pdf") {
-						let e = await r.arrayBuffer(), i = H([{
+						let e = await r.arrayBuffer(), i = G([{
 							bytes: new Uint8Array(e),
 							width: 0,
 							height: 0
 						}], "portrait"), a = n.name.replace(/\.[a-zA-Z0-9]+$/, "") + ".pdf";
 						this._downloadBlob(i, a), t++;
 					} else if (e === "magic_color") {
-						let e = await K(r, 240, { filterMode: "enhanced" });
+						let e = await J(r, 240, { filterMode: "enhanced" });
 						this._downloadBlob(e.blob, `Magic_${n.name}`), t++;
 					} else {
-						let e = await Se(r, "image/jpeg");
+						let e = await we(r, "image/jpeg");
 						this._downloadBlob(e.blob, `Converted_${n.name.replace(/\.[a-zA-Z0-9]+$/, ".jpg")}`), t++;
 					}
 				}
@@ -3158,21 +3345,21 @@ var Ce = class {
 		}, 1e3);
 	}
 };
-function we() {
-	let e = new Ce();
+function Ee() {
+	let e = new Te();
 	return e.init(), e;
 }
-({ ...b });
-function q(e) {
+({ ...C });
+function Y(e) {
 	if (!e || typeof e != "string") return "";
-	let t = m(e);
+	let t = _(e);
 	if (t && t.docType) return t.docType;
 	let n = e.replace(/\.[^/.]+$/, "");
 	return n = n.replace(/\s*\(p\.\d+\)/i, ""), n.trim().toUpperCase();
 }
-function Te(e) {
+function De(e) {
 	if (!e || typeof e != "string") return "";
-	let t = e.replace(/\.[^/.]+$/, "").trim(), n = m(t);
+	let t = e.replace(/\.[^/.]+$/, "").trim(), n = _(t);
 	if (n && n.docType) {
 		let e = n.docType, r = t, i = RegExp(`^${e}\\b`, "i");
 		if (i.test(r) ? r = r.replace(i, "").trim() : e.split(/\s+/).forEach((e) => {
@@ -3184,9 +3371,9 @@ function Te(e) {
 	}
 	return t;
 }
-function Ee(e, t = []) {
+function Oe(e, t = []) {
 	return !Array.isArray(e) || e.length === 0 ? [] : !Array.isArray(t) || t.length === 0 ? [...e] : [...e].sort((e, n) => {
-		let r = e.docType || q(e.label || e.name), i = n.docType || q(n.label || n.name), a = t.findIndex((e) => {
+		let r = e.docType || Y(e.label || e.name), i = n.docType || Y(n.label || n.name), a = t.findIndex((e) => {
 			let t = e.toUpperCase(), n = r.toUpperCase();
 			return t === n || n.includes(t) || t.includes(n);
 		}), o = t.findIndex((e) => {
@@ -3197,9 +3384,9 @@ function Ee(e, t = []) {
 	});
 }
 // src/ui/print-studio-ui.js
-var De = class {
+var ke = class {
 	constructor() {
-		this.presets = { ...b }, this.activePresetKey = "MAHA DBT FORM", this.documents = [], this.activeDocIndex = 0, this.zoomLevel = 100;
+		this.presets = { ...C }, this.activePresetKey = "MAHA DBT FORM", this.documents = [], this.activeDocIndex = 0, this.zoomLevel = 100;
 	}
 	init() {
 		this._seedDemoDocumentsIfEmpty(), this._bindControls(), this.renderPresetSelector(), this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), console.info("[DocMitra Print Studio] Print Studio UI manager initialized.");
@@ -3344,7 +3531,7 @@ var De = class {
 	}
 	handleAutoOrder() {
 		let e = this.presets[this.activePresetKey] || [];
-		this.documents = Ee(this.documents, e), this.activeDocIndex = 0, this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), r.show("Sequence Applied", `Ordered according to ${this.activePresetKey} criteria.`, "success");
+		this.documents = Oe(this.documents, e), this.activeDocIndex = 0, this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), r.show("Sequence Applied", `Ordered according to ${this.activePresetKey} criteria.`, "success");
 	}
 	async handleBrowseFolder() {
 		r.show("Opening Folder Picker", "Navigating Windows Explorer...", "info");
@@ -3360,7 +3547,7 @@ var De = class {
 				return;
 			}
 			this.documents = t.map((e, t) => {
-				let n = q(e.name), r = Te(e.name);
+				let n = Y(e.name), r = De(e.name);
 				return {
 					id: `print_doc_${Date.now()}_${t}`,
 					name: e.name,
@@ -3451,41 +3638,41 @@ var De = class {
 		}
 	}
 };
-function Oe() {
-	let e = new De();
+function Ae() {
+	let e = new ke();
 	return e.init(), e;
 }
 // src/services/followup-service.js
-var J = "studentDocumentFollowUps", Y = [];
-function X() {
+var je = "studentDocumentFollowUps", X = [];
+function Z() {
 	try {
 		if (typeof localStorage < "u") {
-			let e = localStorage.getItem(J);
+			let e = localStorage.getItem(je);
 			return e ? JSON.parse(e) : [];
 		}
-		return Y;
+		return X;
 	} catch {
-		return Y;
+		return X;
 	}
 }
-function Z(e) {
+function Q(e) {
 	try {
-		Y = e, typeof localStorage < "u" && localStorage.setItem(J, JSON.stringify(e));
+		X = e, typeof localStorage < "u" && localStorage.setItem(je, JSON.stringify(e));
 	} catch (e) {
 		console.error("Failed to save follow-ups:", e);
 	}
 }
-function ke(e, t) {
-	let n = X(), r = (e || "").trim().toLowerCase(), i = (t || "").trim().toUpperCase(), a = !1;
+function Me(e, t) {
+	let n = Z(), r = (e || "").trim().toLowerCase(), i = (t || "").trim().toUpperCase(), a = !1;
 	return n.forEach((e) => {
 		e.folderName.trim().toLowerCase() === r && e.documentName.trim().toUpperCase() === i && e.status === "pending" && (e.status = "resolved", e.resolvedAt = Date.now(), a = !0);
-	}), a && Z(n), a;
+	}), a && Q(n), a;
 }
-function Ae(e, t = je()) {
-	let n = Ne(e, t);
+function Ne(e, t = Fe()) {
+	let n = Le(e, t);
 	return n < 0 ? "overdue" : n === 0 ? "today" : "upcoming";
 }
-function Q(e) {
+function Pe(e) {
 	if (!e) return "";
 	let t = e.split("-");
 	return t.length === 3 ? new Date(Number(t[0]), Number(t[1]) - 1, Number(t[2])).toLocaleDateString("en-IN", {
@@ -3494,29 +3681,29 @@ function Q(e) {
 		year: "numeric"
 	}) : e;
 }
-function je() {
+function Fe() {
 	let e = /* @__PURE__ */ new Date();
 	return `${e.getFullYear()}-${String(e.getMonth() + 1).padStart(2, "0")}-${String(e.getDate()).padStart(2, "0")}`;
 }
-function Me(e = 1) {
+function Ie(e = 1) {
 	let t = /* @__PURE__ */ new Date();
 	return t.setDate(t.getDate() + e), `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
 }
-function Ne(e, t) {
+function Le(e, t) {
 	return e === t ? 0 : e < t ? -1 : 1;
 }
 // src/ui/followup-ui.js
-var Pe = class {
+var Re = class {
 	constructor() {
 		this.items = [], this.searchQuery = "";
 	}
 	init() {
-		this._seedDemoDataIfEmpty(), this.items = X(), this._bindControls(), this.renderTable(), console.info("[DocMitra Follow-up Desk] Follow-up UI manager initialized.");
+		this._seedDemoDataIfEmpty(), this.items = Z(), this._bindControls(), this.renderTable(), console.info("[DocMitra Follow-up Desk] Follow-up UI manager initialized.");
 	}
 	_seedDemoDataIfEmpty() {
-		if (X().length === 0) {
-			let e = je(), t = Me(2);
-			Z([
+		if (Z().length === 0) {
+			let e = Fe(), t = Ie(2);
+			Q([
 				{
 					id: "fu_demo_1",
 					folderName: "Vijay_Ramesh_Yadav",
@@ -3625,8 +3812,8 @@ var Pe = class {
 			c.appendChild(u), s.appendChild(c), n.appendChild(s);
 			let d = document.createElement("td");
 			d.className = "py-3.5 px-space-md";
-			let f = Ae(t.promisedDate), p = document.createElement("div");
-			p.className = f === "overdue" ? "font-mono-code font-bold text-error" : f === "today" ? "font-mono-code font-bold text-amber-700" : "font-mono-code font-bold text-emerald-700", p.textContent = Q(t.promisedDate), d.appendChild(p);
+			let f = Ne(t.promisedDate), p = document.createElement("div");
+			p.className = f === "overdue" ? "font-mono-code font-bold text-error" : f === "today" ? "font-mono-code font-bold text-amber-700" : "font-mono-code font-bold text-emerald-700", p.textContent = Pe(t.promisedDate), d.appendChild(p);
 			let m = document.createElement("span");
 			f === "overdue" ? (m.className = "text-[10px] font-bold uppercase tracking-wider text-error bg-error-container/40 px-1.5 py-0.5 rounded", m.textContent = "OVERDUE") : f === "today" ? (m.className = "text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded", m.textContent = "DUE TODAY") : (m.className = "text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded", m.textContent = "UPCOMING"), d.appendChild(m), n.appendChild(d);
 			let h = document.createElement("td");
@@ -3672,7 +3859,7 @@ var Pe = class {
 		});
 	}
 	generateMarathiNotice(e) {
-		let t = Q(e.promisedDate);
+		let t = Pe(e.promisedDate);
 		return `सस्नेह नमस्कार,
 विद्यार्थी नाव: ${e.studentName} (${e.rollNo || "Admission 2026"})
 
@@ -3694,16 +3881,16 @@ var Pe = class {
 		window.open(i, "_blank"), r.show("WhatsApp उघडत आहे", `Opening WhatsApp for ${e.studentName}...`, "info");
 	}
 	markItemResolved(e) {
-		ke(e.folderName, e.documentName), e.status = "resolved", this.renderTable(), r.show("कागदपत्र प्राप्त!", `${e.documentName} for ${e.studentName} marked as received.`, "success");
+		Me(e.folderName, e.documentName), e.status = "resolved", this.renderTable(), r.show("कागदपत्र प्राप्त!", `${e.documentName} for ${e.studentName} marked as received.`, "success");
 	}
 };
-function Fe() {
-	let e = new Pe();
+function ze() {
+	let e = new Re();
 	return e.init(), e;
 }
 // src/ui/index.js
 function $() {
-	new n().init(), new i().init(), pe(), le(), be(), we(), Oe(), Fe(), a();
+	new n().init(), new i().init(), me(), ue(), xe(), Ee(), Ae(), ze(), a();
 	let e = document.getElementById("themeToggleBtn");
 	e && e.addEventListener("click", () => {
 		document.documentElement.classList.toggle("dark");
