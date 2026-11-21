@@ -65,6 +65,19 @@ export function isJunkFile(filename) {
   return false;
 }
 
+/**
+ * High-contrast, bold category-coded badge colors for shortcut buttons & chips
+ */
+export function getShortcutBadgeColor(code) {
+  const c = (code || '').toUpperCase().trim();
+  if (['ADR', 'PAN', 'PIC', 'UID'].includes(c)) return 'bg-blue-600 text-white font-extrabold';
+  if (['10M', '10P', '12M', '12P', '12LC', '12MP', 'ATM', 'BNF', 'BRT'].includes(c)) return 'bg-emerald-700 text-white font-extrabold';
+  if (['CST', 'VLD'].includes(c)) return 'bg-purple-700 text-white font-extrabold';
+  if (['INC', 'DOM', 'NAT', 'BNK'].includes(c)) return 'bg-amber-600 text-white font-extrabold';
+  if (['SLF', 'PAR', 'GAP'].includes(c)) return 'bg-slate-700 text-white font-extrabold';
+  return 'bg-primary text-on-primary font-extrabold';
+}
+
 export class RenamerUIManager {
   constructor() {
     this.state = {
@@ -1021,7 +1034,7 @@ export class RenamerUIManager {
       activeCardWrapper.appendChild(headerRow);
 
       const card = document.createElement('article');
-      card.className = 'bg-surface-container-lowest rounded-xl shadow-md p-3 flex flex-col gap-2.5 border-2 border-primary ring-2 ring-primary/20 relative';
+      card.className = 'bg-surface-container-lowest rounded-xl shadow-sm p-3 flex flex-col gap-2.5 border border-outline-variant/30 border-l-4 border-l-primary relative';
 
       // Original filename label with click-to-reset
       const origRow = document.createElement('div');
@@ -1049,7 +1062,7 @@ export class RenamerUIManager {
       origRow.appendChild(sizeLabel);
       card.appendChild(origRow);
 
-      // Rename target input (Base Name only + Locked Extension Badge)
+      // Rename target input (Base Name only, extension preserved silently in background)
       const inputSection = document.createElement('div');
       inputSection.className = 'flex flex-col gap-1.5';
 
@@ -1082,7 +1095,13 @@ export class RenamerUIManager {
       const targetInput = document.createElement('input');
       targetInput.id = 'inputRenameTarget';
       targetInput.type = 'text';
-      targetInput.className = 'flex-1 h-11 px-3 rounded-l-lg bg-surface-container-lowest font-mono-code text-[14px] text-on-surface font-semibold border-2 border-r-0 border-primary focus:ring-0 outline-none transition-all';
+      targetInput.autocomplete = 'new-password';
+      targetInput.setAttribute('autocomplete', 'new-password');
+      targetInput.setAttribute('autocorrect', 'off');
+      targetInput.setAttribute('autocapitalize', 'off');
+      targetInput.setAttribute('spellcheck', 'false');
+      targetInput.setAttribute('name', `docmitra_rename_${Date.now()}`);
+      targetInput.className = 'w-full h-10 px-3 rounded-lg bg-surface-container-lowest font-mono-code text-[13px] text-on-surface font-semibold border-2 border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-xs';
       
       // USER APPROVED SPEC: ONLY NAME WITHOUT EXTENSION IN EDIT FIELD
       targetInput.value = cleanName(currentFile.targetName || currentFile.suggestedName || currentFile.name);
@@ -1147,9 +1166,7 @@ export class RenamerUIManager {
             : 'px-2 py-1 rounded-md bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[11px] font-semibold border border-outline-variant/40 hover:border-primary/50 transition-all flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95';
 
           const codeBadge = document.createElement('span');
-          codeBadge.className = isTopMatch
-            ? 'px-1 py-0.2 rounded bg-surface-container-lowest/30 text-on-primary text-[9px] font-bold'
-            : 'px-1 py-0.2 rounded bg-surface-container-highest text-secondary text-[9px] font-bold';
+          codeBadge.className = `px-1.5 py-0.5 rounded text-[10px] ${getShortcutBadgeColor(s.code)} shadow-xs`;
           codeBadge.textContent = s.code;
           chipBtn.appendChild(codeBadge);
 
@@ -1191,31 +1208,37 @@ export class RenamerUIManager {
           statusTag.className = 'px-2 py-0.5 rounded font-mono-code text-[10px] bg-error-container text-on-error-container font-bold';
           statusTag.textContent = 'Unmatched';
           this.updateTelemetry();
+          renderSuggestionChips('');
           return;
         }
 
-        // Live evaluation formula & smart keyword matching
-        const spellingFixed = correctSpelling(trimmedVal, DEFAULT_SPELLING_RULES);
-        const matchResult = evaluateMatch(spellingFixed, this.state.settings?.groups);
-        const shortDoc = matchDocument(spellingFixed, this.state.settings?.groups) || matchDocument(trimmedVal, this.state.settings?.groups);
-        const recognized = shortDoc || matchResult.docType || null;
-
-        if (recognized) {
-          const canonical = CANONICAL_NAMES[recognized.toUpperCase()] || recognized;
+        // Exact-Match Shortcut Rule
+        const exactShortcut = this.shortcuts21.find(s => s.code.toLowerCase() === trimmedVal.toLowerCase());
+        if (exactShortcut) {
+          const canonical = exactShortcut.canonical;
           currentFile.docType = canonical;
           currentFile.isMatched = true;
           statusTag.className = 'px-2 py-0.5 rounded font-mono-code text-[10px] bg-tertiary-fixed text-on-tertiary-fixed font-bold';
           statusTag.textContent = `Matched: ${canonical}`;
 
-          // Live formula calculation
           const formulaBase = buildName(canonical, this.state.studentName, this.state.settings?.groups, this.state.style);
           currentFile.targetName = formulaBase.endsWith(currentExt) ? formulaBase : `${formulaBase}${currentExt}`;
         } else {
-          currentFile.docType = null;
+          // Custom name: preserve user's typed name exactly and append student name!
+          currentFile.docType = trimmedVal;
           currentFile.isMatched = false;
-          statusTag.className = 'px-2 py-0.5 rounded font-mono-code text-[10px] bg-error-container text-on-error-container font-bold';
-          statusTag.textContent = 'Unmatched';
-          currentFile.targetName = trimmedVal.endsWith(currentExt) ? trimmedVal : `${trimmedVal}${currentExt}`;
+          statusTag.className = 'px-2 py-0.5 rounded font-mono-code text-[10px] bg-surface-container-high text-secondary font-bold';
+          statusTag.textContent = 'Custom Name';
+
+          let customBase = trimmedVal;
+          if (this.state.studentName && !customBase.toLowerCase().includes(this.state.studentName.toLowerCase())) {
+            customBase = `${customBase} ${this.state.studentName}`;
+          }
+          if (this.state.style === 'upper') customBase = customBase.toUpperCase();
+          else if (this.state.style === 'lower') customBase = customBase.toLowerCase();
+          else if (this.state.style === 'title') customBase = customBase.toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase());
+
+          currentFile.targetName = customBase.endsWith(currentExt) ? customBase : `${customBase}${currentExt}`;
         }
 
         this.updateTelemetry();
@@ -1230,13 +1253,6 @@ export class RenamerUIManager {
       });
 
       inputWrapper.appendChild(targetInput);
-
-      // Locked Extension Pill Badge
-      const extBadge = document.createElement('span');
-      extBadge.className = 'h-11 px-3 rounded-r-lg bg-surface-container text-secondary font-mono-code text-[13px] font-bold border-2 border-l-0 border-primary flex items-center select-none shadow-xs';
-      extBadge.textContent = currentFile.ext;
-      inputWrapper.appendChild(extBadge);
-
       inputSection.appendChild(inputWrapper);
 
       // Initial render of top-3 suggestion chips
@@ -1322,253 +1338,7 @@ export class RenamerUIManager {
       scrollContainer.appendChild(upList);
     }
 
-    // 3. MISSING DOCUMENTS / गहाळ दाखले (Features 3, 4, 5)
-    if (this.state.files.length > 0) {
-      const activeRules = DEFAULT_CHECKLISTS_DATA["MAHA DBT FORM"] || [];
-      const presentDocs = new Set(
-        this.state.files.map(f => (f.docType || '').toUpperCase()).filter(Boolean)
-      );
-
-      // Filter out satisfied rules (including linked rules)
-      const missingRules = activeRules.filter(([ruleName]) => {
-        const cleanRule = ruleName.toUpperCase();
-        if (presentDocs.has(cleanRule)) return false;
-        for (const link of DEFAULT_LINKED_RULES) {
-          if (link.combined && presentDocs.has(link.combined.toUpperCase())) {
-            if (cleanRule === link.part1.toUpperCase() || cleanRule === link.part2.toUpperCase()) {
-              return false;
-            }
-          }
-        }
-        return true;
-      });
-
-      if (missingRules.length > 0) {
-        const missingHeader = document.createElement('div');
-        missingHeader.className = 'flex items-center justify-between px-2 py-1 rounded bg-amber-500/10 border border-amber-500/30 text-[11px] font-mono-code text-amber-900 dark:text-amber-300 shrink-0';
-
-        const leftMissing = document.createElement('div');
-        leftMissing.className = 'flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-400';
-        const warnIcon = document.createElement('span');
-        warnIcon.className = 'material-symbols-outlined text-[15px]';
-        warnIcon.textContent = 'warning';
-        leftMissing.appendChild(warnIcon);
-        leftMissing.appendChild(document.createTextNode('MISSING DOCUMENTS / गहाळ दाखले'));
-        missingHeader.appendChild(leftMissing);
-
-        const rightMissing = document.createElement('span');
-        rightMissing.className = 'text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase px-1.5 py-0.2 rounded bg-amber-500/20';
-        rightMissing.textContent = `${missingRules.length} Missing`;
-        missingHeader.appendChild(rightMissing);
-
-        scrollContainer.appendChild(missingHeader);
-
-        const missingList = document.createElement('div');
-        missingList.className = 'flex flex-col gap-1 shrink-0';
-
-        missingRules.forEach(([ruleName]) => {
-          const mItem = document.createElement('article');
-          mItem.className = 'h-8 px-2.5 py-1 rounded-lg bg-surface-container-lowest shadow-xs flex items-center justify-between gap-2 border border-amber-500/30 hover:border-amber-500/50 transition-colors shrink-0';
-
-          const leftCol = document.createElement('div');
-          leftCol.className = 'flex items-center gap-1.5 min-w-0 flex-1';
-
-          const redDot = document.createElement('span');
-          redDot.className = 'w-1.5 h-1.5 rounded-full bg-error shrink-0';
-          leftCol.appendChild(redDot);
-
-          const titleSpan = document.createElement('span');
-          titleSpan.className = 'font-mono-code text-[11px] font-bold text-on-surface truncate';
-          titleSpan.textContent = ruleName;
-          leftCol.appendChild(titleSpan);
-
-          const studentName = this.state.studentName || this.state.folder?.name || 'Student';
-          const pendingFollowup = getPendingFollowUp(studentName, ruleName);
-
-          const statusBadge = document.createElement('span');
-          if (pendingFollowup) {
-            statusBadge.className = 'px-1.5 py-0.2 rounded font-mono-code text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold shrink-0 flex items-center gap-0.5';
-            statusBadge.textContent = `📅 ${formatFriendlyDate(pendingFollowup.promisedDate)}`;
-          } else {
-            statusBadge.className = 'px-1.5 py-0.2 rounded font-mono-code text-[9px] bg-error-container text-on-error-container font-bold shrink-0';
-            statusBadge.textContent = 'Missing';
-          }
-          leftCol.appendChild(statusBadge);
-          mItem.appendChild(leftCol);
-
-          // Inline Action Buttons (Follow-up + Import)
-          const actionRow = document.createElement('div');
-          actionRow.className = 'flex items-center gap-1 shrink-0';
-
-          // 1. Follow-up Date Picker Popover Button
-          const popoverWrapper = document.createElement('div');
-          popoverWrapper.className = 'relative inline-block';
-
-          const btnFollowup = document.createElement('button');
-          btnFollowup.type = 'button';
-          btnFollowup.className = 'px-1.5 py-0.5 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[9px] font-semibold flex items-center gap-0.5 border border-outline-variant/30 cursor-pointer transition-colors';
-          const calIcon = document.createElement('span');
-          calIcon.className = 'material-symbols-outlined text-[12px] text-primary';
-          calIcon.textContent = 'event';
-          btnFollowup.appendChild(calIcon);
-          btnFollowup.appendChild(document.createTextNode('Date'));
-          popoverWrapper.appendChild(btnFollowup);
-
-          const dateMenu = document.createElement('div');
-          dateMenu.className = 'hidden absolute right-0 bottom-full mb-1 w-48 bg-surface-container-lowest rounded-lg shadow-lg border border-outline-variant/40 p-2 z-50 flex flex-col gap-1 text-[11px] font-mono-code';
-
-          const optToday = document.createElement('button');
-          optToday.type = 'button';
-          optToday.className = 'w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer';
-          optToday.textContent = `आज (Today: ${formatFriendlyDate(getTodayDateString())})`;
-          optToday.onclick = (e) => {
-            e.stopPropagation();
-            addOrUpdateFollowUp({
-              folderName: studentName,
-              studentName: studentName,
-              documentName: ruleName,
-              promisedDate: getTodayDateString(),
-              note: `Missing ${ruleName} during intake`
-            });
-            dateMenu.classList.add('hidden');
-            toast.show('Follow-up Scheduled', `${ruleName} promise date set for Today`, 'success');
-            this.renderQueue();
-          };
-          dateMenu.appendChild(optToday);
-
-          const optTomorrow = document.createElement('button');
-          optTomorrow.type = 'button';
-          optTomorrow.className = 'w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer';
-          optTomorrow.textContent = `उद्या (Tomorrow: ${formatFriendlyDate(getTomorrowDateString(1))})`;
-          optTomorrow.onclick = (e) => {
-            e.stopPropagation();
-            addOrUpdateFollowUp({
-              folderName: studentName,
-              studentName: studentName,
-              documentName: ruleName,
-              promisedDate: getTomorrowDateString(1),
-              note: `Missing ${ruleName} during intake`
-            });
-            dateMenu.classList.add('hidden');
-            toast.show('Follow-up Scheduled', `${ruleName} promise date set for Tomorrow`, 'success');
-            this.renderQueue();
-          };
-          dateMenu.appendChild(optTomorrow);
-
-          const optMonday = document.createElement('button');
-          optMonday.type = 'button';
-          optMonday.className = 'w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer';
-          optMonday.textContent = `सोमवार (Monday: ${formatFriendlyDate(getNextMondayDateString())})`;
-          optMonday.onclick = (e) => {
-            e.stopPropagation();
-            addOrUpdateFollowUp({
-              folderName: studentName,
-              studentName: studentName,
-              documentName: ruleName,
-              promisedDate: getNextMondayDateString(),
-              note: `Missing ${ruleName} during intake`
-            });
-            dateMenu.classList.add('hidden');
-            toast.show('Follow-up Scheduled', `${ruleName} promise date set for Monday`, 'success');
-            this.renderQueue();
-          };
-          dateMenu.appendChild(optMonday);
-
-          // Custom date input
-          const customDateDiv = document.createElement('div');
-          customDateDiv.className = 'flex items-center gap-1 pt-1 border-t border-surface-container mt-1';
-          const dateInput = document.createElement('input');
-          dateInput.type = 'date';
-          dateInput.className = 'flex-1 text-[10px] p-1 rounded bg-surface-container text-on-surface border border-outline-variant/40 outline-none';
-          const btnSetCustom = document.createElement('button');
-          btnSetCustom.type = 'button';
-          btnSetCustom.className = 'px-2 py-1 rounded bg-primary text-on-primary text-[10px] font-bold cursor-pointer';
-          btnSetCustom.textContent = 'Set';
-          btnSetCustom.onclick = (e) => {
-            e.stopPropagation();
-            if (dateInput.value) {
-              addOrUpdateFollowUp({
-                folderName: studentName,
-                studentName: studentName,
-                documentName: ruleName,
-                promisedDate: dateInput.value,
-                note: `Missing ${ruleName} during intake`
-              });
-              dateMenu.classList.add('hidden');
-              toast.show('Follow-up Scheduled', `${ruleName} promise date: ${dateInput.value}`, 'success');
-              this.renderQueue();
-            }
-          };
-          customDateDiv.appendChild(dateInput);
-          customDateDiv.appendChild(btnSetCustom);
-          dateMenu.appendChild(customDateDiv);
-
-          btnFollowup.onclick = (e) => {
-            e.stopPropagation();
-            dateMenu.classList.toggle('hidden');
-          };
-          popoverWrapper.appendChild(dateMenu);
-          actionRow.appendChild(popoverWrapper);
-
-          // 2. Direct Import Button
-          const btnImport = document.createElement('button');
-          btnImport.type = 'button';
-          btnImport.className = 'px-2 py-0.5 rounded bg-primary hover:bg-primary/90 text-on-primary font-mono-code text-[9px] font-bold flex items-center gap-0.5 shadow-xs cursor-pointer transition-colors';
-          const impIcon = document.createElement('span');
-          impIcon.className = 'material-symbols-outlined text-[12px]';
-          impIcon.textContent = 'download';
-          btnImport.appendChild(impIcon);
-          btnImport.appendChild(document.createTextNode('Import'));
-
-          btnImport.onclick = async (e) => {
-            e.stopPropagation();
-            toast.show('Select File for Import', `Select document for ${ruleName}`, 'info');
-            try {
-              const res = await selectNativeFiles('All Supported Files (*.pdf;*.jpg;*.jpeg;*.png;*.docx)|*.pdf;*.jpg;*.jpeg;*.png;*.docx|All Files (*.*)|*.*', `Select File for ${ruleName}`);
-              if (!res.success || !res.files || res.files.length === 0) return;
-
-              const picked = res.files[0];
-              const fileExt = picked.ext || ext(picked.name);
-              const targetFilename = computeImportTargetName(ruleName, this.state.studentName, fileExt);
-
-              const folderPath = this.state.folder?.path || '';
-              const newFileItem = {
-                id: `imported_${Date.now()}`,
-                name: targetFilename,
-                targetName: targetFilename,
-                suggestedName: targetFilename,
-                path: folderPath ? `${folderPath}/${targetFilename}` : picked.path,
-                nativePath: folderPath ? `${folderPath}/${targetFilename}` : picked.path,
-                size: picked.size || 0,
-                ext: fileExt,
-                url: picked.url,
-                docType: ruleName,
-                isMatched: true,
-                isRenamed: false,
-                isKept: false,
-                status: 'matched'
-              };
-
-              this.state.files.push(newFileItem);
-              this.updateTelemetry();
-              this.renderQueue();
-              this.renderCurrentPreview();
-              toast.show('Document Imported', `Imported ${targetFilename} as ${ruleName}`, 'success');
-            } catch (err) {
-              toast.show('Import Error', err.message, 'error');
-            }
-          };
-          actionRow.appendChild(btnImport);
-
-          mItem.appendChild(actionRow);
-          missingList.appendChild(mItem);
-        });
-
-        scrollContainer.appendChild(missingList);
-      }
-    }
-
-    // 4. COMPLETED FILES
+    // 3. COMPLETED FILES
     const completedFiles = this.state.files.filter(f => f.isRenamed || f.isKept);
     if (completedFiles.length > 0) {
       const compHeader = document.createElement('div');
@@ -1634,6 +1404,364 @@ export class RenamerUIManager {
     }
 
     queueCol.appendChild(scrollContainer);
+
+    // Populate Column 3 Utility Panel (Missing Documents + Top 5 Shortcuts)
+    const utilityScroll = document.getElementById('utilityScrollArea');
+    if (utilityScroll) {
+      this.renderUtilityPanel(utilityScroll);
+    }
+  }
+
+  /**
+   * Column 3 (Right Utility Panel): Missing Documents List + Top 5 Core Shortcuts Card
+   */
+  renderUtilityPanel(container) {
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+
+    if (this.state.files.length === 0) {
+      const emptyCard = document.createElement('div');
+      emptyCard.className = 'p-4 text-center text-secondary bg-surface-container-lowest rounded-xl border border-outline-variant/30 flex flex-col items-center gap-2';
+      const icon = document.createElement('span');
+      icon.className = 'material-symbols-outlined text-[32px] text-primary opacity-50';
+      icon.textContent = 'checklist';
+      emptyCard.appendChild(icon);
+      const title = document.createElement('div');
+      title.className = 'font-label-md font-bold text-on-surface';
+      title.textContent = 'No Documents Loaded';
+      emptyCard.appendChild(title);
+      const desc = document.createElement('div');
+      desc.className = 'text-[11px] text-secondary leading-relaxed';
+      desc.textContent = 'Load a student folder to audit missing documents and view quick shortcuts.';
+      emptyCard.appendChild(desc);
+      container.appendChild(emptyCard);
+      return;
+    }
+
+    // 1. MISSING DOCUMENTS / CHECKLIST AUDIT
+    const activeRules = DEFAULT_CHECKLISTS_DATA["MAHA DBT FORM"] || [];
+    const presentDocs = new Set(
+      this.state.files.map(f => (f.docType || '').toUpperCase()).filter(Boolean)
+    );
+
+    const missingRules = activeRules.filter(([ruleName]) => {
+      const cleanRule = ruleName.toUpperCase();
+      if (presentDocs.has(cleanRule)) return false;
+      for (const link of DEFAULT_LINKED_RULES) {
+        if (link.combined && presentDocs.has(link.combined.toUpperCase())) {
+          if (cleanRule === link.part1.toUpperCase() || cleanRule === link.part2.toUpperCase()) {
+            return false;
+          }
+        }
+      }
+      return true;
+    });
+
+    if (missingRules.length > 0) {
+      const missingSection = document.createElement('div');
+      missingSection.className = 'flex flex-col gap-1.5 shrink-0';
+
+      const missingHeader = document.createElement('div');
+      missingHeader.className = 'flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-[11px] font-mono-code text-amber-900 dark:text-amber-300 shrink-0';
+
+      const leftMissing = document.createElement('div');
+      leftMissing.className = 'flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-400';
+      const warnIcon = document.createElement('span');
+      warnIcon.className = 'material-symbols-outlined text-[15px]';
+      warnIcon.textContent = 'warning';
+      leftMissing.appendChild(warnIcon);
+      leftMissing.appendChild(document.createTextNode('MISSING DOCUMENTS'));
+      missingHeader.appendChild(leftMissing);
+
+      const rightMissing = document.createElement('span');
+      rightMissing.className = 'text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase px-1.5 py-0.5 rounded bg-amber-500/20';
+      rightMissing.textContent = `${missingRules.length} Missing`;
+      missingHeader.appendChild(rightMissing);
+      missingSection.appendChild(missingHeader);
+
+      const missingList = document.createElement('div');
+      missingList.className = 'flex flex-col gap-1 shrink-0';
+
+      missingRules.forEach(([ruleName]) => {
+        const mItem = document.createElement('article');
+        mItem.className = 'h-8 px-2 py-1 rounded-lg bg-surface-container-lowest shadow-xs flex items-center justify-between gap-1.5 border border-amber-500/30 hover:border-amber-500/50 transition-colors shrink-0';
+
+        const leftCol = document.createElement('div');
+        leftCol.className = 'flex items-center gap-1.5 min-w-0 flex-1';
+
+        const redDot = document.createElement('span');
+        redDot.className = 'w-1.5 h-1.5 rounded-full bg-error shrink-0';
+        leftCol.appendChild(redDot);
+
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'font-mono-code text-[11px] font-bold text-on-surface truncate';
+        titleSpan.textContent = ruleName;
+        leftCol.appendChild(titleSpan);
+
+        const studentName = this.state.studentName || this.state.folder?.name || 'Student';
+        const pendingFollowup = getPendingFollowUp(studentName, ruleName);
+
+        // ONLY show follow-up date badge if promised date is set; NO repetitive "Missing" text badge!
+        if (pendingFollowup) {
+          const statusBadge = document.createElement('span');
+          statusBadge.className = 'px-1.5 py-0.2 rounded font-mono-code text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold shrink-0 flex items-center gap-0.5';
+          statusBadge.textContent = `📅 ${formatFriendlyDate(pendingFollowup.promisedDate)}`;
+          leftCol.appendChild(statusBadge);
+        }
+
+        mItem.appendChild(leftCol);
+
+        // Inline Action Buttons (Follow-up + Import)
+        const actionRow = document.createElement('div');
+        actionRow.className = 'flex items-center gap-1 shrink-0';
+
+        // 1. Follow-up Date Picker Popover Button
+        const popoverWrapper = document.createElement('div');
+        popoverWrapper.className = 'relative inline-block';
+
+        const btnFollowup = document.createElement('button');
+        btnFollowup.type = 'button';
+        btnFollowup.className = 'px-1.5 py-0.5 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[9px] font-semibold flex items-center gap-0.5 border border-outline-variant/30 cursor-pointer transition-colors';
+        const calIcon = document.createElement('span');
+        calIcon.className = 'material-symbols-outlined text-[12px] text-primary';
+        calIcon.textContent = 'event';
+        btnFollowup.appendChild(calIcon);
+        btnFollowup.appendChild(document.createTextNode('Date'));
+        popoverWrapper.appendChild(btnFollowup);
+
+        const dateMenu = document.createElement('div');
+        dateMenu.className = 'hidden absolute right-0 bottom-full mb-1 w-48 bg-surface-container-lowest rounded-lg shadow-lg border border-outline-variant/40 p-2 z-50 flex flex-col gap-1 text-[11px] font-mono-code';
+
+        const optToday = document.createElement('button');
+        optToday.type = 'button';
+        optToday.className = 'w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer';
+        optToday.textContent = `Today (${formatFriendlyDate(getTodayDateString())})`;
+        optToday.onclick = (e) => {
+          e.stopPropagation();
+          addOrUpdateFollowUp({
+            folderName: studentName,
+            studentName: studentName,
+            documentName: ruleName,
+            promisedDate: getTodayDateString(),
+            note: `Missing ${ruleName} during intake`
+          });
+          dateMenu.classList.add('hidden');
+          toast.show('Follow-up Scheduled', `${ruleName} promise date set for Today`, 'success');
+          this.renderQueue();
+        };
+        dateMenu.appendChild(optToday);
+
+        const optTomorrow = document.createElement('button');
+        optTomorrow.type = 'button';
+        optTomorrow.className = 'w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer';
+        optTomorrow.textContent = `Tomorrow (${formatFriendlyDate(getTomorrowDateString(1))})`;
+        optTomorrow.onclick = (e) => {
+          e.stopPropagation();
+          addOrUpdateFollowUp({
+            folderName: studentName,
+            studentName: studentName,
+            documentName: ruleName,
+            promisedDate: getTomorrowDateString(1),
+            note: `Missing ${ruleName} during intake`
+          });
+          dateMenu.classList.add('hidden');
+          toast.show('Follow-up Scheduled', `${ruleName} promise date set for Tomorrow`, 'success');
+          this.renderQueue();
+        };
+        dateMenu.appendChild(optTomorrow);
+
+        const optMonday = document.createElement('button');
+        optMonday.type = 'button';
+        optMonday.className = 'w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer';
+        optMonday.textContent = `Monday (${formatFriendlyDate(getNextMondayDateString())})`;
+        optMonday.onclick = (e) => {
+          e.stopPropagation();
+          addOrUpdateFollowUp({
+            folderName: studentName,
+            studentName: studentName,
+            documentName: ruleName,
+            promisedDate: getNextMondayDateString(),
+            note: `Missing ${ruleName} during intake`
+          });
+          dateMenu.classList.add('hidden');
+          toast.show('Follow-up Scheduled', `${ruleName} promise date set for Monday`, 'success');
+          this.renderQueue();
+        };
+        dateMenu.appendChild(optMonday);
+
+        // Custom date input
+        const customDateDiv = document.createElement('div');
+        customDateDiv.className = 'flex items-center gap-1 pt-1 border-t border-surface-container mt-1';
+        const dateInput = document.createElement('input');
+        dateInput.type = 'date';
+        dateInput.className = 'flex-1 text-[10px] p-1 rounded bg-surface-container text-on-surface border border-outline-variant/40 outline-none';
+        const btnSetCustom = document.createElement('button');
+        btnSetCustom.type = 'button';
+        btnSetCustom.className = 'px-2 py-1 rounded bg-primary text-on-primary text-[10px] font-bold cursor-pointer';
+        btnSetCustom.textContent = 'Set';
+        btnSetCustom.onclick = (e) => {
+          e.stopPropagation();
+          if (dateInput.value) {
+            addOrUpdateFollowUp({
+              folderName: studentName,
+              studentName: studentName,
+              documentName: ruleName,
+              promisedDate: dateInput.value,
+              note: `Missing ${ruleName} during intake`
+            });
+            dateMenu.classList.add('hidden');
+            toast.show('Follow-up Scheduled', `${ruleName} promise date: ${dateInput.value}`, 'success');
+            this.renderQueue();
+          }
+        };
+        customDateDiv.appendChild(dateInput);
+        customDateDiv.appendChild(btnSetCustom);
+        dateMenu.appendChild(customDateDiv);
+
+        btnFollowup.onclick = (e) => {
+          e.stopPropagation();
+          dateMenu.classList.toggle('hidden');
+        };
+        popoverWrapper.appendChild(dateMenu);
+        actionRow.appendChild(popoverWrapper);
+
+        // 2. Direct Import Button
+        const btnImport = document.createElement('button');
+        btnImport.type = 'button';
+        btnImport.className = 'px-2 py-0.5 rounded bg-primary hover:bg-primary/90 text-on-primary font-mono-code text-[9px] font-bold flex items-center gap-0.5 shadow-xs cursor-pointer transition-colors';
+        const impIcon = document.createElement('span');
+        impIcon.className = 'material-symbols-outlined text-[12px]';
+        impIcon.textContent = 'download';
+        btnImport.appendChild(impIcon);
+        btnImport.appendChild(document.createTextNode('Import'));
+
+        btnImport.onclick = async (e) => {
+          e.stopPropagation();
+          toast.show('Select File for Import', `Select document for ${ruleName}`, 'info');
+          try {
+            const res = await selectNativeFiles('All Supported Files (*.pdf;*.jpg;*.jpeg;*.png;*.docx)|*.pdf;*.jpg;*.jpeg;*.png;*.docx|All Files (*.*)|*.*', `Select File for ${ruleName}`);
+            if (!res.success || !res.files || res.files.length === 0) return;
+
+            const picked = res.files[0];
+            const fileExt = picked.ext || ext(picked.name);
+            const targetFilename = computeImportTargetName(ruleName, this.state.studentName, fileExt);
+
+            const folderPath = this.state.folder?.path || '';
+            const newFileItem = {
+              id: `imported_${Date.now()}`,
+              name: targetFilename,
+              targetName: targetFilename,
+              suggestedName: targetFilename,
+              path: folderPath ? `${folderPath}/${targetFilename}` : picked.path,
+              nativePath: folderPath ? `${folderPath}/${targetFilename}` : picked.path,
+              size: picked.size || 0,
+              ext: fileExt,
+              url: picked.url,
+              docType: ruleName,
+              isMatched: true,
+              isRenamed: false,
+              isKept: false,
+              status: 'matched'
+            };
+
+            this.state.files.push(newFileItem);
+            this.updateTelemetry();
+            this.renderQueue();
+            this.renderCurrentPreview();
+            toast.show('Document Imported', `Imported ${targetFilename} as ${ruleName}`, 'success');
+          } catch (err) {
+            toast.show('Import Error', err.message, 'error');
+          }
+        };
+        actionRow.appendChild(btnImport);
+
+        mItem.appendChild(actionRow);
+        missingList.appendChild(mItem);
+      });
+
+      missingSection.appendChild(missingList);
+      container.appendChild(missingSection);
+    } else {
+      const allDoneCard = document.createElement('div');
+      allDoneCard.className = 'p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 flex items-center gap-2 text-emerald-800 dark:text-emerald-300';
+      const checkIcon = document.createElement('span');
+      checkIcon.className = 'material-symbols-outlined text-[18px] text-tertiary';
+      checkIcon.textContent = 'check_circle';
+      allDoneCard.appendChild(checkIcon);
+      const doneText = document.createElement('span');
+      doneText.className = 'font-mono-code text-[11px] font-bold';
+      doneText.textContent = 'All Required Documents Present';
+      allDoneCard.appendChild(doneText);
+      container.appendChild(allDoneCard);
+    }
+
+    // 2. TOP 5 CORE SHORTCUTS CARD (High-Contrast Bold Colors)
+    const shortcutsSection = document.createElement('div');
+    shortcutsSection.className = 'bg-surface-container-lowest rounded-xl p-3 border border-outline-variant/30 flex flex-col gap-2 shadow-xs shrink-0 mt-1';
+
+    const scHeader = document.createElement('div');
+    scHeader.className = 'flex items-center justify-between';
+    const scTitle = document.createElement('div');
+    scTitle.className = 'flex items-center gap-1.5 font-bold font-mono-code text-[11px] text-primary';
+    const boltIcon = document.createElement('span');
+    boltIcon.className = 'material-symbols-outlined text-[15px]';
+    boltIcon.textContent = 'bolt';
+    scTitle.appendChild(boltIcon);
+    scTitle.appendChild(document.createTextNode('CORE SHORTCUTS'));
+    scHeader.appendChild(scTitle);
+
+    const scBadge = document.createElement('span');
+    scBadge.className = 'px-1.5 py-0.2 rounded font-mono-code text-[10px] bg-surface-container text-secondary font-bold';
+    scBadge.textContent = 'Top 5';
+    scHeader.appendChild(scBadge);
+    shortcutsSection.appendChild(scHeader);
+
+    const scList = document.createElement('div');
+    scList.className = 'flex flex-col gap-1.5';
+
+    const top5Shortcuts = [
+      { code: '10M', label: '10th Marksheet', canonical: '10TH MARKSHEET' },
+      { code: '12M', label: '12th Marksheet', canonical: '12TH MARKSHEET' },
+      { code: 'ADR', label: 'Aadhaar Card', canonical: 'AADHAAR CARD' },
+      { code: 'CST', label: 'Caste Certificate', canonical: 'CASTE CERTIFICATE' },
+      { code: 'DOM', label: 'Domicile Cert', canonical: 'DOMICILE CERTIFICATE' }
+    ];
+
+    top5Shortcuts.forEach(item => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'h-8 px-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[11px] font-semibold flex items-center justify-between gap-2 border border-outline-variant/30 hover:border-primary/50 cursor-pointer active:scale-95 transition-all shadow-xs';
+      btn.title = `Click to apply ${item.code} (${item.label}) to active document`;
+
+      const badge = document.createElement('span');
+      badge.className = `px-2 py-0.5 rounded text-[10px] ${getShortcutBadgeColor(item.code)} shadow-xs`;
+      badge.textContent = item.code;
+      btn.appendChild(badge);
+
+      const label = document.createElement('span');
+      label.className = 'truncate flex-1 text-left text-on-surface text-[11px] font-medium';
+      label.textContent = item.label;
+      btn.appendChild(label);
+
+      const enterHint = document.createElement('span');
+      enterHint.className = 'text-[9px] font-mono-code text-secondary opacity-60';
+      enterHint.textContent = '↵';
+      btn.appendChild(enterHint);
+
+      btn.addEventListener('click', () => {
+        if (this.state.files.length === 0) {
+          toast.show('No Files Loaded', 'Select a folder or add files first.', 'info');
+          return;
+        }
+        this.applyShortcutToCurrent(item);
+      });
+
+      scList.appendChild(btn);
+    });
+
+    shortcutsSection.appendChild(scList);
+    container.appendChild(shortcutsSection);
   }
 
   /**
@@ -1678,25 +1806,31 @@ export class RenamerUIManager {
       return;
     }
 
-    // 1. Check if user typed a short keyword e.g. "12m", "pan", "adr"
     const baseTyped = targetFilename.endsWith(currentExt)
       ? targetFilename.slice(0, -currentExt.length).trim()
       : targetFilename;
 
-    const spellingFixed = correctSpelling(baseTyped, DEFAULT_SPELLING_RULES);
-    const matchedDoc = matchDocument(spellingFixed, this.state.settings?.groups) ||
-                       matchDocument(baseTyped, this.state.settings?.groups);
-    const evalResult = evaluateMatch(spellingFixed, this.state.settings?.groups);
-    const recognized = matchedDoc || evalResult.docType || null;
-
-    if (recognized) {
-      const canonical = CANONICAL_NAMES[recognized.toUpperCase()] || recognized;
+    // Exact-Match Shortcut Rule vs. Custom User Name (+ Student Name)
+    const exactShortcut = this.shortcuts21.find(s => s.code.toLowerCase() === baseTyped.toLowerCase());
+    if (exactShortcut) {
+      const canonical = exactShortcut.canonical;
       const formatted = buildName(canonical, this.state.studentName, this.state.settings?.groups, this.state.style);
       targetFilename = formatted.endsWith(currentExt) ? formatted : `${formatted}${currentExt}`;
       current.docType = canonical;
       current.isMatched = true;
-    } else if (!targetFilename.endsWith(currentExt)) {
-      targetFilename = `${targetFilename}${currentExt}`;
+    } else {
+      // Custom user name: preserve exact custom text and automatically append Student Name
+      let customBase = baseTyped;
+      if (this.state.studentName && !customBase.toLowerCase().includes(this.state.studentName.toLowerCase())) {
+        customBase = `${customBase} ${this.state.studentName}`;
+      }
+      if (this.state.style === 'upper') customBase = customBase.toUpperCase();
+      else if (this.state.style === 'lower') customBase = customBase.toLowerCase();
+      else if (this.state.style === 'title') customBase = customBase.toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase());
+
+      targetFilename = customBase.endsWith(currentExt) ? customBase : `${customBase}${currentExt}`;
+      current.docType = baseTyped;
+      current.isMatched = false;
     }
 
     // UNIQUE DESTINATION NUMBERING: Ensure no duplicate overwrites!
