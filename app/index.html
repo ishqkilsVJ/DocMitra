@@ -228,767 +228,439 @@
     <!-- Main Views Viewport Container -->
     <main id="view-container" class="flex-1 min-h-0 relative w-full overflow-hidden">
 
-      <section id="view-bulk-renamer" class="view-pane flex flex-col h-full overflow-hidden rename-tool-scope">
+                  <section id="view-bulk-renamer" class="view-pane flex flex-col h-full overflow-hidden rename-tool-scope">
         <div class="flex flex-col w-full h-full min-h-0 overflow-hidden">
+<!-- Ribbon: Working Folder Context & Batch Telemetry -->
+  <section
+    class="bg-surface-container-low px-gutter py-space-sm flex flex-nowrap items-center justify-between gap-space-sm shadow-sm shrink-0 w-full overflow-hidden">
+    <!-- Left: Folder Navigation & Single-Line Breadcrumb with Middle Truncation -->
+    <div class="flex items-center gap-space-xs min-w-0 flex-1 overflow-hidden mr-2">
+      <div
+        class="w-7 h-7 rounded-lg bg-primary-container text-on-primary flex items-center justify-center shrink-0 shadow-sm">
+        <span class="material-symbols-outlined text-[17px]">drive_file_rename_outline</span>
+      </div>
+      <button
+        class="w-6 h-6 rounded flex items-center justify-center bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors cursor-pointer shrink-0"
+        id="btnPrevFolder" title="Previous Student Folder (Ctrl+Left)" type="button">
+        <span class="material-symbols-outlined text-[16px]">chevron_left</span>
+      </button>
+      <span
+        class="font-mono-code text-[11px] px-2 py-0.5 rounded bg-surface-container text-secondary font-semibold select-none shrink-0"
+        id="folderCounterPill">Folder 0 of 0</span>
+      <button
+        class="w-6 h-6 rounded flex items-center justify-center bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors cursor-pointer shrink-0"
+        id="btnNextFolder" title="Next Student Folder (Ctrl+Right)" type="button">
+        <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+      </button>
+      <span class="material-symbols-outlined text-[16px] text-primary shrink-0 ml-1">folder</span>
+      <div
+        class="font-mono-code text-label-md text-on-surface truncate font-semibold cursor-pointer hover:bg-surface-container-high/50 hover:text-primary px-1.5 py-0.5 rounded transition-colors flex items-center gap-1 min-w-0"
+        id="activeFolderPath" title="Click to open in Windows Explorer">No folder selected</div>
+      <button class="text-secondary hover:text-primary transition-colors ml-0.5 p-0.5 cursor-pointer shrink-0"
+        id="btnOpenInExplorer" title="Open Folder in Windows Explorer" type="button">
+        <span class="material-symbols-outlined text-[16px]">open_in_new</span>
+      </button>
+    </div>
 
-          <!-- Ribbon: Working Folder Context & Batch Telemetry -->
-          <section
-            class="bg-surface-container-low px-gutter py-space-sm flex flex-nowrap items-center justify-between gap-space-sm shadow-sm shrink-0 w-full overflow-hidden">
-            <!-- Left: Folder Navigation & Single-Line Breadcrumb with Middle Truncation -->
-            <div class="flex items-center gap-space-xs min-w-0 flex-1 overflow-hidden mr-2">
-              <div
-                class="w-7 h-7 rounded-lg bg-primary-container text-on-primary flex items-center justify-center shrink-0 shadow-sm">
-                <span class="material-symbols-outlined text-[17px]">drive_file_rename_outline</span>
-              </div>
+    <!-- Quick Stats Telemetry Strip -->
+    <div
+      class="hidden lg:flex items-center gap-space-sm bg-surface-container-lowest px-space-md py-1 rounded-lg shadow-xs shrink-0">
+      <div class="flex items-center gap-1.5 font-label-sm">
+        <span class="w-2 h-2 rounded-full bg-primary-container"></span>
+        <span class="text-on-surface-variant text-[11px]">Files:</span>
+        <span class="font-mono-code text-on-surface font-bold text-[12px]" id="telemetryTotalFiles">0</span>
+      </div>
+      <span class="text-outline-variant">|</span>
+      <div class="flex items-center gap-1.5 font-label-sm">
+        <span class="w-2 h-2 rounded-full bg-tertiary"></span>
+        <span class="text-on-surface-variant text-[11px]">Ready:</span>
+        <span class="font-mono-code text-tertiary font-bold text-[12px]" id="telemetryReadyFiles">0 (0%)</span>
+      </div>
+      <span class="text-outline-variant">|</span>
+      <div class="flex items-center gap-1.5 font-label-sm">
+        <span class="w-2 h-2 rounded-full bg-error"></span>
+        <span class="text-on-surface-variant text-[11px]">Unmatched:</span>
+        <span class="font-mono-code text-error font-bold text-[12px]" id="telemetryUnmatchedFiles">0</span>
+      </div>
+    </div>
+
+    <!-- Center/Right: Ultra-Compact Segmented Casing Switcher (28px height, Zero Wasted Space) -->
+    <div
+      class="flex items-center bg-surface-container-lowest p-0.5 rounded-lg border border-outline-variant/30 text-label-sm shadow-xs shrink-0 select-none h-7"
+      id="casingRadiosGroup">
+      <span class="font-mono-code text-[10px] text-secondary font-bold px-1.5 flex items-center gap-0.5">
+        <span class="material-symbols-outlined text-[13px] text-primary">text_fields</span>Case:
+      </span>
+      <label
+        class="flex items-center cursor-pointer text-white bg-primary font-mono-code text-[11px] px-2 py-0.5 rounded shadow-xs select-none font-bold transition-all"
+        data-case="upper">
+        <input type="radio" name="casingStyleRadio" value="upper" checked class="sr-only">
+        <span>UPPER</span>
+      </label>
+      <label
+        class="flex items-center cursor-pointer text-secondary hover:text-on-surface font-mono-code text-[11px] px-2 py-0.5 rounded transition-all select-none"
+        data-case="title">
+        <input type="radio" name="casingStyleRadio" value="title" class="sr-only">
+        <span>Title</span>
+      </label>
+      <label
+        class="flex items-center cursor-pointer text-secondary hover:text-on-surface font-mono-code text-[11px] px-2 py-0.5 rounded transition-all select-none"
+        data-case="lower">
+        <input type="radio" name="casingStyleRadio" value="lower" class="sr-only">
+        <span>lower</span>
+      </label>
+
+    </div>
+
+    <!-- Right: Permanently Locked Direct Action Triggers (1. Clear, 2. Add Files, 3. Select Folder) -->
+    <div class="flex items-center gap-space-xs shrink-0 ml-auto">
+      <button
+        class="px-space-md py-1.5 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-secondary hover:text-error font-label-md font-medium border border-outline-variant/40 hover:border-error/40 transition-all flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
+        id="btnClearWorkspace" title="Clear current queue & reset workspace" type="button">
+        <span class="material-symbols-outlined text-[16px] text-error">delete_sweep</span>
+        <span>Clear</span>
+      </button>
+      <button
+        class="px-space-md py-1.5 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-md font-medium border border-outline-variant/40 hover:border-outline-variant/60 transition-all flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
+        id="btnAddFiles" type="button">
+        <span class="material-symbols-outlined text-[16px] text-primary">note_add</span>
+        <span>Add Files</span>
+      </button>
+      <button
+        class="px-space-md py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-on-primary font-label-md font-semibold transition-all flex items-center gap-1.5 shadow-sm active:scale-98 cursor-pointer shrink-0"
+        id="btnSelectFolder" type="button">
+        <span class="material-symbols-outlined text-[16px]">folder_open</span>
+        <span>Select Folder</span>
+        <kbd
+          class="px-1.5 py-0.5 rounded bg-surface-container-lowest/20 font-mono-code text-[10px] text-on-primary font-bold shadow-xs">F2</kbd>
+      </button>
+    </div>
+  </section>
+
+  <!-- Main 3-Column Workstation Bento Grid Relative Container -->
+  <div class="relative w-full flex-1 min-h-0 flex flex-col overflow-hidden">
+    <!-- 3-Column Real Workspace Grid -->
+    <div
+      class="w-full flex flex-col xl:flex-row items-stretch gap-space-md p-space-md bg-surface overflow-hidden select-none flex-1 min-h-0"
+      id="workspace-columns-container">
+      <!-- Column 1 (Left - Primary Controls): Compact Hero Card + Upcoming & Completed Queues -->
+      <main class="w-full xl:w-[28%] shrink-0 flex flex-col gap-space-sm overflow-hidden h-full" id="col-queue">
+        <!-- Dynamically filled by RenamerUIManager.renderQueue() -->
+        <div
+          class="flex flex-col gap-space-sm overflow-y-auto pr-1 flex-1 min-h-0 custom-pan-scroll pan-grab-active queue-scroll-area">
+          <div
+            class="p-6 text-center text-secondary bg-surface-container-lowest rounded-xl border border-outline-variant/30 flex flex-col items-center gap-2">
+            <span class="material-symbols-outlined text-[36px] text-primary opacity-60">folder_open</span>
+            <div class="font-headline-sm font-bold text-on-surface">No Intake Folder Selected</div>
+            <div class="text-body-sm text-secondary">Click "Select Folder" (F2) or "Add Files" to start renaming student
+              admission documents.</div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Column 2 (Center - Primary Visual Focus): Document Preview Viewport -->
+      <section class="w-full xl:flex-1 min-w-0 flex flex-col h-full overflow-hidden" id="col-preview">
+        <!-- Alert Bar: New Document Found (Unrecognized) -->
+        <div id="newDocAlertBar" class="hidden shrink-0 mb-2 px-3 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-between text-amber-900 dark:text-amber-200">
+          <div class="flex items-center gap-2 text-label-md font-semibold">
+            <span class="text-base select-none">⚠️</span>
+            <span>New Document Found (Unrecognized)</span>
+          </div>
+          <button id="btnAddNewDocument" type="button" class="px-3 py-1 rounded bg-amber-600 hover:bg-amber-700 text-white font-label-sm font-bold shadow-xs transition-colors cursor-pointer flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[15px]">add_circle</span>
+            <span>Add Document</span>
+          </button>
+        </div>
+        <div
+          class="bg-surface-container-lowest rounded-xl shadow-sm flex flex-col h-full flex-1 min-h-0 overflow-hidden border border-outline-variant/30">
+          <div
+            class="p-space-xs bg-surface-container-low flex flex-wrap items-center justify-between gap-1 shadow-sm shrink-0">
+            <div class="flex items-center gap-0.5">
               <button
-                class="w-6 h-6 rounded flex items-center justify-center bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors cursor-pointer shrink-0"
-                id="btnPrevFolder" title="Previous Student Folder (Ctrl+Left)" type="button">
-                <span class="material-symbols-outlined text-[16px]">chevron_left</span>
-              </button>
+                class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
+                title="Zoom Out (Ctrl -)" type="button"><span
+                  class="material-symbols-outlined text-[16px]">zoom_out</span></button>
               <span
-                class="font-mono-code text-[11px] px-2 py-0.5 rounded bg-surface-container text-secondary font-semibold select-none shrink-0"
-                id="folderCounterPill">Folder 0 of 0</span>
+                class="font-mono-code text-label-sm font-bold px-1.5 py-0.5 bg-surface-container-lowest rounded text-on-surface">Fit
+                to Page</span>
               <button
-                class="w-6 h-6 rounded flex items-center justify-center bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors cursor-pointer shrink-0"
-                id="btnNextFolder" title="Next Student Folder (Ctrl+Right)" type="button">
-                <span class="material-symbols-outlined text-[16px]">chevron_right</span>
-              </button>
-              <span class="material-symbols-outlined text-[16px] text-primary shrink-0 ml-1">folder</span>
-              <div
-                class="font-mono-code text-label-md text-on-surface truncate font-semibold cursor-pointer hover:bg-surface-container-high/50 hover:text-primary px-1.5 py-0.5 rounded transition-colors flex items-center gap-1 min-w-0"
-                id="activeFolderPath" title="Click to open in Windows Explorer">No folder selected</div>
-              <button class="text-secondary hover:text-primary transition-colors ml-0.5 p-0.5 cursor-pointer shrink-0"
-                id="btnOpenInExplorer" title="Open Folder in Windows Explorer" type="button">
-                <span class="material-symbols-outlined text-[16px]">open_in_new</span>
-              </button>
+                class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
+                title="Zoom In (Ctrl +)" type="button"><span
+                  class="material-symbols-outlined text-[16px]">zoom_in</span></button>
+              <input class="w-24 h-1.5 accent-primary cursor-pointer hidden sm:inline-block ml-1" max="350" min="50"
+                type="range" value="160">
+              <button
+                class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
+                title="Reset Zoom" type="button"><span
+                  class="material-symbols-outlined text-[16px]">restart_alt</span></button>
             </div>
-
-            <!-- Quick Stats Telemetry Strip -->
-            <div
-              class="hidden lg:flex items-center gap-space-sm bg-surface-container-lowest px-space-md py-1 rounded-lg shadow-xs shrink-0">
-              <div class="flex items-center gap-1.5 font-label-sm">
-                <span class="w-2 h-2 rounded-full bg-primary-container"></span>
-                <span class="text-on-surface-variant text-[11px]">Files:</span>
-                <span class="font-mono-code text-on-surface font-bold text-[12px]" id="telemetryTotalFiles">0</span>
-              </div>
-              <span class="text-outline-variant">|</span>
-              <div class="flex items-center gap-1.5 font-label-sm">
-                <span class="w-2 h-2 rounded-full bg-tertiary"></span>
-                <span class="text-on-surface-variant text-[11px]">Ready:</span>
-                <span class="font-mono-code text-tertiary font-bold text-[12px]" id="telemetryReadyFiles">0 (0%)</span>
-              </div>
-              <span class="text-outline-variant">|</span>
-              <div class="flex items-center gap-1.5 font-label-sm">
-                <span class="w-2 h-2 rounded-full bg-error"></span>
-                <span class="text-on-surface-variant text-[11px]">Unmatched:</span>
-                <span class="font-mono-code text-error font-bold text-[12px]" id="telemetryUnmatchedFiles">0</span>
-              </div>
-            </div>
-
-            <!-- Center/Right: Ultra-Compact Segmented Casing Switcher (28px height, Zero Wasted Space) -->
-            <div
-              class="flex items-center bg-surface-container-lowest p-0.5 rounded-lg border border-outline-variant/30 text-label-sm shadow-xs shrink-0 select-none h-7"
-              id="casingRadiosGroup">
-              <span class="font-mono-code text-[10px] text-secondary font-bold px-1.5 flex items-center gap-0.5">
-                <span class="material-symbols-outlined text-[13px] text-primary">text_fields</span>Case:
+            <div class="flex items-center gap-1 font-mono-code text-[11px] text-secondary">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block"></span>
+              <span id="renamerPdfPageContainer" class="flex items-center gap-1">
+                <button id="btnPdfPrevPage" type="button"
+                  class="w-4 h-4 rounded hover:bg-surface-container flex items-center justify-center text-secondary hover:text-primary transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                  title="Previous Page (▲)"><span
+                    class="material-symbols-outlined text-[13px]">arrow_drop_up</span></button>
+                <span id="renamerPdfPageBadge"
+                  class="cursor-pointer hover:underline hover:text-primary font-bold transition-colors select-none"
+                  title="Click to jump to page">Page 1 of 1</span>
+                <button id="btnPdfNextPage" type="button"
+                  class="w-4 h-4 rounded hover:bg-surface-container flex items-center justify-center text-secondary hover:text-primary transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                  title="Next Page (▼)"><span
+                    class="material-symbols-outlined text-[13px]">arrow_drop_down</span></button>
               </span>
-              <label
-                class="flex items-center cursor-pointer text-white bg-primary font-mono-code text-[11px] px-2 py-0.5 rounded shadow-xs select-none font-bold transition-all"
-                data-case="upper">
-                <input type="radio" name="casingStyleRadio" value="upper" checked class="sr-only">
-                <span>UPPER</span>
-              </label>
-              <label
-                class="flex items-center cursor-pointer text-secondary hover:text-on-surface font-mono-code text-[11px] px-2 py-0.5 rounded transition-all select-none"
-                data-case="title">
-                <input type="radio" name="casingStyleRadio" value="title" class="sr-only">
-                <span>Title</span>
-              </label>
-              <label
-                class="flex items-center cursor-pointer text-secondary hover:text-on-surface font-mono-code text-[11px] px-2 py-0.5 rounded transition-all select-none"
-                data-case="lower">
-                <input type="radio" name="casingStyleRadio" value="lower" class="sr-only">
-                <span>lower</span>
-              </label>
-
-            </div>
-
-            <!-- Right: Permanently Locked Direct Action Triggers (1. Clear, 2. Add Files, 3. Select Folder) -->
-            <div class="flex items-center gap-space-xs shrink-0 ml-auto">
-              <button
-                class="px-space-md py-1.5 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-secondary hover:text-error font-label-md font-medium border border-outline-variant/40 hover:border-error/40 transition-all flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
-                id="btnClearWorkspace" title="Clear current queue & reset workspace" type="button">
-                <span class="material-symbols-outlined text-[16px] text-error">delete_sweep</span>
-                <span>Clear</span>
-              </button>
-              <button
-                class="px-space-md py-1.5 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-md font-medium border border-outline-variant/40 hover:border-outline-variant/60 transition-all flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
-                id="btnAddFiles" type="button">
-                <span class="material-symbols-outlined text-[16px] text-primary">note_add</span>
-                <span>Add Files</span>
-              </button>
-              <button
-                class="px-space-md py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-on-primary font-label-md font-semibold transition-all flex items-center gap-1.5 shadow-sm active:scale-98 cursor-pointer shrink-0"
-                id="btnSelectFolder" type="button">
-                <span class="material-symbols-outlined text-[16px]">folder_open</span>
-                <span>Select Folder</span>
-                <kbd
-                  class="px-1.5 py-0.5 rounded bg-surface-container-lowest/20 font-mono-code text-[10px] text-on-primary font-bold shadow-xs">F2</kbd>
-              </button>
-            </div>
-          </section>
-
-          <!-- Main 3-Column Workstation Bento Grid Relative Container -->
-          <div class="relative w-full flex-1 min-h-0 flex flex-col overflow-hidden">
-            <!-- 3-Column Real Workspace Grid -->
-            <div
-              class="w-full flex flex-col xl:flex-row items-stretch gap-space-md p-space-md bg-surface overflow-hidden select-none flex-1 min-h-0"
-              id="workspace-columns-container">
-              <!-- Column 1 (Left - Primary Controls): Compact Hero Card + Upcoming & Completed Queues -->
-              <main class="w-full xl:w-[28%] shrink-0 flex flex-col gap-space-sm overflow-hidden h-full" id="col-queue">
-                <!-- Dynamically filled by RenamerUIManager.renderQueue() -->
-                <div
-                  class="flex flex-col gap-space-sm overflow-y-auto pr-1 flex-1 min-h-0 custom-pan-scroll pan-grab-active queue-scroll-area">
-                  <div
-                    class="p-6 text-center text-secondary bg-surface-container-lowest rounded-xl border border-outline-variant/30 flex flex-col items-center gap-2">
-                    <span class="material-symbols-outlined text-[36px] text-primary opacity-60">folder_open</span>
-                    <div class="font-headline-sm font-bold text-on-surface">No Intake Folder Selected</div>
-                    <div class="text-body-sm text-secondary">Click "Select Folder" (F2) or "Add Files" to start renaming
-                      student admission documents.</div>
-                  </div>
-                </div>
-              </main>
-
-              <!-- Column 2 (Center - Primary Visual Focus): Document Preview Viewport -->
-              <section class="w-full xl:flex-1 min-w-0 flex flex-col h-full overflow-hidden" id="col-preview">
-                <!-- Alert Bar: New Document Found (Unrecognized) -->
-                <div id="newDocAlertBar"
-                  class="hidden shrink-0 mb-2 px-3 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-between text-amber-900 dark:text-amber-200">
-                  <div class="flex items-center gap-2 text-label-md font-semibold">
-                    <span class="text-base select-none">⚠️</span>
-                    <span>New Document Found (Unrecognized)</span>
-                  </div>
-                  <button id="btnAddNewDocument" type="button"
-                    class="px-3 py-1 rounded bg-amber-600 hover:bg-amber-700 text-white font-label-sm font-bold shadow-xs transition-colors cursor-pointer flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-[15px]">add_circle</span>
-                    <span>Add Document</span>
-                  </button>
-                </div>
-
-                <div
-                  class="bg-surface-container-lowest rounded-xl shadow-sm flex flex-col h-full flex-1 min-h-0 overflow-hidden border border-outline-variant/30">
-                  <div
-                    class="p-space-xs bg-surface-container-low flex flex-wrap items-center justify-between gap-1 shadow-sm shrink-0">
-                    <div class="flex items-center gap-0.5">
-                      <button
-                        class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
-                        title="Zoom Out (Ctrl -)" type="button"><span
-                          class="material-symbols-outlined text-[16px]">zoom_out</span></button>
-                      <span
-                        class="font-mono-code text-label-sm font-bold px-1.5 py-0.5 bg-surface-container-lowest rounded text-on-surface">Fit
-                        to Page</span>
-                      <button
-                        class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
-                        title="Zoom In (Ctrl +)" type="button"><span
-                          class="material-symbols-outlined text-[16px]">zoom_in</span></button>
-                      <input class="w-24 h-1.5 accent-primary cursor-pointer hidden sm:inline-block ml-1" max="350"
-                        min="50" type="range" value="160">
-                      <button
-                        class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
-                        title="Reset Zoom" type="button"><span
-                          class="material-symbols-outlined text-[16px]">restart_alt</span></button>
-                    </div>
-                    <div class="flex items-center gap-1 font-mono-code text-[11px] text-secondary">
-                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block"></span>
-                      <span id="renamerPdfPageContainer" class="flex items-center gap-1">
-                        <button id="btnPdfPrevPage" type="button"
-                          class="w-4 h-4 rounded hover:bg-surface-container flex items-center justify-center text-secondary hover:text-primary transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-                          title="Previous Page (▲)"><span
-                            class="material-symbols-outlined text-[13px]">arrow_drop_up</span></button>
-                        <span id="renamerPdfPageBadge"
-                          class="cursor-pointer hover:underline hover:text-primary font-bold transition-colors select-none"
-                          title="Click to jump to page">Page 1 of 1</span>
-                        <button id="btnPdfNextPage" type="button"
-                          class="w-4 h-4 rounded hover:bg-surface-container flex items-center justify-center text-secondary hover:text-primary transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-                          title="Next Page (▼)"><span
-                            class="material-symbols-outlined text-[13px]">arrow_drop_down</span></button>
-                      </span>
-                      <span class="text-outline-variant">• 300 DPI</span>
-                      <span class="text-outline-variant">|</span>
-                      <span>Target Buffer: <strong class="text-tertiary">214 KB / 256 KB Safe</strong></span>
-                    </div>
-                    <div class="flex items-center gap-0.5">
-                      <button
-                        class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
-                        title="Pan Hand" type="button"><span
-                          class="material-symbols-outlined text-[15px]">pan_tool</span></button>
-                      <button
-                        class="w-7 h-7 rounded bg-surface-container text-primary flex items-center justify-center shadow-xs"
-                        title="Fit to A4 Width" type="button"><span
-                          class="material-symbols-outlined text-[16px]">fit_screen</span></button>
-                      <button
-                        class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
-                        title="Rotate 90 Clockwise" type="button"><span
-                          class="material-symbols-outlined text-[16px]">rotate_right</span></button>
-                      <button
-                        class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
-                        title="Split Compare" type="button"><span
-                          class="material-symbols-outlined text-[16px]">vertical_split</span></button>
-                    </div>
-                  </div>
-                  <div
-                    class="flex-1 bg-surface-container-high/40 p-space-md flex items-center justify-center overflow-auto min-h-0">
-                    <div class="flex flex-col items-center justify-center gap-3 text-secondary opacity-60">
-                      <span class="material-symbols-outlined text-[64px]">visibility</span>
-                      <span class="font-mono-code text-[13px]">No Document Loaded for Preview</span>
-                    </div>
-                  </div>
-                  <div
-                    class="p-space-xs bg-surface-container-low flex items-center justify-between text-secondary font-label-sm border-t border-surface-container shrink-0">
-                    <span class="text-on-surface font-semibold text-[11px] flex items-center gap-1"><span
-                        class="material-symbols-outlined text-[14px] text-tertiary">tune</span>Auto Contrast
-                      Active</span>
-                    <button class="text-primary hover:underline text-[11px] font-medium" type="button">Reset
-                      Filters</button>
-                  </div>
-                </div>
-              </section>
-
-              <!-- Column 3 (Right - Secondary Utility Panel): Missing Documents + Top 5 Shortcuts -->
-              <aside class="w-full xl:w-[24%] shrink-0 flex flex-col gap-space-sm overflow-hidden h-full"
-                id="col-utility">
-                <div
-                  class="flex flex-col gap-space-sm overflow-y-auto pr-1 flex-1 min-h-0 custom-pan-scroll queue-scroll-area"
-                  id="utilityScrollArea">
-                  <!-- Dynamically filled by RenamerUIManager.renderQueue() -->
-                </div>
-              </aside>
-            </div>
-          </div>
-
-          <!-- Persistent Execution Toolbar (Automatic Smart Scan Focused Workflow) -->
-          <footer
-            class="w-full bg-slate-900 text-slate-100 px-gutter py-2 flex flex-nowrap items-center justify-between gap-space-sm border-t border-slate-700/80 shadow-2xl shrink-0 z-40 min-h-[50px] overflow-x-auto">
-            <div class="flex items-center gap-space-xs shrink-0">
-              <button
-                class="px-space-md py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-label-md transition-colors flex items-center gap-1.5 shadow-sm border border-slate-700 cursor-pointer"
-                id="btnUndoRename" title="Undo previous rename (Ctrl+Z)" type="button">
-                <span class="material-symbols-outlined text-[16px] text-amber-400">undo</span>
-                <span>Undo Rename</span>
-              </button>
-              <button
-                class="px-space-md py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-label-md transition-all flex items-center gap-1.5 border border-slate-700 cursor-pointer"
-                id="btnKeepOriginal" title="Keep original name and scroll next (Tab)" type="button">
-                <span class="material-symbols-outlined text-[16px] text-blue-400">redo</span>
-                <span>Keep Original &amp; Next</span>
-              </button>
-            </div>
-            <div class="flex items-center gap-space-sm shrink-0">
-              <button
-                class="px-space-md py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-label-md font-bold transition-all flex items-center gap-1.5 border border-amber-500 shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                id="btnReviewUnmatched" title="Review files with low confidence (<80%)" type="button" disabled>
-                <span class="material-symbols-outlined text-[16px]">visibility</span>
-                <span>Review Unmatched (0)</span>
-              </button>
-              <button
-                class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-label-md transition-all flex items-center gap-1.5 border border-slate-700 shadow-sm cursor-pointer"
-                id="btnExportAudit" title="Generate and export full audit log (F9)" type="button">
-                <span class="material-symbols-outlined text-[15px] text-purple-400">summarize</span>
-                <span class="text-[12px]">Export Audit</span>
-              </button>
-              <button
-                class="h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white text-[14px] font-bold shadow-lg hover:shadow-xl border border-emerald-400/50 flex items-center gap-2 cursor-pointer transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                id="btnRenameMatched" title="Cross-check and rename all matched documents (>=80%)" type="button"
-                disabled>
-                <span class="material-symbols-outlined text-[18px]">check_circle</span>
-                <span>Rename Matched (0)</span>
-              </button>
-            </div>
-          </footer>
-
-          <!-- Hidden Fallbacks & Programmatic Shortcuts -->
-          <div class="hidden" aria-hidden="true">
-            <button id="btnSmartScanBatch" type="button">>F4<< /button>
-                <button id="btnSaveBatch" type="button"></button>
-                <button id="btnRenameAll" type="button"></button>
-          </div>
-
-          <!-- Modal: Add New Document Type (Self-Learning Flow) -->
-          <div id="modalAddDocument"
-            class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
-            <div
-              class="w-full max-w-lg bg-surface-container-lowest rounded-2xl border border-outline-variant/40 shadow-2xl flex flex-col overflow-hidden">
-              <!-- Modal Header -->
-              <div
-                class="px-5 py-4 bg-surface-container-low flex items-center justify-between border-b border-outline-variant/30">
-                <div class="flex items-center gap-2.5">
-                  <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold">
-                    <span class="material-symbols-outlined text-[20px]">psychology</span>
-                  </div>
-                  <div>
-                    <h3 class="font-headline-sm text-[16px] font-bold text-on-surface">Add Document Type &amp; Learn
-                    </h3>
-                    <p class="text-secondary text-[11px]">Capture OCR signature to auto-recognize future documents</p>
-                  </div>
-                </div>
-                <button id="btnCloseAddDocModal" type="button"
-                  class="w-7 h-7 rounded-lg hover:bg-surface-container text-secondary hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer">
-                  <span class="material-symbols-outlined text-[18px]">close</span>
-                </button>
-              </div>
-
-              <!-- Modal Body -->
-              <div class="p-5 flex flex-col gap-4 text-label-md">
-                <!-- Input: Short Code -->
-                <div class="flex flex-col gap-1.5">
-                  <label class="font-semibold text-on-surface text-[12px] flex items-center justify-between">
-                    <span>Short Code (Abbreviation)</span>
-                    <span class="text-secondary font-mono-code text-[11px]">2-5 letters</span>
-                  </label>
-                  <input id="inputAddDocCode" type="text" maxlength="8" placeholder="e.g. PAR"
-                    class="w-full h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary font-mono-code text-[13px] uppercase font-bold text-on-surface outline-none">
-                </div>
-
-                <!-- Input: Full Document Name -->
-                <div class="flex flex-col gap-1.5">
-                  <label class="font-semibold text-on-surface text-[12px] flex items-center justify-between">
-                    <span>Full Document Name</span>
-                    <span class="text-secondary font-mono-code text-[11px]">Canonical title</span>
-                  </label>
-                  <input id="inputAddDocName" type="text" placeholder="e.g. Parent Declaration"
-                    class="w-full h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary font-mono-code text-[13px] font-bold text-on-surface outline-none">
-                </div>
-
-                <!-- Live Target Preview -->
-                <div
-                  class="p-3 rounded-xl bg-surface-container-low border border-outline-variant/30 flex flex-col gap-1">
-                  <span class="text-[10px] font-mono-code uppercase font-bold text-secondary">Target Name Preview</span>
-                  <div id="addDocTargetPreview" class="font-mono-code text-[12px] font-bold text-primary break-all">
-                    PARENT DECLARATION.pdf</div>
-                </div>
-
-                <!-- Captured OCR Keywords Reference -->
-                <div class="flex flex-col gap-1.5">
-                  <span class="text-[11px] font-semibold text-secondary flex items-center gap-1">
-                    <span class="material-symbols-outlined text-[14px] text-tertiary">fingerprint</span>
-                    <span>Captured Reference Keywords (<span id="addDocKeywordCount">0</span> detected)</span>
-                  </span>
-                  <div id="addDocKeywordsList"
-                    class="p-2.5 rounded-lg bg-surface border border-outline-variant/30 max-h-24 overflow-y-auto flex flex-wrap gap-1 text-[11px] font-mono-code">
-                    <span class="text-secondary italic">Extracting keywords from active document...</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Modal Footer -->
-              <div
-                class="px-5 py-3 bg-surface-container-low border-t border-outline-variant/30 flex items-center justify-end gap-2">
-                <button id="btnCancelAddDoc" type="button"
-                  class="px-4 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface text-[12px] font-semibold transition-colors cursor-pointer">
-                  Cancel
-                </button>
-                <button id="btnSaveAddDoc" type="button"
-                  class="px-5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-[12px] font-bold shadow-sm flex items-center gap-1.5 transition-all cursor-pointer">
-                  <span class="material-symbols-outlined text-[16px]">save</span>
-                  <span>Save &amp; Learn Document</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Modal: Quick Cross-Check Preview Modal (Before Rename Matched) -->
-          <div id="modalCrossCheck"
-            class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
-            <div
-              class="w-full max-w-4xl max-h-[85vh] bg-surface-container-lowest rounded-2xl border border-outline-variant/40 shadow-2xl flex flex-col overflow-hidden">
-              <!-- Modal Header -->
-              <div
-                class="px-5 py-3.5 bg-surface-container-low flex items-center justify-between border-b border-outline-variant/30 shrink-0">
-                <div class="flex items-center gap-3">
-                  <div
-                    class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold">
-                    <span class="material-symbols-outlined text-[20px]">fact_check</span>
-                  </div>
-                  <div>
-                    <h3 class="font-headline-sm text-[16px] font-bold text-on-surface">Cross-Check Matched Documents
-                    </h3>
-                    <p class="text-secondary text-[11px]">Verify old and suggested new filenames before executing atomic
-                      batch rename</p>
-                  </div>
-                </div>
-                <button id="btnCloseCrossCheckModal" type="button"
-                  class="w-7 h-7 rounded-lg hover:bg-surface-container text-secondary hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer">
-                  <span class="material-symbols-outlined text-[18px]">close</span>
-                </button>
-              </div>
-
-              <!-- Action Sub-bar -->
-              <div
-                class="px-5 py-2 bg-surface-container flex items-center justify-between border-b border-outline-variant/30 text-[12px] shrink-0">
-                <label class="flex items-center gap-2 cursor-pointer font-semibold text-on-surface select-none">
-                  <input id="chkCrossCheckSelectAll" type="checkbox" checked
-                    class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer">
-                  <span>Select All / Deselect All</span>
-                </label>
-                <div class="flex items-center gap-3 font-mono-code text-[11px] text-secondary">
-                  <span>Student: <strong id="crossCheckStudentLabel" class="text-primary font-bold">None</strong></span>
-                  <span class="text-outline-variant">|</span>
-                  <span>Selected: <strong id="crossCheckSelectedCount" class="text-tertiary font-bold">0</strong> of
-                    <strong id="crossCheckTotalCount">0</strong></span>
-                </div>
-              </div>
-
-              <!-- Scrollable Table -->
-              <div class="flex-1 overflow-y-auto min-h-0 custom-pan-scroll p-4">
-                <table class="w-full border-collapse text-left text-[12px] font-mono-code">
-                  <thead>
-                    <tr
-                      class="border-b border-outline-variant/40 text-secondary uppercase text-[10px] tracking-wider select-none">
-                      <th class="py-2 px-3 w-10 text-center">✓</th>
-                      <th class="py-2 px-3 w-[42%]">Old Name</th>
-                      <th class="py-2 px-2 w-8 text-center">→</th>
-                      <th class="py-2 px-3 w-[42%]">Suggested New Name</th>
-                      <th class="py-2 px-3 text-right">Confidence</th>
-                    </tr>
-                  </thead>
-                  <tbody id="crossCheckTableBody" class="divide-y divide-outline-variant/20">
-                    <!-- Dynamically populated rows -->
-                  </tbody>
-                </table>
-              </div>
-
-              <!-- Modal Footer -->
-              <div
-                class="px-5 py-3.5 bg-surface-container-low border-t border-outline-variant/30 flex items-center justify-between shrink-0">
-                <button id="btnCancelCrossCheck" type="button"
-                  class="px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface text-[12px] font-semibold transition-colors cursor-pointer">
-                  Cancel
-                </button>
-                <button id="btnConfirmBatchRename" type="button"
-                  class="h-10 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white font-bold text-[13px] shadow-lg flex items-center gap-2 cursor-pointer transition-all disabled:opacity-40 disabled:cursor-not-allowed">
-                  <span class="material-symbols-outlined text-[18px]">done_all</span>
-                  <span id="confirmRenameLabel">Confirm &amp; Rename (0)</span>
-                </button>
-              </div>
-            </div>
-          </div>
-      </section>
-      <!-- Main 3-Column Workstation Bento Grid Relative Container -->
-      <div class="relative w-full flex-1 min-h-0 flex flex-col overflow-hidden">
-        <!-- 3-Column Real Workspace Grid (Always Consistent, Zero Blur Jump) -->
-        <div
-          class="w-full flex flex-col xl:flex-row items-stretch gap-space-md p-space-md bg-surface overflow-hidden select-none flex-1 min-h-0"
-          id="workspace-columns-container">
-          <!-- Column 1 (Left - Primary Controls): Compact Hero Card + Upcoming & Completed Queues -->
-          <main class="w-full xl:w-[28%] shrink-0 flex flex-col gap-space-sm overflow-hidden h-full" id="col-queue">
-            <!-- Dynamically filled by RenamerUIManager.renderQueue() -->
-            <div
-              class="flex flex-col gap-space-sm overflow-y-auto pr-1 flex-1 min-h-0 custom-pan-scroll pan-grab-active queue-scroll-area">
-              <div
-                class="p-6 text-center text-secondary bg-surface-container-lowest rounded-xl border border-outline-variant/30 flex flex-col items-center gap-2">
-                <span class="material-symbols-outlined text-[36px] text-primary opacity-60">folder_open</span>
-                <div class="font-headline-sm font-bold text-on-surface">No Intake Folder Selected</div>
-                <div class="text-body-sm text-secondary">Click "Select Folder" (F2) or "Add Files" to start renaming
-                  student admission documents.</div>
-              </div>
-            </div>
-          </main>
-
-          <!-- Column 2 (Center - Primary Visual Focus): Document Preview Viewport -->
-          <section class="w-full xl:flex-1 min-w-0 flex flex-col h-full overflow-hidden" id="col-preview">
-            <div
-              class="bg-surface-container-lowest rounded-xl shadow-sm flex flex-col h-full overflow-hidden border border-outline-variant/30">
-              <div
-                class="p-space-xs bg-surface-container-low flex flex-wrap items-center justify-between gap-1 shadow-sm shrink-0">
-                <div class="flex items-center gap-0.5">
-                  <button
-                    class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
-                    title="Zoom Out (Ctrl -)" type="button"><span
-                      class="material-symbols-outlined text-[16px]">zoom_out</span></button>
-                  <span
-                    class="font-mono-code text-label-sm font-bold px-1.5 py-0.5 bg-surface-container-lowest rounded text-on-surface">Fit
-                    to Page</span>
-                  <button
-                    class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
-                    title="Zoom In (Ctrl +)" type="button"><span
-                      class="material-symbols-outlined text-[16px]">zoom_in</span></button>
-                  <input class="w-24 h-1.5 accent-primary cursor-pointer hidden sm:inline-block ml-1" max="350" min="50"
-                    type="range" value="160">
-                  <button
-                    class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
-                    title="Reset Zoom" type="button"><span
-                      class="material-symbols-outlined text-[16px]">restart_alt</span></button>
-                </div>
-                <div class="flex items-center gap-1 font-mono-code text-[11px] text-secondary">
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block"></span>
-                  <span id="renamerPdfPageContainer" class="flex items-center gap-1">
-                    <button id="btnPdfPrevPage" type="button"
-                      class="w-4 h-4 rounded hover:bg-surface-container flex items-center justify-center text-secondary hover:text-primary transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-                      title="Previous Page (▲)"><span
-                        class="material-symbols-outlined text-[13px]">arrow_drop_up</span></button>
-                    <span id="renamerPdfPageBadge"
-                      class="cursor-pointer hover:underline hover:text-primary font-bold transition-colors select-none"
-                      title="Click to jump to page">Page 1 of 1</span>
-                    <button id="btnPdfNextPage" type="button"
-                      class="w-4 h-4 rounded hover:bg-surface-container flex items-center justify-center text-secondary hover:text-primary transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-                      title="Next Page (▼)"><span
-                        class="material-symbols-outlined text-[13px]">arrow_drop_down</span></button>
-                  </span>
-                  <span class="text-outline-variant">• 300 DPI</span>
-                  <span class="text-outline-variant">|</span>
-                  <span>Target Buffer: <strong class="text-tertiary">214 KB / 256 KB Safe</strong></span>
-                </div>
-                <div class="flex items-center gap-0.5">
-                  <button
-                    class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
-                    title="Pan Hand" type="button"><span
-                      class="material-symbols-outlined text-[15px]">pan_tool</span></button>
-                  <button
-                    class="w-7 h-7 rounded bg-surface-container text-primary flex items-center justify-center shadow-xs"
-                    title="Fit to A4 Width" type="button"><span
-                      class="material-symbols-outlined text-[16px]">fit_screen</span></button>
-                  <button
-                    class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
-                    title="Rotate 90 Clockwise" type="button"><span
-                      class="material-symbols-outlined text-[16px]">rotate_right</span></button>
-                  <button
-                    class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
-                    title="Split Compare" type="button"><span
-                      class="material-symbols-outlined text-[16px]">vertical_split</span></button>
-                </div>
-              </div>
-              <div
-                class="flex-1 bg-surface-container-high/40 p-space-md flex items-center justify-center overflow-auto min-h-0">
-                <div class="flex flex-col items-center justify-center gap-3 text-secondary opacity-60">
-                  <span class="material-symbols-outlined text-[64px]">visibility</span>
-                  <span class="font-mono-code text-[13px]">No Document Loaded for Preview</span>
-                </div>
-              </div>
-              <div
-                class="p-space-xs bg-surface-container-low flex items-center justify-between text-secondary font-label-sm border-t border-surface-container shrink-0">
-                <span class="text-on-surface font-semibold text-[11px] flex items-center gap-1"><span
-                    class="material-symbols-outlined text-[14px] text-tertiary">tune</span>Auto Contrast Active</span>
-                <button class="text-primary hover:underline text-[11px] font-medium" type="button">Reset
-                  Filters</button>
-              </div>
-            </div>
-          </section>
-
-          <!-- Column 3 (Right - Secondary Utility Panel): Missing Documents + Top 5 Shortcuts -->
-          <aside class="w-full xl:w-[24%] shrink-0 flex flex-col gap-space-sm overflow-hidden h-full" id="col-utility">
-            <div
-              class="flex flex-col gap-space-sm overflow-y-auto pr-1 flex-1 min-h-0 custom-pan-scroll queue-scroll-area"
-              id="utilityScrollArea">
-              <!-- Dynamically filled by RenamerUIManager.renderQueue() -->
-            </div>
-          </aside>
-        </div>
-      </div>
-      <!-- Persistent Execution Toolbar (Automatic Smart Scan Focused Workflow) -->
-      <footer
-        class="w-full bg-slate-900 text-slate-100 px-gutter py-2 flex flex-nowrap items-center justify-between gap-space-sm border-t border-slate-700/80 shadow-2xl shrink-0 z-40 min-h-[50px] overflow-x-auto">
-        <div class="flex items-center gap-space-xs shrink-0">
-          <button
-            class="px-space-md py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-label-md transition-colors flex items-center gap-1.5 shadow-sm border border-slate-700 cursor-pointer"
-            id="btnUndoRename" title="Undo previous rename (Ctrl+Z)" type="button">
-            <span class="material-symbols-outlined text-[16px] text-amber-400">undo</span>
-            <span>Undo Rename</span>
-          </button>
-          <button
-            class="px-space-md py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-label-md transition-all flex items-center gap-1.5 border border-slate-700 cursor-pointer"
-            id="btnKeepOriginal" title="Keep original name and scroll next (Tab)" type="button">
-            <span class="material-symbols-outlined text-[16px] text-blue-400">redo</span>
-            <span>Keep Original &amp; Next</span>
-          </button>
-        </div>
-        <div class="flex items-center gap-space-sm shrink-0">
-          <button
-            class="px-space-md py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-label-md font-bold transition-all flex items-center gap-1.5 border border-amber-500 shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-            id="btnReviewUnmatched" title="Review files with low confidence (<80%)" type="button" disabled>
-            <span class="material-symbols-outlined text-[16px]">visibility</span>
-            <span>Review Unmatched (0)</span>
-          </button>
-          <button
-            class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-label-md transition-all flex items-center gap-1.5 border border-slate-700 shadow-sm cursor-pointer"
-            id="btnExportAudit" title="Generate and export full audit log (F9)" type="button">
-            <span class="material-symbols-outlined text-[15px] text-purple-400">summarize</span>
-            <span class="text-[12px]">Export Audit</span>
-          </button>
-          <button
-            class="h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white text-[14px] font-bold shadow-lg hover:shadow-xl border border-emerald-400/50 flex items-center gap-2 cursor-pointer transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-            id="btnRenameMatched" title="Cross-check and rename all matched documents (>=80%)" type="button" disabled>
-            <span class="material-symbols-outlined text-[18px]">check_circle</span>
-            <span>Rename Matched (0)</span>
-          </button>
-        </div>
-      </footer>
-
-      <!-- Hidden Fallbacks & Programmatic Shortcuts -->
-      <div class="hidden" aria-hidden="true">
-        <button id="btnSmartScanBatch" type="button">>F4<< /button>
-            <button id="btnSaveBatch" type="button"></button>
-            <button id="btnRenameAll" type="button"></button>
-      </div>
-
-      <!-- Modal: Add New Document Type (Self-Learning Flow) -->
-      <div id="modalAddDocument"
-        class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
-        <div
-          class="w-full max-w-lg bg-surface-container-lowest rounded-2xl border border-outline-variant/40 shadow-2xl flex flex-col overflow-hidden">
-          <!-- Modal Header -->
-          <div
-            class="px-5 py-4 bg-surface-container-low flex items-center justify-between border-b border-outline-variant/30">
-            <div class="flex items-center gap-2.5">
-              <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold">
-                <span class="material-symbols-outlined text-[20px]">psychology</span>
-              </div>
-              <div>
-                <h3 class="font-headline-sm text-[16px] font-bold text-on-surface">Add Document Type &amp; Learn</h3>
-                <p class="text-secondary text-[11px]">Capture OCR signature to auto-recognize future documents</p>
-              </div>
-            </div>
-            <button id="btnCloseAddDocModal" type="button"
-              class="w-7 h-7 rounded-lg hover:bg-surface-container text-secondary hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer">
-              <span class="material-symbols-outlined text-[18px]">close</span>
-            </button>
-          </div>
-
-          <!-- Modal Body -->
-          <div class="p-5 flex flex-col gap-4 text-label-md">
-            <!-- Input: Short Code -->
-            <div class="flex flex-col gap-1.5">
-              <label class="font-semibold text-on-surface text-[12px] flex items-center justify-between">
-                <span>Short Code (Abbreviation)</span>
-                <span class="text-secondary font-mono-code text-[11px]">2-5 letters</span>
-              </label>
-              <input id="inputAddDocCode" type="text" maxlength="8" placeholder="e.g. PAR"
-                class="w-full h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary font-mono-code text-[13px] uppercase font-bold text-on-surface outline-none">
-            </div>
-
-            <!-- Input: Full Document Name -->
-            <div class="flex flex-col gap-1.5">
-              <label class="font-semibold text-on-surface text-[12px] flex items-center justify-between">
-                <span>Full Document Name</span>
-                <span class="text-secondary font-mono-code text-[11px]">Canonical title</span>
-              </label>
-              <input id="inputAddDocName" type="text" placeholder="e.g. Parent Declaration"
-                class="w-full h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary font-mono-code text-[13px] font-bold text-on-surface outline-none">
-            </div>
-
-            <!-- Live Target Preview -->
-            <div class="p-3 rounded-xl bg-surface-container-low border border-outline-variant/30 flex flex-col gap-1">
-              <span class="text-[10px] font-mono-code uppercase font-bold text-secondary">Target Name Preview</span>
-              <div id="addDocTargetPreview" class="font-mono-code text-[12px] font-bold text-primary break-all">PARENT
-                DECLARATION.pdf</div>
-            </div>
-
-            <!-- Captured OCR Keywords Reference -->
-            <div class="flex flex-col gap-1.5">
-              <span class="text-[11px] font-semibold text-secondary flex items-center gap-1">
-                <span class="material-symbols-outlined text-[14px] text-tertiary">fingerprint</span>
-                <span>Captured Reference Keywords (<span id="addDocKeywordCount">0</span> detected)</span>
-              </span>
-              <div id="addDocKeywordsList"
-                class="p-2.5 rounded-lg bg-surface border border-outline-variant/30 max-h-24 overflow-y-auto flex flex-wrap gap-1 text-[11px] font-mono-code">
-                <span class="text-secondary italic">Extracting keywords from active document...</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Modal Footer -->
-          <div
-            class="px-5 py-3 bg-surface-container-low border-t border-outline-variant/30 flex items-center justify-end gap-2">
-            <button id="btnCancelAddDoc" type="button"
-              class="px-4 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface text-[12px] font-semibold transition-colors cursor-pointer">
-              Cancel
-            </button>
-            <button id="btnSaveAddDoc" type="button"
-              class="px-5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-[12px] font-bold shadow-sm flex items-center gap-1.5 transition-all cursor-pointer">
-              <span class="material-symbols-outlined text-[16px]">save</span>
-              <span>Save &amp; Learn Document</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Modal: Quick Cross-Check Preview Modal (Before Rename Matched) -->
-      <div id="modalCrossCheck"
-        class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
-        <div
-          class="w-full max-w-4xl max-h-[85vh] bg-surface-container-lowest rounded-2xl border border-outline-variant/40 shadow-2xl flex flex-col overflow-hidden">
-          <!-- Modal Header -->
-          <div
-            class="px-5 py-3.5 bg-surface-container-low flex items-center justify-between border-b border-outline-variant/30 shrink-0">
-            <div class="flex items-center gap-3">
-              <div
-                class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold">
-                <span class="material-symbols-outlined text-[20px]">fact_check</span>
-              </div>
-              <div>
-                <h3 class="font-headline-sm text-[16px] font-bold text-on-surface">Cross-Check Matched Documents</h3>
-                <p class="text-secondary text-[11px]">Verify old and suggested new filenames before executing atomic
-                  batch rename</p>
-              </div>
-            </div>
-            <button id="btnCloseCrossCheckModal" type="button"
-              class="w-7 h-7 rounded-lg hover:bg-surface-container text-secondary hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer">
-              <span class="material-symbols-outlined text-[18px]">close</span>
-            </button>
-          </div>
-
-          <!-- Action Sub-bar -->
-          <div
-            class="px-5 py-2 bg-surface-container flex items-center justify-between border-b border-outline-variant/30 text-[12px] shrink-0">
-            <label class="flex items-center gap-2 cursor-pointer font-semibold text-on-surface select-none">
-              <input id="chkCrossCheckSelectAll" type="checkbox" checked
-                class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer">
-              <span>Select All / Deselect All</span>
-            </label>
-            <div class="flex items-center gap-3 font-mono-code text-[11px] text-secondary">
-              <span>Student: <strong id="crossCheckStudentLabel" class="text-primary font-bold">None</strong></span>
+              <span class="text-outline-variant">• 300 DPI</span>
               <span class="text-outline-variant">|</span>
-              <span>Selected: <strong id="crossCheckSelectedCount" class="text-tertiary font-bold">0</strong> of <strong
-                  id="crossCheckTotalCount">0</strong></span>
+              <span>Target Buffer: <strong class="text-tertiary">214 KB / 256 KB Safe</strong></span>
+            </div>
+            <div class="flex items-center gap-0.5">
+              <button
+                class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
+                title="Pan Hand" type="button"><span
+                  class="material-symbols-outlined text-[15px]">pan_tool</span></button>
+              <button
+                class="w-7 h-7 rounded bg-surface-container text-primary flex items-center justify-center shadow-xs"
+                title="Fit to A4 Width" type="button"><span
+                  class="material-symbols-outlined text-[16px]">fit_screen</span></button>
+              <button
+                class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
+                title="Rotate 90 Clockwise" type="button"><span
+                  class="material-symbols-outlined text-[16px]">rotate_right</span></button>
+              <button
+                class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
+                title="Split Compare" type="button"><span
+                  class="material-symbols-outlined text-[16px]">vertical_split</span></button>
             </div>
           </div>
-
-          <!-- Scrollable Table -->
-          <div class="flex-1 overflow-y-auto min-h-0 custom-pan-scroll p-4">
-            <table class="w-full border-collapse text-left text-[12px] font-mono-code">
-              <thead>
-                <tr
-                  class="border-b border-outline-variant/40 text-secondary uppercase text-[10px] tracking-wider select-none">
-                  <th class="py-2 px-3 w-10 text-center">✓</th>
-                  <th class="py-2 px-3 w-[42%]">Old Name</th>
-                  <th class="py-2 px-2 w-8 text-center">→</th>
-                  <th class="py-2 px-3 w-[42%]">Suggested New Name</th>
-                  <th class="py-2 px-3 text-right">Confidence</th>
-                </tr>
-              </thead>
-              <tbody id="crossCheckTableBody" class="divide-y divide-outline-variant/20">
-                <!-- Dynamically populated rows -->
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Modal Footer -->
           <div
-            class="px-5 py-3.5 bg-surface-container-low border-t border-outline-variant/30 flex items-center justify-between shrink-0">
-            <button id="btnCancelCrossCheck" type="button"
-              class="px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface text-[12px] font-semibold transition-colors cursor-pointer">
-              Cancel
-            </button>
-            <button id="btnConfirmBatchRename" type="button"
-              class="h-10 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white font-bold text-[13px] shadow-lg flex items-center gap-2 cursor-pointer transition-all disabled:opacity-40 disabled:cursor-not-allowed">
-              <span class="material-symbols-outlined text-[18px]">done_all</span>
-              <span id="confirmRenameLabel">Confirm &amp; Rename (0)</span>
-            </button>
+            class="flex-1 bg-surface-container-high/40 p-space-md flex items-center justify-center overflow-auto min-h-0">
+            <div class="flex flex-col items-center justify-center gap-3 text-secondary opacity-60">
+              <span class="material-symbols-outlined text-[64px]">visibility</span>
+              <span class="font-mono-code text-[13px]">No Document Loaded for Preview</span>
+            </div>
+          </div>
+          <div
+            class="p-space-xs bg-surface-container-low flex items-center justify-between text-secondary font-label-sm border-t border-surface-container shrink-0">
+            <span class="text-on-surface font-semibold text-[11px] flex items-center gap-1"><span
+                class="material-symbols-outlined text-[14px] text-tertiary">tune</span>Auto Contrast Active</span>
+            <button class="text-primary hover:underline text-[11px] font-medium" type="button">Reset Filters</button>
           </div>
         </div>
-      </div>
-
       </section>
 
+      <!-- Column 3 (Right - Secondary Utility Panel): Missing Documents + Top 5 Shortcuts -->
+      <aside class="w-full xl:w-[24%] shrink-0 flex flex-col gap-space-sm overflow-hidden h-full" id="col-utility">
+        <div class="flex flex-col gap-space-sm overflow-y-auto pr-1 flex-1 min-h-0 custom-pan-scroll queue-scroll-area"
+          id="utilityScrollArea">
+          <!-- Dynamically filled by RenamerUIManager.renderQueue() -->
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Persistent Execution Toolbar (Automatic Smart Scan Focused Workflow) -->
+  <footer
+    class="w-full bg-slate-900 text-slate-100 px-gutter py-2 flex flex-nowrap items-center justify-between gap-space-sm border-t border-slate-700/80 shadow-2xl shrink-0 z-40 min-h-[50px] overflow-x-auto">
+    <div class="flex items-center gap-space-xs shrink-0">
+      <button
+        class="px-space-md py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-label-md transition-colors flex items-center gap-1.5 shadow-sm border border-slate-700 cursor-pointer"
+        id="btnUndoRename" title="Undo previous rename (Ctrl+Z)" type="button">
+        <span class="material-symbols-outlined text-[16px] text-amber-400">undo</span>
+        <span>Undo Rename</span>
+      </button>
+      <button
+        class="px-space-md py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-label-md transition-all flex items-center gap-1.5 border border-slate-700 cursor-pointer"
+        id="btnKeepOriginal" title="Keep original name and scroll next (Tab)" type="button">
+        <span class="material-symbols-outlined text-[16px] text-blue-400">redo</span>
+        <span>Keep Original &amp; Next</span>
+      </button>
+    </div>
+    <div class="flex items-center gap-space-sm shrink-0">
+      <button
+        class="px-space-md py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-label-md font-bold transition-all flex items-center gap-1.5 border border-amber-500 shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+        id="btnReviewUnmatched" title="Review files with low confidence (<80%)" type="button" disabled>
+        <span class="material-symbols-outlined text-[16px]">visibility</span>
+        <span>Review Unmatched (0)</span>
+      </button>
+      <button
+        class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-label-md transition-all flex items-center gap-1.5 border border-slate-700 shadow-sm cursor-pointer"
+        id="btnExportAudit" title="Generate and export full audit log (F9)" type="button">
+        <span class="material-symbols-outlined text-[15px] text-purple-400">summarize</span>
+        <span class="text-[12px]">Export Audit</span>
+      </button>
+      <button
+        class="h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white text-[14px] font-bold shadow-lg hover:shadow-xl border border-emerald-400/50 flex items-center gap-2 cursor-pointer transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+        id="btnRenameMatched" title="Cross-check and rename all matched documents (>=80%)" type="button" disabled>
+        <span class="material-symbols-outlined text-[18px]">check_circle</span>
+        <span>Rename Matched (0)</span>
+      </button>
+    </div>
+  </footer>
+
+  <!-- Hidden Fallbacks & Programmatic Shortcuts -->
+  <div class="hidden" aria-hidden="true">
+    <button id="btnSmartScanBatch" type="button">F4</button>
+        <button id="btnSaveBatch" type="button"></button>
+        <button id="btnRenameAll" type="button"></button>
+  </div>
+
+  <!-- Modal: Add New Document Type (Self-Learning Flow) -->
+  <div id="modalAddDocument"
+    class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div
+      class="w-full max-w-lg bg-surface-container-lowest rounded-2xl border border-outline-variant/40 shadow-2xl flex flex-col overflow-hidden">
+      <!-- Modal Header -->
+      <div
+        class="px-5 py-4 bg-surface-container-low flex items-center justify-between border-b border-outline-variant/30">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold">
+            <span class="material-symbols-outlined text-[20px]">psychology</span>
+          </div>
+          <div>
+            <h3 class="font-headline-sm text-[16px] font-bold text-on-surface">Add Document Type &amp; Learn</h3>
+            <p class="text-secondary text-[11px]">Capture OCR signature to auto-recognize future documents</p>
+          </div>
+        </div>
+        <button id="btnCloseAddDocModal" type="button"
+          class="w-7 h-7 rounded-lg hover:bg-surface-container text-secondary hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer">
+          <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-5 flex flex-col gap-4 text-label-md">
+        <!-- Input: Short Code -->
+        <div class="flex flex-col gap-1.5">
+          <label class="font-semibold text-on-surface text-[12px] flex items-center justify-between">
+            <span>Short Code (Abbreviation)</span>
+            <span class="text-secondary font-mono-code text-[11px]">2-5 letters</span>
+          </label>
+          <input id="inputAddDocCode" type="text" maxlength="8" placeholder="e.g. PAR"
+            class="w-full h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary font-mono-code text-[13px] uppercase font-bold text-on-surface outline-none">
+        </div>
+
+        <!-- Input: Full Document Name -->
+        <div class="flex flex-col gap-1.5">
+          <label class="font-semibold text-on-surface text-[12px] flex items-center justify-between">
+            <span>Full Document Name</span>
+            <span class="text-secondary font-mono-code text-[11px]">Canonical title</span>
+          </label>
+          <input id="inputAddDocName" type="text" placeholder="e.g. Parent Declaration"
+            class="w-full h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary font-mono-code text-[13px] font-bold text-on-surface outline-none">
+        </div>
+
+        <!-- Live Target Preview -->
+        <div class="p-3 rounded-xl bg-surface-container-low border border-outline-variant/30 flex flex-col gap-1">
+          <span class="text-[10px] font-mono-code uppercase font-bold text-secondary">Target Name Preview</span>
+          <div id="addDocTargetPreview" class="font-mono-code text-[12px] font-bold text-primary break-all">PARENT
+            DECLARATION.pdf</div>
+        </div>
+
+        <!-- Captured OCR Keywords Reference -->
+        <div class="flex flex-col gap-1.5">
+          <span class="text-[11px] font-semibold text-secondary flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px] text-tertiary">fingerprint</span>
+            <span>Captured Reference Keywords (<span id="addDocKeywordCount">0</span> detected)</span>
+          </span>
+          <div id="addDocKeywordsList"
+            class="p-2.5 rounded-lg bg-surface border border-outline-variant/30 max-h-24 overflow-y-auto flex flex-wrap gap-1 text-[11px] font-mono-code">
+            <span class="text-secondary italic">Extracting keywords from active document...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div
+        class="px-5 py-3 bg-surface-container-low border-t border-outline-variant/30 flex items-center justify-end gap-2">
+        <button id="btnCancelAddDoc" type="button"
+          class="px-4 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface text-[12px] font-semibold transition-colors cursor-pointer">
+          Cancel
+        </button>
+        <button id="btnSaveAddDoc" type="button"
+          class="px-5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-[12px] font-bold shadow-sm flex items-center gap-1.5 transition-all cursor-pointer">
+          <span class="material-symbols-outlined text-[16px]">save</span>
+          <span>Save &amp; Learn Document</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Quick Cross-Check Preview Modal (Before Rename Matched) -->
+  <div id="modalCrossCheck"
+    class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div
+      class="w-full max-w-4xl max-h-[85vh] bg-surface-container-lowest rounded-2xl border border-outline-variant/40 shadow-2xl flex flex-col overflow-hidden">
+      <!-- Modal Header -->
+      <div
+        class="px-5 py-3.5 bg-surface-container-low flex items-center justify-between border-b border-outline-variant/30 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold">
+            <span class="material-symbols-outlined text-[20px]">fact_check</span>
+          </div>
+          <div>
+            <h3 class="font-headline-sm text-[16px] font-bold text-on-surface">Cross-Check Matched Documents</h3>
+            <p class="text-secondary text-[11px]">Verify old and suggested new filenames before executing atomic batch
+              rename</p>
+          </div>
+        </div>
+        <button id="btnCloseCrossCheckModal" type="button"
+          class="w-7 h-7 rounded-lg hover:bg-surface-container text-secondary hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer">
+          <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+      </div>
+
+      <!-- Action Sub-bar -->
+      <div
+        class="px-5 py-2 bg-surface-container flex items-center justify-between border-b border-outline-variant/30 text-[12px] shrink-0">
+        <label class="flex items-center gap-2 cursor-pointer font-semibold text-on-surface select-none">
+          <input id="chkCrossCheckSelectAll" type="checkbox" checked
+            class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+          <span>Select All / Deselect All</span>
+        </label>
+        <div class="flex items-center gap-3 font-mono-code text-[11px] text-secondary">
+          <span>Student: <strong id="crossCheckStudentLabel" class="text-primary font-bold">None</strong></span>
+          <span class="text-outline-variant">|</span>
+          <span>Selected: <strong id="crossCheckSelectedCount" class="text-tertiary font-bold">0</strong> of <strong
+              id="crossCheckTotalCount">0</strong></span>
+        </div>
+      </div>
+
+      <!-- Scrollable Table -->
+      <div class="flex-1 overflow-y-auto min-h-0 custom-pan-scroll p-4">
+        <table class="w-full border-collapse text-left text-[12px] font-mono-code">
+          <thead>
+            <tr
+              class="border-b border-outline-variant/40 text-secondary uppercase text-[10px] tracking-wider select-none">
+              <th class="py-2 px-3 w-10 text-center">✓</th>
+              <th class="py-2 px-3 w-[42%]">Old Name</th>
+              <th class="py-2 px-2 w-8 text-center">→</th>
+              <th class="py-2 px-3 w-[42%]">Suggested New Name</th>
+              <th class="py-2 px-3 text-right">Confidence</th>
+            </tr>
+          </thead>
+          <tbody id="crossCheckTableBody" class="divide-y divide-outline-variant/20">
+            <!-- Dynamically populated rows -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Modal Footer -->
+      <div
+        class="px-5 py-3.5 bg-surface-container-low border-t border-outline-variant/30 flex items-center justify-between shrink-0">
+        <button id="btnCancelCrossCheck" type="button"
+          class="px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface text-[12px] font-semibold transition-colors cursor-pointer">
+          Cancel
+        </button>
+        <button id="btnConfirmBatchRename" type="button"
+          class="h-10 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white font-bold text-[13px] shadow-lg flex items-center gap-2 cursor-pointer transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+          <span class="material-symbols-outlined text-[18px]">done_all</span>
+          <span id="confirmRenameLabel">Confirm &amp; Rename (0)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+        </div>
+      </section>
 
       <section id="view-pdf-studio" class="view-pane flex flex-col h-full overflow-hidden pdf-studio-scope hidden">
         <!-- Main Workspace Layout (Sidebar + Execution Canvas) -->

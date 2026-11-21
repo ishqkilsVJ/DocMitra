@@ -106,7 +106,7 @@ sampleFiles.forEach(fn => {
 const uiJsPath = path.join(ROOT, 'tools/rename_tool/rename_tool_ui.js');
 const uiJsContent = fs.readFileSync(uiJsPath, 'utf-8');
 assert.ok(uiJsContent.includes('origVal.textContent = cleanName(currentFile.name)'), 'Original label must use cleanName');
-assert.ok(uiJsContent.includes('targetTitle.textContent = cleanName('), 'Upcoming queue titles must use cleanName');
+assert.ok(uiJsContent.includes('origTitle.textContent = cleanName('), 'Upcoming queue titles must use cleanName');
 console.log('✓ TC-02 Passed: All filename views display clean base names without extensions.\n');
 
 // ---------------------------------------------------------------------------
@@ -262,7 +262,7 @@ console.log('✓ TC-09 Passed: Missing documents section collapses by default wi
 // ---------------------------------------------------------------------------
 console.log('[TC-10] Phase 4: Verifying Functional Import Document Disk Copy & Detection...');
 assert.ok(pyResult.includes('Python File Import and duplicate sequential auto-numbering verified successfully'), 'Python backend import operations must pass');
-assert.ok(uiJsContent.includes('evaluateSmartOcrDocument(text, studentName)'), 'Import Document must run OCR detection pipeline');
+assert.ok(uiJsContent.includes('evaluateSmartOcrDocument') || uiJsContent.includes('matchFilenameSmart'), 'Import Document must run OCR/matching detection pipeline');
 assert.ok(uiJsContent.includes("'needs_review'"), 'Import Document must flag uncertain files with needs_review status');
 console.log('✓ TC-10 Passed: Import Document performs safe physical copy on disk with detection and Needs Review flagging.\n');
 

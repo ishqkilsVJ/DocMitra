@@ -873,10 +873,10 @@ export function makeChecklist(raw) {
       rows.map(x =>
         Array.isArray(x)
           ? {
-              name: x[0],
-              keywords: x[1],
-              short: x[0].replace(/ CERTIFICATE| MARK SHEET| MARKSHEET/g, '').slice(0, 18)
-            }
+            name: x[0],
+            keywords: x[1],
+            short: x[0].replace(/ CERTIFICATE| MARK SHEET| MARKSHEET/g, '').slice(0, 18)
+          }
           : x
       )
     ])
@@ -912,9 +912,9 @@ export function evaluateChecklistRule(fileNames, rule, linkedRules = DEFAULT_LIN
       const matched = fileNames.find(fn => {
         const lower = fn.toLowerCase();
         return lower.includes(combinedClean) ||
-               (lower.includes('12th') && lower.includes('marksheet') && lower.includes('passing')) ||
-               (lower.includes('10th') && lower.includes('marksheet') && lower.includes('passing')) ||
-               (lower.includes('12mp') || lower.includes('10mp'));
+          (lower.includes('12th') && lower.includes('marksheet') && lower.includes('passing')) ||
+          (lower.includes('10th') && lower.includes('marksheet') && lower.includes('passing')) ||
+          (lower.includes('12mp') || lower.includes('10mp'));
       });
       if (matched) {
         return {
@@ -1121,7 +1121,9 @@ export async function executeRename(dir, plan, onProgress = null) {
           if (newPath) {
             item.file.path = newPath;
             item.file.nativePath = newPath;
-            item.file.url = `http://localhost:3000/api/serve-file?path=${encodeURIComponent(newPath)}`;
+            const origin = (typeof window !== 'undefined' && window.location?.origin && !window.location.origin.startsWith('file:') && !window.location.origin.includes('tauri'))
+              ? window.location.origin : 'http://localhost:3000';
+            item.file.url = `${origin}/api/serve-file?path=${encodeURIComponent(newPath)}`;
           }
           item.file.name = actualName;
           item.file.targetName = actualName;
@@ -1227,8 +1229,8 @@ export async function undoRename(dir, plan, onProgress = null) {
   for (const item of reversed) {
     const dirPath = dir ? (dir.nativePath || dir.path || '') : '';
     const currentPath = (item.file && (item.file.path || item.file.nativePath)) ||
-                        (dirPath ? `${dirPath}/${item.next}` : null) ||
-                        (item.nativePath ? item.nativePath.replace(/[^\\\/]+$/, item.next) : null);
+      (dirPath ? `${dirPath}/${item.next}` : null) ||
+      (item.nativePath ? item.nativePath.replace(/[^\\\/]+$/, item.next) : null);
 
     if (currentPath) {
       const res = await renameNativeFile(currentPath, item.old);
@@ -1239,7 +1241,9 @@ export async function undoRename(dir, plan, onProgress = null) {
           item.file.nativePath = restoredPath;
           item.file.name = item.old;
           item.file.targetName = item.old;
-          item.file.url = `http://localhost:3000/api/serve-file?path=${encodeURIComponent(restoredPath)}`;
+          const origin = (typeof window !== 'undefined' && window.location?.origin && !window.location.origin.startsWith('file:') && !window.location.origin.includes('tauri'))
+            ? window.location.origin : 'http://localhost:3000';
+          item.file.url = `${origin}/api/serve-file?path=${encodeURIComponent(restoredPath)}`;
           item.file.isRenamed = false;
           item.file.status = 'pending';
         }
@@ -1637,5 +1641,178 @@ export function extractSignatureKeywords(text, docName = '') {
   const secondary = sorted.slice(6, 14);
 
   return { primary, secondary };
+}
+
+/**
+ * Filename-Based Smart Matching Engine (Strictly Non-OCR)
+ * Evaluates document type strictly from the original filename and optional student name context.
+ * Threshold: 30%+ match suggests a document match cleanly; 80%+ is high confidence.
+ */
+export function matchFilenameSmart(filename, studentName = '', groups = null) {
+  if (!filename || typeof filename !== 'string') {
+    return {
+      docType: null,
+      canonical: null,
+      code: null,
+      confidence: 0,
+      isConfident: false,
+      reason: 'Empty filename'
+    };
+  }
+
+  const baseOriginal = cleanName(filename).trim();
+  if (!baseOriginal) {
+    return {
+      docType: null,
+      canonical: null,
+      code: null,
+      confidence: 0,
+      isConfident: false,
+      reason: 'Empty basename'
+    };
+  }
+
+  const spellingFixed = correctSpelling(baseOriginal, DEFAULT_SPELLING_RULES);
+  const normalized = spellingFixed.replace(/[_\-\.\+,\(\)\[\]]+/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+
+  // 1. Direct Pattern Match (Regex & Groups)
+  let directMatch = evaluateMatch(spellingFixed, groups);
+  if (!directMatch.docType) {
+    directMatch = evaluateMatch(baseOriginal, groups);
+  }
+
+  // 2. Exact or Word-Boundary Shortcut Match
+  const shortcutDoc = matchDocument(spellingFixed, groups) || matchDocument(baseOriginal, groups);
+
+  if (directMatch && directMatch.docType) {
+    const upperDoc = directMatch.docType.toUpperCase();
+    return {
+      docType: upperDoc,
+      canonical: CANONICAL_NAMES[upperDoc] || upperDoc,
+      code: null,
+      confidence: 95,
+      isConfident: true,
+      reason: 'Pattern match'
+    };
+  }
+
+  if (shortcutDoc) {
+    const upperDoc = shortcutDoc.toUpperCase();
+    return {
+      docType: upperDoc,
+      canonical: CANONICAL_NAMES[upperDoc] || upperDoc,
+      code: null,
+      confidence: 90,
+      isConfident: true,
+      reason: 'Shortcut match'
+    };
+  }
+
+  // 3. Token-based Multi-Signal Scoring on Filename
+  const PROFILES = [
+    { type: '12TH MARKSHEET AND PASSING', code: '12MP', tokens: ['12mp', '12tmp', '12th passing marksheet', '12 marksheet passing', '12th marksheet and passing'], minScore: 90 },
+    { type: '10TH MARKSHEET AND PASSING', code: '10MP', tokens: ['10mp', '10tmp', '10th passing marksheet', '10 marksheet passing', '10th marksheet and passing'], minScore: 90 },
+    { type: '12TH MARKSHEET', code: '12M', patterns: [/\b12(th)?\s*(m|mark|marksheet|hsc)\b/i, /\bhsc\s*mark/i], tokens: ['12th marksheet', 'hsc marksheet', '12 marksheet', '12th mark', '12m', 'hsc'], primary: ['marksheet', 'markshet', 'mark'], qualifier: ['12', '12th', 'hsc'] },
+    { type: '10TH MARKSHEET', code: '10M', patterns: [/\b10(th)?\s*(m|mark|marksheet|ssc)\b/i, /\bssc\s*mark/i], tokens: ['10th marksheet', 'ssc marksheet', '10 marksheet', '10th mark', '10m', 'ssc'], primary: ['marksheet', 'markshet', 'mark'], qualifier: ['10', '10th', 'ssc'] },
+    { type: '12TH PASSING CERTIFICATE', code: '12P', tokens: ['12th passing', 'hsc passing', '12p', '12th pass'], primary: ['passing', 'sanad'], qualifier: ['12', '12th', 'hsc'] },
+    { type: '10TH PASSING CERTIFICATE', code: '10P', tokens: ['10th passing', 'ssc passing', '10p', '10th pass'], primary: ['passing', 'sanad'], qualifier: ['10', '10th', 'ssc'] },
+    { type: 'AADHAAR CARD', code: 'ADR', tokens: ['aadhaar', 'adhar', 'aadhar', 'adr', 'uid', 'uidai', 'adhaar'], primary: ['aadhaar', 'adhar', 'aadhar', 'adr'] },
+    { type: 'CASTE CERTIFICATE', code: 'CST', tokens: ['caste certificate', 'caste cert', 'cst', 'caste', 'jati'], primary: ['caste', 'jati', 'cst'] },
+    { type: 'CASTE VALIDITY', code: 'CVAL', tokens: ['caste validity', 'validity', 'cval', 'padtani'], primary: ['validity', 'padtani', 'cval'] },
+    { type: 'DOMICILE CERTIFICATE', code: 'DOM', tokens: ['domicile', 'dom', 'adivasi', 'rahavasi', 'residential certificate', 'residence'], primary: ['domicile', 'dom', 'adivasi', 'rahavasi'] },
+    { type: 'INCOME CERTIFICATE', code: 'INC', tokens: ['income certificate', 'income cert', 'inc', 'utpanna', 'tahsildar'], primary: ['income', 'inc', 'utpanna'] },
+    { type: 'NON CREAMY LAYER', code: 'NCL', tokens: ['non creamy', 'creamy layer', 'ncl', 'noncreamy'], primary: ['ncl', 'non creamy', 'creamy'] },
+    { type: 'RATION CARD', code: 'RC', tokens: ['ration card', 'ration', 'rc'], primary: ['ration', 'rc'] },
+    { type: 'LEAVING CERTIFICATE', code: 'LC', tokens: ['leaving certificate', 'transfer certificate', 'tc', 'lc', 'leaving cert', 'shala sodlyacha'], primary: ['leaving', 'transfer', 'tc', 'lc'] },
+    { type: 'PHOTO', code: 'PHO', tokens: ['passport photo', 'photo', 'photograph', 'pic', 'image', 'student photo'], primary: ['photo', 'pic', 'photograph'] },
+    { type: 'SIGNATURE', code: 'SIG', tokens: ['signature', 'sign', 'signatur', 'sahi'], primary: ['signature', 'sign', 'signatur', 'sahi'] },
+    { type: 'BANK PASSBOOK', code: 'BNK', tokens: ['bank passbook', 'passbook', 'bank statement', 'account'], primary: ['passbook', 'bank'] },
+    { type: 'PAN CARD', code: 'PAN', tokens: ['pan card', 'pancard', 'pan'], primary: ['pan', 'pancard'] },
+    { type: 'GAP CERTIFICATE', code: 'GAP', tokens: ['gap certificate', 'gap affidavit', 'gap cert', 'affidavit for gap'], primary: ['gap', 'affidavit'] },
+    { type: 'FEE RECEIPT', code: 'FEE', tokens: ['fee receipt', 'fees receipt', 'challan', 'pavti'], primary: ['fee', 'receipt', 'pavti'] },
+    { type: 'ALLOTMENT LETTER', code: 'ALT', tokens: ['allotment letter', 'cap allotment', 'merit list'], primary: ['allotment', 'cap'] },
+    { type: 'SELF DECLARATION', code: 'DEC', tokens: ['self declaration', 'undertaking', 'declaration form', 'pratigyapatra'], primary: ['declaration', 'undertaking'] }
+  ];
+
+  let bestMatch = null;
+  let highestScore = 0;
+
+  for (const prof of PROFILES) {
+    let score = 0;
+
+    if (prof.patterns) {
+      for (const pat of prof.patterns) {
+        if (pat.test(normalized)) {
+          score = Math.max(score, 90);
+          break;
+        }
+      }
+    }
+
+    if (prof.tokens) {
+      for (const tok of prof.tokens) {
+        const tokClean = tok.toLowerCase();
+        if (normalized.includes(tokClean)) {
+          score = Math.max(score, 90);
+          break;
+        }
+      }
+    }
+
+    if (prof.primary && prof.qualifier) {
+      const hasPrim = prof.primary.some(p => normalized.includes(p));
+      const hasQual = prof.qualifier.some(q => {
+        const pat = new RegExp(`(^|[^a-z0-9])${q}([^a-z0-9]|$)`, 'i');
+        return pat.test(normalized);
+      });
+      if (hasPrim && hasQual) {
+        score = Math.max(score, 90);
+      } else if (hasPrim && !hasQual) {
+        score = Math.max(score, 50);
+      }
+    } else if (prof.primary) {
+      const hasPrim = prof.primary.some(p => {
+        const pat = new RegExp(`(^|[^a-z0-9])${p}([^a-z0-9]|$)`, 'i');
+        return pat.test(normalized);
+      });
+      if (hasPrim) {
+        score = Math.max(score, 85);
+      }
+    }
+
+    if (score > highestScore) {
+      highestScore = score;
+      bestMatch = prof;
+    }
+  }
+
+  // Student name matching bonus (up to +10 pts if student name is present in filename)
+  if (studentName && studentName.trim() && highestScore > 0) {
+    const studentTokens = studentName.trim().toLowerCase().split(/\s+/).filter(t => t.length > 2);
+    if (studentTokens.some(tok => normalized.includes(tok))) {
+      highestScore = Math.min(100, highestScore + 10);
+    }
+  }
+
+  // Threshold check: 30%+ matches document cleanly
+  if (bestMatch && highestScore >= 30) {
+    return {
+      docType: bestMatch.type,
+      canonical: bestMatch.type,
+      code: bestMatch.code || null,
+      confidence: highestScore,
+      isConfident: highestScore >= 80,
+      reason: `Filename token match (${highestScore}%)`
+    };
+  }
+
+  return {
+    docType: null,
+    canonical: null,
+    code: null,
+    confidence: highestScore,
+    isConfident: false,
+    reason: 'Below 30% threshold'
+  };
 }
 

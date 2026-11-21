@@ -214,6 +214,17 @@
       "secondaryKeywords": [
         "annual family"
       ]
+    },
+    {
+      "canonical": "PARENT DECLARATION CERTIFICATE",
+      "code": "PAR",
+      "primaryKeywords": [
+        "parent declaration",
+        "guardian"
+      ],
+      "secondaryKeywords": [
+        "annual family"
+      ]
     }
   ]
 }
