@@ -1,0 +1,86 @@
+/**
+ * tools/pdf_studio/pdf_studio.css
+ * DocMitra PDF Studio — Strictly Scoped Stylesheet
+ * All selectors are prefixed with .pdf-studio-scope to ensure zero cross-tool style leakage.
+ */
+
+/* ==========================================================================
+   1. Scoped Scrollbar & Pan Scrolling
+   ========================================================================== */
+
+.pdf-studio-scope .custom-pan-scroll,
+.pdf-studio-scope ::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.pdf-studio-scope ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pdf-studio-scope ::-webkit-scrollbar-thumb {
+  background: rgba(116, 118, 134, 0.3);
+  border-radius: 9999px;
+}
+
+.pdf-studio-scope ::-webkit-scrollbar-thumb:hover {
+  background: rgba(116, 118, 134, 0.6);
+}
+
+/* ==========================================================================
+   2. Scoped Ribbon & Tool Button Transitions
+   ========================================================================== */
+
+.pdf-studio-scope .tool-ribbon-btn {
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.pdf-studio-scope .tool-ribbon-btn:active {
+  transform: scale(0.98);
+}
+
+/* ==========================================================================
+   3. Scoped Docket Cards & Canvas Previews
+   ========================================================================== */
+
+.pdf-studio-scope .docket-card {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.pdf-studio-scope .docket-card:hover {
+  border-color: rgba(0, 55, 176, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 55, 176, 0.06);
+}
+
+.pdf-studio-scope canvas {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* ==========================================================================
+   4. Drag and Drop Zone Interactivity
+   ========================================================================== */
+
+.pdf-studio-scope .dropzone-active {
+  border-color: var(--color-primary, #0037b0) !important;
+  background-color: rgba(0, 55, 176, 0.05) !important;
+}
+
+/* ==========================================================================
+   5. Telemetry & Pulse Indicators
+   ========================================================================== */
+
+.pdf-studio-scope .pulse-indicator {
+  animation: pdfStudioPulse 1.8s infinite ease-in-out;
+}
+
+@keyframes pdfStudioPulse {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}

@@ -5,7 +5,41 @@
 
 ---
 
-## 🏛️ Rule 1: "One Folder Per Tool" Architecture
+## 🤖 Permanent Multi-Agent Isolation Rules
+
+### 🔒 Rule 1 — Rename Tool Lock (`tools/rename_tool/`)
+1. **Strictly Isolated and Locked:**  
+   `tools/rename_tool/` is **STRICTLY LOCKED**. 100% of the Bulk Renamer (UI, Casing, Auto-increment Duplicates, 21 Shortcuts, Preview, Checklist, and Scoped CSS) is fully verified, operational, and locked.
+2. **Zero Modification During Other Work:**  
+   When working on ANY other tool (PDF Studio, Image Studio, Print Studio, Follow-up Desk, settings modal, or app shell), AI agents are strictly forbidden from modifying, refactoring, reformatting, or deleting any file inside `tools/rename_tool/`.
+3. **Explicit Unlock Protocol:**  
+   Only a dedicated Rename Tool session with explicit user confirmation may modify it. The agent MUST ask for explicit confirmation:
+   > *"Confirm tool unlock: Type `UNLOCK RENAME TOOL` to modify files inside `tools/rename_tool/`."*
+   Without this exact confirmation, the tool must remain untouched.
+
+---
+
+### 🔒 Rule 2 — PDF Studio Lock (`tools/pdf_studio/`)
+1. **Strictly Isolated and Locked:**  
+   `tools/pdf_studio/` is **STRICTLY LOCKED** after initial setup and migration. All PDF Studio modules (pure JS engine, scoped UI, scoped CSS, and backend Python module) are self-contained inside `tools/pdf_studio/`.
+2. **Zero Modification Without Explicit Approval:**  
+   When working on other tools or general features, agents must never modify `tools/pdf_studio/`. Any future modification to `tools/pdf_studio/` requires asking the user first and receiving explicit approval:
+   > *"Confirm tool unlock: Type `UNLOCK PDF STUDIO` to modify files inside `tools/pdf_studio/`."*
+   Without this exact confirmation, the tool must remain untouched.
+
+---
+
+### 🎯 Rule 3 — Strict Single-Tool Agent Scope
+1. **Single Tool Boundary:**  
+   Every Antigravity conversation or AI agent is permanently restricted to ONLY the single tool assigned to that conversation (e.g., Rename Tool Agent, PDF Studio Agent, Image Studio Agent, Print Studio Agent).
+2. **Never Cross Tool Boundaries:**  
+   An agent assigned to one tool must NEVER touch, edit, or refactor files belonging to other tools, the Dashboard, or unrelated tool folders — even if asked casually. If requested to edit another tool, the agent must refuse and redirect the user to a dedicated session for that tool.
+3. **App Shell & Shared Code Guard:**  
+   Shared files (`shared/`, `app/index.html`, `server.py`, `src/ui/index.js`) may only have forwarder shims or mounting links added; tool-specific business logic must NEVER be scattered into shared files.
+
+---
+
+## 🏛️ Rule 4: "One Folder Per Tool" Architecture
 
 1. **Self-Contained Tool Boundaries:**  
    Every tool in DocMitra MUST live inside its own self-contained folder under `tools/<tool_name>/`.
@@ -25,20 +59,7 @@
 
 ---
 
-## 🔒 Rule 2: Rename Tool Lock (`tools/rename_tool/`)
-
-1. **Locked by Default:**  
-   `tools/rename_tool/` is **STRICTLY LOCKED**. 100% of the Bulk Renamer (UI, Casing, Auto-increment Duplicates, 21 Shortcuts, Preview, Checklist, and Scoped CSS) is fully verified, operational, and locked.
-2. **Zero Modification During Other Work:**  
-   When working on ANY other tool (PDF Studio, Image Studio, Print Studio, Follow-up Desk, settings modal, or app shell), AI agents are strictly forbidden from modifying, refactoring, reformatting, or deleting any file inside `tools/rename_tool/`.
-3. **Explicit Unlock Protocol:**  
-   Even when the user explicitly requests changes to the Bulk Renamer in the future, the agent MUST ask for explicit confirmation:
-   > *"Confirm tool unlock: Type `UNLOCK RENAME TOOL` to modify files inside `tools/rename_tool/`."*
-   Without this exact confirmation, the tool must remain untouched.
-
----
-
-## 🛡️ Rule 3: The "100-Document Backup" (Shadow / Mirror) Safety Rule
+## 🛡️ Rule 5: The "100-Document Backup" (Shadow / Mirror) Safety Rule
 
 1. **Non-Destructive First:**  
    Never delete, overwrite, or destructively move working files before creating a clean backup.
@@ -51,7 +72,7 @@
 
 ---
 
-## 📐 Rule 4: Visual & Design Integrity
+## 📐 Rule 6: Visual & Design Integrity
 
 1. **Zero Unapproved Visual Changes:**  
    Keep 3-column Bento workstation grids, Hero Card styling, DPI indicators, and layout proportions consistent with the approved specification.

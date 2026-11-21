@@ -2567,7 +2567,6 @@ export class RenamerUIManager {
 
   async handleSmartScanBatch() {
     if (this.state.files.length === 0) {
-      toast.show('Intake Folder Needed', 'Press "Select Folder" (F2) before running Smart Scan.', 'warning');
       return;
     }
 
@@ -2578,9 +2577,9 @@ export class RenamerUIManager {
     this._scanAbortController = new AbortController();
     const signal = this._scanAbortController.signal;
 
-    const pending = this.state.files.filter(f => !f.isRenamed);
+    // Strict: filter out files that are already renamed or kept
+    const pending = this.state.files.filter(f => !f.isRenamed && !f.isKept);
     if (pending.length === 0) {
-      toast.show('No Pending Files', 'All files are already renamed.', 'info');
       return;
     }
 
@@ -2590,6 +2589,14 @@ export class RenamerUIManager {
     if (btnSmart) {
       btnSmart.classList.add('smart-scan-pulse');
       btnSmart.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-primary">sync</span><span>Scanning (0/${pending.length})...</span>`;
+    }
+
+    // Duplicate collision avoidance in Smart Scan: collect all used target names
+    const usedDestinations = new Set();
+    for (const file of this.state.files) {
+      if (file.isRenamed || file.isKept) {
+        usedDestinations.add(file.targetName || file.name);
+      }
     }
 
     toast.show('Smart Scan Started', `Scanning File #1 immediately...`, 'info');
@@ -2612,6 +2619,9 @@ export class RenamerUIManager {
         if (signal.aborted) break;
 
         const f = scanQueue[i];
+        // Respect Keep Original (isKept = true): NEVER overwrite, re-match, or change
+        if (f.isKept) continue;
+
         f.isScanning = true;
 
         if (btnSmart) {
@@ -2639,7 +2649,10 @@ export class RenamerUIManager {
             const formulaBase = buildName(evalRes.docType, this.state.studentName, this.state.settings?.groups, this.state.style);
             const cleanBase = formulaBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
             const currentExt = f.ext || ('.' + f.name.split('.').pop()).toLowerCase();
-            f.targetName = `${cleanBase}${currentExt}`;
+            const desiredWithExt = `${cleanBase}${currentExt}`;
+            const uniqueTarget = uniqueDestination(desiredWithExt, f.name, usedDestinations, this.state.studentName);
+            usedDestinations.add(uniqueTarget);
+            f.targetName = uniqueTarget;
             f.status = 'matched';
           }
         } catch (err) {
@@ -2680,13 +2693,327 @@ export class RenamerUIManager {
   }
 
   async handleRenameAllMatched() {
-    const toRename = this.state.files.filter(f => !f.isRenamed && f.status !== 'needs_review' && (f.smartConfidence >= 80 || (f.smartConfidence === undefined && f.isMatched)) && (f.targetName !== f.name || (f.rotation && f.rotation % 360 !== 0)));
-    if (toRename.length === 0) {
-      toast.show('No Matched Files', 'Run Smart Scan (F4) or match documents with shortcuts first.', 'info');
+    this.openCrossCheckModal();
+  }
+
+  /* ==========================================================================
+     New Document Found / Add Document Self-Learning Handlers
+     ========================================================================== */
+  async openAddDocumentModal() {
+    const currentFile = this.state.files[this.state.currentIndex];
+    if (!currentFile) {
+      toast.show('No Document', 'Please select an unrecognized document first.', 'warning');
       return;
     }
 
-    for (const f of toRename) {
+    const modal = document.getElementById('modalAddDocument');
+    if (!modal) return;
+
+    const inputCode = document.getElementById('inputAddDocCode');
+    const inputName = document.getElementById('inputAddDocName');
+    const previewEl = document.getElementById('addDocTargetPreview');
+    const countEl = document.getElementById('addDocKeywordCount');
+    const keywordsList = document.getElementById('addDocKeywordsList');
+
+    if (inputCode) inputCode.value = '';
+    if (inputName) inputName.value = '';
+
+    const updatePreview = () => {
+      const docName = inputName?.value.trim() || 'DOCUMENT';
+      const formula = buildName(docName, this.state.studentName, null, this.state.style);
+      const cleanBase = formula.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+      const extension = currentFile.ext || ext(currentFile.name) || '.pdf';
+      if (previewEl) previewEl.textContent = `${cleanBase}${extension}`;
+    };
+
+    if (inputName) {
+      inputName.oninput = updatePreview;
+    }
+    if (inputCode) {
+      inputCode.oninput = () => {
+        inputCode.value = inputCode.value.toUpperCase();
+      };
+    }
+
+    updatePreview();
+
+    if (keywordsList) {
+      keywordsList.innerHTML = '<span class="text-secondary italic">Extracting keywords from active document...</span>';
+    }
+
+    modal.classList.remove('hidden');
+
+    let text = currentFile.smartText;
+    if (!text) {
+      text = await this.extractTextFromFile(currentFile);
+      currentFile.smartText = text;
+    }
+
+    const { primary, secondary } = extractSignatureKeywords(text || '', currentFile.name);
+    this._currentLearningKeywords = { primary, secondary };
+
+    if (keywordsList) {
+      keywordsList.innerHTML = '';
+      const allKws = [...primary, ...secondary];
+      if (countEl) countEl.textContent = String(allKws.length);
+
+      if (allKws.length === 0) {
+        keywordsList.innerHTML = '<span class="text-secondary text-[11px] italic">No unique OCR keywords detected (document will match by name).</span>';
+      } else {
+        allKws.forEach(kw => {
+          const pill = document.createElement('span');
+          pill.className = 'px-1.5 py-0.5 rounded bg-surface-container-high text-primary font-bold text-[10px]';
+          pill.textContent = kw;
+          keywordsList.appendChild(pill);
+        });
+      }
+    }
+
+    if (inputCode) inputCode.focus();
+  }
+
+  closeAddDocumentModal() {
+    const modal = document.getElementById('modalAddDocument');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  async handleSaveAndLearnDocument() {
+    const currentFile = this.state.files[this.state.currentIndex];
+    if (!currentFile) return;
+
+    const inputCode = document.getElementById('inputAddDocCode');
+    const inputName = document.getElementById('inputAddDocName');
+
+    const code = (inputCode?.value || '').trim().toUpperCase();
+    const name = (inputName?.value || '').trim().toUpperCase();
+
+    if (!code || !name) {
+      toast.show('Incomplete Details', 'Please enter both Short Code and Full Document Name.', 'warning');
+      return;
+    }
+
+    const { primary = [], secondary = [] } = this._currentLearningKeywords || {};
+
+    // 1. Permanently register in memory signatures for Smart Scan
+    registerDocumentSignature({
+      canonical: name,
+      code: code,
+      primaryKeywords: primary,
+      secondaryKeywords: secondary
+    });
+
+    // 2. Persist into config/document_presets.json via storage-service
+    try {
+      const presets = await loadDocumentPresets();
+      if (!presets.forms) presets.forms = {};
+      for (const formKey of Object.keys(presets.forms)) {
+        const list = presets.forms[formKey];
+        if (Array.isArray(list) && !list.some(item => item.code === code || item.name === name)) {
+          list.push({ code, name, required: false });
+        }
+      }
+      await saveDocumentPresets(presets);
+      if (this.state.documentPresets) {
+        for (const formKey of Object.keys(this.state.documentPresets)) {
+          const list = this.state.documentPresets[formKey];
+          if (Array.isArray(list) && !list.some(item => item.code === code || item.name === name)) {
+            list.push({ code, name, required: false });
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[DocMitra] Failed to persist learned preset to disk:', e);
+    }
+
+    // 3. Match active document immediately
+    currentFile.docType = name;
+    currentFile.isMatched = true;
+    currentFile.smartDocType = name;
+    currentFile.smartConfidence = 95;
+    currentFile.status = 'matched';
+
+    const formulaBase = buildName(name, this.state.studentName, this.state.settings?.groups, this.state.style);
+    const cleanBase = formulaBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+    const currentExt = currentFile.ext || ('.' + currentFile.name.split('.').pop()).toLowerCase();
+    const desiredWithExt = `${cleanBase}${currentExt}`;
+
+    const usedDestinations = new Set(this.state.files.filter(x => x !== currentFile).map(x => x.targetName || x.name));
+    currentFile.targetName = uniqueDestination(desiredWithExt, currentFile.name, usedDestinations, this.state.studentName);
+
+    // 4. Scan any other unrecognized files in queue to see if they match this learned signature
+    for (const other of this.state.files) {
+      if (other !== currentFile && !other.isRenamed && !other.isKept && !other.isMatched && other.smartText) {
+        const evalRes = evaluateSmartOcrDocument(other.smartText, this.state.studentName);
+        if (evalRes.isConfident && evalRes.docType === name) {
+          other.docType = name;
+          other.isMatched = true;
+          other.smartDocType = name;
+          other.smartConfidence = evalRes.confidence;
+          other.status = 'matched';
+          const oFormula = buildName(name, this.state.studentName, this.state.settings?.groups, this.state.style);
+          const oBase = oFormula.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+          const oExt = other.ext || ('.' + other.name.split('.').pop()).toLowerCase();
+          const oDesired = `${oBase}${oExt}`;
+          const oUnique = uniqueDestination(oDesired, other.name, usedDestinations, this.state.studentName);
+          usedDestinations.add(oUnique);
+          other.targetName = oUnique;
+        }
+      }
+    }
+
+    this.closeAddDocumentModal();
+    toast.show('Document Learned', `Registered "${name}" (${code}) & applied pattern.`, 'success');
+
+    this.updateTelemetry();
+    this.renderQueue();
+    this.renderCurrentPreview();
+  }
+
+  /* ==========================================================================
+     High-Speed Cross-Check Preview Modal & Batch Execution Handlers
+     ========================================================================== */
+  openCrossCheckModal() {
+    const matched = this.state.files.filter(f => !f.isRenamed && f.status !== 'needs_review' && (f.smartConfidence >= 80 || (f.smartConfidence === undefined && f.isMatched)));
+    if (matched.length === 0) {
+      toast.show('No Matched Files', 'No documents ready for batch rename.', 'info');
+      return;
+    }
+
+    const modal = document.getElementById('modalCrossCheck');
+    if (!modal) return;
+
+    const tbody = document.getElementById('crossCheckTableBody');
+    const selectAllCb = document.getElementById('chkCrossCheckSelectAll');
+    const totalEl = document.getElementById('crossCheckTotalCount');
+    const selectedEl = document.getElementById('crossCheckSelectedCount');
+    const studentLabel = document.getElementById('crossCheckStudentLabel');
+    const confirmLabel = document.getElementById('confirmRenameLabel');
+
+    if (studentLabel) studentLabel.textContent = this.state.studentName || 'Not Set';
+    if (totalEl) totalEl.textContent = String(matched.length);
+    if (selectedEl) selectedEl.textContent = String(matched.length);
+    if (confirmLabel) confirmLabel.textContent = `Confirm & Rename (${matched.length})`;
+    if (selectAllCb) selectAllCb.checked = true;
+
+    if (tbody) {
+      tbody.innerHTML = '';
+      matched.forEach(f => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-surface-container-high/40 transition-colors';
+        tr.dataset.fileId = f.id;
+
+        // Checkbox column
+        const tdCb = document.createElement('td');
+        tdCb.className = 'py-2 px-3 text-center';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = true;
+        cb.className = 'w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer crosscheck-row-cb';
+        cb.addEventListener('change', () => this._updateCrossCheckSelectionCount());
+        tdCb.appendChild(cb);
+        tr.appendChild(tdCb);
+
+        // Old Name
+        const tdOld = document.createElement('td');
+        tdOld.className = 'py-2 px-3 text-secondary truncate max-w-[220px]';
+        tdOld.title = f.name;
+        tdOld.textContent = cleanName(f.name) + (ext(f.name) || '');
+        tr.appendChild(tdOld);
+
+        // Arrow
+        const tdArr = document.createElement('td');
+        tdArr.className = 'py-2 px-2 text-center text-outline-variant font-bold';
+        tdArr.textContent = '→';
+        tr.appendChild(tdArr);
+
+        // Suggested New Name (student name highlighted)
+        const tdNew = document.createElement('td');
+        tdNew.className = 'py-2 px-3 font-bold text-on-surface truncate max-w-[260px]';
+        tdNew.title = f.targetName || f.name;
+
+        const targetClean = cleanName(f.targetName || f.name);
+        const targetExt = ext(f.targetName || f.name);
+        const sName = (this.state.studentName || '').trim();
+
+        if (sName && targetClean.toLowerCase().includes(sName.toLowerCase())) {
+          const idx = targetClean.toLowerCase().indexOf(sName.toLowerCase());
+          const before = targetClean.slice(0, idx);
+          const matchStr = targetClean.slice(idx, idx + sName.length);
+          const after = targetClean.slice(idx + sName.length);
+          tdNew.appendChild(document.createTextNode(before));
+          const hl = document.createElement('span');
+          hl.className = 'text-primary bg-primary/10 px-1 rounded';
+          hl.textContent = matchStr;
+          tdNew.appendChild(hl);
+          tdNew.appendChild(document.createTextNode(after + targetExt));
+        } else {
+          tdNew.textContent = targetClean + targetExt;
+        }
+        tr.appendChild(tdNew);
+
+        // Confidence badge
+        const tdConf = document.createElement('td');
+        tdConf.className = 'py-2 px-3 text-right';
+        const confBadge = document.createElement('span');
+        const conf = f.smartConfidence !== undefined ? f.smartConfidence : 95;
+        confBadge.className = 'confidence-badge confidence-badge-high';
+        confBadge.textContent = `🟢 ${conf}%`;
+        tdConf.appendChild(confBadge);
+        tr.appendChild(tdConf);
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    if (selectAllCb) {
+      selectAllCb.onchange = (e) => {
+        const checkboxes = modal.querySelectorAll('.crosscheck-row-cb');
+        checkboxes.forEach(cb => { cb.checked = e.target.checked; });
+        this._updateCrossCheckSelectionCount();
+      };
+    }
+
+    modal.classList.remove('hidden');
+  }
+
+  _updateCrossCheckSelectionCount() {
+    const modal = document.getElementById('modalCrossCheck');
+    if (!modal) return;
+    const checkboxes = modal.querySelectorAll('.crosscheck-row-cb');
+    const checked = Array.from(checkboxes).filter(cb => cb.checked);
+    const selectedEl = document.getElementById('crossCheckSelectedCount');
+    const confirmLabel = document.getElementById('confirmRenameLabel');
+    const confirmBtn = document.getElementById('btnConfirmBatchRename');
+    if (selectedEl) selectedEl.textContent = String(checked.length);
+    if (confirmLabel) confirmLabel.textContent = `Confirm & Rename (${checked.length})`;
+    if (confirmBtn) confirmBtn.disabled = checked.length === 0;
+  }
+
+  closeCrossCheckModal() {
+    const modal = document.getElementById('modalCrossCheck');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  async handleConfirmCrossCheckRename() {
+    const modal = document.getElementById('modalCrossCheck');
+    if (!modal) return;
+
+    const rows = modal.querySelectorAll('#crossCheckTableBody tr');
+    const selectedFiles = [];
+    rows.forEach(tr => {
+      const cb = tr.querySelector('.crosscheck-row-cb');
+      if (cb && cb.checked) {
+        const f = this.state.files.find(x => x.id === tr.dataset.fileId);
+        if (f) selectedFiles.push(f);
+      }
+    });
+
+    if (selectedFiles.length === 0) {
+      toast.show('No Files Selected', 'Please select at least one document to rename.', 'warning');
+      return;
+    }
+
+    for (const f of selectedFiles) {
       const err = validateFilename(f.targetName);
       if (err) {
         toast.show('Validation Error', `${cleanName(f.name)}: ${err}`, 'error');
@@ -2694,7 +3021,7 @@ export class RenamerUIManager {
       }
     }
 
-    const plan = toRename.map(f => ({
+    const plan = selectedFiles.map(f => ({
       old: f.name,
       next: f.targetName,
       file: f,
@@ -2703,23 +3030,24 @@ export class RenamerUIManager {
       rotation: f.rotation || 0
     }));
 
-    toast.show('Executing Matched Batch', `Renaming ${plan.length} matched files (>=80% confidence)...`, 'info');
+    toast.show('Executing Batch Rename', `Processing ${plan.length} matched documents...`, 'info');
 
     try {
       const result = await executeRename(this.state.folder, plan, (pct, status) => {
-        console.log(`[Smart Rename Progress] ${pct}%: ${status}`);
+        console.log(`[Batch Rename Progress] ${pct}%: ${status}`);
       });
 
       undoManager.pushBatch(this.state.folder, plan);
 
-      toRename.forEach(f => {
+      selectedFiles.forEach(f => {
         f.name = f.targetName;
         f.isRenamed = true;
         f.status = 'renamed';
         f.rotation = 0;
       });
 
-      toast.show('Matched Batch Complete!', `Successfully renamed ${plan.length} documents.`, 'success');
+      this.closeCrossCheckModal();
+      toast.show('Batch Complete!', `Successfully renamed ${plan.length} documents.`, 'success');
       this.updateTelemetry();
       this.renderQueue();
       this.renderCurrentPreview();

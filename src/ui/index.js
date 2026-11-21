@@ -10,7 +10,7 @@ import { wirePlaceholderActions } from './placeholders.js';
 import { toast } from './toast.js';
 import { initRenamerUI } from '../../tools/rename_tool/rename_tool_ui.js';
 import { initSettingsUI } from './settings-ui.js';
-import { initPdfStudioUI } from './pdf-studio-ui.js';
+import { initPdfStudioUI } from '../../tools/pdf_studio/pdf_studio_ui.js';
 import { initImageStudioUI } from './image-studio-ui.js';
 import { initPrintStudioUI } from './print-studio-ui.js';
 import { initFollowUpUI } from './followup-ui.js';

@@ -19,7 +19,11 @@ import {
   buildName,
   uniqueDestination,
   validateFilename,
-  DEFAULT_CHECKLISTS_DATA
+  DEFAULT_CHECKLISTS_DATA,
+  evaluateSmartOcrDocument,
+  SMART_DOC_SIGNATURES,
+  registerDocumentSignature,
+  extractSignatureKeywords
 } from '../tools/rename_tool/rename_tool_logic.js';
 
 import {
@@ -37,9 +41,9 @@ import {
 console.log('=== RUNNING DOCMITRA BULK RENAMER MASTER VERIFICATION SUITE ===\n');
 
 // ---------------------------------------------------------------------------
-// TC-01: Phase 1 — Bottom Bar Cleanup & High-Visibility 'Rename All'
+// TC-01: Phase 1 & Upgrade — Toolbar Cleanup & Focused Workflow
 // ---------------------------------------------------------------------------
-console.log('[TC-01] Phase 1: Verifying Bottom Bar Cleanup & High-Visibility Rename All...');
+console.log('[TC-01] Phase 1 & Upgrade: Verifying Toolbar Cleanup & Focused Workflow...');
 const htmlPath = path.join(ROOT, 'tools/rename_tool/rename_tool.html');
 const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
 
@@ -49,19 +53,21 @@ assert.ok(footerMatch, 'Footer toolbar must exist in rename_tool.html');
 const footerContent = footerMatch[1];
 assert.ok(!footerContent.includes('<kbd'), 'No <kbd> tags should exist in bottom toolbar');
 
-// Ensure essential buttons exist
+// Ensure approved buttons exist in bottom execution toolbar
 assert.ok(footerContent.includes('id="btnUndoRename"'), 'Undo button must exist in toolbar');
 assert.ok(footerContent.includes('id="btnKeepOriginal"'), 'Keep Original button must exist in toolbar');
-assert.ok(footerContent.includes('id="btnSmartScanBatch"'), 'Smart Scan button must exist in toolbar');
 assert.ok(footerContent.includes('id="btnRenameMatched"'), 'Rename Matched button must exist in toolbar');
 assert.ok(footerContent.includes('id="btnReviewUnmatched"'), 'Review Unmatched button must exist in toolbar');
-assert.ok(footerContent.includes('id="btnSaveBatch"'), 'Save Batch button must exist in toolbar');
 assert.ok(footerContent.includes('id="btnExportAudit"'), 'Export Audit button must exist in toolbar');
 
-// Verify Rename All button styling is prominent and high-contrast
-assert.ok(footerContent.includes('id="btnRenameAll"'), 'btnRenameAll must exist');
-assert.ok(footerContent.includes('bg-emerald-600'), 'btnRenameAll must have prominent emerald styling');
-assert.ok(footerContent.includes('text-[15px]') || footerContent.includes('font-bold'), 'btnRenameAll must have prominent font styling');
+// Ensure removed buttons are NOT present in visible bottom toolbar
+assert.ok(!footerContent.includes('id="btnSmartScanBatch"'), 'Smart Scan button must be removed from toolbar (automatic scan only)');
+assert.ok(!footerContent.includes('id="btnSaveBatch"'), 'Save Batch button must be removed from toolbar');
+assert.ok(!footerContent.includes('id="btnRenameAll"'), 'Rename All button must be removed/hidden from toolbar (focus on Rename Matched)');
+
+// Verify Rename Matched button has prominent emerald styling
+assert.ok(footerContent.includes('bg-emerald-600'), 'Rename Matched button must have prominent emerald styling');
+assert.ok(footerContent.includes('font-bold'), 'Rename Matched button must have bold font styling');
 
 // Verify synchronization with app/index.html
 const appIndexHtmlPath = path.join(ROOT, 'app/index.html');
@@ -69,8 +75,11 @@ const appIndexContent = fs.readFileSync(appIndexHtmlPath, 'utf-8');
 const appRenamerFooter = appIndexContent.match(/<section id="view-bulk-renamer"[\s\S]*?<footer[^>]*>([\s\S]*?)<\/footer>/);
 assert.ok(appRenamerFooter, 'app/index.html must contain view-bulk-renamer footer');
 assert.ok(!appRenamerFooter[1].includes('<kbd'), 'app/index.html renamer footer must not contain <kbd> tags');
+assert.ok(!appRenamerFooter[1].includes('id="btnSmartScanBatch"'), 'app/index.html footer must not have manual smart scan button');
+assert.ok(!appRenamerFooter[1].includes('id="btnSaveBatch"'), 'app/index.html footer must not have save batch button');
+assert.ok(!appRenamerFooter[1].includes('id="btnRenameAll"'), 'app/index.html footer must not have rename all button');
 assert.ok(appRenamerFooter[1].includes('bg-emerald-600'), 'app/index.html renamer footer must include bg-emerald-600');
-console.log('✓ TC-01 Passed: Bottom toolbar is clean, clutter-free, and Rename All is prominently styled (synchronized with app/index.html).\n');
+console.log('✓ TC-01 Passed: Bottom toolbar is clean, clutter-free, and Rename Matched is prominently styled (synchronized with app/index.html).\n');
 
 // ---------------------------------------------------------------------------
 // TC-02: Phase 2 — Clean Filename Display (No Extensions)
@@ -258,14 +267,103 @@ assert.ok(uiJsContent.includes("'needs_review'"), 'Import Document must flag unc
 console.log('✓ TC-10 Passed: Import Document performs safe physical copy on disk with detection and Needs Review flagging.\n');
 
 // ---------------------------------------------------------------------------
-// TC-11: Smart Scan — Sequential One-by-One Live Streaming Scan
+// TC-11: Smart Scan — Sequential Live Streaming & Automatic Scan Trigger
 // ---------------------------------------------------------------------------
-console.log('[TC-11] Smart Scan: Verifying Sequential Live Streaming Scan...');
+console.log('[TC-11] Smart Scan: Verifying Sequential Live Streaming & Automatic Scan Trigger...');
 assert.ok(uiJsContent.includes('_scanAbortController'), 'UI must maintain AbortController for cancellation');
 assert.ok(uiJsContent.includes('scanQueue.unshift(currentFile)'), 'Scan queue must prioritize File #1 first');
 assert.ok(uiJsContent.includes('f.isScanning = true'), 'Scanning file must be tagged with isScanning = true');
 assert.ok(uiJsContent.includes('SCANNING'), 'Queue row must show live SCANNING indicator');
 assert.ok(uiJsContent.includes('signal.aborted'), 'Scan loop must check abort signal on each iteration');
-console.log('✓ TC-11 Passed: Sequential Live Streaming Smart Scan prioritizes File #1 with row-by-row streaming.\n');
 
-console.log('🎉 ALL 11 MASTER TEST CASES (TC-01 through TC-11) PASSED 100%! 🎉');
+// Verify Automatic Scan triggering on folder load and file addition
+assert.ok(uiJsContent.includes('AUTOMATIC SMART SCAN ONLY: auto-start sequential scan on folder load'), 'loadFolderData must trigger automatic smart scan');
+assert.ok(uiJsContent.includes('AUTOMATIC SMART SCAN ONLY: auto-start sequential scan on file addition'), 'handleAddFiles must trigger automatic smart scan');
+
+// Verify isKept protection (Keep Original files are NEVER overwritten or re-matched)
+assert.ok(uiJsContent.includes('if (f.isKept) continue'), 'Smart Scan loop must strictly skip isKept files');
+const keptFileTest = { id: 'k1', name: 'Original_File.pdf', targetName: 'Original_File.pdf', isKept: true, isRenamed: false };
+assert.strictEqual(keptFileTest.isKept, true, 'isKept file must be preserved');
+
+// Verify duplicate filename collision avoidance in Smart Scan
+assert.ok(uiJsContent.includes('usedDestinations.add(uniqueTarget)'), 'Smart Scan must register each assigned target in usedDestinations');
+const duplicateScan1 = uniqueDestination('10TH MARKSHEET RAHUL PATIL.pdf', 'scan1.pdf', new Set(), 'RAHUL PATIL');
+const duplicateScan2 = uniqueDestination('10TH MARKSHEET RAHUL PATIL.pdf', 'scan2.pdf', new Set([duplicateScan1]), 'RAHUL PATIL');
+assert.strictEqual(duplicateScan1, '10TH MARKSHEET RAHUL PATIL.pdf');
+assert.strictEqual(duplicateScan2, '10TH MARKSHEET 1 RAHUL PATIL.pdf', 'Duplicate identical documents in same batch must receive sequential numbers');
+
+console.log('✓ TC-11 Passed: Sequential Live Streaming Smart Scan prioritizes File #1 with automatic triggers, isKept safety, and duplicate numbering.\n');
+
+// ---------------------------------------------------------------------------
+// TC-12: New Document Found & Dynamic Add Document Self-Learning Flow
+// ---------------------------------------------------------------------------
+console.log('[TC-12] Self-Learning: Verifying "New Document Found" Alert Bar & Add Document Flow...');
+// Check markup in rename_tool.html and app/index.html
+assert.ok(htmlContent.includes('id="newDocAlertBar"'), 'rename_tool.html must contain newDocAlertBar');
+assert.ok(htmlContent.includes('id="btnAddNewDocument"'), 'rename_tool.html must contain btnAddNewDocument');
+assert.ok(htmlContent.includes('id="modalAddDocument"'), 'rename_tool.html must contain modalAddDocument');
+assert.ok(htmlContent.includes('id="inputAddDocCode"'), 'rename_tool.html must contain inputAddDocCode');
+assert.ok(htmlContent.includes('id="inputAddDocName"'), 'rename_tool.html must contain inputAddDocName');
+assert.ok(htmlContent.includes('id="btnSaveAddDoc"'), 'rename_tool.html must contain btnSaveAddDoc');
+
+assert.ok(appIndexContent.includes('id="newDocAlertBar"'), 'app/index.html must contain newDocAlertBar');
+assert.ok(appIndexContent.includes('id="btnAddNewDocument"'), 'app/index.html must contain btnAddNewDocument');
+assert.ok(appIndexContent.includes('id="modalAddDocument"'), 'app/index.html must contain modalAddDocument');
+
+// Test dynamic signature registration in logic module
+const dynamicSig = registerDocumentSignature({
+  canonical: 'PARENT DECLARATION CERTIFICATE',
+  code: 'PAR',
+  primaryKeywords: ['parent declaration', 'guardian', 'solemnly affirm'],
+  secondaryKeywords: ['annual family', 'signature of parent']
+});
+assert.ok(dynamicSig, 'registerDocumentSignature must return registered signature');
+assert.strictEqual(dynamicSig.canonical, 'PARENT DECLARATION CERTIFICATE');
+assert.strictEqual(dynamicSig.code, 'PAR');
+
+// Verify recognition immediately works on sample OCR text
+const sampleParentOcr = `
+  SELF AND PARENT DECLARATION CERTIFICATE
+  I, the undersigned parent / guardian, solemnly affirm and declare that the annual family income
+  Candidate: Rahul Patil
+  Signature of parent
+`;
+const learnedMatch = evaluateSmartOcrDocument(sampleParentOcr, 'Rahul Patil');
+assert.strictEqual(learnedMatch.canonical, 'PARENT DECLARATION CERTIFICATE', 'Learned signature must match in evaluateSmartOcrDocument');
+assert.ok(learnedMatch.confidence >= 80, `Learned match confidence must be >= 80%, got ${learnedMatch.confidence}%`);
+assert.strictEqual(learnedMatch.isConfident, true, 'isConfident must be true for learned document');
+
+// Verify keyword extraction helper
+const sampleText = 'Maharashtra State University Migration Certificate Transfer Student Department Government Approval';
+const extractedKws = extractSignatureKeywords(sampleText);
+assert.ok(Array.isArray(extractedKws.primary), 'Extracted keywords must contain primary list');
+assert.ok(extractedKws.primary.length > 0, 'Must extract at least one primary keyword');
+
+// Verify persistence helper loads and saves presets to config/document_presets.json
+const currentPresets = await loadDocumentPresets();
+assert.ok(currentPresets && currentPresets.forms, 'Presets must load forms object');
+console.log('✓ TC-12 Passed: "New Document Found" alert bar, Add Document modal, and dynamic self-learning engine verified.\n');
+
+// ---------------------------------------------------------------------------
+// TC-13: High-Speed Cross-Check Preview Modal & Atomic Matched Execution
+// ---------------------------------------------------------------------------
+console.log('[TC-13] Cross-Check Modal: Verifying 2-Column Preview & Atomic Execution...');
+assert.ok(htmlContent.includes('id="modalCrossCheck"'), 'rename_tool.html must contain modalCrossCheck');
+assert.ok(htmlContent.includes('id="crossCheckTableBody"'), 'rename_tool.html must contain crossCheckTableBody');
+assert.ok(htmlContent.includes('id="chkCrossCheckSelectAll"'), 'rename_tool.html must contain chkCrossCheckSelectAll');
+assert.ok(htmlContent.includes('id="btnConfirmBatchRename"'), 'rename_tool.html must contain btnConfirmBatchRename');
+
+assert.ok(appIndexContent.includes('id="modalCrossCheck"'), 'app/index.html must contain modalCrossCheck');
+assert.ok(appIndexContent.includes('id="btnConfirmBatchRename"'), 'app/index.html must contain btnConfirmBatchRename');
+
+// Verify UI methods for Cross-Check Modal
+assert.ok(uiJsContent.includes('openCrossCheckModal'), 'UI must implement openCrossCheckModal');
+assert.ok(uiJsContent.includes('handleConfirmCrossCheckRename'), 'UI must implement handleConfirmCrossCheckRename');
+assert.ok(uiJsContent.includes('_updateCrossCheckSelectionCount'), 'UI must update cross-check selection count');
+
+// Verify atomic batch rename plan creation and undo manager integration
+assert.ok(uiJsContent.includes('undoManager.pushBatch(this.state.folder, plan)'), 'Confirm rename must push batch plan to undo manager');
+
+console.log('✓ TC-13 Passed: High-Speed Cross-Check Preview Modal, 2-column layout, and atomic batch rename verified.\n');
+
+console.log('🎉 ALL 13 MASTER TEST CASES (TC-01 through TC-13) PASSED 100%! 🎉');

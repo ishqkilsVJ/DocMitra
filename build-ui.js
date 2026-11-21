@@ -28,6 +28,12 @@ async function run() {
     fs.copyFileSync(renameToolCss, targetCss);
   }
 
+  const pdfStudioCss = resolve(__dirname, 'tools/pdf_studio/pdf_studio.css');
+  const targetPdfCss = resolve(__dirname, 'app/assets/css/pdf_studio.css');
+  if (fs.existsSync(pdfStudioCss)) {
+    fs.copyFileSync(pdfStudioCss, targetPdfCss);
+  }
+
   console.log('[DocMitra] UI bundle built successfully -> app/assets/js/app.js');
 }
 
