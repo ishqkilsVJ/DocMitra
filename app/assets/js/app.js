@@ -252,20 +252,68 @@ function a() {
 var o = "http://localhost:3000";
 async function s() {
 	try {
-		let e = new AbortController(), t = setTimeout(() => e.abort(), 3e5), n = await fetch(`${o}/api/native-select-folder`, { signal: e.signal });
-		return clearTimeout(t), n.ok ? await n.json() : {
-			success: !1,
-			errorCode: "CM-103",
-			error: `Server error: ${n.status}`
+		let e = new AbortController(), t = setTimeout(() => e.abort(), 12e4), n = await fetch(`${o}/api/native-select-folder`, { signal: e.signal });
+		if (clearTimeout(t), n.ok) {
+			let e = await n.json();
+			if (e.success || e.cancelled) return e;
+		}
+	} catch (e) {
+		console.warn("[NativeBridge] Backend folder picker failed or unavailable, falling back:", e);
+	}
+	if (typeof window < "u" && typeof window.showDirectoryPicker == "function") try {
+		let e = await window.showDirectoryPicker(), t = [], n = [];
+		for await (let [r, i] of e.entries()) if (i.kind === "file") {
+			let e = await i.getFile();
+			e.handle = i, e.url = URL.createObjectURL(e), t.push({
+				name: e.name,
+				path: e.name,
+				size: e.size,
+				ext: ("." + e.name.split(".").pop()).toLowerCase(),
+				url: e.url,
+				fileObj: e
+			});
+		} else i.kind === "directory" && n.push({
+			name: i.name,
+			path: i.name,
+			handle: i
+		});
+		return {
+			success: !0,
+			path: e.name,
+			name: e.name,
+			subfolders: n,
+			files: t
 		};
 	} catch (e) {
-		let t = e.name === "AbortError";
-		return {
+		if (e.name === "AbortError") return {
 			success: !1,
-			errorCode: t ? "CM-106" : "CM-103",
-			error: t ? "Folder picker dialog timed out after 5 minutes." : e.message
+			cancelled: !0
 		};
 	}
+	return new Promise((e) => {
+		let t = document.getElementById("hiddenFallbackFolderInput");
+		t || (t = document.createElement("input"), t.id = "hiddenFallbackFolderInput", t.type = "file", t.webkitdirectory = !0, t.style.display = "none", document.body.appendChild(t)), t.onchange = (t) => {
+			let n = Array.from(t.target.files || []);
+			if (n.length === 0) return e({
+				success: !1,
+				cancelled: !0
+			});
+			let r = n[0].webkitRelativePath ? n[0].webkitRelativePath.split("/")[0] : "Selected Folder";
+			e({
+				success: !0,
+				name: r,
+				path: r,
+				files: n.map((e) => ({
+					name: e.name,
+					path: e.webkitRelativePath || e.name,
+					size: e.size,
+					ext: ("." + e.name.split(".").pop()).toLowerCase(),
+					url: URL.createObjectURL(e),
+					fileObj: e
+				}))
+			});
+		}, t.click();
+	});
 }
 async function c(e) {
 	try {
@@ -300,21 +348,60 @@ async function l(e, t) {
 		};
 	}
 }
-async function u(e = "PDF Files (*.pdf)|*.pdf|All Files (*.*)|*.*", t = "Select Files") {
+async function u(e = "All Files (*.*)|*.*", t = "Select Files") {
 	try {
 		let n = await fetch(`${o}/api/native-select-files?filter=${encodeURIComponent(e)}&title=${encodeURIComponent(t)}`);
-		return n.ok ? await n.json() : {
-			success: !1,
-			errorCode: "CM-106",
-			error: `Server error: ${n.status}`
+		if (n.ok) {
+			let e = await n.json();
+			if (e.success || e.cancelled) return e;
+		}
+	} catch (e) {
+		console.warn("[NativeBridge] Backend file picker failed or unavailable, falling back:", e);
+	}
+	if (typeof window < "u" && typeof window.showOpenFilePicker == "function") try {
+		let e = await window.showOpenFilePicker({ multiple: !0 }), t = [];
+		for (let n of e) {
+			let e = await n.getFile();
+			e.handle = n, t.push({
+				name: e.name,
+				path: e.name,
+				size: e.size,
+				ext: ("." + e.name.split(".").pop()).toLowerCase(),
+				url: URL.createObjectURL(e),
+				fileObj: e
+			});
+		}
+		return {
+			success: !0,
+			files: t
 		};
 	} catch (e) {
-		return {
+		if (e.name === "AbortError") return {
 			success: !1,
-			errorCode: "CM-106",
-			error: e.message
+			cancelled: !0
 		};
 	}
+	return new Promise((e) => {
+		let t = document.getElementById("hiddenFallbackFilesInput");
+		t || (t = document.createElement("input"), t.id = "hiddenFallbackFilesInput", t.type = "file", t.multiple = !0, t.style.display = "none", document.body.appendChild(t)), t.onchange = (t) => {
+			let n = Array.from(t.target.files || []);
+			if (n.length === 0) return e({
+				success: !1,
+				cancelled: !0
+			});
+			e({
+				success: !0,
+				files: n.map((e) => ({
+					name: e.name,
+					path: e.name,
+					size: e.size,
+					ext: ("." + e.name.split(".").pop()).toLowerCase(),
+					url: URL.createObjectURL(e),
+					fileObj: e
+				}))
+			});
+		}, t.click();
+	});
 }
 async function d(e) {
 	try {
@@ -1669,16 +1756,16 @@ var le = class {
 				e.cancelled || r.show("Folder Select Error", e.error || "Failed to select folder", "error");
 				return;
 			}
+			let t = (e.files || []).filter((e) => !H(e.name));
+			if (t.length > 0) {
+				e.files = t, this.state.subfolders = [], this.loadFolderData(e), r.show("Folder Loaded", `${t.length} files found`, "success");
+				return;
+			}
 			if (e.subfolders && e.subfolders.length > 0) {
 				this.state.subfolders = e.subfolders, this.state.currentSubfolderIndex = 0, await this.loadSubfolder(0), r.show("Batch Folder Loaded", `${e.subfolders.length} student folders detected`, "success");
 				return;
 			}
-			let t = (e.files || []).filter((e) => !H(e.name));
-			if (t.length === 0) {
-				r.show("Selected Folder is Empty", "Remaining on previous folder.", "warning");
-				return;
-			}
-			e.files = t, this.state.subfolders = [], this.loadFolderData(e), r.show("Folder Loaded", `${t.length} files found`, "success");
+			r.show("Selected Folder is Empty", "Remaining on previous folder.", "warning");
 		} catch (e) {
 			r.show("Folder Error", e.message, "error");
 		}
@@ -1731,7 +1818,7 @@ var le = class {
 					isKept: !1
 				};
 			});
-			this.state.files.push(...i), this.updateTelemetry(), this.renderQueue(), r.show("Files Appended", `${i.length} files added to queue in-place`, "success");
+			this.state.files.push(...i), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), r.show("Files Appended", `${i.length} files added to queue in-place`, "success");
 		} catch (e) {
 			r.show("Add Files Error", e.message, "error");
 		}

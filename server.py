@@ -67,26 +67,46 @@ def track_accessed_dir(d):
             LAST_ACCESSED_DIRS.pop()
 
 def pick_native_files(title="Select Files to Process", file_filter="All Files (*.*)|*.*"):
+    # 1. Native Tkinter File Dialog (Zero console window, zero powershell popup)
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        selected = filedialog.askopenfilenames(title=title)
+        root.destroy()
+        if selected:
+            files = []
+            for fp in selected:
+                norm = os.path.normpath(fp)
+                if os.path.isfile(norm):
+                    files.append({
+                        'path': norm.replace('\\', '/'),
+                        'name': os.path.basename(norm),
+                        'size': os.path.getsize(norm),
+                        'ext': os.path.splitext(norm)[1].lower(),
+                        'mtime': os.path.getmtime(norm) * 1000.0,
+                        'dir': os.path.dirname(norm).replace('\\', '/'),
+                        'url': f'/api/serve-file?path={urllib.parse.quote(norm)}'
+                    })
+            if files:
+                track_accessed_dir(os.path.dirname(files[0]['path']))
+                return {'success': True, 'files': files}
+            return {'success': False, 'cancelled': True, 'files': []}
+        return {'success': False, 'cancelled': True, 'files': []}
+    except Exception:
+        pass
+
+    # 2. PowerShell Fallback with CREATE_NO_WINDOW (Never opens black console window)
     ps_cmd = (
         "Add-Type -AssemblyName System.Windows.Forms; "
-        "Add-Type -AssemblyName System.Drawing; "
         "[System.Windows.Forms.Application]::EnableVisualStyles(); "
         "$f = New-Object System.Windows.Forms.OpenFileDialog; "
         f"$f.Title = '{title}'; "
         f"$f.Filter = '{file_filter}'; "
         "$f.Multiselect = $true; "
-        "$top = New-Object System.Windows.Forms.Form; "
-        "$top.TopMost = $true; "
-        "$top.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen; "
-        "$top.Size = New-Object System.Drawing.Size(1, 1); "
-        "$top.Location = New-Object System.Drawing.Point(-2000, -2000); "
-        "$top.Show(); "
-        "$top.BringToFront(); "
-        "$top.Activate(); "
-        "$res = $f.ShowDialog($top); "
-        "$top.Close(); "
-        "$top.Dispose(); "
-        "if ($res -eq [System.Windows.Forms.DialogResult]::OK) { "
+        "if ($f.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { "
         "  [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; "
         "  foreach ($file in $f.FileNames) { Write-Output ('FILE:' + $file); } "
         "} else { "
@@ -95,11 +115,13 @@ def pick_native_files(title="Select Files to Process", file_filter="All Files (*
         "$f.Dispose();"
     )
     try:
+        CREATE_NO_WINDOW = 0x08000000
         proc = subprocess.run(
             ['powershell.exe', '-NoProfile', '-STA', '-Command', ps_cmd],
             capture_output=True,
             text=True,
-            timeout=300
+            timeout=300,
+            creationflags=CREATE_NO_WINDOW
         )
         out = proc.stdout.strip()
         files = []
@@ -112,8 +134,10 @@ def pick_native_files(title="Select Files to Process", file_filter="All Files (*
                         'path': os.path.normpath(file_path).replace('\\', '/'),
                         'name': os.path.basename(file_path),
                         'size': os.path.getsize(file_path),
+                        'ext': os.path.splitext(file_path)[1].lower(),
                         'mtime': os.path.getmtime(file_path) * 1000.0,
-                        'dir': os.path.dirname(os.path.normpath(file_path)).replace('\\', '/')
+                        'dir': os.path.dirname(os.path.normpath(file_path)).replace('\\', '/'),
+                        'url': f'/api/serve-file?path={urllib.parse.quote(os.path.normpath(file_path))}'
                     })
             elif line == 'CANCEL':
                 return {'success': False, 'cancelled': True, 'files': []}
@@ -126,25 +150,31 @@ def pick_native_files(title="Select Files to Process", file_filter="All Files (*
         return {'success': False, 'errorCode': 'DM-106', 'error': str(e), 'files': []}
 
 def pick_native_folder(title="Select Folder"):
+    # 1. Native Tkinter Folder Dialog (Zero console window, zero powershell popup)
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        folder = filedialog.askdirectory(title=title)
+        root.destroy()
+        if folder:
+            norm = os.path.normpath(folder)
+            track_accessed_dir(norm)
+            return {'success': True, 'path': norm}
+        return {'success': False, 'cancelled': True}
+    except Exception:
+        pass
+
+    # 2. PowerShell Fallback with CREATE_NO_WINDOW (Never opens black console window)
     ps_cmd = (
         "Add-Type -AssemblyName System.Windows.Forms; "
-        "Add-Type -AssemblyName System.Drawing; "
         "[System.Windows.Forms.Application]::EnableVisualStyles(); "
         "$f = New-Object System.Windows.Forms.FolderBrowserDialog; "
         f"$f.Description = '{title}'; "
         "$f.ShowNewFolderButton = $true; "
-        "$top = New-Object System.Windows.Forms.Form; "
-        "$top.TopMost = $true; "
-        "$top.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen; "
-        "$top.Size = New-Object System.Drawing.Size(1, 1); "
-        "$top.Location = New-Object System.Drawing.Point(-2000, -2000); "
-        "$top.Show(); "
-        "$top.BringToFront(); "
-        "$top.Activate(); "
-        "$res = $f.ShowDialog($top); "
-        "$top.Close(); "
-        "$top.Dispose(); "
-        "if ($res -eq [System.Windows.Forms.DialogResult]::OK) { "
+        "if ($f.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { "
         "  [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; "
         "  Write-Output ('OK:' + $f.SelectedPath); "
         "} else { "
@@ -153,11 +183,13 @@ def pick_native_folder(title="Select Folder"):
         "$f.Dispose();"
     )
     try:
+        CREATE_NO_WINDOW = 0x08000000
         proc = subprocess.run(
             ['powershell.exe', '-NoProfile', '-STA', '-Command', ps_cmd],
             capture_output=True,
             text=True,
-            timeout=300
+            timeout=300,
+            creationflags=CREATE_NO_WINDOW
         )
         out = proc.stdout.strip()
         for line in out.splitlines():
@@ -301,6 +333,13 @@ class DocMitraHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
+        if parsed.path == '/api/license-status':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'success': True, 'status': 'air-gapped', 'license': 'active'}).encode('utf-8'))
+            return
+
         if parsed.path == '/api/native-select-folder':
             result = pick_native_folder()
             self.send_response(200)

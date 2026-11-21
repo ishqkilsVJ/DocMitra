@@ -17,25 +17,96 @@ export async function isNativeAvailable() {
 }
 
 /**
- * Triggers authentic Windows Explorer Folder Picker with ZERO browser sandbox prompts
+ * Triggers authentic Windows Explorer Folder Picker with fallback to native browser File System API
  */
 export async function selectNativeFolder() {
+  // 1. Try Python local desktop bridge
   try {
     const controller = new AbortController();
-    // 5-minute safety timeout allows user to navigate any disk/USB without premature timeout
-    const timeoutId = setTimeout(() => controller.abort(), 300000);
+    const timeoutId = setTimeout(() => controller.abort(), 120000);
     const res = await fetch(`${BACKEND_BASE}/api/native-select-folder`, { signal: controller.signal });
     clearTimeout(timeoutId);
-    if (!res.ok) return { success: false, errorCode: 'CM-103', error: `Server error: ${res.status}` };
-    return await res.json();
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success || data.cancelled) return data;
+    }
   } catch (err) {
-    const isTimeout = err.name === 'AbortError';
-    return {
-      success: false,
-      errorCode: isTimeout ? 'CM-106' : 'CM-103',
-      error: isTimeout ? 'Folder picker dialog timed out after 5 minutes.' : err.message
-    };
+    console.warn('[NativeBridge] Backend folder picker failed or unavailable, falling back:', err);
   }
+
+  // 2. Direct Chromium / WebView2 File System API
+  if (typeof window !== 'undefined' && typeof window.showDirectoryPicker === 'function') {
+    try {
+      const dirHandle = await window.showDirectoryPicker();
+      const files = [];
+      const subfolders = [];
+      for await (const [name, handle] of dirHandle.entries()) {
+        if (handle.kind === 'file') {
+          const file = await handle.getFile();
+          file.handle = handle;
+          file.url = URL.createObjectURL(file);
+          files.push({
+            name: file.name,
+            path: file.name,
+            size: file.size,
+            ext: ('.' + file.name.split('.').pop()).toLowerCase(),
+            url: file.url,
+            fileObj: file
+          });
+        } else if (handle.kind === 'directory') {
+          subfolders.push({
+            name: handle.name,
+            path: handle.name,
+            handle
+          });
+        }
+      }
+      return {
+        success: true,
+        path: dirHandle.name,
+        name: dirHandle.name,
+        subfolders,
+        files
+      };
+    } catch (pickerErr) {
+      if (pickerErr.name === 'AbortError') {
+        return { success: false, cancelled: true };
+      }
+    }
+  }
+
+  // 3. Fallback: Hidden HTML webkitdirectory input
+  return new Promise((resolve) => {
+    let input = document.getElementById('hiddenFallbackFolderInput');
+    if (!input) {
+      input = document.createElement('input');
+      input.id = 'hiddenFallbackFolderInput';
+      input.type = 'file';
+      input.webkitdirectory = true;
+      input.style.display = 'none';
+      document.body.appendChild(input);
+    }
+    input.onchange = (e) => {
+      const fileList = Array.from(e.target.files || []);
+      if (fileList.length === 0) return resolve({ success: false, cancelled: true });
+      const folderName = fileList[0].webkitRelativePath ? fileList[0].webkitRelativePath.split('/')[0] : 'Selected Folder';
+      const mapped = fileList.map(f => ({
+        name: f.name,
+        path: f.webkitRelativePath || f.name,
+        size: f.size,
+        ext: ('.' + f.name.split('.').pop()).toLowerCase(),
+        url: URL.createObjectURL(f),
+        fileObj: f
+      }));
+      resolve({
+        success: true,
+        name: folderName,
+        path: folderName,
+        files: mapped
+      });
+    };
+    input.click();
+  });
 }
 
 /**
@@ -123,16 +194,69 @@ export async function createNativeFileObject(nativeItem) {
 }
 
 /**
- * Triggers authentic Windows OpenFileDialog for native multi-file selection
+ * Triggers authentic Windows OpenFileDialog for native multi-file selection with browser fallback
  */
-export async function selectNativeFiles(filter = 'PDF Files (*.pdf)|*.pdf|All Files (*.*)|*.*', title = 'Select Files') {
+export async function selectNativeFiles(filter = 'All Files (*.*)|*.*', title = 'Select Files') {
+  // 1. Try Python local desktop bridge
   try {
     const res = await fetch(`${BACKEND_BASE}/api/native-select-files?filter=${encodeURIComponent(filter)}&title=${encodeURIComponent(title)}`);
-    if (!res.ok) return { success: false, errorCode: 'CM-106', error: `Server error: ${res.status}` };
-    return await res.json();
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success || data.cancelled) return data;
+    }
   } catch (err) {
-    return { success: false, errorCode: 'CM-106', error: err.message };
+    console.warn('[NativeBridge] Backend file picker failed or unavailable, falling back:', err);
   }
+
+  // 2. Direct Chromium / WebView2 File System API
+  if (typeof window !== 'undefined' && typeof window.showOpenFilePicker === 'function') {
+    try {
+      const handles = await window.showOpenFilePicker({ multiple: true });
+      const files = [];
+      for (const h of handles) {
+        const file = await h.getFile();
+        file.handle = h;
+        files.push({
+          name: file.name,
+          path: file.name,
+          size: file.size,
+          ext: ('.' + file.name.split('.').pop()).toLowerCase(),
+          url: URL.createObjectURL(file),
+          fileObj: file
+        });
+      }
+      return { success: true, files };
+    } catch (pickerErr) {
+      if (pickerErr.name === 'AbortError') return { success: false, cancelled: true };
+    }
+  }
+
+  // 3. Fallback: Hidden multi-file HTML input
+  return new Promise((resolve) => {
+    let input = document.getElementById('hiddenFallbackFilesInput');
+    if (!input) {
+      input = document.createElement('input');
+      input.id = 'hiddenFallbackFilesInput';
+      input.type = 'file';
+      input.multiple = true;
+      input.style.display = 'none';
+      document.body.appendChild(input);
+    }
+    input.onchange = (e) => {
+      const fileList = Array.from(e.target.files || []);
+      if (fileList.length === 0) return resolve({ success: false, cancelled: true });
+      const mapped = fileList.map(f => ({
+        name: f.name,
+        path: f.name,
+        size: f.size,
+        ext: ('.' + f.name.split('.').pop()).toLowerCase(),
+        url: URL.createObjectURL(f),
+        fileObj: f
+      }));
+      resolve({ success: true, files: mapped });
+    };
+    input.click();
+  });
 }
 
 /**

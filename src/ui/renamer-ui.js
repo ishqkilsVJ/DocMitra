@@ -348,7 +348,19 @@ export class RenamerUIManager {
         return;
       }
 
-      // Check for subfolders (Batch Parent Folder mode)
+      // Check for direct files first
+      const validFiles = (res.files || []).filter(f => !isJunkFile(f.name));
+
+      // 1. If folder has direct document files, treat as Single Student Folder
+      if (validFiles.length > 0) {
+        res.files = validFiles;
+        this.state.subfolders = [];
+        this.loadFolderData(res);
+        toast.show('Folder Loaded', `${validFiles.length} files found`, 'success');
+        return;
+      }
+
+      // 2. If folder has 0 direct files, but has student subfolders, treat as Batch Parent Folder
       if (res.subfolders && res.subfolders.length > 0) {
         this.state.subfolders = res.subfolders;
         this.state.currentSubfolderIndex = 0;
@@ -357,17 +369,8 @@ export class RenamerUIManager {
         return;
       }
 
-      // Single folder check for empty files
-      const validFiles = (res.files || []).filter(f => !isJunkFile(f.name));
-      if (validFiles.length === 0) {
-        toast.show('Selected Folder is Empty', 'Remaining on previous folder.', 'warning');
-        return;
-      }
-
-      res.files = validFiles;
-      this.state.subfolders = [];
-      this.loadFolderData(res);
-      toast.show('Folder Loaded', `${validFiles.length} files found`, 'success');
+      // 3. Otherwise folder is empty
+      toast.show('Selected Folder is Empty', 'Remaining on previous folder.', 'warning');
     } catch (err) {
       toast.show('Folder Error', err.message, 'error');
     }
@@ -473,6 +476,7 @@ export class RenamerUIManager {
       this.state.files.push(...mapped);
       this.updateTelemetry();
       this.renderQueue();
+      this.renderCurrentPreview();
       toast.show('Files Appended', `${mapped.length} files added to queue in-place`, 'success');
     } catch (err) {
       toast.show('Add Files Error', err.message, 'error');
