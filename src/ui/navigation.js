@@ -68,6 +68,7 @@ export class NavigationManager {
       return;
     }
 
+    const previousView = this.currentView;
     this.currentView = viewName;
 
     // Toggle View Panes
@@ -93,5 +94,9 @@ export class NavigationManager {
         tab.classList.add(...INACTIVE_CLASSES);
       }
     });
+
+    if (typeof this.onViewChange === 'function') {
+      this.onViewChange(viewName, previousView);
+    }
   }
 }

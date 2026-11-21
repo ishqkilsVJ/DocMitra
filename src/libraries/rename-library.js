@@ -28,30 +28,37 @@ export function group(name, groups) {
   return null;
 }
 
-export function applyCase(source, target, style = 'preserve') {
-  if (style === 'upper') return target.toUpperCase();
-  if (style === 'lower') return target.toLowerCase();
-  if (style === 'title') return target.toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase());
-  if (source === source.toUpperCase()) return target.toUpperCase();
-  if (source === source.toLowerCase()) return target.toLowerCase();
-  return target;
+export function applyCase(textOrSource, targetOrStyle = 'preserve', optionalStyle = null) {
+  let text = textOrSource;
+  let style = targetOrStyle;
+  if (optionalStyle !== null) {
+    text = targetOrStyle;
+    style = optionalStyle;
+  }
+  if (!text) return '';
+  if (style === 'upper') return text.toUpperCase();
+  if (style === 'lower') return text.toLowerCase();
+  if (style === 'title') {
+    return text.toLowerCase().replace(/(^|\s|\-|\_)\S/g, c => c.toUpperCase());
+  }
+  return text; // 'preserve' or 'as_is'
 }
 
 export function buildName(input, student, groups, style = 'preserve') {
   const g = group(input, groups);
+  let baseDoc = '';
   if (!g) {
-    const clean = cleanName(input);
-    if (!student) return clean;
-    if (clean.toLowerCase().includes(student.toLowerCase())) return clean;
-    return `${clean} ${student}`;
+    baseDoc = cleanName(input);
+  } else {
+    baseDoc = CANONICAL_NAMES[g.toUpperCase()] || g;
   }
   
-  const canonical = CANONICAL_NAMES[g.toUpperCase()] || g;
-  const formatted = applyCase(cleanName(input), canonical, style);
+  let combined = baseDoc;
+  if (student && !baseDoc.toLowerCase().includes(student.toLowerCase())) {
+    combined = `${baseDoc} ${student}`;
+  }
   
-  if (!student) return formatted;
-  if (formatted.toLowerCase().includes(student.toLowerCase())) return formatted;
-  return `${formatted} ${student}`;
+  return applyCase(combined, style);
 }
 
 export function validateFilename(name) {

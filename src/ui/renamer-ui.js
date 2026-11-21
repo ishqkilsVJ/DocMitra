@@ -721,6 +721,8 @@ export class RenamerUIManager {
           const canonical = CANONICAL_NAMES[docType.toUpperCase()] || docType;
           suggested = buildName(canonical, this.state.studentName, this.state.settings?.groups, this.state.style);
           isMatched = true;
+        } else {
+          suggested = buildName(baseName, this.state.studentName, null, this.state.style);
         }
 
         const desiredWithExt = (suggested.endsWith(extension) ? suggested : suggested + extension);
@@ -824,6 +826,8 @@ export class RenamerUIManager {
         const canonical = CANONICAL_NAMES[docType.toUpperCase()] || docType;
         suggested = buildName(canonical, this.state.studentName, this.state.settings?.groups, this.state.style);
         isMatched = true;
+      } else {
+        suggested = buildName(baseName, this.state.studentName, null, this.state.style);
       }
 
       const desiredWithExt = (suggested.endsWith(extension) ? suggested : suggested + extension);
@@ -855,10 +859,10 @@ export class RenamerUIManager {
 
   _recalculateTargetNames() {
     for (const f of this.state.files) {
-      if (!f.isRenamed && !f.isKept && f.docType) {
-        const canonical = CANONICAL_NAMES[f.docType.toUpperCase()] || f.docType;
-        const newBase = buildName(canonical, this.state.studentName, this.state.settings?.groups, this.state.style);
+      if (!f.isRenamed && !f.isKept) {
+        const docBase = f.docType || cleanName(f.name);
         const currentExt = f.ext || ('.' + f.name.split('.').pop()).toLowerCase();
+        const newBase = buildName(docBase, this.state.studentName, this.state.settings?.groups, this.state.style);
         f.targetName = newBase.endsWith(currentExt) ? newBase : `${newBase}${currentExt}`;
       }
     }
@@ -932,16 +936,6 @@ export class RenamerUIManager {
       }
     }
 
-    // Toggle Empty Skeleton Overlay (Zero Fake Files)
-    const skeletonOverlay = document.getElementById('renamerEmptySkeletonOverlay');
-    if (skeletonOverlay) {
-      if (total === 0) {
-        skeletonOverlay.classList.remove('hidden');
-      } else {
-        skeletonOverlay.classList.add('hidden');
-      }
-    }
-
     const countEl = document.getElementById('telemetryTotalFiles');
     if (countEl) countEl.textContent = String(total);
 
@@ -975,7 +969,7 @@ export class RenamerUIManager {
 
     if (this.state.files.length === 0) {
       const emptyCard = document.createElement('div');
-      emptyCard.className = 'p-6 text-center text-secondary bg-surface-container-lowest rounded-xl border border-outline-variant/30 flex flex-col items-center gap-2';
+      emptyCard.className = 'p-6 text-center text-secondary bg-surface-container-lowest rounded-xl border border-outline-variant/30 flex flex-col items-center gap-2 select-none';
 
       const icon = document.createElement('span');
       icon.className = 'material-symbols-outlined text-[36px] text-primary opacity-60';
@@ -984,16 +978,21 @@ export class RenamerUIManager {
 
       const title = document.createElement('div');
       title.className = 'font-headline-sm font-bold text-on-surface';
-      title.textContent = 'No Intake Folder Selected';
+      title.textContent = 'No Active Queue';
       emptyCard.appendChild(title);
 
       const desc = document.createElement('div');
       desc.className = 'text-body-sm text-secondary';
-      desc.textContent = 'Click "Select Folder" (F2) or "Add Files" to start renaming student admission documents.';
+      desc.textContent = 'Select a student folder (F2) or add document files to begin admission renaming.';
       emptyCard.appendChild(desc);
 
       scrollContainer.appendChild(emptyCard);
       queueCol.appendChild(scrollContainer);
+
+      const utilityScroll = document.getElementById('utilityScrollArea');
+      if (utilityScroll) {
+        this.renderUtilityPanel(utilityScroll);
+      }
       return;
     }
 
@@ -1136,59 +1135,6 @@ export class RenamerUIManager {
         }
       });
 
-      // Dynamic Smart Suggestion Chips (Top-3 Cap - Feature 1)
-      const suggestionsWrapper = document.createElement('div');
-      suggestionsWrapper.className = 'flex items-center gap-1.5 flex-wrap pt-0.5';
-
-      const renderSuggestionChips = (typedText) => {
-        while (suggestionsWrapper.firstChild) {
-          suggestionsWrapper.removeChild(suggestionsWrapper.firstChild);
-        }
-
-        const baseOriginal = cleanName(currentFile.name);
-        const effectiveQuery = (typedText && typedText.trim() === baseOriginal) ? '' : (typedText || '').trim();
-        const suggestions = getMatchingSuggestions(effectiveQuery, this.state.settings?.groups, 3);
-
-        if (!suggestions || suggestions.length === 0) {
-          const noMatch = document.createElement('span');
-          noMatch.className = 'text-[10px] font-mono-code text-secondary italic py-0.5';
-          noMatch.textContent = `No shortcodes matching '${typedText}'`;
-          suggestionsWrapper.appendChild(noMatch);
-          return;
-        }
-
-        suggestions.forEach((s, sIdx) => {
-          const isTopMatch = (sIdx === 0 && effectiveQuery.length > 0);
-          const chipBtn = document.createElement('button');
-          chipBtn.type = 'button';
-          chipBtn.className = isTopMatch
-            ? 'px-2 py-1 rounded-md bg-primary text-on-primary font-mono-code text-[11px] font-bold shadow-xs transition-all flex items-center gap-1.5 ring-1 ring-primary/40 cursor-pointer active:scale-95'
-            : 'px-2 py-1 rounded-md bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[11px] font-semibold border border-outline-variant/40 hover:border-primary/50 transition-all flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95';
-
-          const codeBadge = document.createElement('span');
-          codeBadge.className = `px-1.5 py-0.5 rounded text-[10px] ${getShortcutBadgeColor(s.code)} shadow-xs`;
-          codeBadge.textContent = s.code;
-          chipBtn.appendChild(codeBadge);
-
-          const lblSpan = document.createElement('span');
-          lblSpan.className = 'truncate max-w-[130px]';
-          lblSpan.textContent = s.displayName || s.name;
-          chipBtn.appendChild(lblSpan);
-
-          chipBtn.title = `Click to set ${s.code} (${s.name})`;
-
-          chipBtn.addEventListener('click', () => {
-            this.applyShortcutToCurrent({
-              code: s.code,
-              label: s.displayName || s.name,
-              canonical: s.name
-            });
-          });
-
-          suggestionsWrapper.appendChild(chipBtn);
-        });
-      };
-
       targetInput.addEventListener('input', (e) => {
         let val = e.target.value;
         // Sanitize pasted illegal characters
@@ -1208,7 +1154,7 @@ export class RenamerUIManager {
           statusTag.className = 'px-2 py-0.5 rounded font-mono-code text-[10px] bg-error-container text-on-error-container font-bold';
           statusTag.textContent = 'Unmatched';
           this.updateTelemetry();
-          renderSuggestionChips('');
+          this.renderCoreShortcuts('');
           return;
         }
 
@@ -1224,21 +1170,14 @@ export class RenamerUIManager {
           const formulaBase = buildName(canonical, this.state.studentName, this.state.settings?.groups, this.state.style);
           currentFile.targetName = formulaBase.endsWith(currentExt) ? formulaBase : `${formulaBase}${currentExt}`;
         } else {
-          // Custom name: preserve user's typed name exactly and append student name!
+          // Custom name: preserve user's typed name and append student name with selected case
           currentFile.docType = trimmedVal;
           currentFile.isMatched = false;
           statusTag.className = 'px-2 py-0.5 rounded font-mono-code text-[10px] bg-surface-container-high text-secondary font-bold';
           statusTag.textContent = 'Custom Name';
 
-          let customBase = trimmedVal;
-          if (this.state.studentName && !customBase.toLowerCase().includes(this.state.studentName.toLowerCase())) {
-            customBase = `${customBase} ${this.state.studentName}`;
-          }
-          if (this.state.style === 'upper') customBase = customBase.toUpperCase();
-          else if (this.state.style === 'lower') customBase = customBase.toLowerCase();
-          else if (this.state.style === 'title') customBase = customBase.toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase());
-
-          currentFile.targetName = customBase.endsWith(currentExt) ? customBase : `${customBase}${currentExt}`;
+          const formulaBase = buildName(trimmedVal, this.state.studentName, null, this.state.style);
+          currentFile.targetName = formulaBase.endsWith(currentExt) ? formulaBase : `${formulaBase}${currentExt}`;
         }
 
         this.updateTelemetry();
@@ -1249,15 +1188,12 @@ export class RenamerUIManager {
           stageTitle.textContent = currentFile.targetName;
         }
 
-        renderSuggestionChips(val);
+        // Live narrow shortcuts in Right-Side CORE SHORTCUTS Panel
+        this.renderCoreShortcuts(val);
       });
 
       inputWrapper.appendChild(targetInput);
       inputSection.appendChild(inputWrapper);
-
-      // Initial render of top-3 suggestion chips
-      renderSuggestionChips(targetInput.value);
-      inputSection.appendChild(suggestionsWrapper);
 
       card.appendChild(inputSection);
       activeCardWrapper.appendChild(card);
@@ -1269,6 +1205,8 @@ export class RenamerUIManager {
         targetInput.select();
         // Pin active card to top of view
         activeCardWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Initial render of CORE SHORTCUTS for active file
+        this.renderCoreShortcuts(targetInput.value);
       });
     }
 
@@ -1696,12 +1634,71 @@ export class RenamerUIManager {
       container.appendChild(allDoneCard);
     }
 
-    // 2. TOP 5 CORE SHORTCUTS CARD (High-Contrast Bold Colors)
+    // 2. CORE SHORTCUTS CONTAINER (Dynamic Live Narrowing)
     const shortcutsSection = document.createElement('div');
-    shortcutsSection.className = 'bg-surface-container-lowest rounded-xl p-3 border border-outline-variant/30 flex flex-col gap-2 shadow-xs shrink-0 mt-1';
+    shortcutsSection.id = 'coreShortcutsContainer';
+    shortcutsSection.className = 'bg-surface-container-lowest rounded-xl p-3 border border-outline-variant/30 flex flex-col shadow-xs shrink-0 mt-1';
+    container.appendChild(shortcutsSection);
 
+    const inputVal = document.getElementById('inputRenameTarget')?.value || '';
+    this.renderCoreShortcuts(inputVal);
+  }
+
+  /**
+   * Dynamically filters and renders CORE SHORTCUTS in Column 3 based on Rename box typing
+   */
+  renderCoreShortcuts(query = '') {
+    const scContainer = document.getElementById('coreShortcutsContainer');
+    if (!scContainer) return;
+
+    while (scContainer.firstChild) {
+      scContainer.removeChild(scContainer.firstChild);
+    }
+
+    if (this.state.files.length === 0) {
+      return;
+    }
+
+    const currentFile = this.state.files[this.state.currentIndex];
+    const baseOriginal = currentFile ? cleanName(currentFile.name) : '';
+    let q = (query || '').trim();
+    if (q === baseOriginal) q = '';
+
+    const defaultTop5 = [
+      { code: '10M', label: '10th Marksheet', canonical: '10TH MARKSHEET' },
+      { code: '12M', label: '12th Marksheet', canonical: '12TH MARKSHEET' },
+      { code: 'ADR', label: 'Aadhaar Card', canonical: 'AADHAAR CARD' },
+      { code: 'CST', label: 'Caste Certificate', canonical: 'CASTE CERTIFICATE' },
+      { code: 'DOM', label: 'Domicile Cert', canonical: 'DOMICILE CERTIFICATE' }
+    ];
+
+    let itemsToRender = [];
+    let isFiltered = false;
+    let zeroMatches = false;
+
+    if (!q) {
+      itemsToRender = defaultTop5;
+    } else {
+      const lowerQ = q.toLowerCase();
+      const filtered = this.shortcuts21.filter(s =>
+        s.code.toLowerCase().includes(lowerQ) ||
+        s.label.toLowerCase().includes(lowerQ) ||
+        s.canonical.toLowerCase().includes(lowerQ)
+      );
+
+      if (filtered.length > 0) {
+        itemsToRender = filtered.slice(0, 5);
+        isFiltered = true;
+      } else {
+        // Zero matches: display default top 5 dimmed with italic note per locked spec
+        itemsToRender = defaultTop5;
+        zeroMatches = true;
+      }
+    }
+
+    // Header
     const scHeader = document.createElement('div');
-    scHeader.className = 'flex items-center justify-between';
+    scHeader.className = 'flex items-center justify-between mb-1.5';
     const scTitle = document.createElement('div');
     scTitle.className = 'flex items-center gap-1.5 font-bold font-mono-code text-[11px] text-primary';
     const boltIcon = document.createElement('span');
@@ -1712,27 +1709,43 @@ export class RenamerUIManager {
     scHeader.appendChild(scTitle);
 
     const scBadge = document.createElement('span');
-    scBadge.className = 'px-1.5 py-0.2 rounded font-mono-code text-[10px] bg-surface-container text-secondary font-bold';
-    scBadge.textContent = 'Top 5';
+    if (zeroMatches) {
+      scBadge.className = 'px-1.5 py-0.2 rounded font-mono-code text-[10px] bg-surface-container text-secondary font-bold';
+      scBadge.textContent = 'Custom';
+    } else if (isFiltered) {
+      scBadge.className = 'px-1.5 py-0.2 rounded font-mono-code text-[10px] bg-primary/20 text-primary font-bold';
+      scBadge.textContent = `${itemsToRender.length} Match${itemsToRender.length > 1 ? 'es' : ''}`;
+    } else {
+      scBadge.className = 'px-1.5 py-0.2 rounded font-mono-code text-[10px] bg-surface-container text-secondary font-bold';
+      scBadge.textContent = 'Top 5';
+    }
     scHeader.appendChild(scBadge);
-    shortcutsSection.appendChild(scHeader);
+    scContainer.appendChild(scHeader);
+
+    // Italic note if custom name (zero matches)
+    if (zeroMatches) {
+      const note = document.createElement('div');
+      note.className = 'text-[10px] font-mono-code text-secondary italic py-1 px-2 mb-1.5 rounded bg-surface-container/60 border border-outline-variant/30 text-center select-none';
+      note.textContent = 'No shortcode matches — saving as custom text';
+      scContainer.appendChild(note);
+    }
 
     const scList = document.createElement('div');
     scList.className = 'flex flex-col gap-1.5';
 
-    const top5Shortcuts = [
-      { code: '10M', label: '10th Marksheet', canonical: '10TH MARKSHEET' },
-      { code: '12M', label: '12th Marksheet', canonical: '12TH MARKSHEET' },
-      { code: 'ADR', label: 'Aadhaar Card', canonical: 'AADHAAR CARD' },
-      { code: 'CST', label: 'Caste Certificate', canonical: 'CASTE CERTIFICATE' },
-      { code: 'DOM', label: 'Domicile Cert', canonical: 'DOMICILE CERTIFICATE' }
-    ];
-
-    top5Shortcuts.forEach(item => {
+    itemsToRender.forEach(item => {
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'h-8 px-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[11px] font-semibold flex items-center justify-between gap-2 border border-outline-variant/30 hover:border-primary/50 cursor-pointer active:scale-95 transition-all shadow-xs';
-      btn.title = `Click to apply ${item.code} (${item.label}) to active document`;
+
+      if (zeroMatches) {
+        btn.className = 'h-8 px-2.5 rounded-lg bg-surface-container text-on-surface font-mono-code text-[11px] font-semibold flex items-center justify-between gap-2 border border-outline-variant/20 opacity-40 pointer-events-none cursor-not-allowed select-none';
+      } else {
+        btn.className = 'h-8 px-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[11px] font-semibold flex items-center justify-between gap-2 border border-outline-variant/30 hover:border-primary/50 cursor-pointer active:scale-95 transition-all shadow-xs';
+        btn.title = `Click to apply ${item.code} (${item.label}) to active document`;
+        btn.addEventListener('click', () => {
+          this.applyShortcutToCurrent(item);
+        });
+      }
 
       const badge = document.createElement('span');
       badge.className = `px-2 py-0.5 rounded text-[10px] ${getShortcutBadgeColor(item.code)} shadow-xs`;
@@ -1744,24 +1757,17 @@ export class RenamerUIManager {
       label.textContent = item.label;
       btn.appendChild(label);
 
-      const enterHint = document.createElement('span');
-      enterHint.className = 'text-[9px] font-mono-code text-secondary opacity-60';
-      enterHint.textContent = '↵';
-      btn.appendChild(enterHint);
-
-      btn.addEventListener('click', () => {
-        if (this.state.files.length === 0) {
-          toast.show('No Files Loaded', 'Select a folder or add files first.', 'info');
-          return;
-        }
-        this.applyShortcutToCurrent(item);
-      });
+      if (!zeroMatches) {
+        const enterHint = document.createElement('span');
+        enterHint.className = 'text-[9px] font-mono-code text-secondary opacity-60';
+        enterHint.textContent = '↵';
+        btn.appendChild(enterHint);
+      }
 
       scList.appendChild(btn);
     });
 
-    shortcutsSection.appendChild(scList);
-    container.appendChild(shortcutsSection);
+    scContainer.appendChild(scList);
   }
 
   /**
@@ -2099,7 +2105,7 @@ export class RenamerUIManager {
     toast.show('Audit Exported', `CSV report for ${rules.length} admission rules downloaded.`, 'success');
   }
 
-  handleClearQueue() {
+  handleClearQueue(silent = false) {
     this.state.files = [];
     this.state.folder = null;
     this.state.subfolders = [];
@@ -2111,7 +2117,9 @@ export class RenamerUIManager {
     this.updateTelemetry();
     this.renderQueue();
     this.renderCurrentPreview();
-    toast.show('Workspace Cleared', 'Intake queue and preview have been reset.', 'info');
+    if (!silent) {
+      toast.show('Workspace Cleared', 'Intake queue and preview have been reset.', 'info');
+    }
   }
 
   renderCurrentPreview() {
@@ -2127,17 +2135,65 @@ export class RenamerUIManager {
     }
 
     if (!currentFile) {
-      const placeholder = document.createElement('div');
-      placeholder.className = 'flex flex-col items-center justify-center gap-3 text-secondary opacity-60';
+      const emptyStage = document.createElement('div');
+      emptyStage.id = 'previewContainerStage';
+      emptyStage.className = 'h-full max-h-[calc(100vh-175px)] aspect-[1/1.414] bg-surface-container-lowest rounded-xl shadow-md p-space-lg flex flex-col items-center justify-center text-center gap-4 relative select-none border border-outline-variant/30 shrink-0';
+
+      const iconBox = document.createElement('div');
+      iconBox.className = 'w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shadow-inner';
       const icon = document.createElement('span');
-      icon.className = 'material-symbols-outlined text-[64px]';
-      icon.textContent = 'visibility';
-      placeholder.appendChild(icon);
-      const txt = document.createElement('span');
-      txt.className = 'font-mono-code text-[13px]';
-      txt.textContent = 'No Document Loaded for Preview';
-      placeholder.appendChild(txt);
-      previewStageWrapper.appendChild(placeholder);
+      icon.className = 'material-symbols-outlined text-[36px]';
+      icon.textContent = 'drive_file_rename_outline';
+      iconBox.appendChild(icon);
+      emptyStage.appendChild(iconBox);
+
+      const textGroup = document.createElement('div');
+      textGroup.className = 'flex flex-col gap-1 max-w-xs';
+      const h3 = document.createElement('h3');
+      h3.className = 'font-headline-sm text-[18px] font-bold text-on-surface';
+      h3.textContent = 'Bulk Document Renamer';
+      textGroup.appendChild(h3);
+      const p = document.createElement('p');
+      p.className = 'text-body-sm text-secondary text-[12px] leading-relaxed';
+      p.textContent = 'Fast, automated admission document renaming with MahaDBT checklist verification.';
+      textGroup.appendChild(p);
+      emptyStage.appendChild(textGroup);
+
+      const btnGroup = document.createElement('div');
+      btnGroup.className = 'flex items-center gap-3 pt-2';
+
+      const btnSelect = document.createElement('button');
+      btnSelect.type = 'button';
+      btnSelect.className = 'px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-on-primary font-label-md font-semibold transition-all flex items-center gap-2 shadow-sm cursor-pointer active:scale-98';
+      const fldIcon = document.createElement('span');
+      fldIcon.className = 'material-symbols-outlined text-[18px]';
+      fldIcon.textContent = 'folder_open';
+      btnSelect.appendChild(fldIcon);
+      const spanSelect = document.createElement('span');
+      spanSelect.textContent = 'Select Folder';
+      btnSelect.appendChild(spanSelect);
+      const kbd = document.createElement('kbd');
+      kbd.className = 'px-1.5 py-0.5 rounded bg-surface-container-lowest/20 font-mono-code text-[10px] text-on-primary font-bold shadow-xs';
+      kbd.textContent = 'F2';
+      btnSelect.appendChild(kbd);
+      btnSelect.addEventListener('click', () => this.handleSelectFolder());
+      btnGroup.appendChild(btnSelect);
+
+      const btnAdd = document.createElement('button');
+      btnAdd.type = 'button';
+      btnAdd.className = 'px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md font-medium border border-outline-variant/40 transition-all flex items-center gap-2 shadow-xs cursor-pointer active:scale-98';
+      const addIcon = document.createElement('span');
+      addIcon.className = 'material-symbols-outlined text-[18px] text-primary';
+      addIcon.textContent = 'note_add';
+      btnAdd.appendChild(addIcon);
+      const spanAdd = document.createElement('span');
+      spanAdd.textContent = 'Add Files';
+      btnAdd.appendChild(spanAdd);
+      btnAdd.addEventListener('click', () => this.handleAddFiles());
+      btnGroup.appendChild(btnAdd);
+
+      emptyStage.appendChild(btnGroup);
+      previewStageWrapper.appendChild(emptyStage);
       return;
     }
 

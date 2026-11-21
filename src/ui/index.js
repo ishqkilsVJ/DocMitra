@@ -28,6 +28,13 @@ export function initAppShell() {
   // Initialize Bulk Renamer UI
   const renamerUI = initRenamerUI();
 
+  // Reset Bulk Renamer whenever navigating away to a different tool tab
+  nav.onViewChange = (newView, oldView) => {
+    if (oldView === 'bulk-renamer' && newView !== 'bulk-renamer') {
+      renamerUI.handleClearQueue(true); // silent reset on tab switch
+    }
+  };
+
   // Initialize PDF Studio UI
   const pdfStudioUI = initPdfStudioUI();
 
