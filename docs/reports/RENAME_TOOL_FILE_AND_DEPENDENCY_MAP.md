@@ -4,7 +4,7 @@
 > **प्रकल्प मार्ग (Project Path):** `E:\DocMitra`  
 > **टूल मार्ग (Rename Tool Folder Path):** `E:\DocMitra\tools\rename_tool`  
 > **Git Branch:** `master`  
-> **Git Commit Hash:** `785759fe08698735936c965cd99dc5a70c873a5b`  
+> **Git Commit Hash:** `bf7ff46`  
 
 ---
 
