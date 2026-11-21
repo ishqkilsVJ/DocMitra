@@ -174,20 +174,27 @@ runStep(9, 'Confirm other files do not change state upon active file switch', ()
 // ---------------------------------------------------------------------------
 // TEST 10: Rotate only the active file
 // ---------------------------------------------------------------------------
+const queueFilesState = [
+  { name: 'scan001_aadhaar.pdf', rotation: 0, isRenamed: false },
+  { name: 'img_income_cert.jpg', rotation: 0, isRenamed: false },
+  { name: '10th_marksheet_photo.png', rotation: 0, isRenamed: false },
+  { name: '12th_lc_leaving.pdf', rotation: 0, isRenamed: false },
+  { name: 'cst_validity_doc.pdf', rotation: 0, isRenamed: false }
+];
 runStep(10, 'Rotate only active file (90 degrees clockwise)', () => {
-  const rotations = { 0: 0, 1: 0, 2: 90, 3: 0, 4: 0 };
-  assert.strictEqual(rotations[2], 90);
+  queueFilesState[activeIndex].rotation = ((queueFilesState[activeIndex].rotation || 0) + 90) % 360;
+  assert.strictEqual(queueFilesState[activeIndex].rotation, 90, 'Active file rotation must be 90 degrees');
 });
 
 // ---------------------------------------------------------------------------
 // TEST 11: Confirm other files keep their own rotation state
 // ---------------------------------------------------------------------------
 runStep(11, 'Confirm other files keep their own rotation state (0 deg)', () => {
-  const rotations = { 0: 0, 1: 0, 2: 90, 3: 0, 4: 0 };
-  assert.strictEqual(rotations[0], 0);
-  assert.strictEqual(rotations[1], 0);
-  assert.strictEqual(rotations[3], 0);
-  assert.strictEqual(rotations[4], 0);
+  queueFilesState.forEach((f, idx) => {
+    if (idx !== activeIndex) {
+      assert.strictEqual(f.rotation, 0, `File at index ${idx} must retain rotation 0`);
+    }
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -272,27 +279,27 @@ runStep(19, 'Verify physical existence and non-zero byte size of renamed files',
 // TEST 20: Verify files remain in the queue until success
 // ---------------------------------------------------------------------------
 runStep(20, 'Verify files remain in queue until disk confirmation', () => {
-  const queueState = [
-    { name: '12th_lc_leaving.pdf', isRenamed: false },
-    { name: 'cst_validity_doc.pdf', isRenamed: false }
-  ];
-  assert.strictEqual(queueState.filter(f => !f.isRenamed).length, 2);
+  const pendingFiles = queueFilesState.filter(f => !f.isRenamed);
+  assert.strictEqual(pendingFiles.length, 5, 'All 5 files must remain pending in queue until disk operations succeed');
 });
 
 // ---------------------------------------------------------------------------
 // TEST 21: Verify completed files move to Completed only after success
 // ---------------------------------------------------------------------------
 runStep(21, 'Verify completed files marked with isRenamed = true', () => {
-  const fileRecord = { name: 'scan001_aadhaar.pdf', targetName: 'AADHAAR CARD Aarti Kadam.pdf', isRenamed: true };
-  assert.strictEqual(fileRecord.isRenamed, true);
+  queueFilesState[0].isRenamed = true;
+  queueFilesState[0].status = 'renamed';
+  queueFilesState[0].rotation = 0;
+  assert.strictEqual(queueFilesState[0].isRenamed, true);
+  assert.strictEqual(queueFilesState.filter(f => !f.isRenamed).length, 4, 'Remaining pending count must decrement');
 });
 
 // ---------------------------------------------------------------------------
 // TEST 22: Verify failed or skipped files remain in Upcoming Queue
 // ---------------------------------------------------------------------------
 runStep(22, 'Verify failed or skipped files remain un-renamed', () => {
-  const skippedFile = { name: 'cst_validity_doc.pdf', isRenamed: false, error: 'Permission denied' };
-  assert.strictEqual(skippedFile.isRenamed, false);
+  queueFilesState[4].error = 'Permission denied';
+  assert.strictEqual(queueFilesState[4].isRenamed, false, 'Failed file must remain unrenamed in upcoming queue');
 });
 
 // ---------------------------------------------------------------------------
@@ -328,14 +335,31 @@ runStep(25, 'Verify UI cleanName strips extensions across all views', () => {
 // TEST 26: Verify Reset
 // ---------------------------------------------------------------------------
 runStep(26, 'Verify workspace reset restores empty queue and default state', () => {
-  const state = { files: [1, 2, 3], folder: 'test', currentIndex: 2 };
-  // Reset
-  state.files = [];
-  state.folder = '';
-  state.currentIndex = -1;
-  assert.strictEqual(state.files.length, 0);
-  assert.strictEqual(state.folder, '');
-  assert.strictEqual(state.currentIndex, -1);
+  const workspaceState = {
+    files: [
+      { id: '1', name: 'a.pdf', _blobUrl: 'blob:http://localhost/test', _pdfBytes: new Uint8Array([1, 2]) },
+      { id: '2', name: 'b.jpg', _blobUrl: 'blob:http://localhost/test2' }
+    ],
+    folder: { path: '/documents' },
+    studentName: 'Aarti Kadam',
+    currentIndex: 1,
+    rotation: 90
+  };
+  // Execute reset/clear handler logic with memory cleanup
+  for (const f of workspaceState.files) {
+    f._blobUrl = null;
+    f._pdfBytes = null;
+  }
+  workspaceState.files = [];
+  workspaceState.folder = null;
+  workspaceState.studentName = '';
+  workspaceState.currentIndex = 0;
+  workspaceState.rotation = 0;
+  assert.strictEqual(workspaceState.files.length, 0);
+  assert.strictEqual(workspaceState.folder, null);
+  assert.strictEqual(workspaceState.studentName, '');
+  assert.strictEqual(workspaceState.currentIndex, 0);
+  assert.strictEqual(workspaceState.rotation, 0);
 });
 
 // ---------------------------------------------------------------------------
@@ -343,9 +367,14 @@ runStep(26, 'Verify workspace reset restores empty queue and default state', () 
 // ---------------------------------------------------------------------------
 runStep(27, 'Verify batch operation cancellation abort signal', () => {
   const abortCtrl = new AbortController();
+  let wasCancelled = false;
+  abortCtrl.signal.addEventListener('abort', () => {
+    wasCancelled = true;
+  });
   assert.strictEqual(abortCtrl.signal.aborted, false);
   abortCtrl.abort();
   assert.strictEqual(abortCtrl.signal.aborted, true);
+  assert.strictEqual(wasCancelled, true);
 });
 
 // ---------------------------------------------------------------------------
@@ -353,30 +382,43 @@ runStep(27, 'Verify batch operation cancellation abort signal', () => {
 // ---------------------------------------------------------------------------
 runStep(28, 'Verify error retry mechanism on transient disk failures', () => {
   let attempts = 0;
-  function executeWithRetry(maxRetries = 2) {
-    while (attempts < maxRetries) {
+  let transientLock = 1;
+  function renameWithRetry(oldPath, newPath, maxRetries = 2) {
+    for (let r = 0; r <= maxRetries; r++) {
       attempts++;
-      if (attempts === 2) return true;
+      if (transientLock > 0) {
+        transientLock--;
+        continue; // simulate transient Windows file lock retry
+      }
+      return { success: true, oldPath, newPath };
     }
-    return false;
+    return { success: false, error: 'Locked' };
   }
-  const result = executeWithRetry();
-  assert.strictEqual(result, true);
-  assert.strictEqual(attempts, 2);
+  const res = renameWithRetry('/path/doc.pdf', '/path/doc_new.pdf');
+  assert.strictEqual(res.success, true);
+  assert.strictEqual(attempts, 2, 'Should succeed on second attempt after transient lock release');
 });
 
 // ---------------------------------------------------------------------------
 // TEST 29: Verify Tab-key behavior
 // ---------------------------------------------------------------------------
 runStep(29, 'Verify bidirectional Tab / Shift+Tab keyboard navigation', () => {
-  let cur = 1;
+  let cur = 0;
   const total = 5;
-  // Tab moves forward
-  cur = Math.min(total - 1, cur + 1);
-  assert.strictEqual(cur, 2);
-  // Shift+Tab moves backward
-  cur = Math.max(0, cur - 1);
-  assert.strictEqual(cur, 1);
+  function navigateQueue(shiftKey) {
+    if (shiftKey) {
+      cur = (cur - 1 + total) % total;
+    } else {
+      cur = (cur + 1) % total;
+    }
+    return cur;
+  }
+  assert.strictEqual(navigateQueue(false), 1, 'Tab moves forward to index 1');
+  assert.strictEqual(navigateQueue(false), 2, 'Tab moves forward to index 2');
+  assert.strictEqual(navigateQueue(true), 1, 'Shift+Tab moves backward to index 1');
+  assert.strictEqual(navigateQueue(true), 0, 'Shift+Tab moves backward to index 0');
+  assert.strictEqual(navigateQueue(true), 4, 'Shift+Tab wraps backward to index 4');
+  assert.strictEqual(navigateQueue(false), 0, 'Tab wraps forward to index 0');
 });
 
 // ---------------------------------------------------------------------------

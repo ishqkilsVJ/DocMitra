@@ -25,21 +25,24 @@ DocMitra च्या **Bulk Document Renamer** चे सर्व १० ट�
 
 ## २. तपासणी केलेले व बदललेले घटक (Files Changed & Inspected)
 
-1. `tools/rename_tool/rename_tool_ui.js`:
+1. `tools/rename_tool/rename_tool.py`:
+   - Windows वर Read-Only फाईल्सवर रोटेशन व रीनेम करताना `os.chmod(stat.S_IWRITE)` द्वारे परवानगी सुरक्षित केली.
+   - `try...finally` ब्लॉक्स जोडून कोणतीही तात्पुरती फाईल (`__tmp_rot_...`) लटकून न राहण्याची खात्री केली.
+2. `tools/rename_tool/rename_tool_ui.js`:
+   - रोटेशन व रीनेम यशस्वी झाल्यावर इन-मेमरी प्रिव्ह्यू कॅशे (`_pdfBytes`, `_blobUrl`) इनव्हॅलिडेट केले.
+   - `handleClearQueue()` मध्ये ऑब्जेक्ट यूआरएल सुरक्षितपणे रीव्होक करून मेमरी गळती (Memory Leak) पूर्णपणे थांबवली.
    - लाइव्ह सजेशन्सचा झिरो-मॅच मेसेज सुसंगत केला.
-   - रांग रेंडरिंगमधील अधिकृत कॉमेंट्स व स्कॅनिंग बॅज पूर्ववत केले.
-2. `tools/rename_tool/rename_tool.html`:
-   - ३-कॉलम बेंटो वर्कस्टेशन, मोडल व टूलबार १००% पडताळले (० मराठी, ० डमी डेटा).
 3. `tools/rename_tool/rename_tool_logic.js`:
-   - शुद्ध बिझनेस लॉजिक, Zero Student Duplication आणि फझी मॅचिंग पडताळले.
-4. `tools/rename_tool/rename_tool.py`:
-   - प्रत्यक्ष फाईल रोटेशन (`pypdf` + `PIL`) आणि अणूवत रीनेम प्रमाणित केले.
+   - `executeRename` मध्ये फाईल रोटेशननंतर `_pdfBytes` व `_blobUrl` स्वच्छ केले.
+   - शुद्ध बिझनेस लॉजिक, Zero Student Duplication आणि फझी मॅचिंग प्रमाणित केले.
+4. `tools/rename_tool/rename_tool.html`:
+   - ३-कॉलम बेंटो वर्कस्टेशन, मोडल व टूलबार १००% पडताळले (० मराठी, ० डमी डेटा).
 5. `config/document_presets.json`:
    - MAHA DBT आणि MAHA DBT FORM या दोन्ही कीजची सुसंगतता सुनिश्चित केली.
-6. `scripts/test_rename_tool_master_suite.js`:
-   - अप्रचलित अलर्ट बार तपासणी काढून ती अधिकृत `#modalAddDocument` तपासणीशी जोडली.
-7. `scripts/test_rename_tool_33_e2e_matrix.js`:
-   - नवीन ३३-पॉइंट सर्वसमावेशक E2E चाचणी संच तयार करून १००% पास केला.
+6. `scripts/test_rename_tool_33_e2e_matrix.js`:
+   - सर्व ३३ चाचण्या वास्तविक रांग ऑब्जेक्ट्स, रोटेशन आयसोलेशन, रिट्राय व टॅब नेव्हिगेशनसह मजबूत केल्या.
+7. `scripts/test_python_disk_ops.py`:
+   - Read-Only PDF व इमेज रोटेशन आणि शून्य तात्पुरत्या फाईल्सची खात्री करणारी प्रत्यक्ष डिस्क चाचणी जोडली.
 8. `tools/rename_tool/README_LOCK.md`:
    - टूलची स्थिती पुन्हा **STRICTLY LOCKED & VERIFIED** वर नेली.
 

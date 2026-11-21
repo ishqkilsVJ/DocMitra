@@ -62,12 +62,52 @@ assert 'AADHAAR CARD 1 RAHUL PATIL.pdf' in res_import2.get('name'), f"Unexpected
 print("✓ Python File Import and duplicate sequential auto-numbering verified successfully.")
 
 # 4. Test Numbered Document Duplicate (FORM 16)
-from tools.rename_tool.rename_tool import unique_destination
+from tools.rename_tool.rename_tool import unique_destination, safe_rename_file
+import stat
+
 form16_dup = unique_destination('FORM 16 RAHUL PATIL.pdf', '', {'form 16 rahul patil.pdf'}, 'RAHUL PATIL')
 assert form16_dup == 'FORM 16 1 RAHUL PATIL.pdf', f"Expected 'FORM 16 1 RAHUL PATIL.pdf', got '{form16_dup}'"
 form16_dup2 = unique_destination('FORM 16.pdf', '', {'form 16.pdf'}, '')
 assert form16_dup2 == 'FORM 16 1.pdf', f"Expected 'FORM 16 1.pdf', got '{form16_dup2}'"
 print("✓ Document names ending in digits (FORM 16) preserved during duplicate resolution.")
+
+# 5. Test Read-Only PDF and Image Rotation and Renaming on Windows
+ro_pdf = os.path.join(test_dir, 'readonly_doc.pdf')
+w_ro = PdfWriter()
+w_ro.add_blank_page(width=200, height=300)
+with open(ro_pdf, 'wb') as f:
+    w_ro.write(f)
+os.chmod(ro_pdf, stat.S_IREAD)
+
+res_ro_rot = rotate_file_on_disk(ro_pdf, 90)
+assert res_ro_rot.get('success') is True, f"Rotate on read-only failed: {res_ro_rot}"
+ro_reader = PdfReader(ro_pdf)
+assert ro_reader.pages[0].rotation == 90
+print("✓ Python Read-Only PDF 90-degree disk rotation verified successfully with zero junk temp files.")
+
+ro_img = os.path.join(test_dir, 'readonly_img.jpg')
+img_ro = Image.new('RGB', (100, 200), color='purple')
+img_ro.save(ro_img)
+os.chmod(ro_img, stat.S_IREAD)
+
+res_ro_img = rotate_file_on_disk(ro_img, 90)
+assert res_ro_img.get('success') is True, f"Rotate image on read-only failed: {res_ro_img}"
+with Image.open(ro_img) as c_ro:
+    assert c_ro.size == (200, 100)
+print("✓ Python Read-Only Image 90-degree disk rotation verified successfully with zero junk temp files.")
+
+# Safe rename with rotation on read-only file
+os.chmod(ro_pdf, stat.S_IREAD)
+res_ro_ren = safe_rename_file(ro_pdf, 'RENAMED_RO_DOC.pdf', rotation=90)
+assert res_ro_ren.get('success') is True, f"Safe rename with rotation on read-only failed: {res_ro_ren}"
+assert os.path.isfile(os.path.join(test_dir, 'RENAMED_RO_DOC.pdf'))
+print("✓ Python Safe Rename with rotation on read-only file verified successfully.")
+
+# Cleanup writable before rmtree
+for root, dirs, files in os.walk(os.path.dirname(test_dir)):
+    for fname in files:
+        try: os.chmod(os.path.join(root, fname), stat.S_IWRITE)
+        except Exception: pass
 
 shutil.rmtree(os.path.dirname(test_dir), ignore_errors=True)
 print("ALL_PYTHON_DISK_OPS_PASSED")

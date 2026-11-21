@@ -128,11 +128,15 @@ def unique_destination(desired_name: str, current_name: str, existing_names: Set
         return candidate
 
 
+import stat
+
 def rotate_pdf_on_disk(file_path: str, angle: int) -> Tuple[bool, str, Optional[Tuple[float, float]]]:
     """
     Rotate all pages of a PDF file clockwise by angle (90, 180, 270) using pypdf.
     Handles encrypted PDFs with blank password and verifies output dimensions.
+    Safely guards against Windows read-only attributes and ensures temporary files are cleaned up.
     """
+    temp_path = None
     try:
         from pypdf import PdfReader, PdfWriter
         reader = PdfReader(file_path)
@@ -161,6 +165,13 @@ def rotate_pdf_on_disk(file_path: str, angle: int) -> Tuple[bool, str, Optional[
         except Exception:
             pass
 
+        # Windows read-only guard: ensure write permission on destination before replacement
+        if os.path.exists(file_path):
+            try:
+                os.chmod(file_path, stat.S_IWRITE)
+            except Exception:
+                pass
+
         os.replace(temp_path, file_path)
 
         # Verify output dimensions of first page
@@ -180,6 +191,12 @@ def rotate_pdf_on_disk(file_path: str, angle: int) -> Tuple[bool, str, Optional[
         return True, "", dims
     except Exception as e:
         return False, str(e), None
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except Exception:
+                pass
 
 
 def rotate_image_on_disk(file_path: str, angle: int) -> Tuple[bool, str, Optional[Tuple[int, int]]]:
@@ -187,7 +204,9 @@ def rotate_image_on_disk(file_path: str, angle: int) -> Tuple[bool, str, Optiona
     Rotate an image file clockwise by angle (90, 180, 270) using PIL.
     Transposes EXIF orientation first to ensure accurate angular rotation.
     PIL rotate() rotates counter-clockwise, so clockwise angle requires (360 - (angle % 360)) % 360, expand=True.
+    Safely guards against Windows read-only attributes and ensures temporary files are cleaned up.
     """
+    temp_path = None
     try:
         from PIL import Image, ImageOps
         with Image.open(file_path) as img:
@@ -201,11 +220,25 @@ def rotate_image_on_disk(file_path: str, angle: int) -> Tuple[bool, str, Optiona
                 rotated.convert('RGB').save(temp_path, format='JPEG', quality=95)
             else:
                 rotated.save(temp_path, format=fmt)
+
+        # Windows read-only guard: ensure write permission on destination before replacement
+        if os.path.exists(file_path):
+            try:
+                os.chmod(file_path, stat.S_IWRITE)
+            except Exception:
+                pass
+
         os.replace(temp_path, file_path)
         with Image.open(file_path) as check_img:
             return True, "", check_img.size
     except Exception as e:
         return False, str(e), None
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except Exception:
+                pass
 
 
 def rotate_file_on_disk(file_path: str, angle: int) -> Dict[str, Any]:
@@ -364,6 +397,8 @@ def safe_rename_file(old_path: str, new_name: str, student_name: str = '', rotat
             'path': new_path.replace('\\', '/'),
             'name': new_name
         }
+    except PermissionError as pe:
+        return {'success': False, 'error': f"Permission denied: Unable to rename '{os.path.basename(old_path)}'. The file may be write-protected, read-only, or open in another program ({str(pe)})"}
     except Exception as e:
         return {'success': False, 'error': str(e)}
 

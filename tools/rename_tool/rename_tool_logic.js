@@ -1135,6 +1135,11 @@ export async function executeRename(dir, plan, onProgress = null) {
           item.file.isRenamed = true;
           item.file.status = 'renamed';
           item.file.rotation = 0; // rotation applied to disk
+          item.file._pdfBytes = null;
+          if (item.file._blobUrl && typeof URL !== 'undefined' && URL.revokeObjectURL) {
+            try { URL.revokeObjectURL(item.file._blobUrl); } catch (_) {}
+            item.file._blobUrl = null;
+          }
         }
         written.push(item);
         completed++;

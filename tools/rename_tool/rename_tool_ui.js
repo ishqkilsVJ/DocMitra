@@ -2474,6 +2474,11 @@ export class RenamerUIManager {
           const rotRes = await rotateNativeFile(oldPath, current.rotation);
           if (rotRes && rotRes.success) {
             current.rotation = 0;
+            current._pdfBytes = null;
+            if (current._blobUrl && typeof URL !== 'undefined' && URL.revokeObjectURL) {
+              try { URL.revokeObjectURL(current._blobUrl); } catch (_) {}
+              current._blobUrl = null;
+            }
           }
         } catch (e) {
           console.warn('[DocMitra] Rotation on keep failed:', e);
@@ -2537,6 +2542,11 @@ export class RenamerUIManager {
         f.isRenamed = true;
         f.status = 'renamed';
         f.rotation = 0;
+        f._pdfBytes = null;
+        if (f._blobUrl && typeof URL !== 'undefined' && URL.revokeObjectURL) {
+          try { URL.revokeObjectURL(f._blobUrl); } catch (_) {}
+          f._blobUrl = null;
+        }
       });
 
       toast.show('Batch Complete!', `Successfully renamed ${plan.length} files.`, 'success');
@@ -3690,6 +3700,11 @@ export class RenamerUIManager {
           f.isRenamed = true;
           f.status = 'renamed';
           f.rotation = 0;
+          f._pdfBytes = null;
+          if (f._blobUrl && typeof URL !== 'undefined' && URL.revokeObjectURL) {
+            try { URL.revokeObjectURL(f._blobUrl); } catch (_) {}
+            f._blobUrl = null;
+          }
         });
 
         this.closeCrossCheckModal();
@@ -3796,6 +3811,15 @@ export class RenamerUIManager {
     }
 
     handleClearQueue(silent = false) {
+      if (this.state.files && typeof URL !== 'undefined' && URL.revokeObjectURL) {
+        for (const f of this.state.files) {
+          if (f && f._blobUrl) {
+            try { URL.revokeObjectURL(f._blobUrl); } catch (_) {}
+            f._blobUrl = null;
+          }
+          f._pdfBytes = null;
+        }
+      }
       this.state.files = [];
       this.state.folder = null;
       this.state.subfolders = [];

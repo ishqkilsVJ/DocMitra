@@ -1437,7 +1437,12 @@ async function oe(e, t, n = null) {
 						let t = typeof window < "u" && window.location?.origin && !window.location.origin.startsWith("file:") && !window.location.origin.includes("tauri") ? window.location.origin : "http://localhost:3000";
 						a.file.url = `${t}/api/serve-file?path=${encodeURIComponent(e)}`;
 					}
-					a.file.name = l, a.file.targetName = l, a.file.isRenamed = !0, a.file.status = "renamed", a.file.rotation = 0;
+					if (a.file.name = l, a.file.targetName = l, a.file.isRenamed = !0, a.file.status = "renamed", a.file.rotation = 0, a.file._pdfBytes = null, a.file._blobUrl && typeof URL < "u" && URL.revokeObjectURL) {
+						try {
+							URL.revokeObjectURL(a.file._blobUrl);
+						} catch {}
+						a.file._blobUrl = null;
+					}
 				}
 				r.push(a), i++, n && n(Math.round(i / t.length * 100), `Renamed ${i} of ${t.length} files...`);
 				continue;
@@ -4501,7 +4506,12 @@ var He = [
 			let t = e.path || (this.state.folder?.path ? `${this.state.folder.path}/${e.name}` : null);
 			if (t) try {
 				let n = await f(t, e.rotation);
-				n && n.success && (e.rotation = 0);
+				if (n && n.success && (e.rotation = 0, e._pdfBytes = null, e._blobUrl && typeof URL < "u" && URL.revokeObjectURL)) {
+					try {
+						URL.revokeObjectURL(e._blobUrl);
+					} catch {}
+					e._blobUrl = null;
+				}
 			} catch (e) {
 				console.warn("[DocMitra] Rotation on keep failed:", e);
 			}
@@ -4541,7 +4551,12 @@ var He = [
 			await oe(this.state.folder, t, (e, t) => {
 				console.log(`[Rename Progress] ${e}%: ${t}`);
 			}), j.pushBatch(this.state.folder, t), e.forEach((e) => {
-				e.name = e.targetName, e.isRenamed = !0, e.status = "renamed", e.rotation = 0;
+				if (e.name = e.targetName, e.isRenamed = !0, e.status = "renamed", e.rotation = 0, e._pdfBytes = null, e._blobUrl && typeof URL < "u" && URL.revokeObjectURL) {
+					try {
+						URL.revokeObjectURL(e._blobUrl);
+					} catch {}
+					e._blobUrl = null;
+				}
 			}), r.show("Batch Complete!", `Successfully renamed ${t.length} files.`, "success"), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview();
 		} catch (e) {
 			r.show("Rename Failed", e.message, "error");
@@ -5402,7 +5417,12 @@ var He = [
 			await oe(this.state.folder, i, (e, t) => {
 				console.log(`[Batch Rename Progress] ${e}%: ${t}`);
 			}), j.pushBatch(this.state.folder, i), n.forEach((e) => {
-				e.name = e.targetName, e.isRenamed = !0, e.status = "renamed", e.rotation = 0;
+				if (e.name = e.targetName, e.isRenamed = !0, e.status = "renamed", e.rotation = 0, e._pdfBytes = null, e._blobUrl && typeof URL < "u" && URL.revokeObjectURL) {
+					try {
+						URL.revokeObjectURL(e._blobUrl);
+					} catch {}
+					e._blobUrl = null;
+				}
 			}), this.closeCrossCheckModal(), r.show("Batch Complete!", `Successfully renamed ${i.length} documents.`, "success"), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview();
 		} catch (e) {
 			r.show("Rename Failed", e.message, "error");
@@ -5465,6 +5485,15 @@ var He = [
 		ae(`DocMitra_Audit_${(this.state.studentName || "Batch").replace(/\s+/g, "_")}.csv`, u), r.show("Audit Exported", `CSV report for ${t.length} admission rules downloaded.`, "success");
 	}
 	handleClearQueue(e = !1) {
+		if (this.state.files && typeof URL < "u" && URL.revokeObjectURL) for (let e of this.state.files) {
+			if (e && e._blobUrl) {
+				try {
+					URL.revokeObjectURL(e._blobUrl);
+				} catch {}
+				e._blobUrl = null;
+			}
+			e._pdfBytes = null;
+		}
 		this.state.files = [], this.state.folder = null, this.state.subfolders = [], this.state.currentSubfolderIndex = 0, this.state.studentName = "", this.state.currentIndex = 0, this.state.activePdfDoc = null, this.state.activePdfUrl = null, this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), e || r.show("Workspace Cleared", "Intake queue and preview have been reset.", "info");
 	}
 	renderCurrentPreview() {

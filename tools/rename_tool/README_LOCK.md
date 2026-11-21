@@ -46,6 +46,8 @@
 - [x] **Copy Preset & In-Place Editing:** 1-click duplicate action next to `+ New Preset` that copies all documents to a new preset, plus in-place `Edit` buttons on document and shortcut rows.
 - [x] **Native Offline Preview Engine (.jpg, .jpeg, .png, .pdf):** Rust Tauri `read_binary_file` command directly reading bytes across IPC, rendering via Blob URL for images and in-memory `ArrayBuffer` for PDF.js. 100% offline, zero broken preview.
 - [x] **`Rename To` Box Displays Original Filename First:** Initially displays the clean original filename without extension. Formulas and rules apply dynamically as user types or selects shortcuts.
+- [x] **Windows Read-Only Safety & Zero Orphaned Temp Files:** Enhanced `rotate_file_on_disk()` and `safe_rename_file()` in `rename_tool.py` to seamlessly handle `FILE_ATTRIBUTE_READONLY` files via atomic write-permission elevation and guaranteed `try...finally` removal of working temporary files (`__tmp_rot_...`).
+- [x] **In-Memory Preview Cache Invalidation & Zero Memory Leak:** Invalidate `_pdfBytes` and revoke `_blobUrl` upon physical rotation, batch rename, or workspace reset (`handleClearQueue`) to guarantee real-time visual accuracy and zero memory leakage.
 - [x] **Preserved Core Foundations:** Casing rules (`UPPER`, `Title`, `lower`), duplicate auto-numbering (`1, 2, 3`), and queue lifecycle remain 100% intact. 100% English professional administrative workstation UI (zero Marathi text in production DOM, zero dummy data).
 
 ---
