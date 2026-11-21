@@ -1586,76 +1586,6 @@ export class RenamerUIManager {
       missingSkeletonBox.appendChild(sNote);
       missingSection.appendChild(missingSkeletonBox);
       container.appendChild(missingSection);
-
-      // 2. CORE SHORTCUTS (100% Crisp, Sharp, Unblurred & Locked in Position)
-      const shortcutsCard = document.createElement('div');
-      shortcutsCard.className = 'flex flex-col gap-1.5 bg-surface-container-lowest p-space-sm rounded-xl border border-outline-variant/30 shadow-xs shrink-0 select-none';
-
-      const shortcutsHeader = document.createElement('div');
-      shortcutsHeader.className = 'flex items-center justify-between px-1 text-label-sm pb-1';
-      const scLeft = document.createElement('div');
-      scLeft.className = 'flex items-center gap-1.5 font-bold text-on-surface text-[12px]';
-      const scIcon = document.createElement('span');
-      scIcon.className = 'material-symbols-outlined text-[15px] text-primary';
-      scIcon.textContent = 'bolt';
-      scLeft.appendChild(scIcon);
-      const scTitle = document.createElement('span');
-      scTitle.textContent = 'CORE SHORTCUTS';
-      scLeft.appendChild(scTitle);
-      shortcutsHeader.appendChild(scLeft);
-
-      const scSub = document.createElement('span');
-      scSub.className = 'text-[10px] font-mono-code text-secondary';
-      scSub.textContent = 'Top 5 Keys';
-      shortcutsHeader.appendChild(scSub);
-      shortcutsCard.appendChild(shortcutsHeader);
-
-      const shortcutsList = document.createElement('div');
-      shortcutsList.id = 'coreShortcutsList';
-      shortcutsList.className = 'flex flex-col gap-1';
-
-      // Top-5 Identity & Schooling shortcuts confirmed in Decision A6
-      const default5 = [
-        { code: 'ADR', doc: 'AADHAAR CARD' },
-        { code: 'PIC', doc: 'PASSPORT PHOTO' },
-        { code: 'SIG', doc: 'STUDENT SIGNATURE' },
-        { code: '10M', doc: '10TH MARKSHEET' },
-        { code: '12LC', doc: '12TH LEAVING CERTIFICATE' }
-      ];
-
-      for (const sc of default5) {
-        const item = document.createElement('button');
-        item.type = 'button';
-        item.className = 'w-full px-2.5 py-1.5 rounded-lg border border-outline-variant/20 hover:border-primary/40 bg-surface-container-lowest hover:bg-surface-container flex items-center justify-between text-left transition-all cursor-pointer group shadow-xs';
-        
-        const badgeColor = getShortcutBadgeColor(sc.code);
-        const itemLeft = document.createElement('div');
-        itemLeft.className = 'flex items-center gap-2 min-w-0';
-
-        const codeSpan = document.createElement('span');
-        codeSpan.className = `px-2 py-0.5 rounded font-mono-code font-bold text-[11px] ${badgeColor} shrink-0`;
-        codeSpan.textContent = sc.code;
-        itemLeft.appendChild(codeSpan);
-
-        const docSpan = document.createElement('span');
-        docSpan.className = 'text-[11px] font-semibold text-on-surface truncate group-hover:text-primary transition-colors';
-        docSpan.textContent = sc.doc;
-        itemLeft.appendChild(docSpan);
-        item.appendChild(itemLeft);
-
-        const arrowIcon = document.createElement('span');
-        arrowIcon.className = 'material-symbols-outlined text-[14px] text-secondary opacity-0 group-hover:opacity-100 transition-opacity';
-        arrowIcon.textContent = 'arrow_forward';
-        item.appendChild(arrowIcon);
-
-        item.addEventListener('click', () => {
-          toast.show('Shortcut Preview', `Press "Select Folder" (F2) to start admission renaming with ${sc.code}`, 'info');
-        });
-        shortcutsList.appendChild(item);
-      }
-
-      shortcutsCard.appendChild(shortcutsList);
-      container.appendChild(shortcutsCard);
       return;
     }
 
@@ -1916,10 +1846,10 @@ export class RenamerUIManager {
       container.appendChild(allDoneCard);
     }
 
-    // 2. CORE SHORTCUTS CONTAINER (Dynamic Live Narrowing)
+    // 2. CORE SHORTCUTS CONTAINER (Hidden from UI per operator preference)
     const shortcutsSection = document.createElement('div');
     shortcutsSection.id = 'coreShortcutsContainer';
-    shortcutsSection.className = 'bg-surface-container-lowest rounded-xl p-3 border border-outline-variant/30 flex flex-col shadow-xs shrink-0 mt-1';
+    shortcutsSection.className = 'hidden';
     container.appendChild(shortcutsSection);
 
     const inputVal = document.getElementById('inputRenameTarget')?.value || '';

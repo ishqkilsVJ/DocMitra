@@ -3151,72 +3151,22 @@ var Ue = class {
 			t.className = "flex flex-col gap-1.5 shrink-0 select-none";
 			let n = document.createElement("div");
 			n.className = "flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-surface-container border border-outline-variant/30 text-[11px] font-mono-code text-secondary shrink-0";
-			let i = document.createElement("div");
-			i.className = "flex items-center gap-1.5 font-bold";
+			let r = document.createElement("div");
+			r.className = "flex items-center gap-1.5 font-bold";
+			let i = document.createElement("span");
+			i.className = "material-symbols-outlined text-[15px] text-secondary", i.textContent = "checklist", r.appendChild(i);
 			let a = document.createElement("span");
-			a.className = "material-symbols-outlined text-[15px] text-secondary", a.textContent = "checklist", i.appendChild(a);
+			a.textContent = "MISSING DOCUMENTS (Checklist)", r.appendChild(a), n.appendChild(r);
 			let o = document.createElement("span");
-			o.textContent = "MISSING DOCUMENTS (Checklist)", i.appendChild(o), n.appendChild(i);
-			let s = document.createElement("span");
-			s.className = "text-[10px] text-secondary/70", s.textContent = "Standby", n.appendChild(s), t.appendChild(n);
+			o.className = "text-[10px] text-secondary/70", o.textContent = "Standby", n.appendChild(o), t.appendChild(n);
+			let s = document.createElement("div");
+			s.className = "p-3 rounded-xl border border-dashed border-outline-variant/40 bg-surface-container-lowest/60 flex flex-col gap-2 select-none";
 			let c = document.createElement("div");
-			c.className = "p-3 rounded-xl border border-dashed border-outline-variant/40 bg-surface-container-lowest/60 flex flex-col gap-2 select-none";
+			c.className = "h-3 w-3/4 bg-slate-300 dark:bg-slate-700/50 rounded skeleton-bar", s.appendChild(c);
 			let l = document.createElement("div");
-			l.className = "h-3 w-3/4 bg-slate-300 dark:bg-slate-700/50 rounded skeleton-bar", c.appendChild(l);
-			let u = document.createElement("div");
-			u.className = "h-3 w-1/2 bg-slate-300 dark:bg-slate-700/50 rounded skeleton-bar", c.appendChild(u);
-			let d = document.createElement("span");
-			d.className = "text-[11px] text-secondary/60 italic pt-1", d.textContent = "Checklist audit will verify missing records upon folder load.", c.appendChild(d), t.appendChild(c), e.appendChild(t);
-			let f = document.createElement("div");
-			f.className = "flex flex-col gap-1.5 bg-surface-container-lowest p-space-sm rounded-xl border border-outline-variant/30 shadow-xs shrink-0 select-none";
-			let p = document.createElement("div");
-			p.className = "flex items-center justify-between px-1 text-label-sm pb-1";
-			let m = document.createElement("div");
-			m.className = "flex items-center gap-1.5 font-bold text-on-surface text-[12px]";
-			let h = document.createElement("span");
-			h.className = "material-symbols-outlined text-[15px] text-primary", h.textContent = "bolt", m.appendChild(h);
-			let g = document.createElement("span");
-			g.textContent = "CORE SHORTCUTS", m.appendChild(g), p.appendChild(m);
-			let _ = document.createElement("span");
-			_.className = "text-[10px] font-mono-code text-secondary", _.textContent = "Top 5 Keys", p.appendChild(_), f.appendChild(p);
-			let v = document.createElement("div");
-			v.id = "coreShortcutsList", v.className = "flex flex-col gap-1";
-			for (let e of [
-				{
-					code: "ADR",
-					doc: "AADHAAR CARD"
-				},
-				{
-					code: "PIC",
-					doc: "PASSPORT PHOTO"
-				},
-				{
-					code: "SIG",
-					doc: "STUDENT SIGNATURE"
-				},
-				{
-					code: "10M",
-					doc: "10TH MARKSHEET"
-				},
-				{
-					code: "12LC",
-					doc: "12TH LEAVING CERTIFICATE"
-				}
-			]) {
-				let t = document.createElement("button");
-				t.type = "button", t.className = "w-full px-2.5 py-1.5 rounded-lg border border-outline-variant/20 hover:border-primary/40 bg-surface-container-lowest hover:bg-surface-container flex items-center justify-between text-left transition-all cursor-pointer group shadow-xs";
-				let n = He(e.code), i = document.createElement("div");
-				i.className = "flex items-center gap-2 min-w-0";
-				let a = document.createElement("span");
-				a.className = `px-2 py-0.5 rounded font-mono-code font-bold text-[11px] ${n} shrink-0`, a.textContent = e.code, i.appendChild(a);
-				let o = document.createElement("span");
-				o.className = "text-[11px] font-semibold text-on-surface truncate group-hover:text-primary transition-colors", o.textContent = e.doc, i.appendChild(o), t.appendChild(i);
-				let s = document.createElement("span");
-				s.className = "material-symbols-outlined text-[14px] text-secondary opacity-0 group-hover:opacity-100 transition-opacity", s.textContent = "arrow_forward", t.appendChild(s), t.addEventListener("click", () => {
-					r.show("Shortcut Preview", `Press "Select Folder" (F2) to start admission renaming with ${e.code}`, "info");
-				}), v.appendChild(t);
-			}
-			f.appendChild(v), e.appendChild(f);
+			l.className = "h-3 w-1/2 bg-slate-300 dark:bg-slate-700/50 rounded skeleton-bar", s.appendChild(l);
+			let u = document.createElement("span");
+			u.className = "text-[11px] text-secondary/60 italic pt-1", u.textContent = "Checklist audit will verify missing records upon folder load.", s.appendChild(u), t.appendChild(s), e.appendChild(t);
 			return;
 		}
 		let t = g["MAHA DBT FORM"] || [], n = new Set(this.state.files.map((e) => (e.docType || "").toUpperCase()).filter(Boolean)), i = t.filter(([e]) => {
@@ -3347,7 +3297,7 @@ var Ue = class {
 			r.className = "font-mono-code text-[11px] font-bold", r.textContent = "All Required Documents Present", t.appendChild(r), e.appendChild(t);
 		}
 		let a = document.createElement("div");
-		a.id = "coreShortcutsContainer", a.className = "bg-surface-container-lowest rounded-xl p-3 border border-outline-variant/30 flex flex-col shadow-xs shrink-0 mt-1", e.appendChild(a);
+		a.id = "coreShortcutsContainer", a.className = "hidden", e.appendChild(a);
 		let o = document.getElementById("inputRenameTarget")?.value || "";
 		this.renderCoreShortcuts(o);
 	}

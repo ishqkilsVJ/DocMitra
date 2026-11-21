@@ -27,12 +27,13 @@
 
 ---
 
-## 3. Verified Working Features (90% Ready)
+## 3. Verified Working Features (100% Core Polish Complete)
 - [x] **File/Folder Intake:** Fast folder scanning with F2 native dialog & in-place file addition.
 - [x] **In-Ribbon Folder Switcher:** `< Prev` and `> Next` navigation with `Ctrl+Left` / `Ctrl+Right` hotkeys and folder counter pill.
 - [x] **Windows Junk Filtering:** Filters out `thumbs.db`, `desktop.ini`, `~$*`, and `.tmp` files.
 - [x] **21-Shortcut Keyword Engine:** Exact-shortcut-first matching with word boundary protection (`Pankaj` does not match `PAN`).
-- [x] **Live Narrowing:** Real-time top-5 suggestions in the right-side `CORE SHORTCUTS` panel as the operator types.
+- [x] **Clean UI / Zero Clutter:** Removed redundant on-screen shortcut button cards and duplicate fixed footer strip; typing shortcuts still functions instantly without visual clutter.
+- [x] **High-Visibility Single Execution Toolbar:** Single, unclipped, non-wrapping bottom action toolbar containing all operations (`Smart Scan F4`, `Rename Matched`, `Review Unmatched`, `Rename All F8`, `Undo Ctrl+Z`, `Keep Original Tab`, `Save Batch Ctrl+S`, `Export Audit F9`) 100% visible in full screen mode.
 - [x] **Strict Casing:** All 4 casing styles (`UPPER`, `Title`, `lower`, `As Is`) enforced across base document and student name.
 - [x] **Safe Atomic File Operations:** Native atomic rename with intermediate temporary files for Windows case-insensitive changes.
 - [x] **Duplicate Collision Prevention:** Non-colliding sequential suffixing (` 1`, ` 2`, etc.).
