@@ -28,6 +28,8 @@ import {
   selectNativeFiles,
   listNativeDirectory,
   renameNativeFile,
+  rotateNativeFile,
+  importNativeFile,
   openFolderInExplorer,
   isNativeAvailable
 } from '../../shared/native-bridge.js';
@@ -56,7 +58,7 @@ import {
   SMART_DOC_SIGNATURES
 } from './rename_tool_logic.js';
 import { recordRenameEvent } from '../../src/services/analytics-service.js';
-import { loadSettings, saveSettings } from '../../src/services/storage-service.js';
+import { loadSettings, saveSettings, loadDocumentPresets } from '../../src/services/storage-service.js';
 import {
   addOrUpdateFollowUp,
   getPendingFollowUp,
@@ -99,6 +101,7 @@ export class RenamerUIManager {
       studentName: '',
       style: 'preserve', // 'preserve' | 'upper' | 'lower' | 'title'
       settings: null,
+      documentPresets: null,
       history: [],
       zoom: 100,
       rotation: 0,
@@ -110,8 +113,10 @@ export class RenamerUIManager {
       totalPdfPages: 1,
       activePdfDoc: null,
       activePdfUrl: null,
-      isSmartScanning: false
+      isSmartScanning: false,
+      isMissingDocsCollapsed: true
     };
+    this._scanAbortController = null;
 
     // 21 Canonical Shortcut Engine List
     this.shortcuts21 = [
@@ -141,6 +146,12 @@ export class RenamerUIManager {
 
   init() {
     this.state.settings = loadSettings();
+    loadDocumentPresets().then(presets => {
+      if (presets && presets.forms) {
+        this.state.documentPresets = presets.forms;
+        this.renderQueue();
+      }
+    }).catch(() => {});
     const savedCasing = localStorage.getItem('docmitra_casing_style');
     this.state.style = (savedCasing && ['upper', 'title', 'lower'].includes(savedCasing.toLowerCase()))
       ? savedCasing.toLowerCase()
@@ -440,6 +451,8 @@ export class RenamerUIManager {
     if (btnReset) {
       btnReset.addEventListener('click', () => {
         this.state.zoom = 100;
+        const currentFile = this.state.files[this.state.currentIndex];
+        if (currentFile) currentFile.rotation = 0;
         this.state.rotation = 0;
         if (zoomSlider) zoomSlider.value = 100;
         this._applyPreviewTransform();
@@ -448,7 +461,13 @@ export class RenamerUIManager {
 
     if (btnRotate) {
       btnRotate.addEventListener('click', () => {
-        this.state.rotation = (this.state.rotation + 90) % 360;
+        const currentFile = this.state.files[this.state.currentIndex];
+        if (currentFile) {
+          currentFile.rotation = ((currentFile.rotation || 0) + 90) % 360;
+          this.state.rotation = currentFile.rotation;
+        } else {
+          this.state.rotation = (this.state.rotation + 90) % 360;
+        }
         this._applyPreviewTransform();
       });
     }
@@ -581,8 +600,10 @@ export class RenamerUIManager {
 
   _applyPreviewTransform() {
     const stage = document.getElementById('previewContainerStage');
+    const currentFile = this.state.files[this.state.currentIndex];
+    const fileRot = currentFile ? (currentFile.rotation || 0) : (this.state.rotation || 0);
     if (stage) {
-      stage.style.transform = `scale(${this.state.zoom / 100}) rotate(${this.state.rotation}deg)`;
+      stage.style.transform = `scale(${this.state.zoom / 100}) rotate(${fileRot}deg)`;
       stage.style.transformOrigin = 'center center';
       stage.style.transition = 'transform 0.15s ease-out';
     }
@@ -781,7 +802,7 @@ export class RenamerUIManager {
         }
 
         const desiredWithExt = (suggested.endsWith(extension) ? suggested : suggested + extension);
-        const uniqueName = uniqueDestination(desiredWithExt, f.name, usedDestinations);
+        const uniqueName = uniqueDestination(desiredWithExt, f.name, usedDestinations, this.state.studentName);
         usedDestinations.add(uniqueName);
 
         return {
@@ -797,7 +818,9 @@ export class RenamerUIManager {
           targetName: uniqueName,
           status: isMatched ? 'matched' : 'pending',
           isRenamed: false,
-          isKept: false
+          isKept: false,
+          rotation: 0,
+          isScanning: false
         };
       });
 
@@ -886,7 +909,7 @@ export class RenamerUIManager {
       }
 
       const desiredWithExt = (suggested.endsWith(extension) ? suggested : suggested + extension);
-      const uniqueName = uniqueDestination(desiredWithExt, f.name, usedDestinations);
+      const uniqueName = uniqueDestination(desiredWithExt, f.name, usedDestinations, this.state.studentName);
       usedDestinations.add(uniqueName);
 
       return {
@@ -902,23 +925,40 @@ export class RenamerUIManager {
         targetName: uniqueName,
         status: isMatched ? 'matched' : 'pending',
         isRenamed: false,
-        isKept: false
+        isKept: false,
+        rotation: 0,
+        isScanning: false
       };
     });
 
+    if (this._scanAbortController) {
+      this._scanAbortController.abort();
+      this._scanAbortController = null;
+    }
+
     this.state.currentIndex = 0;
+    this.state.rotation = 0;
     this.updateTelemetry();
     this.renderQueue();
     this.renderCurrentPreview();
   }
 
   _recalculateTargetNames() {
+    const usedDestinations = new Set();
+    for (const f of this.state.files) {
+      if (f.isRenamed || f.isKept) {
+        usedDestinations.add(f.targetName || f.name);
+      }
+    }
     for (const f of this.state.files) {
       if (!f.isRenamed && !f.isKept) {
         const docBase = f.docType || cleanName(f.name);
         const currentExt = f.ext || ('.' + f.name.split('.').pop()).toLowerCase();
         const newBase = buildName(docBase, this.state.studentName, this.state.settings?.groups, this.state.style);
-        f.targetName = newBase.endsWith(currentExt) ? newBase : `${newBase}${currentExt}`;
+        const desired = newBase.endsWith(currentExt) ? newBase : `${newBase}${currentExt}`;
+        const unique = uniqueDestination(desired, f.name, usedDestinations, this.state.studentName);
+        usedDestinations.add(unique);
+        f.targetName = unique;
       }
     }
   }
@@ -1032,7 +1072,7 @@ export class RenamerUIManager {
 
     const renameAllBtn = document.getElementById('btnRenameAll');
     if (renameAllBtn) {
-      const pendingToRename = this.state.files.filter(f => !f.isRenamed && !f.isKept && f.targetName !== f.name);
+      const pendingToRename = this.state.files.filter(f => !f.isRenamed && ((f.targetName && f.targetName !== f.name) || (f.rotation && f.rotation % 360 !== 0)));
       const span = renameAllBtn.querySelector('.font-bold');
       if (span) {
         span.textContent = `Rename All (${pendingToRename.length} Files)`;
@@ -1042,7 +1082,7 @@ export class RenamerUIManager {
     // Smart Auto-Rename Action Buttons Counter Sync
     const smartMatchedBtn = document.getElementById('btnRenameMatched');
     if (smartMatchedBtn) {
-      const matchedCount = this.state.files.filter(f => !f.isRenamed && !f.isKept && (f.smartConfidence >= 80 || (f.smartConfidence === undefined && f.isMatched))).length;
+      const matchedCount = this.state.files.filter(f => !f.isRenamed && f.status !== 'needs_review' && (f.smartConfidence >= 80 || (f.smartConfidence === undefined && f.isMatched))).length;
       const span = smartMatchedBtn.querySelector('span:not(.material-symbols-outlined)');
       if (span) span.textContent = `Rename Matched (${matchedCount})`;
       smartMatchedBtn.disabled = matchedCount === 0;
@@ -1050,7 +1090,7 @@ export class RenamerUIManager {
 
     const reviewUnmatchedBtn = document.getElementById('btnReviewUnmatched');
     if (reviewUnmatchedBtn) {
-      const unmatchedCount = this.state.files.filter(f => !f.isRenamed && !f.isKept && (f.smartConfidence !== undefined ? f.smartConfidence < 80 : !f.isMatched)).length;
+      const unmatchedCount = this.state.files.filter(f => !f.isRenamed && (f.status === 'needs_review' || (f.smartConfidence !== undefined ? f.smartConfidence < 80 : !f.isMatched))).length;
       const span = reviewUnmatchedBtn.querySelector('span:not(.material-symbols-outlined)');
       if (span) span.textContent = `Review Unmatched (${unmatchedCount})`;
       reviewUnmatchedBtn.disabled = unmatchedCount === 0;
@@ -1194,7 +1234,12 @@ export class RenamerUIManager {
       const rightBadgeGroup = document.createElement('div');
       rightBadgeGroup.className = 'flex items-center gap-1.5';
 
-      if (currentFile.smartConfidence !== undefined) {
+      if (currentFile.status === 'needs_review') {
+        const smartConfBadge = document.createElement('span');
+        smartConfBadge.className = 'confidence-badge confidence-badge-med';
+        smartConfBadge.textContent = '🟡 Needs Review';
+        rightBadgeGroup.appendChild(smartConfBadge);
+      } else if (currentFile.smartConfidence !== undefined) {
         const smartConfBadge = document.createElement('span');
         if (currentFile.smartConfidence >= 80) {
           smartConfBadge.className = 'confidence-badge confidence-badge-high';
@@ -1209,12 +1254,14 @@ export class RenamerUIManager {
         rightBadgeGroup.appendChild(smartConfBadge);
       }
 
-      const isReady = currentFile.isMatched || currentFile.isRenamed || currentFile.isKept;
+      const isReady = (currentFile.isMatched || currentFile.isRenamed || currentFile.isKept) && currentFile.status !== 'needs_review';
       const statusTag = document.createElement('span');
-      statusTag.className = isReady
-        ? 'px-2 py-0.5 rounded font-mono-code text-[10px] bg-tertiary-fixed text-on-tertiary-fixed font-bold'
-        : 'px-2 py-0.5 rounded font-mono-code text-[10px] bg-error-container text-on-error-container font-bold';
-      statusTag.textContent = isReady ? 'Matched' : 'Unmatched';
+      statusTag.className = currentFile.status === 'needs_review'
+        ? 'px-2 py-0.5 rounded font-mono-code text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold'
+        : (isReady
+          ? 'px-2 py-0.5 rounded font-mono-code text-[10px] bg-tertiary-fixed text-on-tertiary-fixed font-bold'
+          : 'px-2 py-0.5 rounded font-mono-code text-[10px] bg-error-container text-on-error-container font-bold');
+      statusTag.textContent = currentFile.status === 'needs_review' ? 'Needs Review' : (isReady ? 'Matched' : 'Unmatched');
       rightBadgeGroup.appendChild(statusTag);
 
       headerRow.appendChild(rightBadgeGroup);
@@ -1235,7 +1282,7 @@ export class RenamerUIManager {
       const origVal = document.createElement('strong');
       origVal.className = 'text-on-surface truncate min-w-0 flex-1 cursor-pointer hover:underline hover:text-primary transition-colors font-medium';
       origVal.title = 'Click to reset input to original name';
-      origVal.textContent = currentFile.name;
+      origVal.textContent = cleanName(currentFile.name);
 
       origVal.addEventListener('click', () => {
         const cleanOriginal = cleanName(currentFile.name);
@@ -1331,8 +1378,8 @@ export class RenamerUIManager {
           toast.show('Character Not Allowed', 'Illegal Windows filename characters removed', 'warning');
         }
 
-        const trimmedVal = val.trim();
-        const currentExt = currentFile.ext;
+        const currentExt = currentFile.ext || ext(currentFile.name);
+        const trimmedVal = val.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
 
         if (!trimmedVal) {
           currentFile.targetName = currentFile.name;
@@ -1355,7 +1402,8 @@ export class RenamerUIManager {
           statusTag.textContent = `Matched: ${canonical}`;
 
           const formulaBase = buildName(canonical, this.state.studentName, this.state.settings?.groups, this.state.style);
-          currentFile.targetName = formulaBase.endsWith(currentExt) ? formulaBase : `${formulaBase}${currentExt}`;
+          const cleanBase = formulaBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+          currentFile.targetName = `${cleanBase}${currentExt}`;
         } else {
           // Custom name: preserve user's typed name and append student name with selected case
           currentFile.docType = trimmedVal;
@@ -1364,7 +1412,8 @@ export class RenamerUIManager {
           statusTag.textContent = 'Custom Name';
 
           const formulaBase = buildName(trimmedVal, this.state.studentName, null, this.state.style);
-          currentFile.targetName = formulaBase.endsWith(currentExt) ? formulaBase : `${formulaBase}${currentExt}`;
+          const cleanBase = formulaBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+          currentFile.targetName = `${cleanBase}${currentExt}`;
         }
 
         this.updateTelemetry();
@@ -1372,7 +1421,7 @@ export class RenamerUIManager {
         // Update live preview document title in canvas if present
         const stageTitle = document.querySelector('#previewContainerStage .font-headline-sm');
         if (stageTitle) {
-          stageTitle.textContent = currentFile.targetName;
+          stageTitle.textContent = cleanName(currentFile.targetName);
         }
 
         // Live narrow shortcuts in Right-Side CORE SHORTCUTS Panel
@@ -1397,8 +1446,8 @@ export class RenamerUIManager {
       });
     }
 
-    // 2. UPCOMING QUEUE
-    const upcomingFiles = this.state.files.filter((_, i) => i > this.state.currentIndex && !_.isRenamed && !_.isKept);
+    // 2. UPCOMING QUEUE (Strict Queue Rule: files stay until actually renamed on disk)
+    const upcomingFiles = this.state.files.filter((f, i) => i !== this.state.currentIndex && !f.isRenamed);
     if (upcomingFiles.length > 0) {
       const upHeader = document.createElement('div');
       upHeader.className = 'flex items-center justify-between px-2 py-1 rounded bg-surface-container border border-outline-variant/40 text-[11px] font-mono-code text-secondary shrink-0';
@@ -1426,7 +1475,7 @@ export class RenamerUIManager {
         const fIdx = this.state.files.indexOf(f);
         const item = document.createElement('article');
         item.className = 'h-8 px-2.5 py-1 rounded-lg bg-surface-container-lowest shadow-xs flex items-center justify-between gap-2 hover:bg-surface-container-low transition-colors border border-outline-variant/30 cursor-pointer shrink-0';
-        item.title = `Original: ${f.name} (Click to jump & edit)`;
+        item.title = `Original: ${cleanName(f.name)} (Click to jump & edit)`;
 
         // Click upcoming item to jump and focus
         item.addEventListener('click', () => {
@@ -1450,7 +1499,21 @@ export class RenamerUIManager {
 
         item.appendChild(leftCol);
 
-        if (f.smartConfidence !== undefined) {
+        if (f.isScanning) {
+          const scanBadge = document.createElement('span');
+          scanBadge.className = 'confidence-badge bg-primary/20 text-primary flex items-center gap-1 font-bold';
+          const scanSpin = document.createElement('span');
+          scanSpin.className = 'material-symbols-outlined text-[12px] animate-spin';
+          scanSpin.textContent = 'sync';
+          scanBadge.appendChild(scanSpin);
+          scanBadge.appendChild(document.createTextNode('SCANNING'));
+          item.appendChild(scanBadge);
+        } else if (f.status === 'needs_review') {
+          const confBadge = document.createElement('span');
+          confBadge.className = 'confidence-badge confidence-badge-med';
+          confBadge.textContent = '🟡 Needs Review';
+          item.appendChild(confBadge);
+        } else if (f.smartConfidence !== undefined) {
           const confBadge = document.createElement('span');
           if (f.smartConfidence >= 80) {
             confBadge.className = 'confidence-badge confidence-badge-high';
@@ -1471,8 +1534,8 @@ export class RenamerUIManager {
       scrollContainer.appendChild(upList);
     }
 
-    // 3. COMPLETED FILES
-    const completedFiles = this.state.files.filter(f => f.isRenamed || f.isKept);
+    // 3. COMPLETED FILES (Strict: ONLY genuinely renamed on disk files)
+    const completedFiles = this.state.files.filter(f => f.isRenamed);
     if (completedFiles.length > 0) {
       const compHeader = document.createElement('div');
       compHeader.className = 'mt-auto pt-2 flex flex-col gap-1.5 shrink-0';
@@ -1521,7 +1584,7 @@ export class RenamerUIManager {
 
         const txt = document.createElement('span');
         txt.className = 'font-mono-code text-[11px] text-tertiary font-bold truncate';
-        txt.textContent = f.targetName;
+        txt.textContent = cleanName(f.targetName || f.name);
         left.appendChild(txt);
         item.appendChild(left);
 
@@ -1590,13 +1653,22 @@ export class RenamerUIManager {
     }
 
     // 1. MISSING DOCUMENTS / CHECKLIST AUDIT
-    const activeRules = DEFAULT_CHECKLISTS_DATA["MAHA DBT FORM"] || [];
+    const presetsData = this.state.documentPresets || this.state.settings?.checklists || DEFAULT_CHECKLISTS_DATA;
+    const formRules = presetsData["MAHA DBT FORM"] || DEFAULT_CHECKLISTS_DATA["MAHA DBT FORM"] || [];
+
+    // Extract rule names and shortcodes
+    const activeRules = formRules.map(r => {
+      if (typeof r === 'string') return { name: r, code: '', required: true };
+      if (Array.isArray(r)) return { name: r[0], code: '', required: true };
+      return { name: r.name, code: r.code || '', required: r.required !== undefined ? !!r.required : true };
+    }).filter(r => r.required !== false);
+
     const presentDocs = new Set(
       this.state.files.map(f => (f.docType || '').toUpperCase()).filter(Boolean)
     );
 
-    const missingRules = activeRules.filter(([ruleName]) => {
-      const cleanRule = ruleName.toUpperCase();
+    const missingRules = activeRules.filter((rule) => {
+      const cleanRule = rule.name.toUpperCase();
       if (presentDocs.has(cleanRule)) return false;
       for (const link of DEFAULT_LINKED_RULES) {
         if (link.combined && presentDocs.has(link.combined.toUpperCase())) {
@@ -1613,7 +1685,11 @@ export class RenamerUIManager {
       missingSection.className = 'flex flex-col gap-1.5 shrink-0';
 
       const missingHeader = document.createElement('div');
-      missingHeader.className = 'flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-[11px] font-mono-code text-amber-900 dark:text-amber-300 shrink-0';
+      missingHeader.className = 'flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-[11px] font-mono-code text-amber-900 dark:text-amber-300 shrink-0 cursor-pointer select-none hover:bg-amber-500/20 transition-colors';
+      missingHeader.onclick = () => {
+        this.state.isMissingDocsCollapsed = !this.state.isMissingDocsCollapsed;
+        this.renderQueue();
+      };
 
       const leftMissing = document.createElement('div');
       leftMissing.className = 'flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-400';
@@ -1624,213 +1700,298 @@ export class RenamerUIManager {
       leftMissing.appendChild(document.createTextNode('MISSING DOCUMENTS'));
       missingHeader.appendChild(leftMissing);
 
-      const rightMissing = document.createElement('span');
-      rightMissing.className = 'text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase px-1.5 py-0.5 rounded bg-amber-500/20';
-      rightMissing.textContent = `${missingRules.length} Missing`;
+      const rightMissing = document.createElement('div');
+      rightMissing.className = 'flex items-center gap-1.5';
+
+      const pulseBadge = document.createElement('span');
+      pulseBadge.className = 'px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 font-bold font-mono-code text-[10px] animate-pulse flex items-center gap-1';
+      pulseBadge.textContent = `⚠️ ${missingRules.length} Missing Documents Found`;
+      rightMissing.appendChild(pulseBadge);
+
+      const chevron = document.createElement('span');
+      chevron.className = 'material-symbols-outlined text-[16px] text-amber-800 transition-transform';
+      chevron.textContent = this.state.isMissingDocsCollapsed ? 'expand_more' : 'expand_less';
+      rightMissing.appendChild(chevron);
+
       missingHeader.appendChild(rightMissing);
       missingSection.appendChild(missingHeader);
 
-      const missingList = document.createElement('div');
-      missingList.className = 'flex flex-col gap-1 shrink-0';
+      if (!this.state.isMissingDocsCollapsed) {
+        const missingList = document.createElement('div');
+        missingList.className = 'flex flex-col gap-1 shrink-0';
 
-      missingRules.forEach(([ruleName]) => {
-        const mItem = document.createElement('article');
-        mItem.className = 'h-8 px-2 py-1 rounded-lg bg-surface-container-lowest shadow-xs flex items-center justify-between gap-1.5 border border-amber-500/30 hover:border-amber-500/50 transition-colors shrink-0';
+        missingRules.forEach((ruleObj) => {
+          const ruleName = ruleObj.name;
+          const ruleCode = ruleObj.code;
+          const mItem = document.createElement('article');
+          mItem.className = 'h-8 px-2 py-1 rounded-lg bg-surface-container-lowest shadow-xs flex items-center justify-between gap-1.5 border border-amber-500/30 hover:border-amber-500/50 transition-colors shrink-0';
 
-        const leftCol = document.createElement('div');
-        leftCol.className = 'flex items-center gap-1.5 min-w-0 flex-1';
+          const leftCol = document.createElement('div');
+          leftCol.className = 'flex items-center gap-1.5 min-w-0 flex-1';
 
-        const redDot = document.createElement('span');
-        redDot.className = 'w-1.5 h-1.5 rounded-full bg-error shrink-0';
-        leftCol.appendChild(redDot);
+          const redDot = document.createElement('span');
+          redDot.className = 'w-1.5 h-1.5 rounded-full bg-error shrink-0';
+          leftCol.appendChild(redDot);
 
-        const titleSpan = document.createElement('span');
-        titleSpan.className = 'font-mono-code text-[11px] font-bold text-on-surface truncate';
-        titleSpan.textContent = ruleName;
-        leftCol.appendChild(titleSpan);
+          if (ruleCode) {
+            const cBadge = document.createElement('span');
+            cBadge.className = 'px-1 py-0.2 rounded bg-amber-500/20 text-amber-900 dark:text-amber-300 font-mono-code text-[9px] font-bold shrink-0';
+            cBadge.textContent = ruleCode;
+            leftCol.appendChild(cBadge);
+          }
 
-        const studentName = this.state.studentName || this.state.folder?.name || 'Student';
-        const pendingFollowup = getPendingFollowUp(studentName, ruleName);
+          const titleSpan = document.createElement('span');
+          titleSpan.className = 'font-mono-code text-[11px] font-bold text-on-surface truncate';
+          titleSpan.textContent = ruleName;
+          leftCol.appendChild(titleSpan);
 
-        // ONLY show follow-up date badge if promised date is set; NO repetitive "Missing" text badge!
-        if (pendingFollowup) {
-          const statusBadge = document.createElement('span');
-          statusBadge.className = 'px-1.5 py-0.2 rounded font-mono-code text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold shrink-0 flex items-center gap-0.5';
-          statusBadge.textContent = `📅 ${formatFriendlyDate(pendingFollowup.promisedDate)}`;
-          leftCol.appendChild(statusBadge);
-        }
+          const studentName = this.state.studentName || this.state.folder?.name || 'Student';
+          const pendingFollowup = getPendingFollowUp(studentName, ruleName);
 
-        mItem.appendChild(leftCol);
+          if (pendingFollowup) {
+            const statusBadge = document.createElement('span');
+            statusBadge.className = 'px-1.5 py-0.2 rounded font-mono-code text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold shrink-0 flex items-center gap-0.5';
+            statusBadge.textContent = `📅 ${formatFriendlyDate(pendingFollowup.promisedDate)}`;
+            leftCol.appendChild(statusBadge);
+          }
 
-        // Inline Action Buttons (Follow-up + Import)
-        const actionRow = document.createElement('div');
-        actionRow.className = 'flex items-center gap-1 shrink-0';
+          mItem.appendChild(leftCol);
 
-        // 1. Follow-up Date Picker Popover Button
-        const popoverWrapper = document.createElement('div');
-        popoverWrapper.className = 'relative inline-block';
+          // Inline Action Buttons (Follow-up + Import)
+          const actionRow = document.createElement('div');
+          actionRow.className = 'flex items-center gap-1 shrink-0';
 
-        const btnFollowup = document.createElement('button');
-        btnFollowup.type = 'button';
-        btnFollowup.className = 'px-1.5 py-0.5 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[9px] font-semibold flex items-center gap-0.5 border border-outline-variant/30 cursor-pointer transition-colors';
-        const calIcon = document.createElement('span');
-        calIcon.className = 'material-symbols-outlined text-[12px] text-primary';
-        calIcon.textContent = 'event';
-        btnFollowup.appendChild(calIcon);
-        btnFollowup.appendChild(document.createTextNode('Date'));
-        popoverWrapper.appendChild(btnFollowup);
+          // 1. Follow-up Date Picker Popover Button
+          const popoverWrapper = document.createElement('div');
+          popoverWrapper.className = 'relative inline-block';
 
-        const dateMenu = document.createElement('div');
-        dateMenu.className = 'hidden absolute right-0 bottom-full mb-1 w-48 bg-surface-container-lowest rounded-lg shadow-lg border border-outline-variant/40 p-2 z-50 flex flex-col gap-1 text-[11px] font-mono-code';
+          const btnFollowup = document.createElement('button');
+          btnFollowup.type = 'button';
+          btnFollowup.className = 'px-1.5 py-0.5 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[9px] font-semibold flex items-center gap-0.5 border border-outline-variant/30 cursor-pointer transition-colors';
+          const calIcon = document.createElement('span');
+          calIcon.className = 'material-symbols-outlined text-[12px] text-primary';
+          calIcon.textContent = 'event';
+          btnFollowup.appendChild(calIcon);
+          btnFollowup.appendChild(document.createTextNode('Date'));
+          popoverWrapper.appendChild(btnFollowup);
 
-        const optToday = document.createElement('button');
-        optToday.type = 'button';
-        optToday.className = 'w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer';
-        optToday.textContent = `Today (${formatFriendlyDate(getTodayDateString())})`;
-        optToday.onclick = (e) => {
-          e.stopPropagation();
-          addOrUpdateFollowUp({
-            folderName: studentName,
-            studentName: studentName,
-            documentName: ruleName,
-            promisedDate: getTodayDateString(),
-            note: `Missing ${ruleName} during intake`
-          });
-          dateMenu.classList.add('hidden');
-          toast.show('Follow-up Scheduled', `${ruleName} promise date set for Today`, 'success');
-          this.renderQueue();
-        };
-        dateMenu.appendChild(optToday);
+          const dateMenu = document.createElement('div');
+          dateMenu.className = 'hidden absolute right-0 bottom-full mb-1 w-48 bg-surface-container-lowest rounded-lg shadow-lg border border-outline-variant/40 p-2 z-50 flex flex-col gap-1 text-[11px] font-mono-code';
 
-        const optTomorrow = document.createElement('button');
-        optTomorrow.type = 'button';
-        optTomorrow.className = 'w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer';
-        optTomorrow.textContent = `Tomorrow (${formatFriendlyDate(getTomorrowDateString(1))})`;
-        optTomorrow.onclick = (e) => {
-          e.stopPropagation();
-          addOrUpdateFollowUp({
-            folderName: studentName,
-            studentName: studentName,
-            documentName: ruleName,
-            promisedDate: getTomorrowDateString(1),
-            note: `Missing ${ruleName} during intake`
-          });
-          dateMenu.classList.add('hidden');
-          toast.show('Follow-up Scheduled', `${ruleName} promise date set for Tomorrow`, 'success');
-          this.renderQueue();
-        };
-        dateMenu.appendChild(optTomorrow);
-
-        const optMonday = document.createElement('button');
-        optMonday.type = 'button';
-        optMonday.className = 'w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer';
-        optMonday.textContent = `Monday (${formatFriendlyDate(getNextMondayDateString())})`;
-        optMonday.onclick = (e) => {
-          e.stopPropagation();
-          addOrUpdateFollowUp({
-            folderName: studentName,
-            studentName: studentName,
-            documentName: ruleName,
-            promisedDate: getNextMondayDateString(),
-            note: `Missing ${ruleName} during intake`
-          });
-          dateMenu.classList.add('hidden');
-          toast.show('Follow-up Scheduled', `${ruleName} promise date set for Monday`, 'success');
-          this.renderQueue();
-        };
-        dateMenu.appendChild(optMonday);
-
-        // Custom date input
-        const customDateDiv = document.createElement('div');
-        customDateDiv.className = 'flex items-center gap-1 pt-1 border-t border-surface-container mt-1';
-        const dateInput = document.createElement('input');
-        dateInput.type = 'date';
-        dateInput.className = 'flex-1 text-[10px] p-1 rounded bg-surface-container text-on-surface border border-outline-variant/40 outline-none';
-        const btnSetCustom = document.createElement('button');
-        btnSetCustom.type = 'button';
-        btnSetCustom.className = 'px-2 py-1 rounded bg-primary text-on-primary text-[10px] font-bold cursor-pointer';
-        btnSetCustom.textContent = 'Set';
-        btnSetCustom.onclick = (e) => {
-          e.stopPropagation();
-          if (dateInput.value) {
+          const optToday = document.createElement('button');
+          optToday.type = 'button';
+          optToday.className = 'w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer';
+          optToday.textContent = `Today (${formatFriendlyDate(getTodayDateString())})`;
+          optToday.onclick = (e) => {
+            e.stopPropagation();
             addOrUpdateFollowUp({
               folderName: studentName,
               studentName: studentName,
               documentName: ruleName,
-              promisedDate: dateInput.value,
+              promisedDate: getTodayDateString(),
               note: `Missing ${ruleName} during intake`
             });
             dateMenu.classList.add('hidden');
-            toast.show('Follow-up Scheduled', `${ruleName} promise date: ${dateInput.value}`, 'success');
+            toast.show('Follow-up Scheduled', `${ruleName} promise date set for Today`, 'success');
             this.renderQueue();
-          }
-        };
-        customDateDiv.appendChild(dateInput);
-        customDateDiv.appendChild(btnSetCustom);
-        dateMenu.appendChild(customDateDiv);
+          };
+          dateMenu.appendChild(optToday);
 
-        btnFollowup.onclick = (e) => {
-          e.stopPropagation();
-          dateMenu.classList.toggle('hidden');
-        };
-        popoverWrapper.appendChild(dateMenu);
-        actionRow.appendChild(popoverWrapper);
-
-        // 2. Direct Import Button
-        const btnImport = document.createElement('button');
-        btnImport.type = 'button';
-        btnImport.className = 'px-2 py-0.5 rounded bg-primary hover:bg-primary/90 text-on-primary font-mono-code text-[9px] font-bold flex items-center gap-0.5 shadow-xs cursor-pointer transition-colors';
-        const impIcon = document.createElement('span');
-        impIcon.className = 'material-symbols-outlined text-[12px]';
-        impIcon.textContent = 'download';
-        btnImport.appendChild(impIcon);
-        btnImport.appendChild(document.createTextNode('Import'));
-
-        btnImport.onclick = async (e) => {
-          e.stopPropagation();
-          toast.show('Select File for Import', `Select document for ${ruleName}`, 'info');
-          try {
-            const res = await selectNativeFiles('All Supported Files (*.pdf;*.jpg;*.jpeg;*.png;*.docx)|*.pdf;*.jpg;*.jpeg;*.png;*.docx|All Files (*.*)|*.*', `Select File for ${ruleName}`);
-            if (!res.success || !res.files || res.files.length === 0) return;
-
-            const picked = res.files[0];
-            const fileExt = picked.ext || ext(picked.name);
-            const targetFilename = computeImportTargetName(ruleName, this.state.studentName, fileExt);
-
-            const folderPath = this.state.folder?.path || '';
-            const newFileItem = {
-              id: `imported_${Date.now()}`,
-              name: targetFilename,
-              targetName: targetFilename,
-              suggestedName: targetFilename,
-              path: folderPath ? `${folderPath}/${targetFilename}` : picked.path,
-              nativePath: folderPath ? `${folderPath}/${targetFilename}` : picked.path,
-              size: picked.size || 0,
-              ext: fileExt,
-              url: picked.url,
-              docType: ruleName,
-              isMatched: true,
-              isRenamed: false,
-              isKept: false,
-              status: 'matched'
-            };
-
-            this.state.files.push(newFileItem);
-            this.updateTelemetry();
+          const optTomorrow = document.createElement('button');
+          optTomorrow.type = 'button';
+          optTomorrow.className = 'w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer';
+          optTomorrow.textContent = `Tomorrow (${formatFriendlyDate(getTomorrowDateString(1))})`;
+          optTomorrow.onclick = (e) => {
+            e.stopPropagation();
+            addOrUpdateFollowUp({
+              folderName: studentName,
+              studentName: studentName,
+              documentName: ruleName,
+              promisedDate: getTomorrowDateString(1),
+              note: `Missing ${ruleName} during intake`
+            });
+            dateMenu.classList.add('hidden');
+            toast.show('Follow-up Scheduled', `${ruleName} promise date set for Tomorrow`, 'success');
             this.renderQueue();
-            this.renderCurrentPreview();
-            toast.show('Document Imported', `Imported ${targetFilename} as ${ruleName}`, 'success');
-          } catch (err) {
-            toast.show('Import Error', err.message, 'error');
-          }
-        };
-        actionRow.appendChild(btnImport);
+          };
+          dateMenu.appendChild(optTomorrow);
 
-        mItem.appendChild(actionRow);
-        missingList.appendChild(mItem);
-      });
+          const optMonday = document.createElement('button');
+          optMonday.type = 'button';
+          optMonday.className = 'w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer';
+          optMonday.textContent = `Monday (${formatFriendlyDate(getNextMondayDateString())})`;
+          optMonday.onclick = (e) => {
+            e.stopPropagation();
+            addOrUpdateFollowUp({
+              folderName: studentName,
+              studentName: studentName,
+              documentName: ruleName,
+              promisedDate: getNextMondayDateString(),
+              note: `Missing ${ruleName} during intake`
+            });
+            dateMenu.classList.add('hidden');
+            toast.show('Follow-up Scheduled', `${ruleName} promise date set for Monday`, 'success');
+            this.renderQueue();
+          };
+          dateMenu.appendChild(optMonday);
 
-      missingSection.appendChild(missingList);
+          // Custom date input
+          const customDateDiv = document.createElement('div');
+          customDateDiv.className = 'flex items-center gap-1 pt-1 border-t border-surface-container mt-1';
+          const dateInput = document.createElement('input');
+          dateInput.type = 'date';
+          dateInput.className = 'flex-1 text-[10px] p-1 rounded bg-surface-container text-on-surface border border-outline-variant/40 outline-none';
+          const btnSetCustom = document.createElement('button');
+          btnSetCustom.type = 'button';
+          btnSetCustom.className = 'px-2 py-1 rounded bg-primary text-on-primary text-[10px] font-bold cursor-pointer';
+          btnSetCustom.textContent = 'Set';
+          btnSetCustom.onclick = (e) => {
+            e.stopPropagation();
+            if (dateInput.value) {
+              addOrUpdateFollowUp({
+                folderName: studentName,
+                studentName: studentName,
+                documentName: ruleName,
+                promisedDate: dateInput.value,
+                note: `Missing ${ruleName} during intake`
+              });
+              dateMenu.classList.add('hidden');
+              toast.show('Follow-up Scheduled', `${ruleName} promise date: ${dateInput.value}`, 'success');
+              this.renderQueue();
+            }
+          };
+          customDateDiv.appendChild(dateInput);
+          customDateDiv.appendChild(btnSetCustom);
+          dateMenu.appendChild(customDateDiv);
+
+          btnFollowup.onclick = (e) => {
+            e.stopPropagation();
+            dateMenu.classList.toggle('hidden');
+          };
+          popoverWrapper.appendChild(dateMenu);
+          actionRow.appendChild(popoverWrapper);
+
+          // 2. Direct Import Button (Functional: Copies file on disk into student folder)
+          const btnImport = document.createElement('button');
+          btnImport.type = 'button';
+          btnImport.className = 'px-2 py-0.5 rounded bg-primary hover:bg-primary/90 text-on-primary font-mono-code text-[9px] font-bold flex items-center gap-0.5 shadow-xs cursor-pointer transition-colors';
+          const impIcon = document.createElement('span');
+          impIcon.className = 'material-symbols-outlined text-[12px]';
+          impIcon.textContent = 'download';
+          btnImport.appendChild(impIcon);
+          btnImport.appendChild(document.createTextNode('Import'));
+
+          btnImport.onclick = async (e) => {
+            e.stopPropagation();
+            toast.show('Select File for Import', `Select document for ${ruleName}`, 'info');
+            try {
+              const res = await selectNativeFiles('All Supported Files (*.pdf;*.jpg;*.jpeg;*.png;*.docx)|*.pdf;*.jpg;*.jpeg;*.png;*.docx|All Files (*.*)|*.*', `Select File for ${ruleName}`);
+              if (!res.success || !res.files || res.files.length === 0) return;
+
+              const picked = res.files[0];
+              const fileExt = picked.ext || ext(picked.name);
+              const folderPath = this.state.folder?.path || '';
+              const studentName = this.state.studentName || this.state.folder?.name || '';
+
+              // Detection & Matching Pipeline: detect type/code -> match student name -> mark uncertain files as Needs Review
+              let detectedDocType = ruleName;
+              let isConfident = true;
+              let evalRes = null;
+
+              try {
+                const text = await this.extractTextFromFile(picked);
+                if (text && text.length >= 20) {
+                  evalRes = evaluateSmartOcrDocument(text, studentName);
+                  if (evalRes && evalRes.docType) {
+                    if (ruleName && evalRes.docType.toUpperCase() === ruleName.toUpperCase()) {
+                      detectedDocType = ruleName;
+                      isConfident = evalRes.confidence >= 50;
+                    } else if (!ruleName) {
+                      detectedDocType = evalRes.docType;
+                      isConfident = evalRes.confidence >= 70;
+                    } else {
+                      // OCR detected a different document type
+                      isConfident = false;
+                    }
+                  } else {
+                    isConfident = false;
+                  }
+                } else {
+                  // Fallback: check filename for keyword or shortcode matching
+                  const baseClean = cleanName(picked.name);
+                  const matched = matchDocument(baseClean, this.state.settings?.groups);
+                  if (matched) {
+                    detectedDocType = ruleName || matched;
+                    isConfident = true;
+                  } else {
+                    isConfident = false;
+                  }
+                }
+              } catch (ocrErr) {
+                console.warn('[DocMitra Import] OCR detection warning:', ocrErr);
+                isConfident = false;
+              }
+
+              const targetBase = buildName(detectedDocType || ruleName || cleanName(picked.name), studentName, this.state.settings?.groups, this.state.style);
+              const cleanBase = targetBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+              const targetFilename = `${cleanBase}${fileExt}`;
+
+              let imported = null;
+              if (folderPath && picked.path) {
+                imported = await importNativeFile({
+                  sourcePath: picked.path,
+                  targetDir: folderPath,
+                  targetName: targetFilename,
+                  studentName: studentName
+                });
+              }
+
+              const finalName = (imported && imported.name) ? imported.name : targetFilename;
+              const finalPath = (imported && imported.path) ? imported.path : (folderPath ? `${folderPath}/${finalName}` : picked.path);
+              const finalSize = (imported && imported.size) ? imported.size : (picked.size || 0);
+
+              const newFileItem = {
+                id: `imported_${Date.now()}`,
+                name: finalName,
+                targetName: finalName,
+                suggestedName: finalName,
+                path: finalPath,
+                nativePath: finalPath,
+                size: finalSize,
+                ext: fileExt,
+                url: (imported && imported.url) ? imported.url : picked.url,
+                docType: detectedDocType || ruleName,
+                isMatched: isConfident,
+                isRenamed: false,
+                isKept: false,
+                rotation: 0,
+                isScanning: false,
+                smartConfidence: evalRes ? evalRes.confidence : (isConfident ? 90 : 40),
+                smartDocType: evalRes ? evalRes.docType : detectedDocType,
+                status: isConfident ? 'matched' : 'needs_review'
+              };
+
+              this.state.files.push(newFileItem);
+              this.updateTelemetry();
+              this.renderQueue();
+              this.renderCurrentPreview();
+              if (isConfident) {
+                toast.show('Document Imported', `Imported ${cleanName(finalName)} as ${detectedDocType}`, 'success');
+              } else {
+                toast.show('Imported — Needs Review', `Imported ${cleanName(finalName)}; please verify document type.`, 'warning');
+              }
+            } catch (err) {
+              toast.show('Import Error', err.message, 'error');
+            }
+          };
+          actionRow.appendChild(btnImport);
+
+          mItem.appendChild(actionRow);
+          missingList.appendChild(mItem);
+        });
+
+        missingSection.appendChild(missingList);
+      }
       container.appendChild(missingSection);
     } else {
       const allDoneCard = document.createElement('div');
@@ -1990,14 +2151,15 @@ export class RenamerUIManager {
     if (!current) return;
 
     const canonical = shortcut.canonical;
-    const extension = current.ext;
+    const extension = current.ext || ('.' + current.name.split('.').pop()).toLowerCase();
     const formatted = buildName(canonical, this.state.studentName, this.state.settings?.groups, this.state.style);
-    const targetWithExt = formatted.endsWith(extension) ? formatted : `${formatted}${extension}`;
+    const cleanFormatted = formatted.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+    const targetWithExt = `${cleanFormatted}${extension}`;
 
-    // Unique destination check
+    // Unique destination check with studentName sequential duplicate avoidance
     const used = new Set(this.state.files.map(f => f.targetName));
     used.delete(current.targetName);
-    const unique = uniqueDestination(targetWithExt, current.name, used);
+    const unique = uniqueDestination(targetWithExt, current.name, used, this.state.studentName);
 
     current.targetName = unique;
     current.docType = canonical;
@@ -2020,20 +2182,19 @@ export class RenamerUIManager {
 
     // If empty input, keep original name
     if (!targetFilename) {
-      this.handleKeepOriginal();
+      await this.handleKeepOriginal();
       return;
     }
 
-    const baseTyped = targetFilename.endsWith(currentExt)
-      ? targetFilename.slice(0, -currentExt.length).trim()
-      : targetFilename;
+    const baseTyped = targetFilename.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
 
     // Exact-Match Shortcut Rule vs. Custom User Name (+ Student Name)
     const exactShortcut = this.shortcuts21.find(s => s.code.toLowerCase() === baseTyped.toLowerCase());
     if (exactShortcut) {
       const canonical = exactShortcut.canonical;
       const formatted = buildName(canonical, this.state.studentName, this.state.settings?.groups, this.state.style);
-      targetFilename = formatted.endsWith(currentExt) ? formatted : `${formatted}${currentExt}`;
+      const cleanFormatted = formatted.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+      targetFilename = `${cleanFormatted}${currentExt}`;
       current.docType = canonical;
       current.isMatched = true;
     } else {
@@ -2046,7 +2207,8 @@ export class RenamerUIManager {
       else if (this.state.style === 'lower') customBase = customBase.toLowerCase();
       else if (this.state.style === 'title') customBase = customBase.toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase());
 
-      targetFilename = customBase.endsWith(currentExt) ? customBase : `${customBase}${currentExt}`;
+      const cleanCustom = customBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+      targetFilename = `${cleanCustom}${currentExt}`;
       current.docType = baseTyped;
       current.isMatched = false;
     }
@@ -2068,13 +2230,15 @@ export class RenamerUIManager {
       return;
     }
 
-    // Perform atomic rename on disk immediately
+    // Perform atomic rename on disk immediately with rotation support
     try {
       const dirPath = this.state.folder?.path || '';
       const oldPath = current.path || (dirPath ? `${dirPath}/${current.name}` : null);
+      const studentName = this.state.studentName || '';
+      const rotation = current.rotation || 0;
 
-      if (oldPath && current.name !== targetFilename) {
-        const res = await renameNativeFile(oldPath, targetFilename);
+      if (oldPath && (current.name !== targetFilename || rotation % 360 !== 0)) {
+        const res = await renameNativeFile(oldPath, targetFilename, studentName, rotation);
         if (res.success) {
           const actualFilename = res.name || targetFilename;
           const updatedPath = res.path || (oldPath.replace(/\\/g, '/').replace(/\/[^\/]+$/, '') + '/' + actualFilename);
@@ -2093,8 +2257,9 @@ export class RenamerUIManager {
           current.url = `http://localhost:3000/api/serve-file?path=${encodeURIComponent(updatedPath)}`;
           current.isRenamed = true;
           current.status = 'renamed';
+          current.rotation = 0; // successfully applied to output file
           recordRenameEvent(1);
-          toast.show('Renamed', actualFilename, 'success');
+          toast.show('Renamed', cleanName(actualFilename), 'success');
         } else {
           toast.show('Rename Error', res.error || 'Failed to rename on disk', 'error');
           return;
@@ -2104,7 +2269,7 @@ export class RenamerUIManager {
         current.targetName = targetFilename;
         current.isRenamed = true;
         current.status = 'renamed';
-        toast.show('Name Confirmed', targetFilename, 'info');
+        toast.show('Name Confirmed', cleanName(targetFilename), 'info');
       }
     } catch (err) {
       toast.show('Rename Failed', err.message, 'error');
@@ -2114,11 +2279,11 @@ export class RenamerUIManager {
     this.updateTelemetry();
 
     // Advance to next pending file
-    const nextPending = this.state.files.findIndex((f, idx) => idx > this.state.currentIndex && !f.isRenamed && !f.isKept);
+    const nextPending = this.state.files.findIndex((f, idx) => idx > this.state.currentIndex && !f.isRenamed);
     if (nextPending !== -1) {
       this.state.currentIndex = nextPending;
     } else {
-      const firstPending = this.state.files.findIndex(f => !f.isRenamed && !f.isKept);
+      const firstPending = this.state.files.findIndex(f => !f.isRenamed);
       if (firstPending !== -1) {
         this.state.currentIndex = firstPending;
       }
@@ -2138,7 +2303,7 @@ export class RenamerUIManager {
     }
   }
 
-  handleKeepOriginal() {
+  async handleKeepOriginal() {
     const current = this.state.files[this.state.currentIndex];
     if (!current) return;
 
@@ -2146,14 +2311,29 @@ export class RenamerUIManager {
     current.isKept = true;
     current.status = 'kept';
 
-    toast.show('Kept Original', current.name, 'info');
+    // If file has rotation, apply it to disk even when keeping original name
+    if (current.rotation && current.rotation % 360 !== 0) {
+      const oldPath = current.path || (this.state.folder?.path ? `${this.state.folder.path}/${current.name}` : null);
+      if (oldPath) {
+        try {
+          const rotRes = await rotateNativeFile(oldPath, current.rotation);
+          if (rotRes && rotRes.success) {
+            current.rotation = 0;
+          }
+        } catch (e) {
+          console.warn('[DocMitra] Rotation on keep failed:', e);
+        }
+      }
+    }
+
+    toast.show('Kept Original', cleanName(current.name), 'info');
 
     // Advance to next pending file
     const nextPending = this.state.files.findIndex((f, idx) => idx > this.state.currentIndex && !f.isRenamed && !f.isKept);
     if (nextPending !== -1) {
       this.state.currentIndex = nextPending;
     } else {
-      const firstPending = this.state.files.findIndex(f => !f.isRenamed && !f.isKept);
+      const firstPending = this.state.files.findIndex(f => !f.isRenamed);
       if (firstPending !== -1) {
         this.state.currentIndex = firstPending;
       }
@@ -2165,7 +2345,7 @@ export class RenamerUIManager {
   }
 
   async handleRenameAll() {
-    const pending = this.state.files.filter(f => !f.isRenamed && !f.isKept && f.targetName !== f.name);
+    const pending = this.state.files.filter(f => !f.isRenamed && ((f.targetName && f.targetName !== f.name) || (f.rotation && f.rotation % 360 !== 0)));
     if (pending.length === 0) {
       toast.show('No Changes Needed', 'All files are already named or kept.', 'info');
       return;
@@ -2174,7 +2354,7 @@ export class RenamerUIManager {
     for (const f of pending) {
       const err = validateFilename(f.targetName);
       if (err) {
-        toast.show('Validation Error', `${f.name}: ${err}`, 'error');
+        toast.show('Validation Error', `${cleanName(f.name)}: ${err}`, 'error');
         return;
       }
     }
@@ -2183,7 +2363,9 @@ export class RenamerUIManager {
       old: f.name,
       next: f.targetName,
       file: f,
-      nativePath: f.path
+      nativePath: f.path,
+      studentName: this.state.studentName || '',
+      rotation: f.rotation || 0
     }));
 
     toast.show('Executing Batch Rename', `Processing ${plan.length} files atomically...`, 'info');
@@ -2199,6 +2381,7 @@ export class RenamerUIManager {
         f.name = f.targetName;
         f.isRenamed = true;
         f.status = 'renamed';
+        f.rotation = 0;
       });
 
       toast.show('Batch Complete!', `Successfully renamed ${plan.length} files.`, 'success');
@@ -2314,14 +2497,17 @@ export class RenamerUIManager {
       toast.show('Intake Folder Needed', 'Press "Select Folder" (F2) before running Smart Scan.', 'warning');
       return;
     }
-    if (this.state.isSmartScanning) {
-      toast.show('Smart Scan Active', 'Scan is currently running in background...', 'info');
-      return;
-    }
 
-    const pending = this.state.files.filter(f => !f.isRenamed && !f.isKept);
+    // Cancel existing scan if running
+    if (this._scanAbortController) {
+      this._scanAbortController.abort();
+    }
+    this._scanAbortController = new AbortController();
+    const signal = this._scanAbortController.signal;
+
+    const pending = this.state.files.filter(f => !f.isRenamed);
     if (pending.length === 0) {
-      toast.show('No Pending Files', 'All files are already renamed or kept.', 'info');
+      toast.show('No Pending Files', 'All files are already renamed.', 'info');
       return;
     }
 
@@ -2333,57 +2519,95 @@ export class RenamerUIManager {
       btnSmart.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-primary">sync</span><span>Scanning (0/${pending.length})...</span>`;
     }
 
-    toast.show('Smart Scan Started', `Analyzing ${pending.length} documents with local OCR...`, 'info');
+    toast.show('Smart Scan Started', `Scanning File #1 immediately...`, 'info');
 
     let highConfCount = 0;
 
-    for (let i = 0; i < pending.length; i++) {
-      const f = pending[i];
-      if (btnSmart) {
-        btnSmart.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-primary">sync</span><span>Scanning (${i + 1}/${pending.length})...</span>`;
+    // Prioritize File #1 (current index or index 0)
+    const scanQueue = [...pending];
+    const currentFile = this.state.files[this.state.currentIndex];
+    if (currentFile && scanQueue.includes(currentFile)) {
+      const idx = scanQueue.indexOf(currentFile);
+      if (idx > 0) {
+        scanQueue.splice(idx, 1);
+        scanQueue.unshift(currentFile);
       }
-      try {
-        const text = await this.extractTextFromFile(f);
-        const evalRes = evaluateSmartOcrDocument(text, this.state.studentName);
-        f.smartEvaluation = evalRes;
-        f.smartConfidence = evalRes.confidence;
-        f.smartDocType = evalRes.docType;
-        f.smartText = text;
+    }
 
-        if (evalRes.isConfident && evalRes.docType) {
-          highConfCount++;
-          f.docType = evalRes.docType;
-          f.isMatched = true;
-          const formulaBase = buildName(evalRes.docType, this.state.studentName, this.state.settings?.groups, this.state.style);
-          const currentExt = f.ext || ('.' + f.name.split('.').pop()).toLowerCase();
-          f.targetName = formulaBase.endsWith(currentExt) ? formulaBase : `${formulaBase}${currentExt}`;
-          f.status = 'matched';
+    try {
+      for (let i = 0; i < scanQueue.length; i++) {
+        if (signal.aborted) break;
+
+        const f = scanQueue[i];
+        f.isScanning = true;
+
+        if (btnSmart) {
+          btnSmart.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-primary">sync</span><span>Scanning (${i + 1}/${scanQueue.length})...</span>`;
         }
-      } catch (err) {
-        console.error('[DocMitra Renamer] OCR error on file:', f.name, err);
-        f.smartConfidence = 0;
+
+        // Live render active scanning indicator
+        this.renderQueue();
+        await new Promise(r => setTimeout(r, 40));
+
+        if (signal.aborted) break;
+
+        try {
+          const text = await this.extractTextFromFile(f);
+          const evalRes = evaluateSmartOcrDocument(text, this.state.studentName);
+          f.smartEvaluation = evalRes;
+          f.smartConfidence = evalRes.confidence;
+          f.smartDocType = evalRes.docType;
+          f.smartText = text;
+
+          if (evalRes.isConfident && evalRes.docType) {
+            highConfCount++;
+            f.docType = evalRes.docType;
+            f.isMatched = true;
+            const formulaBase = buildName(evalRes.docType, this.state.studentName, this.state.settings?.groups, this.state.style);
+            const cleanBase = formulaBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+            const currentExt = f.ext || ('.' + f.name.split('.').pop()).toLowerCase();
+            f.targetName = `${cleanBase}${currentExt}`;
+            f.status = 'matched';
+          }
+        } catch (err) {
+          console.error('[DocMitra Renamer] OCR error on file:', f.name, err);
+          f.smartConfidence = 0;
+        } finally {
+          f.isScanning = false;
+        }
+
+        // Live row-by-row update: telemetry, queue badges, and preview
+        this.updateTelemetry();
+        this.renderQueue();
+        if (this.state.files[this.state.currentIndex] === f) {
+          this.renderCurrentPreview();
+        }
+
+        // Yield to browser UI paint
+        await new Promise(r => setTimeout(r, 40));
       }
+    } finally {
+      this.state.isSmartScanning = false;
+      this.state.files.forEach(f => { f.isScanning = false; });
+      if (btnSmart) {
+        btnSmart.classList.remove('smart-scan-pulse');
+        btnSmart.innerHTML = origHtml;
+      }
+      this.updateTelemetry();
+      this.renderQueue();
     }
 
-    this.state.isSmartScanning = false;
-    if (btnSmart) {
-      btnSmart.classList.remove('smart-scan-pulse');
-      btnSmart.innerHTML = origHtml;
+    if (!signal.aborted) {
+      toast.show(
+        'Smart Scan Complete',
+        `${highConfCount} of ${pending.length} documents identified with high confidence (>=80%).`,
+        highConfCount > 0 ? 'success' : 'info'
+      );
     }
-
-    this.updateTelemetry();
-    this.renderQueue();
-    this.renderCurrentPreview();
-
-    toast.show(
-      'Smart Scan Complete',
-      `${highConfCount} of ${pending.length} documents identified with high confidence (>=80%).`,
-      highConfCount > 0 ? 'success' : 'info'
-    );
   }
 
   async handleRenameAllMatched() {
-    const toRename = this.state.files.filter(f => !f.isRenamed && !f.isKept && (f.smartConfidence >= 80 || (f.smartConfidence === undefined && f.isMatched)) && f.targetName !== f.name);
+    const toRename = this.state.files.filter(f => !f.isRenamed && f.status !== 'needs_review' && (f.smartConfidence >= 80 || (f.smartConfidence === undefined && f.isMatched)) && (f.targetName !== f.name || (f.rotation && f.rotation % 360 !== 0)));
     if (toRename.length === 0) {
       toast.show('No Matched Files', 'Run Smart Scan (F4) or match documents with shortcuts first.', 'info');
       return;
@@ -2392,7 +2616,7 @@ export class RenamerUIManager {
     for (const f of toRename) {
       const err = validateFilename(f.targetName);
       if (err) {
-        toast.show('Validation Error', `${f.name}: ${err}`, 'error');
+        toast.show('Validation Error', `${cleanName(f.name)}: ${err}`, 'error');
         return;
       }
     }
@@ -2401,7 +2625,9 @@ export class RenamerUIManager {
       old: f.name,
       next: f.targetName,
       file: f,
-      nativePath: f.path
+      nativePath: f.path,
+      studentName: this.state.studentName || '',
+      rotation: f.rotation || 0
     }));
 
     toast.show('Executing Matched Batch', `Renaming ${plan.length} matched files (>=80% confidence)...`, 'info');
@@ -2417,6 +2643,7 @@ export class RenamerUIManager {
         f.name = f.targetName;
         f.isRenamed = true;
         f.status = 'renamed';
+        f.rotation = 0;
       });
 
       toast.show('Matched Batch Complete!', `Successfully renamed ${plan.length} documents.`, 'success');
@@ -2429,7 +2656,7 @@ export class RenamerUIManager {
   }
 
   handleReviewUnmatched() {
-    const unmatchedIdx = this.state.files.findIndex(f => !f.isRenamed && !f.isKept && (f.smartConfidence !== undefined ? f.smartConfidence < 80 : !f.isMatched));
+    const unmatchedIdx = this.state.files.findIndex(f => !f.isRenamed && (f.status === 'needs_review' || (f.smartConfidence !== undefined ? f.smartConfidence < 80 : !f.isMatched)));
     if (unmatchedIdx === -1) {
       toast.show('Queue Clear', 'All pending files have high confidence or are already resolved.', 'info');
       return;
@@ -2441,7 +2668,7 @@ export class RenamerUIManager {
     const targetFile = this.state.files[unmatchedIdx];
     toast.show(
       'Reviewing File',
-      `Jumped to file #${unmatchedIdx + 1} (${targetFile.name}) for manual inspection.`,
+      `Jumped to file #${unmatchedIdx + 1} (${cleanName(targetFile.name)}) for manual inspection.`,
       'info'
     );
   }
@@ -2543,6 +2770,7 @@ export class RenamerUIManager {
     if (!previewCol) return;
 
     const currentFile = this.state.files[this.state.currentIndex];
+    this.state.rotation = currentFile ? (currentFile.rotation || 0) : 0;
     const previewStageWrapper = previewCol.querySelector('.overflow-auto');
     if (!previewStageWrapper) return;
 

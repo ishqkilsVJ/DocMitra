@@ -8,6 +8,7 @@ duplicate suffix resolution, directory scanning, and folder switcher helpers.
 import os
 import sys
 import time
+import shutil
 import urllib.parse
 from typing import Dict, Any, List, Optional, Set, Tuple
 
@@ -76,6 +77,7 @@ def unique_destination(desired_name: str, current_name: str, existing_names: Set
     Generate a non-colliding filename with sequential suffixes (' 1', ' 2', etc.)
     Case-insensitive check against existing_names in the target directory.
     If student_name is attached, number is inserted sequentially before the student name.
+    Preserves document numbers (e.g. FORM 16 -> FORM 16 1).
     """
     lower_map = {n.lower(): n for n in existing_names if n}
 
@@ -84,26 +86,201 @@ def unique_destination(desired_name: str, current_name: str, existing_names: Set
 
     stem, ext = split_ext(desired_name)
     import re
-    counter = 1
     s_clean = student_name.strip() if student_name else ''
     if s_clean and stem.lower().endswith(s_clean.lower()):
         doc_part = stem[:-len(s_clean)].strip()
-        doc_part = re.sub(r'\s+\d+$', '', doc_part).strip()
+        match = re.match(r'^(.*?)\s+(\d+)$', doc_part)
+        if match:
+            prefix = match.group(1).strip()
+            num = int(match.group(2))
+            base_check = f"{prefix} {s_clean}{ext}".lower()
+            if base_check in lower_map:
+                doc_part = prefix
+                counter = num + 1
+            else:
+                counter = 1
+        else:
+            counter = 1
+
         candidate = f"{doc_part} {counter} {s_clean}{ext}"
         while candidate.lower() in lower_map and candidate.lower() != (current_name or '').lower():
             counter += 1
             candidate = f"{doc_part} {counter} {s_clean}{ext}"
         return candidate
     else:
-        base = re.sub(r'\s+\d+$', '', stem).strip()
-        candidate = f"{base} {counter}{ext}"
+        match = re.match(r'^(.*?)\s+(\d+)$', stem)
+        if match:
+            prefix = match.group(1).strip()
+            num = int(match.group(2))
+            base_check = f"{prefix}{ext}".lower()
+            if base_check in lower_map:
+                stem = prefix
+                counter = num + 1
+            else:
+                counter = 1
+        else:
+            counter = 1
+
+        candidate = f"{stem} {counter}{ext}"
         while candidate.lower() in lower_map and candidate.lower() != (current_name or '').lower():
             counter += 1
-            candidate = f"{base} {counter}{ext}"
+            candidate = f"{stem} {counter}{ext}"
         return candidate
 
 
-def safe_rename_file(old_path: str, new_name: str, student_name: str = '') -> Dict[str, Any]:
+def rotate_pdf_on_disk(file_path: str, angle: int) -> Tuple[bool, str, Optional[Tuple[float, float]]]:
+    """
+    Rotate all pages of a PDF file clockwise by angle (90, 180, 270) using pypdf.
+    Handles encrypted PDFs with blank password and verifies output dimensions.
+    """
+    try:
+        from pypdf import PdfReader, PdfWriter
+        reader = PdfReader(file_path)
+        if getattr(reader, 'is_encrypted', False):
+            try:
+                reader.decrypt("")
+            except Exception:
+                pass
+
+        writer = PdfWriter()
+        for page in reader.pages:
+            page.rotate(angle)
+            writer.add_page(page)
+
+        dir_name = os.path.dirname(file_path)
+        temp_path = os.path.join(dir_name, f"__tmp_rot_{int(time.time() * 1000)}_{os.path.basename(file_path)}")
+        with open(temp_path, "wb") as f_out:
+            writer.write(f_out)
+
+        try:
+            reader.close()
+        except Exception:
+            pass
+        try:
+            writer.close()
+        except Exception:
+            pass
+
+        os.replace(temp_path, file_path)
+
+        # Verify output dimensions of first page
+        reader_check = PdfReader(file_path)
+        if getattr(reader_check, 'is_encrypted', False):
+            try:
+                reader_check.decrypt("")
+            except Exception:
+                pass
+        p0 = reader_check.pages[0]
+        mb = p0.mediabox
+        dims = (float(mb.width), float(mb.height))
+        try:
+            reader_check.close()
+        except Exception:
+            pass
+        return True, "", dims
+    except Exception as e:
+        return False, str(e), None
+
+
+def rotate_image_on_disk(file_path: str, angle: int) -> Tuple[bool, str, Optional[Tuple[int, int]]]:
+    """
+    Rotate an image file clockwise by angle (90, 180, 270) using PIL.
+    Transposes EXIF orientation first to ensure accurate angular rotation.
+    PIL rotate() rotates counter-clockwise, so clockwise angle requires (360 - (angle % 360)) % 360, expand=True.
+    """
+    try:
+        from PIL import Image, ImageOps
+        with Image.open(file_path) as img:
+            img = ImageOps.exif_transpose(img)
+            fmt = img.format or 'JPEG'
+            rot_deg = (360 - (angle % 360)) % 360
+            rotated = img.rotate(rot_deg, expand=True)
+            dir_name = os.path.dirname(file_path)
+            temp_path = os.path.join(dir_name, f"__tmp_rot_{int(time.time() * 1000)}_{os.path.basename(file_path)}")
+            if fmt.upper() in ('JPG', 'JPEG'):
+                rotated.convert('RGB').save(temp_path, format='JPEG', quality=95)
+            else:
+                rotated.save(temp_path, format=fmt)
+        os.replace(temp_path, file_path)
+        with Image.open(file_path) as check_img:
+            return True, "", check_img.size
+    except Exception as e:
+        return False, str(e), None
+
+
+def rotate_file_on_disk(file_path: str, angle: int) -> Dict[str, Any]:
+    """
+    Apply rotation (angle in degrees: 90, 180, 270) to an image or PDF file on disk.
+    """
+    if not file_path or not os.path.isfile(file_path):
+        return {'success': False, 'error': f"File not found on disk: {file_path}"}
+
+    angle = angle % 360
+    if angle == 0:
+        return {'success': True, 'message': 'No rotation needed', 'angle': 0}
+
+    ext = split_ext(file_path)[1].lower()
+    if ext == '.pdf':
+        ok, err, dims = rotate_pdf_on_disk(file_path, angle)
+    elif ext in ('.jpg', '.jpeg', '.png', '.webp', '.bmp', '.tiff'):
+        ok, err, dims = rotate_image_on_disk(file_path, angle)
+    else:
+        return {'success': False, 'error': f"Unsupported file type for rotation: {ext}"}
+
+    if not ok:
+        return {'success': False, 'error': err}
+
+    return {
+        'success': True,
+        'path': file_path.replace('\\', '/'),
+        'angle': angle,
+        'dimensions': dims
+    }
+
+
+def import_file_to_folder(source_path: str, target_dir: str, target_name: str = '', student_name: str = '') -> Dict[str, Any]:
+    """
+    Safely import (copy) a file from an external location into a student folder on disk.
+    Applies collision avoidance and duplicate sequential numbering.
+    """
+    if not source_path or not os.path.isfile(source_path):
+        return {'success': False, 'error': f"Source file does not exist: {source_path}"}
+
+    if not target_dir or not os.path.isdir(target_dir):
+        return {'success': False, 'error': f"Target directory does not exist: {target_dir}"}
+
+    if not target_name or not target_name.strip():
+        target_name = os.path.basename(source_path)
+
+    valid, err_msg = validate_filename(target_name)
+    if not valid:
+        return {'success': False, 'error': err_msg}
+
+    try:
+        existing = set(os.listdir(target_dir))
+    except Exception:
+        existing = set()
+
+    dest_name = unique_destination(target_name, '', existing, student_name)
+    dest_path = os.path.join(target_dir, dest_name)
+
+    try:
+        shutil.copy2(source_path, dest_path)
+        stat = os.stat(dest_path)
+        ext = split_ext(dest_name)[1].lower()
+        return {
+            'success': True,
+            'name': dest_name,
+            'path': dest_path.replace('\\', '/'),
+            'size': stat.st_size,
+            'ext': ext,
+            'url': f'/api/serve-file?path={urllib.parse.quote(dest_path)}'
+        }
+    except Exception as e:
+        return {'success': False, 'error': f"Failed to copy file to student folder: {str(e)}"}
+
+
+def safe_rename_file(old_path: str, new_name: str, student_name: str = '', rotation: int = 0) -> Dict[str, Any]:
     """
     Perform a safe atomic rename of a single file on disk.
     Handles:
@@ -111,6 +288,7 @@ def safe_rename_file(old_path: str, new_name: str, student_name: str = '') -> Di
     2. Windows case-only rename via a safe temporary file (__tmp_...).
     3. Auto-increment duplicate non-colliding sequential numbers (never fails with 'already exists').
     4. Exact same name no-op.
+    5. Per-file rotation applied to the output file on disk.
     """
     if not old_path or not os.path.isfile(old_path):
         return {'success': False, 'error': 'Source file not found on disk'}
@@ -122,8 +300,12 @@ def safe_rename_file(old_path: str, new_name: str, student_name: str = '') -> Di
     parent = os.path.dirname(old_path)
     new_path = os.path.join(parent, new_name)
 
-    # Identical path - no-op success
+    # Identical path - handle rotation if requested or no-op success
     if os.path.normpath(old_path) == os.path.normpath(new_path):
+        if rotation and (rotation % 360 != 0):
+            rot_res = rotate_file_on_disk(new_path, rotation)
+            if not rot_res.get('success'):
+                return {'success': False, 'error': f"File rotation failed: {rot_res.get('error')}"}
         return {
             'success': True,
             'oldPath': old_path.replace('\\', '/'),
@@ -143,6 +325,10 @@ def safe_rename_file(old_path: str, new_name: str, student_name: str = '') -> Di
 
         try:
             os.rename(temp_path, new_path)
+            if rotation and (rotation % 360 != 0):
+                rot_res = rotate_file_on_disk(new_path, rotation)
+                if not rot_res.get('success'):
+                    return {'success': False, 'error': f"Case rename succeeded but rotation failed: {rot_res.get('error')}"}
             return {
                 'success': True,
                 'oldPath': old_path.replace('\\', '/'),
@@ -168,6 +354,10 @@ def safe_rename_file(old_path: str, new_name: str, student_name: str = '') -> Di
 
     try:
         os.rename(old_path, new_path)
+        if rotation and (rotation % 360 != 0):
+            rot_res = rotate_file_on_disk(new_path, rotation)
+            if not rot_res.get('success'):
+                return {'success': False, 'error': f"Rename succeeded but rotation failed: {rot_res.get('error')}"}
         return {
             'success': True,
             'oldPath': old_path.replace('\\', '/'),
@@ -178,13 +368,15 @@ def safe_rename_file(old_path: str, new_name: str, student_name: str = '') -> Di
         return {'success': False, 'error': str(e)}
 
 
-def batch_rename_files(renames: List[Dict[str, str]]) -> Dict[str, Any]:
+def batch_rename_files(renames: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Execute batch atomic renames sequentially."""
     results = []
     for item in renames:
         old_path = item.get('oldPath') or item.get('old_path') or item.get('path') or ''
         new_name = item.get('newName') or item.get('new_name') or item.get('targetName') or ''
-        res = safe_rename_file(old_path, new_name)
+        student_name = item.get('studentName') or item.get('student_name') or ''
+        rotation = int(item.get('rotation') or 0)
+        res = safe_rename_file(old_path, new_name, student_name=student_name, rotation=rotation)
         results.append(res)
     return {'success': True, 'results': results}
 

@@ -216,3 +216,35 @@ export async function hydrateSettings(state) {
     return false;
   }
 }
+
+/**
+ * Load persistent document presets from backend config/document_presets.json with local fallback
+ */
+export async function loadDocumentPresets() {
+  try {
+    const res = await fetch('http://localhost:3000/api/load-document-presets');
+    const json = await res.json();
+    if (json && json.success && json.data && json.data.forms) {
+      return json.data;
+    }
+  } catch (e) {
+    console.warn('[StorageService] Failed to load document presets from backend:', e);
+  }
+  return readLocal('documentPresets', { forms: DEFAULT_CHECKLISTS_DATA });
+}
+
+/**
+ * Save document presets persistently to config/document_presets.json via backend API
+ */
+export async function saveDocumentPresets(presets) {
+  saveLocal('documentPresets', presets);
+  try {
+    await fetch('http://localhost:3000/api/save-document-presets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(presets)
+    });
+  } catch (e) {
+    console.warn('[StorageService] Failed to persist document presets to disk:', e);
+  }
+}

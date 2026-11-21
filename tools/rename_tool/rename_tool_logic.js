@@ -720,28 +720,47 @@ export function uniqueDestination(desired, currentName, usedNames, studentName =
 
   const suffix = ext(desired);
   const base = cleanName(desired);
-  let counter = 1;
-  let candidate = '';
-
   const sClean = (studentName || '').trim();
+
   if (sClean && base.toLowerCase().endsWith(sClean.toLowerCase())) {
     let docPart = base.slice(0, -sClean.length).trim();
-    docPart = docPart.replace(/\s+\d+$/, '').trim();
-    candidate = `${docPart} ${counter} ${sClean}${suffix}`;
+    let counter = 1;
+    const match = docPart.match(/^(.*?)\s+(\d+)$/);
+    if (match) {
+      const prefix = match[1].trim();
+      const num = parseInt(match[2], 10);
+      const baseCheck = `${prefix} ${sClean}${suffix}`.toLowerCase();
+      if (usedLower.has(baseCheck)) {
+        docPart = prefix;
+        counter = num + 1;
+      }
+    }
+    let candidate = `${docPart} ${counter} ${sClean}${suffix}`;
     while (usedLower.has(candidate.toLowerCase()) && candidate.toLowerCase() !== (currentName || '').toLowerCase()) {
       counter++;
       candidate = `${docPart} ${counter} ${sClean}${suffix}`;
     }
+    return candidate;
   } else {
-    const docPart = base.replace(/\s+\d+$/, '').trim();
-    candidate = `${docPart} ${counter}${suffix}`;
+    let stem = base;
+    let counter = 1;
+    const match = stem.match(/^(.*?)\s+(\d+)$/);
+    if (match) {
+      const prefix = match[1].trim();
+      const num = parseInt(match[2], 10);
+      const baseCheck = `${prefix}${suffix}`.toLowerCase();
+      if (usedLower.has(baseCheck)) {
+        stem = prefix;
+        counter = num + 1;
+      }
+    }
+    let candidate = `${stem} ${counter}${suffix}`;
     while (usedLower.has(candidate.toLowerCase()) && candidate.toLowerCase() !== (currentName || '').toLowerCase()) {
       counter++;
-      candidate = `${docPart} ${counter}${suffix}`;
+      candidate = `${stem} ${counter}${suffix}`;
     }
+    return candidate;
   }
-
-  return candidate;
 }
 
 /* ==========================================================================
@@ -1089,10 +1108,14 @@ export async function executeRename(dir, plan, onProgress = null) {
       const dirPath = dir ? (dir.nativePath || dir.path || '') : '';
       const oldPath = item.nativePath || (item.file && (item.file.path || item.file.nativePath)) || (dirPath ? `${dirPath}/${item.old}` : null);
       if (oldPath) {
-        const res = await renameNativeFile(oldPath, item.next);
+        const studentName = item.studentName || (item.file && item.file.studentName) || '';
+        const rotation = item.rotation || (item.file && item.file.rotation) || 0;
+        const res = await renameNativeFile(oldPath, item.next, studentName, rotation);
         if (!res.success) {
           throw new Error(res.error || `Failed to rename ${item.old}`);
         }
+        const actualName = res.name || item.next;
+        item.next = actualName;
         if (item.file) {
           const newPath = res.path || res.newPath;
           if (newPath) {
@@ -1100,10 +1123,11 @@ export async function executeRename(dir, plan, onProgress = null) {
             item.file.nativePath = newPath;
             item.file.url = `http://localhost:3000/api/serve-file?path=${encodeURIComponent(newPath)}`;
           }
-          item.file.name = item.next;
-          item.file.targetName = item.next;
+          item.file.name = actualName;
+          item.file.targetName = actualName;
           item.file.isRenamed = true;
           item.file.status = 'renamed';
+          item.file.rotation = 0; // rotation applied to disk
         }
         written.push(item);
         completed++;

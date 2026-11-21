@@ -257,15 +257,23 @@ def list_native_directory(dir_path):
 
 # Dedicated Tool Integrations: Bulk Document Renamer
 try:
-    from tools.rename_tool.rename_tool import safe_rename_file, batch_rename_files, scan_student_folder
+    from tools.rename_tool.rename_tool import (
+        safe_rename_file,
+        batch_rename_files,
+        scan_student_folder,
+        rotate_file_on_disk,
+        import_file_to_folder
+    )
 except ImportError:
     safe_rename_file = None
     batch_rename_files = None
     scan_student_folder = None
+    rotate_file_on_disk = None
+    import_file_to_folder = None
 
-def rename_native_file(old_path, new_name):
+def rename_native_file(old_path, new_name, student_name='', rotation=0):
     if safe_rename_file is not None:
-        return safe_rename_file(old_path, new_name)
+        return safe_rename_file(old_path, new_name, student_name=student_name, rotation=rotation)
     return {'success': False, 'error': 'tools.rename_tool.rename_tool backend module not loaded'}
 
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
@@ -294,7 +302,12 @@ class DocMitraHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 length = int(self.headers.get('Content-Length', 0))
                 body = json.loads(self.rfile.read(length).decode('utf-8'))
-                res = rename_native_file(body.get('oldPath', ''), body.get('newName', ''))
+                res = rename_native_file(
+                    body.get('oldPath', ''),
+                    body.get('newName', ''),
+                    student_name=body.get('studentName', ''),
+                    rotation=int(body.get('rotation', 0))
+                )
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
@@ -336,7 +349,14 @@ class DocMitraHandler(http.server.SimpleHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(json.dumps(res).encode('utf-8'))
                     return
-                results = [rename_native_file(item.get('oldPath', ''), item.get('newName', '')) for item in body.get('renames', [])]
+                results = [
+                    rename_native_file(
+                        item.get('oldPath', ''),
+                        item.get('newName', ''),
+                        student_name=item.get('studentName', ''),
+                        rotation=int(item.get('rotation', 0))
+                    ) for item in body.get('renames', [])
+                ]
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
@@ -349,8 +369,93 @@ class DocMitraHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode('utf-8'))
                 return
 
+        if parsed.path == '/api/native-rotate-file':
+            try:
+                length = int(self.headers.get('Content-Length', 0))
+                body = json.loads(self.rfile.read(length).decode('utf-8'))
+                if rotate_file_on_disk is not None:
+                    res = rotate_file_on_disk(body.get('filePath', ''), int(body.get('angle', 0)))
+                else:
+                    res = {'success': False, 'error': 'Rotation module not available'}
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(res).encode('utf-8'))
+                return
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode('utf-8'))
+                return
+
+        if parsed.path == '/api/native-import-file':
+            try:
+                length = int(self.headers.get('Content-Length', 0))
+                body = json.loads(self.rfile.read(length).decode('utf-8'))
+                if import_file_to_folder is not None:
+                    res = import_file_to_folder(
+                        body.get('sourcePath', ''),
+                        body.get('targetDir', ''),
+                        body.get('targetName', ''),
+                        body.get('studentName', '')
+                    )
+                else:
+                    res = {'success': False, 'error': 'Import module not available'}
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(res).encode('utf-8'))
+                return
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode('utf-8'))
+                return
+
+        if parsed.path == '/api/save-document-presets':
+            try:
+                length = int(self.headers.get('Content-Length', 0))
+                data = json.loads(self.rfile.read(length).decode('utf-8'))
+                presets_dir = os.path.join(DIRECTORY, 'config')
+                os.makedirs(presets_dir, exist_ok=True)
+                presets_path = os.path.join(presets_dir, 'document_presets.json')
+                with open(presets_path, 'w', encoding='utf-8') as f:
+                    json.dump(data, f, indent=2, ensure_ascii=False)
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': True}).encode('utf-8'))
+                return
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode('utf-8'))
+                return
+
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
+        if parsed.path == '/api/load-document-presets':
+            try:
+                presets_path = os.path.join(DIRECTORY, 'config', 'document_presets.json')
+                if os.path.exists(presets_path):
+                    with open(presets_path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                else:
+                    data = {'forms': {}}
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': True, 'data': data}).encode('utf-8'))
+                return
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode('utf-8'))
+                return
         if parsed.path == '/api/license-status':
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')

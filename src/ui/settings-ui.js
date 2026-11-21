@@ -9,7 +9,7 @@
  */
 
 import { toast } from './toast.js';
-import { loadSettings, saveSettings } from '../services/storage-service.js';
+import { loadSettings, saveSettings, loadDocumentPresets, saveDocumentPresets } from '../services/storage-service.js';
 import { exportSettingsToFile, importSettingsFromFile } from '../services/export-import-service.js';
 import { DEFAULT_SHORTCUT_DICTIONARY, exportDictionaryToGroups } from '../libraries/shortcut-keyword-library.js';
 import { CANONICAL_NAMES, DEFAULT_CHECKLISTS_DATA } from '../core/constants.js';
@@ -18,18 +18,26 @@ export class SettingsUIManager {
   constructor() {
     this.state = null;
     this.initialState = null;
-    this.activeChecklist = '11th / 12th (FYJC / SYJC)';
+    this.activeChecklist = 'MAHA DBT FORM';
   }
 
-  init() {
-    this.loadState();
+  async init() {
+    await this.loadState();
     this._bindButtons();
     this.renderAll();
     console.info('[DocMitra Settings] Settings UI manager initialized.');
   }
 
-  loadState() {
+  async loadState() {
     this.state = loadSettings();
+    try {
+      const presets = await loadDocumentPresets();
+      if (presets && presets.forms && Object.keys(presets.forms).length > 0) {
+        this.state.checklists = presets.forms;
+      }
+    } catch (e) {
+      console.warn('[SettingsUI] Could not load presets from server:', e);
+    }
     this.initialState = JSON.parse(JSON.stringify(this.state));
   }
 
@@ -333,39 +341,144 @@ export class SettingsUIManager {
     });
 
     const currentRules = checklists[this.activeChecklist] || [];
+
+    // Header Toolbar with "Add Document" Button
+    const headerRow = document.createElement('div');
+    headerRow.className = 'flex items-center justify-between pb-2 mb-2 border-b border-outline-variant/30';
+    const formTitle = document.createElement('span');
+    formTitle.className = 'font-label-sm font-bold text-secondary uppercase';
+    formTitle.textContent = `${this.activeChecklist} (${currentRules.length} Documents)`;
+    headerRow.appendChild(formTitle);
+
+    const btnAddDoc = document.createElement('button');
+    btnAddDoc.type = 'button';
+    btnAddDoc.className = 'px-2.5 py-1 rounded bg-primary text-on-primary font-label-sm font-bold flex items-center gap-1 shadow-xs cursor-pointer hover:bg-primary/90';
+    const addIcon = document.createElement('span');
+    addIcon.className = 'material-symbols-outlined text-[14px]';
+    addIcon.textContent = 'add';
+    btnAddDoc.appendChild(addIcon);
+    btnAddDoc.appendChild(document.createTextNode('Add Document'));
+    btnAddDoc.onclick = () => {
+      const docName = window.prompt('Enter document name (e.g. INCOME CERTIFICATE):');
+      if (!docName || !docName.trim()) return;
+      const docCode = window.prompt('Enter document shortcode (e.g. INC):') || '';
+      const newRule = {
+        name: docName.trim().toUpperCase(),
+        code: docCode.trim().toUpperCase(),
+        required: true
+      };
+      if (!checklists[this.activeChecklist]) checklists[this.activeChecklist] = [];
+      checklists[this.activeChecklist].push(newRule);
+      this.state.checklists = checklists;
+      this.renderChecklists();
+      toast.show('Document Added', `${newRule.name} added to ${this.activeChecklist}`, 'success');
+    };
+    headerRow.appendChild(btnAddDoc);
+    rulesList.appendChild(headerRow);
+
     currentRules.forEach((rule, idx) => {
       const card = document.createElement('div');
       card.className = 'p-3 rounded-lg bg-surface-container-lowest border border-outline-variant/30 flex items-center justify-between gap-3 shadow-2xs';
 
+      const ruleName = typeof rule === 'string' ? rule : (rule.name || (Array.isArray(rule) ? rule[0] : ''));
+      const ruleCode = rule.code || '';
+      const isRequired = rule.required !== undefined ? !!rule.required : true;
+
       const left = document.createElement('div');
-      left.className = 'flex items-center gap-2.5';
+      left.className = 'flex items-center gap-2.5 min-w-0 flex-1';
 
       const num = document.createElement('span');
-      num.className = 'w-6 h-6 rounded bg-surface-container text-secondary font-mono-code text-[11px] font-bold flex items-center justify-center';
+      num.className = 'w-6 h-6 rounded bg-surface-container text-secondary font-mono-code text-[11px] font-bold flex items-center justify-center shrink-0';
       num.textContent = String(idx + 1);
       left.appendChild(num);
 
+      if (ruleCode) {
+        const codeBadge = document.createElement('span');
+        codeBadge.className = 'px-1.5 py-0.5 rounded bg-surface-container-high text-primary font-mono-code text-[10px] font-bold shrink-0';
+        codeBadge.textContent = ruleCode;
+        left.appendChild(codeBadge);
+      }
+
       const name = document.createElement('span');
-      name.className = 'font-label-md font-bold text-on-surface';
-      name.textContent = rule.name || rule[0];
+      name.className = 'font-label-md font-bold text-on-surface truncate';
+      name.textContent = ruleName;
       left.appendChild(name);
       card.appendChild(left);
 
       const right = document.createElement('div');
-      right.className = 'flex items-center gap-2';
+      right.className = 'flex items-center gap-1.5 shrink-0';
 
-      const badge = document.createElement('span');
-      badge.className = 'px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono-code text-[10px] font-bold';
-      badge.textContent = 'Mandatory';
-      right.appendChild(badge);
+      // Required / Optional toggle button
+      const reqBtn = document.createElement('button');
+      reqBtn.type = 'button';
+      reqBtn.className = isRequired
+        ? 'px-2 py-0.5 rounded bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-mono-code text-[10px] font-bold cursor-pointer transition-colors'
+        : 'px-2 py-0.5 rounded bg-slate-200 hover:bg-slate-300 text-slate-700 font-mono-code text-[10px] font-semibold cursor-pointer transition-colors';
+      reqBtn.textContent = isRequired ? 'Mandatory' : 'Optional';
+      reqBtn.title = 'Click to toggle Mandatory / Optional';
+      reqBtn.onclick = () => {
+        if (typeof rule === 'object' && !Array.isArray(rule)) {
+          rule.required = !isRequired;
+        } else {
+          currentRules[idx] = {
+            name: ruleName,
+            code: ruleCode,
+            required: !isRequired
+          };
+        }
+        this.renderChecklists();
+      };
+      right.appendChild(reqBtn);
+
+      // Edit Button
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.className = 'w-6 h-6 rounded bg-surface-container hover:bg-surface-container-high text-secondary flex items-center justify-center cursor-pointer transition-colors';
+      editBtn.title = 'Edit document rule';
+      const editIcon = document.createElement('span');
+      editIcon.className = 'material-symbols-outlined text-[13px]';
+      editIcon.textContent = 'edit';
+      editBtn.appendChild(editIcon);
+      editBtn.onclick = () => {
+        const newName = window.prompt('Edit document name:', ruleName);
+        if (!newName || !newName.trim()) return;
+        const newCode = window.prompt('Edit document shortcode:', ruleCode) || '';
+        currentRules[idx] = {
+          name: newName.trim().toUpperCase(),
+          code: newCode.trim().toUpperCase(),
+          required: isRequired
+        };
+        this.renderChecklists();
+        toast.show('Document Updated', newName, 'info');
+      };
+      right.appendChild(editBtn);
+
+      // Delete Button
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'w-6 h-6 rounded bg-surface-container hover:bg-error/20 hover:text-error text-secondary flex items-center justify-center cursor-pointer transition-colors';
+      delBtn.title = 'Delete document rule';
+      const delIcon = document.createElement('span');
+      delIcon.className = 'material-symbols-outlined text-[13px]';
+      delIcon.textContent = 'delete';
+      delBtn.appendChild(delIcon);
+      delBtn.onclick = () => {
+        if (window.confirm(`Remove ${ruleName} from ${this.activeChecklist}?`)) {
+          currentRules.splice(idx, 1);
+          this.renderChecklists();
+          toast.show('Document Removed', ruleName, 'info');
+        }
+      };
+      right.appendChild(delBtn);
 
       card.appendChild(right);
       rulesList.appendChild(card);
     });
   }
 
-  handleSave() {
+  async handleSave() {
     saveSettings(this.state);
+    await saveDocumentPresets({ forms: this.state.checklists });
     this.initialState = JSON.parse(JSON.stringify(this.state));
     toast.show('Settings Saved', 'System rules updated and applied to workstation.', 'success');
 

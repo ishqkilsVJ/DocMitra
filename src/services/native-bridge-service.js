@@ -257,7 +257,7 @@ export async function listNativeDirectory(dirPath) {
 /**
  * Atomically renames a file on disk
  */
-export async function renameNativeFile(oldPath, newName) {
+export async function renameNativeFile(oldPath, newName, studentName = '', rotation = 0) {
   const invoke = getTauriInvoke();
   if (invoke) {
     try {
@@ -265,7 +265,10 @@ export async function renameNativeFile(oldPath, newName) {
         oldPath,
         old_path: oldPath,
         newName,
-        new_name: newName
+        new_name: newName,
+        studentName,
+        student_name: studentName,
+        rotation
       });
       if (res) {
         return {
@@ -286,7 +289,7 @@ export async function renameNativeFile(oldPath, newName) {
     const res = await fetch(`${BACKEND_BASE}/api/native-rename`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ oldPath, newName })
+      body: JSON.stringify({ oldPath, newName, studentName, rotation })
     });
     const data = await res.json();
     return {
@@ -308,11 +311,45 @@ export async function renameNativeFile(oldPath, newName) {
 export async function batchRenameNativeFiles(renames) {
   const results = [];
   for (const item of renames) {
-    const r = await renameNativeFile(item.oldPath, item.newName);
+    const r = await renameNativeFile(item.oldPath, item.newName, item.studentName || '', item.rotation || 0);
     results.push(r);
   }
   const allSuccess = results.every(r => r.success);
   return { success: allSuccess, results };
+}
+
+/**
+ * Rotate an image or PDF file on disk by given angle (90, 180, 270)
+ */
+export async function rotateNativeFile(filePath, angle) {
+  try {
+    const res = await fetch(`${BACKEND_BASE}/api/native-rotate-file`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filePath, angle })
+    });
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Safely copy an external file into the active student directory
+ */
+export async function importNativeFile({ sourcePath, targetDir, targetName = '', studentName = '' }) {
+  try {
+    const res = await fetch(`${BACKEND_BASE}/api/native-import-file`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sourcePath, targetDir, targetName, studentName })
+    });
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
 }
 
 /**
