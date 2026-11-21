@@ -266,3 +266,47 @@ def get_sibling_folders(current_folder_path: str) -> List[Dict[str, str]]:
 
     siblings.sort(key=lambda x: x['name'].lower())
     return siblings
+
+
+def ocr_extract_text(file_path: str = '', base64_image: str = '') -> Dict[str, Any]:
+    """
+    Perform local offline OCR on an image file or base64 image data using Tesseract.
+    Returns: {'success': True, 'text': extracted_text} or {'success': False, 'error': ...}
+    """
+    try:
+        import pytesseract
+        from PIL import Image
+        import io
+        import base64
+
+        tess_candidates = [
+            r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+            r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+            r"C:\Users\USER\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"
+        ]
+        for c in tess_candidates:
+            if os.path.exists(c):
+                pytesseract.pytesseract.tesseract_cmd = c
+                break
+
+        img = None
+        if base64_image:
+            if ',' in base64_image:
+                base64_image = base64_image.split(',', 1)[1]
+            img_bytes = base64.b64decode(base64_image)
+            img = Image.open(io.BytesIO(img_bytes))
+        elif file_path and os.path.isfile(file_path):
+            img = Image.open(file_path)
+        else:
+            return {'success': False, 'error': 'No valid image file or data provided'}
+
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+
+        text = pytesseract.image_to_string(img, config='--oem 3 --psm 6')
+        return {
+            'success': True,
+            'text': text.strip()
+        }
+    except Exception as e:
+        return {'success': False, 'error': str(e)}

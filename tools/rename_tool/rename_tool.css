@@ -123,3 +123,48 @@
 .rename-tool-scope #activeFolderPath span {
   text-decoration: none !important;
 }
+
+/* ==========================================================================
+   6. Scoped Smart Auto-Rename & Confidence Badges
+   ========================================================================== */
+
+.rename-tool-scope .confidence-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.rename-tool-scope .confidence-badge-high {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.rename-tool-scope .confidence-badge-med {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.rename-tool-scope .confidence-badge-low {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.rename-tool-scope .smart-scan-pulse {
+  animation: smartScanPulseAnim 1.5s infinite ease-in-out;
+}
+
+@keyframes smartScanPulseAnim {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+

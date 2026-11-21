@@ -1407,9 +1407,367 @@ async function le(e, t, n = null) {
 		i++, n && n(Math.round(i / r.length * 100), `Undo: ${i}/${r.length}`);
 	}
 }
+var ue = [
+	{
+		canonical: "AADHAAR CARD",
+		code: "ADR",
+		patterns: [
+			/\bunique identification authority\b/i,
+			/\buidai\b/i,
+			/\baadhaar\b/i,
+			/\badhar\b/i,
+			/\bmera aadhaar\b/i,
+			/\bidentification authority of india\b/i,
+			/\b\d{4}\s\d{4}\s\d{4}\b/,
+			/\bvid\s*:\s*\d{4}\b/i
+		],
+		primaryKeywords: [
+			"aadhaar",
+			"uidai",
+			"unique identification",
+			"आधार",
+			"enrollment"
+		],
+		secondaryKeywords: [
+			"male",
+			"female",
+			"dob",
+			"year of birth",
+			"father",
+			"address"
+		]
+	},
+	{
+		canonical: "10TH MARKSHEET",
+		code: "10M",
+		patterns: [
+			/\bsecondary school certificate\b/i,
+			/\bs\.s\.c\b/i,
+			/\bssc examination\b/i,
+			/\bboard of secondary\b/i,
+			/\b10th marksheet\b/i,
+			/\bstd\.?\s*10\b/i,
+			/\bstandard x\b/i,
+			/\bmatriculation\b/i
+		],
+		primaryKeywords: [
+			"secondary school",
+			"s.s.c",
+			"ssc",
+			"xth",
+			"10th",
+			"matric"
+		],
+		secondaryKeywords: [
+			"statement of marks",
+			"candidate name",
+			"seat no",
+			"centre no",
+			"pass"
+		]
+	},
+	{
+		canonical: "12TH MARKSHEET",
+		code: "12M",
+		patterns: [
+			/\bhigher secondary certificate\b/i,
+			/\bh\.s\.c\b/i,
+			/\bhsc examination\b/i,
+			/\bboard of higher secondary\b/i,
+			/\b12th marksheet\b/i,
+			/\bstd\.?\s*12\b/i,
+			/\bstandard xii\b/i,
+			/\bintermediate\b/i
+		],
+		primaryKeywords: [
+			"higher secondary",
+			"h.s.c",
+			"hsc",
+			"xiith",
+			"12th",
+			"science",
+			"commerce",
+			"arts"
+		],
+		secondaryKeywords: [
+			"statement of marks",
+			"candidate name",
+			"seat no",
+			"centre no",
+			"stream",
+			"pass"
+		]
+	},
+	{
+		canonical: "12TH LEAVING CERTIFICATE",
+		code: "12LC",
+		patterns: [
+			/\bleaving certificate\b/i,
+			/\btransfer certificate\b/i,
+			/\bcollege leaving\b/i,
+			/\bschool leaving\b/i,
+			/\bconduct\s*:\s*good\b/i,
+			/\bdate of leaving\b/i,
+			/\bdate of birth\b/i
+		],
+		primaryKeywords: [
+			"leaving certificate",
+			"transfer certificate",
+			"tc",
+			"school leaving",
+			"college leaving"
+		],
+		secondaryKeywords: [
+			"date of birth",
+			"conduct",
+			"progress",
+			"religion",
+			"caste",
+			"nationality"
+		]
+	},
+	{
+		canonical: "CASTE CERTIFICATE",
+		code: "CST",
+		patterns: [
+			/\bcaste certificate\b/i,
+			/\bform of caste\b/i,
+			/\bbelong to\s+\w+\s+caste\b/i,
+			/\bbackward class\b/i,
+			/\bscheduled caste\b/i,
+			/\bscheduled tribe\b/i,
+			/\bother backward class\b/i,
+			/\bobc\b/i,
+			/\bvjnt\b/i,
+			/\bnt-[a-d]\b/i,
+			/\bsebc\b/i,
+			/\bजात प्रमाणपत्र\b/i
+		],
+		primaryKeywords: [
+			"caste certificate",
+			"backward class",
+			"sub divisional officer",
+			"competent authority",
+			"caste"
+		],
+		secondaryKeywords: [
+			"ordinance",
+			"constitution",
+			"tahasildar",
+			"deputy collector"
+		]
+	},
+	{
+		canonical: "CASTE VALIDITY CERTIFICATE",
+		code: "VLD",
+		patterns: [
+			/\bcaste validity\b/i,
+			/\bvalidity certificate\b/i,
+			/\bscrutiny committee\b/i,
+			/\bverification of caste\b/i,
+			/\bvalidity of caste\b/i,
+			/\bजात वैधता प्रमाणपत्र\b/i
+		],
+		primaryKeywords: [
+			"caste validity",
+			"validity certificate",
+			"scrutiny committee",
+			"caste certificate scrutiny"
+		],
+		secondaryKeywords: [
+			"district caste",
+			"certificate of validity",
+			"verified"
+		]
+	},
+	{
+		canonical: "INCOME CERTIFICATE",
+		code: "INC",
+		patterns: [
+			/\bincome certificate\b/i,
+			/\bannual family income\b/i,
+			/\bannual income\b/i,
+			/\bउत्पन्नाचा दाखला\b/i,
+			/\bउत्पन्न प्रमाणपत्र\b/i,
+			/\bfinancial year\b/i
+		],
+		primaryKeywords: [
+			"income certificate",
+			"annual income",
+			"tahsildar",
+			"taluka executive magistrate"
+		],
+		secondaryKeywords: [
+			"rupees",
+			"lakhs",
+			"financial year",
+			"head of family"
+		]
+	},
+	{
+		canonical: "DOMICILE CERTIFICATE",
+		code: "DOM",
+		patterns: [
+			/\bdomicile certificate\b/i,
+			/\bage,?\s*nationality\s*(and|&)\s*domicile\b/i,
+			/\bage and domicile\b/i,
+			/\bresident of\s+state of maharashtra\b/i,
+			/\bstate of maharashtra\b/i,
+			/\bअधिवास प्रमाणपत्र\b/i
+		],
+		primaryKeywords: [
+			"domicile",
+			"age and nationality",
+			"state of maharashtra",
+			"ordinary resident"
+		],
+		secondaryKeywords: [
+			"executive magistrate",
+			"tahsildar",
+			"mumbai",
+			"pune",
+			"nagpur",
+			"district"
+		]
+	},
+	{
+		canonical: "NON CREAMY LAYER CERTIFICATE",
+		code: "NCL",
+		patterns: [
+			/\bnon[-\s]creamy layer\b/i,
+			/\bdoes not belong to the persons\/sections \(creamy layer\)\b/i,
+			/\bcreamy layer\b/i
+		],
+		primaryKeywords: [
+			"non creamy layer",
+			"creamy layer",
+			"other backward classes"
+		],
+		secondaryKeywords: [
+			"annual income",
+			"sub divisional officer",
+			"valid upto"
+		]
+	},
+	{
+		canonical: "RATION CARD",
+		code: "RAT",
+		patterns: [
+			/\bration card\b/i,
+			/\bfood (and|&) civil supplies\b/i,
+			/\bconsumer affairs\b/i,
+			/\bcard no\b/i
+		],
+		primaryKeywords: [
+			"ration card",
+			"food civil supplies",
+			"fair price"
+		],
+		secondaryKeywords: [
+			"head of family",
+			"gas connection",
+			"bpl",
+			"apl"
+		]
+	},
+	{
+		canonical: "BANK PASSBOOK",
+		code: "BNK",
+		patterns: [
+			/\bpassbook\b/i,
+			/\baccount (number|no)\b/i,
+			/\bifsc\s*code\b/i,
+			/\bbranch\b/i,
+			/\bstate bank of india\b/i,
+			/\bbank of maharashtra\b/i,
+			/\bbank of baroda\b/i
+		],
+		primaryKeywords: [
+			"passbook",
+			"ifsc",
+			"account number",
+			"bank"
+		],
+		secondaryKeywords: [
+			"savings",
+			"branch",
+			"micr",
+			"cif"
+		]
+	},
+	{
+		canonical: "GAP CERTIFICATE",
+		code: "GAP",
+		patterns: [
+			/\bgap certificate\b/i,
+			/\baffidavit for gap\b/i,
+			/\bgap in education\b/i,
+			/\beducational gap\b/i
+		],
+		primaryKeywords: [
+			"gap certificate",
+			"affidavit",
+			"educational gap"
+		],
+		secondaryKeywords: [
+			"notary",
+			"stamp paper",
+			"solemnly affirm"
+		]
+	}
+];
+function de(e, t = "") {
+	if (!e || typeof e != "string") return {
+		docType: null,
+		canonical: null,
+		code: null,
+		confidence: 0,
+		studentNameMatchRatio: 0,
+		isConfident: !1,
+		reason: "No text extracted"
+	};
+	let n = e.replace(/\s+/g, " "), r = null, i = 0;
+	for (let e of ue) {
+		let t = 0, a = [];
+		for (let r of e.patterns) if (r.test(n)) {
+			t += 35;
+			break;
+		}
+		let o = 0;
+		for (let t of e.primaryKeywords) n.toLowerCase().includes(t.toLowerCase()) && (o++, a.push(t));
+		t += Math.min(25, o * 15);
+		let s = 0;
+		for (let t of e.secondaryKeywords) n.toLowerCase().includes(t.toLowerCase()) && s++;
+		t += Math.min(10, s * 5), t > i && (i = t, r = {
+			sig: e,
+			score: t,
+			matchedKeywords: a
+		});
+	}
+	let a = 0;
+	if (t && t.trim()) {
+		let e = t.trim().toUpperCase().split(/\s+/).filter((e) => e.length > 2);
+		if (e.length > 0) {
+			let t = 0, r = n.toUpperCase();
+			for (let n of e) r.includes(n) && t++;
+			a = Math.round(t / e.length * 100);
+		}
+	}
+	let o = r ? Math.min(70, r.score) : 0, s = Math.round(a / 100 * 30), c = Math.min(100, o + s);
+	return {
+		docType: r && o >= 35 ? r.sig.canonical : null,
+		canonical: r && o >= 35 ? r.sig.canonical : null,
+		code: r && o >= 35 ? r.sig.code : null,
+		confidence: r && o >= 35 ? c : Math.min(45, c),
+		docScore: o,
+		nameMatchRatio: a,
+		isConfident: c >= 80 && o >= 50,
+		matchedKeywords: r ? r.matchedKeywords : []
+	};
+}
 // src/services/analytics-service.js
-var ue = "cm_user_productivity_stats_v1", de = 60, fe = 240, pe = 120;
-function me() {
+var fe = "cm_user_productivity_stats_v1", pe = 60, me = 240, he = 120;
+function ge() {
 	return {
 		renamedCount: 52,
 		pdfProcessedCount: 24,
@@ -1428,40 +1786,40 @@ function me() {
 }
 function A() {
 	try {
-		let e = localStorage.getItem(ue);
+		let e = localStorage.getItem(fe);
 		if (!e) {
-			let e = me();
-			return he(e), e;
+			let e = ge();
+			return _e(e), e;
 		}
 		return JSON.parse(e);
 	} catch {
-		return me();
+		return ge();
 	}
 }
-function he(e) {
+function _e(e) {
 	try {
-		localStorage.setItem(ue, JSON.stringify(e));
+		localStorage.setItem(fe, JSON.stringify(e));
 	} catch (e) {
 		console.warn("Could not save stats to localStorage", e);
 	}
 }
-function ge(e = 1) {
+function ve(e = 1) {
 	let t = A();
 	t.renamedCount = (t.renamedCount || 0) + e, t.lastActiveDate = (/* @__PURE__ */ new Date()).toLocaleDateString("en-IN", {
 		day: "2-digit",
 		month: "short",
 		year: "numeric"
-	}), he(t), ye();
+	}), _e(t), xe();
 }
 function j(e) {
 	let t = Math.floor(e / 3600), n = Math.floor(e % 3600 / 60);
 	return t === 0 ? `${n}m` : `${t}h ${n}m`;
 }
-function _e(e) {
-	let t = e || A(), n = (t.renamedCount || 0) * de + (t.pdfProcessedCount || 0) * fe + (t.imagesProcessedCount || 0) * pe, r = Math.floor(n / 3600), i = Math.floor(n % 3600 / 60);
+function ye(e) {
+	let t = e || A(), n = (t.renamedCount || 0) * pe + (t.pdfProcessedCount || 0) * me + (t.imagesProcessedCount || 0) * he, r = Math.floor(n / 3600), i = Math.floor(n % 3600 / 60);
 	return r === 0 ? `${i} Mins` : `${r}h ${i}m`;
 }
-async function ve() {
+async function be() {
 	try {
 		return await (await fetch("http://localhost:3000/api/license-status")).json();
 	} catch {
@@ -1473,12 +1831,12 @@ async function ve() {
 		};
 	}
 }
-async function ye() {
+async function xe() {
 	if (typeof document > "u") return;
 	let e = A(), t = document.getElementById("dashTimeSaved"), n = document.getElementById("dashRenamingTimeSaved"), r = document.getElementById("dashPdfTimeSaved"), i = document.getElementById("dashImageTimeSaved"), a = document.getElementById("dashRenamedCount"), o = document.getElementById("dashPdfCount"), s = document.getElementById("dashImageCount"), c = document.getElementById("dashInstallDate");
-	t && (t.textContent = _e(e)), n && (n.textContent = j((e.renamedCount || 0) * de)), r && (r.textContent = j((e.pdfProcessedCount || 0) * fe)), i && (i.textContent = j((e.imagesProcessedCount || 0) * pe)), a && (a.textContent = `${e.renamedCount || 0} Files`), o && (o.textContent = `${e.pdfProcessedCount || 0} Docs`), s && (s.textContent = `${e.imagesProcessedCount || 0} Images`), c && (c.textContent = e.firstInstalledDate || "Today");
+	t && (t.textContent = ye(e)), n && (n.textContent = j((e.renamedCount || 0) * pe)), r && (r.textContent = j((e.pdfProcessedCount || 0) * me)), i && (i.textContent = j((e.imagesProcessedCount || 0) * he)), a && (a.textContent = `${e.renamedCount || 0} Files`), o && (o.textContent = `${e.pdfProcessedCount || 0} Docs`), s && (s.textContent = `${e.imagesProcessedCount || 0} Images`), c && (c.textContent = e.firstInstalledDate || "Today");
 	try {
-		let e = await ve(), t = document.getElementById("dashGreetingName"), n = document.getElementById("topbarUserName"), r = document.getElementById("dashLicBadge"), i = document.getElementById("dashSystemKey"), a = document.getElementById("dashDaysLeft"), o = e.customer || localStorage.getItem("cm_user_display_name") || "Vijay";
+		let e = await be(), t = document.getElementById("dashGreetingName"), n = document.getElementById("topbarUserName"), r = document.getElementById("dashLicBadge"), i = document.getElementById("dashSystemKey"), a = document.getElementById("dashDaysLeft"), o = e.customer || localStorage.getItem("cm_user_display_name") || "Vijay";
 		t && (t.textContent = o), n && (n.textContent = o), i && (i.textContent = e.systemKey || "CM-SYS-D83E-714F-3E56-D773"), r && (e.validity === "LIFETIME" ? (r.textContent = "🌟 Lifetime License", r.style.background = "#065f46", r.style.color = "#34d399") : r.textContent = `📅 ${e.validity || "Active"} Subscription`), a && (e.validity === "LIFETIME" ? (a.textContent = "Unlimited (Never Expires)", a.style.color = "#10b981") : (a.textContent = "342 Days Remaining", a.style.color = "#38bdf8"));
 	} catch {
 		let e = document.getElementById("dashGreetingName"), t = document.getElementById("topbarUserName");
@@ -1486,7 +1844,7 @@ async function ye() {
 	}
 }
 // src/core/constants.js
-var be = {
+var Se = {
 	marskheet: "marksheet",
 	markshet: "marksheet",
 	markshit: "marksheet",
@@ -1510,7 +1868,7 @@ var be = {
 	atempt: "attempt",
 	attmpt: "attempt",
 	phot: "photo"
-}, xe = [
+}, Ce = [
 	{
 		id: "12th-marksheet-passing-link",
 		part1: "12TH MARKSHEET",
@@ -1539,7 +1897,7 @@ var be = {
 		combined: "12TH LC",
 		type: "alias"
 	}
-], Se = "2026.11.passing_canonical_v2", M = {
+], we = "2026.11.passing_canonical_v2", M = {
 	"MAHA DBT FORM": [
 		["AADHAAR CARD", ["aadhaar card"]],
 		["PHOTO", ["photo"]],
@@ -1583,7 +1941,7 @@ var be = {
 		["PASSBOOK BANK", ["passbook bank", "bank passbook"]],
 		["BONAFIDE CERTIFICATE", ["bonafide certificate"]]
 	]
-}, Ce = {
+}, Te = {
 	"MAHA DBT FORM": [
 		"AADHAAR CARD",
 		"PHOTO",
@@ -1634,7 +1992,7 @@ var be = {
 	version: 1,
 	store: "settings",
 	key: "current"
-}, we = [
+}, Ee = [
 	{
 		id: "aadhaar-card",
 		displayName: "Aadhaar Card",
@@ -1846,13 +2204,13 @@ var be = {
 		outputName: "CAP ALLOTMENT LETTER"
 	}
 ];
-function Te(e = we) {
+function De(e = Ee) {
 	let t = {};
 	for (let n of e) t[n.outputName] = [n.primaryShortcut.toLowerCase(), ...(n.alternateKeywords || []).map((e) => e.toLowerCase())];
 	return t;
 }
 // src/libraries/checklist-library.js
-function Ee(e) {
+function Oe(e) {
 	return Object.fromEntries(Object.entries(e).map(([e, t]) => [e, t.map((e) => Array.isArray(e) ? {
 		name: e[0],
 		keywords: e[1],
@@ -1860,7 +2218,7 @@ function Ee(e) {
 	} : e)]));
 }
 // src/services/storage-service.js
-var De = "v3_exact_single", P = Te(), F = (e, t) => {
+var ke = "v3_exact_single", P = De(), F = (e, t) => {
 	try {
 		let n = localStorage.getItem(e);
 		return n ? JSON.parse(n) : t;
@@ -1871,7 +2229,7 @@ var De = "v3_exact_single", P = Te(), F = (e, t) => {
 	try {
 		localStorage.setItem(e, JSON.stringify(t));
 	} catch {}
-}, Oe = (e) => {
+}, Ae = (e) => {
 	let t = {};
 	Object.entries(e || {}).forEach(([e, n]) => {
 		let r = /^12\s*LC$/i.test(e) || e === "12TH LEAVING CERTIFICATE" ? "12TH LC" : e;
@@ -1889,32 +2247,32 @@ var De = "v3_exact_single", P = Te(), F = (e, t) => {
 		keywords: [...new Set(e.keywords || [])],
 		short: e.short || t.slice(0, 18)
 	};
-}, ke = (e) => {
+}, je = (e) => {
 	let t = e.filter((e) => e.name === "12TH MARKSHEET AND PASSING");
 	if (!t.length) return e;
 	let n = e.filter((e) => e.name !== "12TH MARKSHEET AND PASSING"), r = n.findIndex((e) => e.name === "12TH PASSING CERTIFICATE");
 	return n.splice(r < 0 ? n.length : r + 1, 0, ...t), n;
-}, Ae = (e) => {
-	let t = Ee(M), n = e || {}, r = {};
+}, Me = (e) => {
+	let t = Oe(M), n = e || {}, r = {};
 	return Object.keys(t).forEach((e) => {
 		let i = Array.isArray(n[e]) ? n[e].map(L) : [], a = new Map(i.map((e) => [e.name.toUpperCase(), e]));
 		t[e].forEach((e) => {
 			let t = L(e);
 			a.has(t.name.toUpperCase()) || i.push(t);
-		}), r[e] = ke(i);
+		}), r[e] = je(i);
 	}), Object.entries(n).forEach(([e, t]) => {
-		r[e] || (r[e] = ke(t.map(L)));
+		r[e] || (r[e] = je(t.map(L)));
 	}), r;
 };
 function R() {
 	let e = localStorage.getItem("dictVersion"), t, n;
-	e === De ? (t = Oe(F("renameSettings", P)), n = F("renameProfiles", { Default: P })) : (t = P, n = { Default: P }, I("renameSettings", t), I("renameProfiles", n), localStorage.setItem("dictVersion", De));
+	e === ke ? (t = Ae(F("renameSettings", P)), n = F("renameProfiles", { Default: P })) : (t = P, n = { Default: P }, I("renameSettings", t), I("renameProfiles", n), localStorage.setItem("dictVersion", ke));
 	let r = localStorage.getItem("checklistVersion"), i;
-	r === "2026.11.passing_canonical_v2" ? i = Ae(F("checklists", null)) : (i = Ee(M), I("checklists", i), localStorage.setItem("checklistVersion", Se));
+	r === "2026.11.passing_canonical_v2" ? i = Me(F("checklists", null)) : (i = Oe(M), I("checklists", i), localStorage.setItem("checklistVersion", we));
 	let a = {
-		...be,
+		...Se,
 		...F("spellingCorrections", {}) || {}
-	}, o = F("linkedRules", xe);
+	}, o = F("linkedRules", Ce);
 	return {
 		groups: t,
 		checklists: i,
@@ -1925,7 +2283,7 @@ function R() {
 		active: Object.keys(n)[0] || "Default"
 	};
 }
-function je() {
+function Ne() {
 	return new Promise((e, t) => {
 		if (!("indexedDB" in window)) return t(/* @__PURE__ */ Error("IndexedDB unavailable"));
 		let n = indexedDB.open(N.name, N.version);
@@ -1934,8 +2292,8 @@ function je() {
 		}, n.onsuccess = () => e(n.result), n.onerror = () => t(n.error || /* @__PURE__ */ Error("IndexedDB open failed"));
 	});
 }
-function Me(e) {
-	return je().then((t) => new Promise((n, r) => {
+function Pe(e) {
+	return Ne().then((t) => new Promise((n, r) => {
 		let i = t.transaction(N.store, "readwrite");
 		i.objectStore(N.store).put(e, N.key), i.oncomplete = () => n(!0), i.onerror = () => r(i.error);
 	}));
@@ -1950,14 +2308,14 @@ function z(e) {
 		style: e.style,
 		savedAt: (/* @__PURE__ */ new Date()).toISOString()
 	};
-	I("renameSettings", t.groups), I("checklists", t.checklists), I("spellingCorrections", t.spelling), I("renameProfiles", t.profiles), I("linkedRules", t.linkedRules), localStorage.setItem("nameStyle", t.style), Me(t).catch(() => {});
+	I("renameSettings", t.groups), I("checklists", t.checklists), I("spellingCorrections", t.spelling), I("renameProfiles", t.profiles), I("linkedRules", t.linkedRules), localStorage.setItem("nameStyle", t.style), Pe(t).catch(() => {});
 }
 // src/services/followup-service.js
-var Ne = "studentDocumentFollowUps", B = [];
+var Fe = "studentDocumentFollowUps", B = [];
 function V() {
 	try {
 		if (typeof localStorage < "u") {
-			let e = localStorage.getItem(Ne);
+			let e = localStorage.getItem(Fe);
 			return e ? JSON.parse(e) : [];
 		}
 		return B;
@@ -1967,7 +2325,7 @@ function V() {
 }
 function H(e) {
 	try {
-		B = e, typeof localStorage < "u" && localStorage.setItem(Ne, JSON.stringify(e));
+		B = e, typeof localStorage < "u" && localStorage.setItem(Fe, JSON.stringify(e));
 	} catch (e) {
 		console.error("Failed to save follow-ups:", e);
 	}
@@ -1988,18 +2346,18 @@ function U({ folderName: e, studentName: t, documentName: n, promisedDate: r, no
 	};
 	return a.push(d), H(a), d;
 }
-function Pe(e, t) {
+function Ie(e, t) {
 	let n = V(), r = (e || "").trim().toLowerCase(), i = (t || "").trim().toUpperCase(), a = !1;
 	return n.forEach((e) => {
 		e.folderName.trim().toLowerCase() === r && e.documentName.trim().toUpperCase() === i && e.status === "pending" && (e.status = "resolved", e.resolvedAt = Date.now(), a = !0);
 	}), a && H(n), a;
 }
-function Fe(e, t) {
+function Le(e, t) {
 	let n = V(), r = (e || "").trim().toLowerCase(), i = (t || "").trim().toUpperCase();
 	return n.find((e) => e.folderName.trim().toLowerCase() === r && e.documentName.trim().toUpperCase() === i && e.status === "pending") || null;
 }
-function Ie(e, t = G()) {
-	let n = Re(e, t);
+function Re(e, t = G()) {
+	let n = Be(e, t);
 	return n < 0 ? "overdue" : n === 0 ? "today" : "upcoming";
 }
 function W(e) {
@@ -2019,14 +2377,14 @@ function K(e = 1) {
 	let t = /* @__PURE__ */ new Date();
 	return t.setDate(t.getDate() + e), `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
 }
-function Le() {
+function ze() {
 	let e = /* @__PURE__ */ new Date(), t = (1 - e.getDay() + 7) % 7 || 7;
 	return e.setDate(e.getDate() + t), `${e.getFullYear()}-${String(e.getMonth() + 1).padStart(2, "0")}-${String(e.getDate()).padStart(2, "0")}`;
 }
-function Re(e, t) {
+function Be(e, t) {
 	return e === t ? 0 : e < t ? -1 : 1;
 }
-function ze(e, t, n) {
+function Ve(e, t, n) {
 	return `${(e || "").trim().toUpperCase()} ${(t || "").trim()}${(n || ".pdf").toLowerCase().startsWith(".") ? n.toLowerCase() : `.${n.toLowerCase()}`}`;
 }
 // tools/rename_tool/rename_tool_ui.js
@@ -2035,7 +2393,7 @@ function q(e) {
 	let t = e.toLowerCase().trim();
 	return !!(t === "thumbs.db" || t === "ehthumbs.db" || t === "desktop.ini" || t === ".ds_store" || t.startsWith(".") || t.startsWith("~$") || t.endsWith(".tmp"));
 }
-function Be(e) {
+function He(e) {
 	let t = (e || "").toUpperCase().trim();
 	return [
 		"ADR",
@@ -2063,7 +2421,7 @@ function Be(e) {
 		"GAP"
 	].includes(t) ? "bg-slate-700 text-white font-extrabold" : "bg-primary text-on-primary font-extrabold";
 }
-var Ve = class {
+var Ue = class {
 	constructor() {
 		this.state = {
 			folder: null,
@@ -2084,7 +2442,8 @@ var Ve = class {
 			currentPdfPage: 1,
 			totalPdfPages: 1,
 			activePdfDoc: null,
-			activePdfUrl: null
+			activePdfUrl: null,
+			isSmartScanning: !1
 		}, this.shortcuts21 = [
 			{
 				code: "ADR",
@@ -2235,7 +2594,13 @@ var Ve = class {
 		u && u.addEventListener("click", () => this.handleSaveBatch());
 		let d = document.getElementById("btnExportAudit");
 		d && d.addEventListener("click", () => this.handleExportAudit());
-		let f = () => {
+		let f = document.getElementById("btnSmartScanBatch");
+		f && f.addEventListener("click", () => this.handleSmartScanBatch());
+		let p = document.getElementById("btnRenameMatched");
+		p && p.addEventListener("click", () => this.handleRenameAllMatched());
+		let m = document.getElementById("btnReviewUnmatched");
+		m && m.addEventListener("click", () => this.handleReviewUnmatched());
+		let h = () => {
 			document.querySelectorAll("#casingRadiosGroup label").forEach((e) => {
 				let t = e.querySelector("input");
 				e.className = t && t.checked ? "flex items-center cursor-pointer text-white bg-primary font-mono-code text-[11px] px-2 py-0.5 rounded shadow-xs select-none font-bold transition-all casing-pill-active" : "flex items-center cursor-pointer text-secondary hover:text-on-surface font-mono-code text-[11px] px-2 py-0.5 rounded transition-all select-none";
@@ -2243,21 +2608,21 @@ var Ve = class {
 		};
 		document.querySelectorAll("input[name=\"casingStyleRadio\"]").forEach((e) => {
 			e.value === (this.state.style || "upper") && (e.checked = !0), e.addEventListener("change", (e) => {
-				e.target.checked && (this.state.style = e.target.value, localStorage.setItem("docmitra_casing_style", e.target.value), f(), this._recalculateTargetNames(), this.renderQueue(), this.renderCurrentPreview(), r.show("Case Style Changed", `Applied ${e.target.value.toUpperCase()} casing to pending files`, "info"));
+				e.target.checked && (this.state.style = e.target.value, localStorage.setItem("docmitra_casing_style", e.target.value), h(), this._recalculateTargetNames(), this.renderQueue(), this.renderCurrentPreview(), r.show("Case Style Changed", `Applied ${e.target.value.toUpperCase()} casing to pending files`, "info"));
 			});
-		}), f();
-		let p = document.getElementById("btnClearWorkspace");
-		p && p.addEventListener("click", () => this.handleClearQueue());
-		let m = document.getElementById("btnClearQueue");
-		m && m.addEventListener("click", () => this.handleClearQueue());
-		let h = document.getElementById("btnEmptySelectFolder");
-		h && h.addEventListener("click", () => this.handleSelectFolder());
-		let g = document.getElementById("btnEmptyAddFiles");
-		g && g.addEventListener("click", () => this.handleAddFiles());
-		let _ = document.querySelector("#col-queue input");
-		_ && (_.addEventListener("keydown", (e) => {
+		}), h();
+		let g = document.getElementById("btnClearWorkspace");
+		g && g.addEventListener("click", () => this.handleClearQueue());
+		let _ = document.getElementById("btnClearQueue");
+		_ && _.addEventListener("click", () => this.handleClearQueue());
+		let v = document.getElementById("btnEmptySelectFolder");
+		v && v.addEventListener("click", () => this.handleSelectFolder());
+		let y = document.getElementById("btnEmptyAddFiles");
+		y && y.addEventListener("click", () => this.handleAddFiles());
+		let b = document.querySelector("#col-queue input");
+		b && (b.addEventListener("keydown", (e) => {
 			(e.key === "Tab" || e.key === "Enter") && (e.preventDefault(), r.show("Intake Folder Needed", "Press \"Select Folder\" (F2) to choose admission documents.", "info")), /[\\/:*?"<>|]/.test(e.key) && (e.preventDefault(), r.show("Character Not Allowed", `Windows filenames cannot contain ${e.key}`, "warning"));
-		}), _.addEventListener("input", (e) => {
+		}), b.addEventListener("input", (e) => {
 			/[\\/:*?"<>|]/.test(e.target.value) && (e.target.value = e.target.value.replace(/[\\/:*?"<>|]/g, ""), r.show("Character Not Allowed", "Illegal characters removed", "warning"));
 		})), document.querySelectorAll("#col-queue .grid-cols-3 button").forEach((e) => {
 			e.addEventListener("click", () => {
@@ -2271,7 +2636,7 @@ var Ve = class {
 			let t = document.getElementById("view-bulk-renamer");
 			if (!t || t.classList.contains("hidden")) return;
 			let n = document.getElementById("settings-modal-overlay");
-			(!n || n.classList.contains("hidden")) && (e.key === "F2" ? (e.preventDefault(), this.handleSelectFolder()) : e.key === "F8" ? (e.preventDefault(), this.handleRenameAll()) : e.key === "F9" ? (e.preventDefault(), this.handleExportAudit()) : (e.ctrlKey || e.metaKey) && e.key === "ArrowLeft" ? (e.preventDefault(), this.handlePrevFolder()) : (e.ctrlKey || e.metaKey) && e.key === "ArrowRight" ? (e.preventDefault(), this.handleNextFolder()) : (e.ctrlKey || e.metaKey) && (e.key === "z" || e.key === "Z") && !e.shiftKey && e.target.tagName !== "INPUT" ? (e.preventDefault(), this.handleUndo()) : (e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S") && (e.preventDefault(), this.handleSaveBatch()));
+			(!n || n.classList.contains("hidden")) && (e.key === "F2" ? (e.preventDefault(), this.handleSelectFolder()) : e.key === "F4" ? (e.preventDefault(), this.handleSmartScanBatch()) : e.key === "F8" ? (e.preventDefault(), this.handleRenameAll()) : e.key === "F9" ? (e.preventDefault(), this.handleExportAudit()) : (e.ctrlKey || e.metaKey) && e.key === "ArrowLeft" ? (e.preventDefault(), this.handlePrevFolder()) : (e.ctrlKey || e.metaKey) && e.key === "ArrowRight" ? (e.preventDefault(), this.handleNextFolder()) : (e.ctrlKey || e.metaKey) && (e.key === "z" || e.key === "Z") && !e.shiftKey && e.target.tagName !== "INPUT" ? (e.preventDefault(), this.handleUndo()) : (e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S") && (e.preventDefault(), this.handleSaveBatch()));
 		});
 	}
 	_bindPreviewControls() {
@@ -2581,6 +2946,16 @@ var Ve = class {
 			let e = this.state.files.filter((e) => !e.isRenamed && !e.isKept && e.targetName !== e.name), t = d.querySelector(".font-bold");
 			t && (t.textContent = `Rename All (${e.length} Files)`);
 		}
+		let f = document.getElementById("btnRenameMatched");
+		if (f) {
+			let e = this.state.files.filter((e) => !e.isRenamed && !e.isKept && (e.smartConfidence >= 80 || e.smartConfidence === void 0 && e.isMatched)).length, t = f.querySelector("span:not(.material-symbols-outlined)");
+			t && (t.textContent = `Rename Matched (${e})`), f.disabled = e === 0;
+		}
+		let p = document.getElementById("btnReviewUnmatched");
+		if (p) {
+			let e = this.state.files.filter((e) => !e.isRenamed && !e.isKept && (e.smartConfidence === void 0 ? !e.isMatched : e.smartConfidence < 80)).length, t = p.querySelector("span:not(.material-symbols-outlined)");
+			t && (t.textContent = `Review Unmatched (${e})`), p.disabled = e === 0;
+		}
 	}
 	renderQueue() {
 		let e = document.getElementById("col-queue");
@@ -2647,63 +3022,68 @@ var Ve = class {
 			s.className = "material-symbols-outlined text-[14px]", s.textContent = "edit_document", o.appendChild(s);
 			let c = document.createTextNode(`Editing ${this.state.currentIndex + 1} of ${this.state.files.length}`);
 			o.appendChild(c), a.appendChild(o), i.appendChild(a);
-			let l = n.isMatched || n.isRenamed || n.isKept, u = document.createElement("span");
-			u.className = l ? "px-2 py-0.5 rounded font-mono-code text-[10px] bg-tertiary-fixed text-on-tertiary-fixed font-bold" : "px-2 py-0.5 rounded font-mono-code text-[10px] bg-error-container text-on-error-container font-bold", u.textContent = l ? "Matched" : "Unmatched", i.appendChild(u), e.appendChild(i);
-			let d = document.createElement("article");
-			d.className = "bg-surface-container-lowest rounded-xl shadow-sm p-3 flex flex-col gap-2.5 border border-outline-variant/30 border-l-4 border-l-primary relative";
-			let f = document.createElement("div");
-			f.className = "flex items-center gap-1.5 text-[11px] font-mono-code text-secondary w-full min-w-0 overflow-hidden";
-			let p = document.createElement("span");
-			p.className = "shrink-0 select-none text-secondary", p.textContent = "Original:", f.appendChild(p);
-			let m = document.createElement("strong");
-			m.className = "text-on-surface truncate min-w-0 flex-1 cursor-pointer hover:underline hover:text-primary transition-colors font-medium", m.title = "Click to reset input to original name", m.textContent = n.name, m.addEventListener("click", () => {
+			let l = document.createElement("div");
+			if (l.className = "flex items-center gap-1.5", n.smartConfidence !== void 0) {
+				let e = document.createElement("span");
+				n.smartConfidence >= 80 ? (e.className = "confidence-badge confidence-badge-high", e.textContent = `🟢 ${n.smartConfidence}% ${n.smartDocType || "MATCH"}`) : n.smartConfidence >= 60 ? (e.className = "confidence-badge confidence-badge-med", e.textContent = `🟡 ${n.smartConfidence}% ${n.smartDocType || "REVIEW"}`) : (e.className = "confidence-badge confidence-badge-low", e.textContent = `🔴 ${n.smartConfidence}% UNMATCHED`), l.appendChild(e);
+			}
+			let u = n.isMatched || n.isRenamed || n.isKept, d = document.createElement("span");
+			d.className = u ? "px-2 py-0.5 rounded font-mono-code text-[10px] bg-tertiary-fixed text-on-tertiary-fixed font-bold" : "px-2 py-0.5 rounded font-mono-code text-[10px] bg-error-container text-on-error-container font-bold", d.textContent = u ? "Matched" : "Unmatched", l.appendChild(d), i.appendChild(l), e.appendChild(i);
+			let f = document.createElement("article");
+			f.className = "bg-surface-container-lowest rounded-xl shadow-sm p-3 flex flex-col gap-2.5 border border-outline-variant/30 border-l-4 border-l-primary relative";
+			let p = document.createElement("div");
+			p.className = "flex items-center gap-1.5 text-[11px] font-mono-code text-secondary w-full min-w-0 overflow-hidden";
+			let m = document.createElement("span");
+			m.className = "shrink-0 select-none text-secondary", m.textContent = "Original:", p.appendChild(m);
+			let h = document.createElement("strong");
+			h.className = "text-on-surface truncate min-w-0 flex-1 cursor-pointer hover:underline hover:text-primary transition-colors font-medium", h.title = "Click to reset input to original name", h.textContent = n.name, h.addEventListener("click", () => {
 				let e = C(n.name);
 				n.targetName = n.name, this.updateTelemetry(), this.renderQueue(), r.show("Input Reset", e, "info");
-			}), f.appendChild(m), d.appendChild(f);
-			let h = document.createElement("div");
-			h.className = "flex flex-col gap-1.5";
+			}), p.appendChild(h), f.appendChild(p);
 			let g = document.createElement("div");
-			g.className = "flex items-center justify-between font-label-sm font-semibold";
-			let _ = document.createElement("label");
-			_.className = "text-on-surface font-bold text-[13px]", _.textContent = "Rename To:", g.appendChild(_);
-			let v = document.createElement("span");
-			v.className = "text-secondary text-[11px] flex items-center gap-1", v.appendChild(document.createTextNode("Press "));
-			let y = document.createElement("kbd");
-			y.className = "px-1.5 py-0.5 rounded bg-surface-container font-mono-code text-[10px] text-on-surface font-bold border border-outline-variant/40", y.textContent = "Tab", v.appendChild(y), v.appendChild(document.createTextNode(" or "));
+			g.className = "flex flex-col gap-1.5";
+			let _ = document.createElement("div");
+			_.className = "flex items-center justify-between font-label-sm font-semibold";
+			let v = document.createElement("label");
+			v.className = "text-on-surface font-bold text-[13px]", v.textContent = "Rename To:", _.appendChild(v);
+			let y = document.createElement("span");
+			y.className = "text-secondary text-[11px] flex items-center gap-1", y.appendChild(document.createTextNode("Press "));
 			let b = document.createElement("kbd");
-			b.className = "px-1.5 py-0.5 rounded bg-surface-container font-mono-code text-[10px] text-on-surface font-bold border border-outline-variant/40", b.textContent = "Enter", v.appendChild(b), v.appendChild(document.createTextNode(" to save")), g.appendChild(v), h.appendChild(g);
-			let x = document.createElement("div");
-			x.className = "relative flex items-center w-full shadow-sm";
-			let S = document.createElement("input");
-			S.id = "inputRenameTarget", S.type = "text", S.autocomplete = "new-password", S.setAttribute("autocomplete", "new-password"), S.setAttribute("autocorrect", "off"), S.setAttribute("autocapitalize", "off"), S.setAttribute("spellcheck", "false"), S.setAttribute("name", `docmitra_rename_${Date.now()}`), S.className = "w-full h-10 px-3 rounded-lg bg-surface-container-lowest font-mono-code text-[13px] text-on-surface font-semibold border-2 border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-xs", S.value = C(n.targetName || n.suggestedName || n.name), S.addEventListener("keydown", (e) => {
-				e.key === "Tab" && !e.shiftKey ? (e.preventDefault(), this.handleConfirmCurrentName(S.value.trim())) : e.key === "Tab" && e.shiftKey ? (e.preventDefault(), this.handleNavigateBackward()) : e.key === "Enter" ? (e.preventDefault(), this.handleConfirmCurrentName(S.value.trim())) : /[\\/:*?"<>|]/.test(e.key) && (e.preventDefault(), r.show("Character Not Allowed", `Windows filenames cannot contain ${e.key}`, "warning"));
-			}), S.addEventListener("input", (e) => {
+			b.className = "px-1.5 py-0.5 rounded bg-surface-container font-mono-code text-[10px] text-on-surface font-bold border border-outline-variant/40", b.textContent = "Tab", y.appendChild(b), y.appendChild(document.createTextNode(" or "));
+			let x = document.createElement("kbd");
+			x.className = "px-1.5 py-0.5 rounded bg-surface-container font-mono-code text-[10px] text-on-surface font-bold border border-outline-variant/40", x.textContent = "Enter", y.appendChild(x), y.appendChild(document.createTextNode(" to save")), _.appendChild(y), g.appendChild(_);
+			let S = document.createElement("div");
+			S.className = "relative flex items-center w-full shadow-sm";
+			let w = document.createElement("input");
+			w.id = "inputRenameTarget", w.type = "text", w.autocomplete = "new-password", w.setAttribute("autocomplete", "new-password"), w.setAttribute("autocorrect", "off"), w.setAttribute("autocapitalize", "off"), w.setAttribute("spellcheck", "false"), w.setAttribute("name", `docmitra_rename_${Date.now()}`), w.className = "w-full h-10 px-3 rounded-lg bg-surface-container-lowest font-mono-code text-[13px] text-on-surface font-semibold border-2 border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-xs", w.value = C(n.targetName || n.suggestedName || n.name), w.addEventListener("keydown", (e) => {
+				e.key === "Tab" && !e.shiftKey ? (e.preventDefault(), this.handleConfirmCurrentName(w.value.trim())) : e.key === "Tab" && e.shiftKey ? (e.preventDefault(), this.handleNavigateBackward()) : e.key === "Enter" ? (e.preventDefault(), this.handleConfirmCurrentName(w.value.trim())) : /[\\/:*?"<>|]/.test(e.key) && (e.preventDefault(), r.show("Character Not Allowed", `Windows filenames cannot contain ${e.key}`, "warning"));
+			}), w.addEventListener("input", (e) => {
 				let t = e.target.value;
 				/[\\/:*?"<>|]/.test(t) && (t = t.replace(/[\\/:*?"<>|]/g, ""), e.target.value = t, r.show("Character Not Allowed", "Illegal Windows filename characters removed", "warning"));
 				let i = t.trim(), a = n.ext;
 				if (!i) {
-					n.targetName = n.name, n.docType = null, n.isMatched = !1, u.className = "px-2 py-0.5 rounded font-mono-code text-[10px] bg-error-container text-on-error-container font-bold", u.textContent = "Unmatched", this.updateTelemetry(), this.renderCoreShortcuts("");
+					n.targetName = n.name, n.docType = null, n.isMatched = !1, d.className = "px-2 py-0.5 rounded font-mono-code text-[10px] bg-error-container text-on-error-container font-bold", d.textContent = "Unmatched", this.updateTelemetry(), this.renderCoreShortcuts("");
 					return;
 				}
 				let o = this.shortcuts21.find((e) => e.code.toLowerCase() === i.toLowerCase());
 				if (o) {
 					let e = o.canonical;
-					n.docType = e, n.isMatched = !0, u.className = "px-2 py-0.5 rounded font-mono-code text-[10px] bg-tertiary-fixed text-on-tertiary-fixed font-bold", u.textContent = `Matched: ${e}`;
+					n.docType = e, n.isMatched = !0, d.className = "px-2 py-0.5 rounded font-mono-code text-[10px] bg-tertiary-fixed text-on-tertiary-fixed font-bold", d.textContent = `Matched: ${e}`;
 					let t = E(e, this.state.studentName, this.state.settings?.groups, this.state.style);
 					n.targetName = t.endsWith(a) ? t : `${t}${a}`;
 				} else {
-					n.docType = i, n.isMatched = !1, u.className = "px-2 py-0.5 rounded font-mono-code text-[10px] bg-surface-container-high text-secondary font-bold", u.textContent = "Custom Name";
+					n.docType = i, n.isMatched = !1, d.className = "px-2 py-0.5 rounded font-mono-code text-[10px] bg-surface-container-high text-secondary font-bold", d.textContent = "Custom Name";
 					let e = E(i, this.state.studentName, null, this.state.style);
 					n.targetName = e.endsWith(a) ? e : `${e}${a}`;
 				}
 				this.updateTelemetry();
 				let s = document.querySelector("#previewContainerStage .font-headline-sm");
 				s && (s.textContent = n.targetName), this.renderCoreShortcuts(t);
-			}), x.appendChild(S), h.appendChild(x), d.appendChild(h), e.appendChild(d), t.appendChild(e), requestAnimationFrame(() => {
-				S.focus(), S.select(), e.scrollIntoView({
+			}), S.appendChild(w), g.appendChild(S), f.appendChild(g), e.appendChild(f), t.appendChild(e), requestAnimationFrame(() => {
+				w.focus(), w.select(), e.scrollIntoView({
 					behavior: "smooth",
 					block: "start"
-				}), this.renderCoreShortcuts(S.value);
+				}), this.renderCoreShortcuts(w.value);
 			});
 		}
 		let i = this.state.files.filter((e, t) => t > this.state.currentIndex && !e.isRenamed && !e.isKept);
@@ -2727,7 +3107,11 @@ var Ve = class {
 				let i = document.createElement("span");
 				i.className = "w-4 h-4 rounded bg-surface-container text-secondary font-mono-code font-bold text-[10px] flex items-center justify-center shrink-0", i.textContent = String(t + 1), r.appendChild(i);
 				let a = document.createElement("span");
-				a.className = "font-mono-code text-[11px] text-on-surface font-semibold truncate", a.textContent = C(e.targetName || e.suggestedName || e.name), r.appendChild(a), n.appendChild(r), o.appendChild(n);
+				if (a.className = "font-mono-code text-[11px] text-on-surface font-semibold truncate", a.textContent = C(e.targetName || e.suggestedName || e.name), r.appendChild(a), n.appendChild(r), e.smartConfidence !== void 0) {
+					let t = document.createElement("span");
+					e.smartConfidence >= 80 ? (t.className = "confidence-badge confidence-badge-high", t.textContent = `🟢 ${e.smartConfidence}% ${e.smartDocType || "MATCH"}`) : e.smartConfidence >= 60 ? (t.className = "confidence-badge confidence-badge-med", t.textContent = `🟡 ${e.smartConfidence}% ${e.smartDocType || "REVIEW"}`) : (t.className = "confidence-badge confidence-badge-low", t.textContent = `🔴 ${e.smartConfidence}% UNMATCHED`), n.appendChild(t);
+				}
+				o.appendChild(n);
 			}), t.appendChild(o);
 		}
 		let a = this.state.files.filter((e) => e.isRenamed || e.isKept);
@@ -2821,7 +3205,7 @@ var Ve = class {
 			]) {
 				let t = document.createElement("button");
 				t.type = "button", t.className = "w-full px-2.5 py-1.5 rounded-lg border border-outline-variant/20 hover:border-primary/40 bg-surface-container-lowest hover:bg-surface-container flex items-center justify-between text-left transition-all cursor-pointer group shadow-xs";
-				let n = Be(e.code), i = document.createElement("div");
+				let n = He(e.code), i = document.createElement("div");
 				i.className = "flex items-center gap-2 min-w-0";
 				let a = document.createElement("span");
 				a.className = `px-2 py-0.5 rounded font-mono-code font-bold text-[11px] ${n} shrink-0`, a.textContent = e.code, i.appendChild(a);
@@ -2862,7 +3246,7 @@ var Ve = class {
 				i.className = "w-1.5 h-1.5 rounded-full bg-error shrink-0", n.appendChild(i);
 				let a = document.createElement("span");
 				a.className = "font-mono-code text-[11px] font-bold text-on-surface truncate", a.textContent = e, n.appendChild(a);
-				let o = this.state.studentName || this.state.folder?.name || "Student", s = Fe(o, e);
+				let o = this.state.studentName || this.state.folder?.name || "Student", s = Le(o, e);
 				if (s) {
 					let e = document.createElement("span");
 					e.className = "px-1.5 py-0.2 rounded font-mono-code text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold shrink-0 flex items-center gap-0.5", e.textContent = `📅 ${W(s.promisedDate)}`, n.appendChild(e);
@@ -2899,12 +3283,12 @@ var Ve = class {
 					}), m.classList.add("hidden"), r.show("Follow-up Scheduled", `${e} promise date set for Tomorrow`, "success"), this.renderQueue();
 				}, m.appendChild(g);
 				let _ = document.createElement("button");
-				_.type = "button", _.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", _.textContent = `Monday (${W(Le())})`, _.onclick = (t) => {
+				_.type = "button", _.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", _.textContent = `Monday (${W(ze())})`, _.onclick = (t) => {
 					t.stopPropagation(), U({
 						folderName: o,
 						studentName: o,
 						documentName: e,
-						promisedDate: Le(),
+						promisedDate: ze(),
 						note: `Missing ${e} during intake`
 					}), m.classList.add("hidden"), r.show("Follow-up Scheduled", `${e} promise date set for Monday`, "success"), this.renderQueue();
 				}, m.appendChild(_);
@@ -2932,7 +3316,7 @@ var Ve = class {
 					try {
 						let t = await l("All Supported Files (*.pdf;*.jpg;*.jpeg;*.png;*.docx)|*.pdf;*.jpg;*.jpeg;*.png;*.docx|All Files (*.*)|*.*", `Select File for ${e}`);
 						if (!t.success || !t.files || t.files.length === 0) return;
-						let n = t.files[0], i = n.ext || S(n.name), a = ze(e, this.state.studentName, i), o = this.state.folder?.path || "", s = {
+						let n = t.files[0], i = n.ext || S(n.name), a = Ve(e, this.state.studentName, i), o = this.state.folder?.path || "", s = {
 							id: `imported_${Date.now()}`,
 							name: a,
 							targetName: a,
@@ -3024,7 +3408,7 @@ var Ve = class {
 				this.applyShortcutToCurrent(e);
 			}));
 			let n = document.createElement("span");
-			n.className = `px-2 py-0.5 rounded text-[10px] ${Be(e.code)} shadow-xs`, n.textContent = e.code, t.appendChild(n);
+			n.className = `px-2 py-0.5 rounded text-[10px] ${He(e.code)} shadow-xs`, n.textContent = e.code, t.appendChild(n);
 			let r = document.createElement("span");
 			if (r.className = "truncate flex-1 text-left text-on-surface text-[11px] font-medium", r.textContent = e.label, t.appendChild(r), !c) {
 				let e = document.createElement("span");
@@ -3076,7 +3460,7 @@ var Ve = class {
 						next: a,
 						file: t,
 						nativePath: t.path
-					}]), t.name = a, t.targetName = a, t.path = o, t.nativePath = o, t.url = `http://localhost:3000/api/serve-file?path=${encodeURIComponent(o)}`, t.isRenamed = !0, t.status = "renamed", ge(1), r.show("Renamed", a, "success");
+					}]), t.name = a, t.targetName = a, t.path = o, t.nativePath = o, t.url = `http://localhost:3000/api/serve-file?path=${encodeURIComponent(o)}`, t.isRenamed = !0, t.status = "renamed", ve(1), r.show("Renamed", a, "success");
 				} else {
 					r.show("Rename Error", e.error || "Failed to rename on disk", "error");
 					return;
@@ -3161,6 +3545,115 @@ var Ve = class {
 		} catch (e) {
 			r.show("Undo Failed", e.message, "error");
 		}
+	}
+	async extractTextFromFile(e) {
+		if (!e) return "";
+		if (e.ext === ".pdf" || e.name && e.name.toLowerCase().endsWith(".pdf")) try {
+			if (window.pdfjsLib || await new Promise((e) => this._loadPdfJs(e)), window.pdfjsLib && e.url) {
+				let t = await (await window.pdfjsLib.getDocument(e.url).promise).getPage(1), n = ((await t.getTextContent()).items || []).map((e) => e.str).join(" ").trim();
+				if (n && n.length >= 35) return n;
+				let r = t.getViewport({ scale: 1.5 }), i = document.createElement("canvas");
+				i.width = r.width, i.height = r.height;
+				let a = i.getContext("2d");
+				await t.render({
+					canvasContext: a,
+					viewport: r
+				}).promise;
+				let o = i.toDataURL("image/jpeg", .85), s = await (await fetch("http://localhost:3000/api/ocr-extract", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ base64Image: o })
+				})).json();
+				if (s && s.success) return s.text || "";
+			}
+		} catch (e) {
+			console.warn("[DocMitra Renamer] PDF OCR extraction warning:", e);
+		}
+		else try {
+			let t = await (await fetch("http://localhost:3000/api/ocr-extract", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ filePath: e.path || e.nativePath || "" })
+			})).json();
+			if (t && t.success) return t.text || "";
+		} catch (e) {
+			console.warn("[DocMitra Renamer] Image OCR extraction warning:", e);
+		}
+		return "";
+	}
+	async handleSmartScanBatch() {
+		if (this.state.files.length === 0) {
+			r.show("Intake Folder Needed", "Press \"Select Folder\" (F2) before running Smart Scan.", "warning");
+			return;
+		}
+		if (this.state.isSmartScanning) {
+			r.show("Smart Scan Active", "Scan is currently running in background...", "info");
+			return;
+		}
+		let e = this.state.files.filter((e) => !e.isRenamed && !e.isKept);
+		if (e.length === 0) {
+			r.show("No Pending Files", "All files are already renamed or kept.", "info");
+			return;
+		}
+		this.state.isSmartScanning = !0;
+		let t = document.getElementById("btnSmartScanBatch"), n = t ? t.innerHTML : "";
+		t && (t.classList.add("smart-scan-pulse"), t.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-primary">sync</span><span>Scanning (0/${e.length})...</span>`), r.show("Smart Scan Started", `Analyzing ${e.length} documents with local OCR...`, "info");
+		let i = 0;
+		for (let n = 0; n < e.length; n++) {
+			let r = e[n];
+			t && (t.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-primary">sync</span><span>Scanning (${n + 1}/${e.length})...</span>`);
+			try {
+				let e = await this.extractTextFromFile(r), t = de(e, this.state.studentName);
+				if (r.smartEvaluation = t, r.smartConfidence = t.confidence, r.smartDocType = t.docType, r.smartText = e, t.isConfident && t.docType) {
+					i++, r.docType = t.docType, r.isMatched = !0;
+					let e = E(t.docType, this.state.studentName, this.state.settings?.groups, this.state.style), n = r.ext || ("." + r.name.split(".").pop()).toLowerCase();
+					r.targetName = e.endsWith(n) ? e : `${e}${n}`, r.status = "matched";
+				}
+			} catch (e) {
+				console.error("[DocMitra Renamer] OCR error on file:", r.name, e), r.smartConfidence = 0;
+			}
+		}
+		this.state.isSmartScanning = !1, t && (t.classList.remove("smart-scan-pulse"), t.innerHTML = n), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), r.show("Smart Scan Complete", `${i} of ${e.length} documents identified with high confidence (>=80%).`, i > 0 ? "success" : "info");
+	}
+	async handleRenameAllMatched() {
+		let e = this.state.files.filter((e) => !e.isRenamed && !e.isKept && (e.smartConfidence >= 80 || e.smartConfidence === void 0 && e.isMatched) && e.targetName !== e.name);
+		if (e.length === 0) {
+			r.show("No Matched Files", "Run Smart Scan (F4) or match documents with shortcuts first.", "info");
+			return;
+		}
+		for (let t of e) {
+			let e = D(t.targetName);
+			if (e) {
+				r.show("Validation Error", `${t.name}: ${e}`, "error");
+				return;
+			}
+		}
+		let t = e.map((e) => ({
+			old: e.name,
+			next: e.targetName,
+			file: e,
+			nativePath: e.path
+		}));
+		r.show("Executing Matched Batch", `Renaming ${t.length} matched files (>=80% confidence)...`, "info");
+		try {
+			await ce(this.state.folder, t, (e, t) => {
+				console.log(`[Smart Rename Progress] ${e}%: ${t}`);
+			}), k.pushBatch(this.state.folder, t), e.forEach((e) => {
+				e.name = e.targetName, e.isRenamed = !0, e.status = "renamed";
+			}), r.show("Matched Batch Complete!", `Successfully renamed ${t.length} documents.`, "success"), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview();
+		} catch (e) {
+			r.show("Rename Failed", e.message, "error");
+		}
+	}
+	handleReviewUnmatched() {
+		let e = this.state.files.findIndex((e) => !e.isRenamed && !e.isKept && (e.smartConfidence === void 0 ? !e.isMatched : e.smartConfidence < 80));
+		if (e === -1) {
+			r.show("Queue Clear", "All pending files have high confidence or are already resolved.", "info");
+			return;
+		}
+		this.state.currentIndex = e, this.renderQueue(), this.renderCurrentPreview();
+		let t = this.state.files[e];
+		r.show("Reviewing File", `Jumped to file #${e + 1} (${t.name}) for manual inspection.`, "info");
 	}
 	handleSaveBatch() {
 		if (!this.state.folder) {
@@ -3330,12 +3823,12 @@ var Ve = class {
 		l.className = "text-center border-t pt-2 border-outline-variant/30 text-[10px] font-mono-code text-secondary", l.textContent = "Air-Gapped High-Precision Preview Stage", e.appendChild(l);
 	}
 };
-function He() {
-	let e = new Ve();
+function We() {
+	let e = new Ue();
 	return e.init(), e;
 }
 // src/services/export-import-service.js
-function Ue(e) {
+function Ge(e) {
 	let t = {
 		format: "BulkStudentRenamerSettings",
 		version: 1,
@@ -3348,7 +3841,7 @@ function Ue(e) {
 	}, n = new Blob([JSON.stringify(t, null, 2)], { type: "application/json" }), r = URL.createObjectURL(n), i = document.createElement("a");
 	i.href = r, i.download = `student-renamer-settings-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.json`, i.click(), setTimeout(() => URL.revokeObjectURL(r), 1e3);
 }
-function We(e, t) {
+function Ke(e, t) {
 	return new Promise((n, r) => {
 		if (!e) return r(/* @__PURE__ */ Error("No backup file selected."));
 		if (e.size > 5242880) return r(/* @__PURE__ */ Error("Backup file exceeds maximum allowed size (5 MB)."));
@@ -3371,7 +3864,7 @@ function We(e, t) {
 	});
 }
 // src/ui/settings-ui.js
-var Ge = class {
+var qe = class {
 	constructor() {
 		this.state = null, this.initialState = null, this.activeChecklist = "11th / 12th (FYJC / SYJC)";
 	}
@@ -3393,7 +3886,7 @@ var Ge = class {
 		let a = document.getElementById("btnExportSettingsJSON");
 		a && a.addEventListener("click", () => {
 			try {
-				Ue(this.state), r.show("Settings Exported", "Configuration JSON file downloaded.", "success");
+				Ge(this.state), r.show("Settings Exported", "Configuration JSON file downloaded.", "success");
 			} catch (e) {
 				r.show("Export Error", e.message, "error");
 			}
@@ -3402,7 +3895,7 @@ var Ge = class {
 		o && s && (o.addEventListener("click", () => s.click()), s.addEventListener("change", async (e) => {
 			let t = e.target.files?.[0];
 			if (t) try {
-				await We(t, this.state), z(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Import Successful", "System configuration restored and verified.", "success");
+				await Ke(t, this.state), z(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Import Successful", "System configuration restored and verified.", "success");
 			} catch (e) {
 				r.show("Import Failed", e.message || "Invalid settings JSON format.", "error");
 			} finally {
@@ -3433,7 +3926,7 @@ var Ge = class {
 			d.className = "font-mono-code text-[10px] text-on-surface-variant", d.textContent = `TOKEN_${t.replace(/[^A-Z0-9]/gi, "_").toUpperCase()}`, l.appendChild(d), o.appendChild(l);
 			let f = document.createElement("div");
 			f.className = "col-span-2";
-			let p = we.find((e) => e.outputName.toUpperCase() === t.toUpperCase()), m = p ? p.primaryShortcut : (n[0] || "DOC").toUpperCase().slice(0, 4), h = document.createElement("span");
+			let p = Ee.find((e) => e.outputName.toUpperCase() === t.toUpperCase()), m = p ? p.primaryShortcut : (n[0] || "DOC").toUpperCase().slice(0, 4), h = document.createElement("span");
 			h.className = "px-2 py-1 bg-surface-container-high rounded text-on-surface font-mono-code text-[12px] font-bold shadow-2xs", h.textContent = m, f.appendChild(h), o.appendChild(f);
 			let g = document.createElement("div");
 			g.className = "col-span-4 pr-space-sm";
@@ -3654,7 +4147,7 @@ var Ge = class {
 		e && e.classList.add("hidden"), document.body.style.overflow = "";
 	}
 	handleReset() {
-		window.confirm("Reset all rules, shortcuts, and checklists to factory defaults?") && (this.state.groups = Te(), this.state.checklists = JSON.parse(JSON.stringify(M)), z(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Factory Defaults Restored", "All default rules loaded.", "info"));
+		window.confirm("Reset all rules, shortcuts, and checklists to factory defaults?") && (this.state.groups = De(), this.state.checklists = JSON.parse(JSON.stringify(M)), z(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Factory Defaults Restored", "All default rules loaded.", "info"));
 	}
 	handleDiscard() {
 		this.state = JSON.parse(JSON.stringify(this.initialState)), this.renderAll(), r.show("Changes Discarded", "Reverted to previous configuration.", "info");
@@ -3662,8 +4155,8 @@ var Ge = class {
 		e && e.classList.add("hidden"), document.body.style.overflow = "";
 	}
 };
-function Ke() {
-	let e = new Ge();
+function Je() {
+	let e = new qe();
 	return e.init(), e;
 }
 // src/modules/pdf-studio.js
@@ -3679,7 +4172,7 @@ var J = {
 		label: "A4 Landscape"
 	}
 };
-function qe(e) {
+function Ye(e) {
 	let t = 2, n = e.length;
 	for (; t < n && e[t] === 255;) {
 		let r = e[t + 1];
@@ -3711,7 +4204,7 @@ function Y(e = [], t = "portrait", n = 0) {
 	for (let e = 0; e < c; e++) l.push(3 + e * 3);
 	r.push(i), s(a(`2 0 obj\n<< /Type /Pages /Kids [ ${l.map((e) => `${e} 0 R`).join(" ")} ] /Count ${c} >>\nendobj\n`));
 	for (let o = 0; o < c; o++) {
-		let c = e[o], l = 3 + o * 3, u = l + 1, d = l + 2, f = c.bytes, { width: p, height: m } = c.width && c.height ? c : qe(f), h = J.A4_PORTRAIT.width, g = J.A4_PORTRAIT.height;
+		let c = e[o], l = 3 + o * 3, u = l + 1, d = l + 2, f = c.bytes, { width: p, height: m } = c.width && c.height ? c : Ye(f), h = J.A4_PORTRAIT.width, g = J.A4_PORTRAIT.height;
 		(t === "landscape" || t === "fit" && p > m) && (h = J.A4_LANDSCAPE.width, g = J.A4_LANDSCAPE.height);
 		let _ = h - 36, v = g - 36, y = Math.min(_ / p, v / m), b = p * y, x = m * y, S = (h - b) / 2, C = (g - x) / 2, w = n ? ` /Rotate ${n}` : "";
 		r.push(i), s(a(`${l} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${h.toFixed(2)} ${g.toFixed(2)}]${w} /Contents ${u} 0 R /Resources << /XObject << /Im${o + 1} ${d} 0 R >> >> >>\nendobj\n`));
@@ -3723,13 +4216,13 @@ function Y(e = [], t = "portrait", n = 0) {
 	for (let e of r) s(a(`${String(e).padStart(10, "0")} 00000 n \n`));
 	return s(a(`trailer\n<< /Size ${d} /Root 1 0 R >>\nstartxref\n${u}\n%%EOF\n`)), new Blob(o, { type: "application/pdf" });
 }
-function Je(e) {
+function Xe(e) {
 	let t = [], n = e.length, r = 0;
 	for (; r < n - 3;) if (e[r] === 255 && e[r + 1] === 216 && e[r + 2] === 255) {
 		let i = r;
 		for (r += 2; r < n - 1;) {
 			if (e[r] === 255 && e[r + 1] === 217) {
-				let n = r + 2, a = e.slice(i, n), o = qe(a);
+				let n = r + 2, a = e.slice(i, n), o = Ye(a);
 				t.push({
 					bytes: a,
 					width: o.width,
@@ -3743,7 +4236,7 @@ function Je(e) {
 	return t;
 }
 function X(e) {
-	let t = Je(e);
+	let t = Xe(e);
 	if (!t.length) return [];
 	if (t.length === 1) return t;
 	let n = Math.max(...t.map((e) => (e.width || 0) * (e.height || 0))), r = Math.max(...t.map((e) => e.bytes?.length || 0)), i = t.filter((e) => {
@@ -3755,7 +4248,7 @@ function X(e) {
 		return r === n ? (t.bytes?.length || 0) - (e.bytes?.length || 0) : r - n;
 	});
 }
-function Ye(e, t = "Document.pdf") {
+function Ze(e, t = "Document.pdf") {
 	let n = X(e), r = t.replace(/\.pdf$/i, "");
 	return n.length ? n.map((e, t) => {
 		let i = n.length === 1 ? `${r}.jpg` : `${r}_page_${t + 1}.jpg`, a = new Blob([e.bytes], { type: "image/jpeg" });
@@ -3769,7 +4262,7 @@ function Ye(e, t = "Document.pdf") {
 		};
 	}) : [];
 }
-function Xe(e, t = "Document.pdf") {
+function Qe(e, t = "Document.pdf") {
 	let n = X(e), r = t.replace(/\.pdf$/i, "");
 	return n.length ? n.map((e, t) => {
 		let n = `${r}_page_${t + 1}.pdf`, i = Y([e], "portrait");
@@ -3781,7 +4274,7 @@ function Xe(e, t = "Document.pdf") {
 		};
 	}) : [];
 }
-function Ze(e = [], t = "portrait") {
+function $e(e = [], t = "portrait") {
 	let n = [];
 	for (let t of e) {
 		let e = X(t);
@@ -3809,13 +4302,13 @@ function Z(e, t = 90) {
 	}
 	throw Error("No pages found in PDF to rotate.");
 }
-function Qe(e, t, n = "auto") {
+function et(e, t, n = "auto") {
 	if (!e) return "document.pdf";
 	let r = e.lastIndexOf("."), i = r === -1 ? e : e.slice(0, r), a = r === -1 ? "" : e.slice(r), o = i.replace(/[\s_-]+\d+\s*(?:KB|MB)$/i, "").trim();
 	return n === "MB" || n === "auto" && t >= 10485760 ? `${o} ${Math.max(1, Math.round(Number(t || 0) / 1048576))} MB${a}` : `${o} ${Math.max(1, Math.round(Number(t || 0) / 1024))} KB${a}`;
 }
 // src/ui/pdf-studio-ui.js
-var $e = class {
+var tt = class {
 	constructor() {
 		this.activeTool = "compress_pdf", this.files = [], this.isProcessing = !1;
 	}
@@ -4076,7 +4569,7 @@ var $e = class {
 		r.show("Processing Started", `Running ${this._getToolDisplayName(e)} on ${this.files.length} files...`, "info");
 		try {
 			if (e === "merge_pdf") {
-				let e = Ze(this.files.map((e) => e.bytes).filter(Boolean), "portrait");
+				let e = $e(this.files.map((e) => e.bytes).filter(Boolean), "portrait");
 				this._downloadBlob(e, "Merged_Admission_Dossier.pdf"), r.show("Merge Complete!", "Merged PDF Dossier generated and saved.", "success");
 			} else if (e === "compress_pdf") {
 				let e = 0;
@@ -4084,19 +4577,19 @@ var $e = class {
 					if (!t.bytes) continue;
 					let n = X(t.bytes), r;
 					r = n.length > 0 ? Y(n, "portrait") : new Blob([t.bytes], { type: "application/pdf" });
-					let i = Qe(t.name, r.size);
+					let i = et(t.name, r.size);
 					this._downloadBlob(r, i), e++;
 				}
 				r.show("Compression Complete!", `Compressed ${e} files to safe MahaDBT thresholds.`, "success");
 			} else if (e === "split_pdf") {
 				let e = 0;
-				for (let t of this.files) t.bytes && Xe(t.bytes, t.name).forEach((t) => {
+				for (let t of this.files) t.bytes && Qe(t.bytes, t.name).forEach((t) => {
 					this._downloadBlob(t.blob, t.fileName), e++;
 				});
 				r.show("Split Complete!", `Extracted ${e} individual PDF pages.`, "success");
 			} else if (e === "pdf_to_jpg") {
 				let e = 0;
-				for (let t of this.files) t.bytes && Ye(t.bytes, t.name).forEach((t) => {
+				for (let t of this.files) t.bytes && Ze(t.bytes, t.name).forEach((t) => {
 					this._downloadBlob(t.blob, t.fileName), e++;
 				});
 				r.show("Conversion Complete!", `Extracted ${e} high-resolution JPG pages.`, "success");
@@ -4130,12 +4623,12 @@ var $e = class {
 		}, 1e3);
 	}
 };
-function et() {
-	let e = new $e();
+function nt() {
+	let e = new tt();
 	return e.init(), e;
 }
 // src/modules/image-studio.js
-function tt(e, t, n, r = "magic_color") {
+function rt(e, t, n, r = "magic_color") {
 	if (!e || r === "none" || r === "original") return;
 	let i = e.getImageData(0, 0, t, n), a = i.data;
 	for (let e = 0; e < a.length; e += 4) {
@@ -4152,7 +4645,7 @@ function tt(e, t, n, r = "magic_color") {
 	}
 	e.putImageData(i, 0, 0);
 }
-function nt(e, t = 0) {
+function it(e, t = 0) {
 	let n = document.createElement("canvas"), r = (t % 360 + 360) % 360, i = r === 90 || r === 270, a = i ? e.height : e.width, o = i ? e.width : e.height;
 	n.width = a, n.height = o;
 	let s = n.getContext("2d");
@@ -4171,7 +4664,7 @@ async function Q(e, t = 250, n = {}) {
 					e = Math.round(e * t), s = Math.round(s * t);
 				}
 				let l;
-				if (r === 0 ? (l = document.createElement("canvas"), l.width = e, l.height = s, l.getContext("2d").drawImage(c, 0, 0, e, s)) : l = nt(c, r), i && i !== "none" && tt(l.getContext("2d"), l.width, l.height, i), !t || t <= 0) {
+				if (r === 0 ? (l = document.createElement("canvas"), l.width = e, l.height = s, l.getContext("2d").drawImage(c, 0, 0, e, s)) : l = it(c, r), i && i !== "none" && rt(l.getContext("2d"), l.width, l.height, i), !t || t <= 0) {
 					let e = await new Promise((e) => l.toBlob(e, a, .9));
 					return n({
 						blob: e,
@@ -4215,7 +4708,7 @@ async function Q(e, t = 250, n = {}) {
 		}, c.src = l;
 	});
 }
-async function rt(e, t = "image/png") {
+async function at(e, t = "image/png") {
 	return new Promise((n, r) => {
 		let i = new Image(), a = URL.createObjectURL(e);
 		i.onload = () => {
@@ -4241,7 +4734,7 @@ async function rt(e, t = "image/png") {
 	});
 }
 // src/ui/image-studio-ui.js
-var it = class {
+var ot = class {
 	constructor() {
 		this.activeTool = "compress_photo_sign", this.files = [], this.isProcessing = !1;
 	}
@@ -4438,7 +4931,7 @@ var it = class {
 		if (!t || !t.url) return;
 		let n = new Image();
 		n.crossOrigin = "anonymous", n.onload = () => {
-			nt(n, 90).toBlob((e) => {
+			it(n, 90).toBlob((e) => {
 				t.url = URL.createObjectURL(e), t.size = e.size, t.fileOrBlob = e, this.renderQueue(), r.show("Image Rotated", `${t.name} rotated 90° clockwise.`, "info");
 			}, "image/jpeg", .92);
 		}, n.src = t.url;
@@ -4490,7 +4983,7 @@ var it = class {
 						let e = await Q(r, 240, { filterMode: "enhanced" });
 						this._downloadBlob(e.blob, `Magic_${n.name}`), t++;
 					} else {
-						let e = await rt(r, "image/jpeg");
+						let e = await at(r, "image/jpeg");
 						this._downloadBlob(e.blob, `Converted_${n.name.replace(/\.[a-zA-Z0-9]+$/, ".jpg")}`), t++;
 					}
 				}
@@ -4523,12 +5016,12 @@ var it = class {
 		}, 1e3);
 	}
 };
-function at() {
-	let e = new it();
+function st() {
+	let e = new ot();
 	return e.init(), e;
 }
 // src/libraries/document-matcher.js
-var ot = [
+var ct = [
 	{
 		id: "12th-marksheet-passing-combined",
 		outputName: "12TH MARKSHEET AND PASSING",
@@ -4838,7 +5331,7 @@ var ot = [
 		]
 	}
 ];
-function st(e, t = null) {
+function lt(e, t = null) {
 	if (!e || typeof e != "string") return {
 		docType: null,
 		percentage: 0,
@@ -4847,7 +5340,7 @@ function st(e, t = null) {
 		status: "none"
 	};
 	let n = e.trim().toLowerCase(), r = n.replace(/[-_.]+/g, " ");
-	for (let e of ot) if (n === e.shortcut.toLowerCase() || r.trim() === e.shortcut.toLowerCase()) return {
+	for (let e of ct) if (n === e.shortcut.toLowerCase() || r.trim() === e.shortcut.toLowerCase()) return {
 		docType: e.outputName,
 		percentage: 100,
 		badgeText: `100% Match: ${e.outputName}`,
@@ -4865,7 +5358,7 @@ function st(e, t = null) {
 			};
 		}
 	}
-	for (let e of ot) for (let t of e.patterns) if (t.test(n) || t.test(r)) return {
+	for (let e of ct) for (let t of e.patterns) if (t.test(n) || t.test(r)) return {
 		docType: e.outputName,
 		percentage: 100,
 		badgeText: `100% Match: ${e.outputName}`,
@@ -4892,17 +5385,17 @@ function st(e, t = null) {
 		status: "none"
 	};
 }
-({ ...Ce });
+({ ...Te });
 function $(e) {
 	if (!e || typeof e != "string") return "";
-	let t = st(e);
+	let t = lt(e);
 	if (t && t.docType) return t.docType;
 	let n = e.replace(/\.[^/.]+$/, "");
 	return n = n.replace(/\s*\(p\.\d+\)/i, ""), n.trim().toUpperCase();
 }
-function ct(e) {
+function ut(e) {
 	if (!e || typeof e != "string") return "";
-	let t = e.replace(/\.[^/.]+$/, "").trim(), n = st(t);
+	let t = e.replace(/\.[^/.]+$/, "").trim(), n = lt(t);
 	if (n && n.docType) {
 		let e = n.docType, r = t, i = RegExp(`^${e}\\b`, "i");
 		if (i.test(r) ? r = r.replace(i, "").trim() : e.split(/\s+/).forEach((e) => {
@@ -4914,7 +5407,7 @@ function ct(e) {
 	}
 	return t;
 }
-function lt(e, t = []) {
+function dt(e, t = []) {
 	return !Array.isArray(e) || e.length === 0 ? [] : !Array.isArray(t) || t.length === 0 ? [...e] : [...e].sort((e, n) => {
 		let r = e.docType || $(e.label || e.name), i = n.docType || $(n.label || n.name), a = t.findIndex((e) => {
 			let t = e.toUpperCase(), n = r.toUpperCase();
@@ -4927,9 +5420,9 @@ function lt(e, t = []) {
 	});
 }
 // src/ui/print-studio-ui.js
-var ut = class {
+var ft = class {
 	constructor() {
-		this.presets = { ...Ce }, this.activePresetKey = "MAHA DBT FORM", this.documents = [], this.activeDocIndex = 0, this.zoomLevel = 100;
+		this.presets = { ...Te }, this.activePresetKey = "MAHA DBT FORM", this.documents = [], this.activeDocIndex = 0, this.zoomLevel = 100;
 	}
 	init() {
 		this._seedDemoDocumentsIfEmpty(), this._bindControls(), this.renderPresetSelector(), this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), console.info("[DocMitra Print Studio] Print Studio UI manager initialized.");
@@ -5074,7 +5567,7 @@ var ut = class {
 	}
 	handleAutoOrder() {
 		let e = this.presets[this.activePresetKey] || [];
-		this.documents = lt(this.documents, e), this.activeDocIndex = 0, this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), r.show("Sequence Applied", `Ordered according to ${this.activePresetKey} criteria.`, "success");
+		this.documents = dt(this.documents, e), this.activeDocIndex = 0, this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), r.show("Sequence Applied", `Ordered according to ${this.activePresetKey} criteria.`, "success");
 	}
 	async handleBrowseFolder() {
 		r.show("Opening Folder Picker", "Navigating Windows Explorer...", "info");
@@ -5090,7 +5583,7 @@ var ut = class {
 				return;
 			}
 			this.documents = t.map((e, t) => {
-				let n = $(e.name), r = ct(e.name);
+				let n = $(e.name), r = ut(e.name);
 				return {
 					id: `print_doc_${Date.now()}_${t}`,
 					name: e.name,
@@ -5181,12 +5674,12 @@ var ut = class {
 		}
 	}
 };
-function dt() {
-	let e = new ut();
+function pt() {
+	let e = new ft();
 	return e.init(), e;
 }
 // src/ui/followup-ui.js
-var ft = class {
+var mt = class {
 	constructor() {
 		this.items = [], this.searchQuery = "";
 	}
@@ -5305,7 +5798,7 @@ var ft = class {
 			c.appendChild(u), s.appendChild(c), n.appendChild(s);
 			let d = document.createElement("td");
 			d.className = "py-3.5 px-space-md";
-			let f = Ie(t.promisedDate), p = document.createElement("div");
+			let f = Re(t.promisedDate), p = document.createElement("div");
 			p.className = f === "overdue" ? "font-mono-code font-bold text-error" : f === "today" ? "font-mono-code font-bold text-amber-700" : "font-mono-code font-bold text-emerald-700", p.textContent = W(t.promisedDate), d.appendChild(p);
 			let m = document.createElement("span");
 			f === "overdue" ? (m.className = "text-[10px] font-bold uppercase tracking-wider text-error bg-error-container/40 px-1.5 py-0.5 rounded", m.textContent = "OVERDUE") : f === "today" ? (m.className = "text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded", m.textContent = "DUE TODAY") : (m.className = "text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded", m.textContent = "UPCOMING"), d.appendChild(m), n.appendChild(d);
@@ -5374,18 +5867,18 @@ var ft = class {
 		window.open(i, "_blank"), r.show("WhatsApp उघडत आहे", `Opening WhatsApp for ${e.studentName}...`, "info");
 	}
 	markItemResolved(e) {
-		Pe(e.folderName, e.documentName), e.status = "resolved", this.renderTable(), r.show("कागदपत्र प्राप्त!", `${e.documentName} for ${e.studentName} marked as received.`, "success");
+		Ie(e.folderName, e.documentName), e.status = "resolved", this.renderTable(), r.show("कागदपत्र प्राप्त!", `${e.documentName} for ${e.studentName} marked as received.`, "success");
 	}
 };
-function pt() {
-	let e = new ft();
+function ht() {
+	let e = new mt();
 	return e.init(), e;
 }
 // src/ui/index.js
-function mt() {
+function gt() {
 	let e = new n();
-	e.init(), new i().init(), Ke();
-	let t = He();
+	e.init(), new i().init(), Je();
+	let t = We();
 	typeof window < "u" && (window.renamerUI = t, window.location.search.includes("test_loaded=1") && setTimeout(() => {
 		t.state.folder = {
 			name: "Vijay_Ramesh_Yadav",
@@ -5421,7 +5914,7 @@ function mt() {
 		], t.state.currentIndex = 0, t.renderQueue();
 	}, 200)), e.onViewChange = (e, n) => {
 		n === "bulk-renamer" && e !== "bulk-renamer" && t.handleClearQueue(!0);
-	}, et(), at(), dt(), pt(), a();
+	}, nt(), st(), pt(), ht(), a();
 	let o = document.getElementById("themeToggleBtn");
 	o && o.addEventListener("click", () => {
 		document.documentElement.classList.toggle("dark");
@@ -5429,5 +5922,5 @@ function mt() {
 		r.show(e ? "Dark Theme Enabled" : "Light Theme Enabled", "UI Preference Updated", "info");
 	}), console.info("[DocMitra] UI Shell & Modules initialized successfully.");
 }
-document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", mt) : mt();
-export { mt as initAppShell };
+document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", gt) : gt();
+export { gt as initAppShell };

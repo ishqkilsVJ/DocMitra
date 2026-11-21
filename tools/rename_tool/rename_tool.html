@@ -172,6 +172,19 @@
       </button>
     </div>
     <div class="flex items-center gap-space-sm">
+      <button class="px-space-md py-1.5 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary-fixed-dim hover:text-white font-label-md transition-all flex items-center gap-1.5 border border-primary/30 shadow-xs cursor-pointer" id="btnSmartScanBatch" title="Perform smart OCR and document recognition (F4)" type="button">
+        <span class="material-symbols-outlined text-[16px] text-primary">psychology</span>
+        <span>Smart Scan</span>
+        <kbd class="px-1.5 py-0.5 rounded bg-surface-container-lowest/20 border border-surface-container-lowest/30 font-mono-code text-[10px] font-bold shadow-xs">F4</kbd>
+      </button>
+      <button class="px-space-md py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-label-md transition-all flex items-center gap-1.5 border border-emerald-500/30 shadow-xs cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed" id="btnRenameMatched" title="Rename all matched documents with high confidence (>=80%)" type="button" disabled>
+        <span class="material-symbols-outlined text-[16px] text-emerald-400">check_circle</span>
+        <span>Rename Matched (0)</span>
+      </button>
+      <button class="px-space-md py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-label-md transition-all flex items-center gap-1.5 border border-amber-500/30 shadow-xs cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed" id="btnReviewUnmatched" title="Review files with low confidence (<80%)" type="button" disabled>
+        <span class="material-symbols-outlined text-[16px] text-amber-400">visibility</span>
+        <span>Review Unmatched (0)</span>
+      </button>
       <button class="px-space-md py-1.5 rounded-lg bg-surface-container-lowest/10 hover:bg-surface-container-lowest/20 text-inverse-on-surface font-label-md transition-all flex items-center gap-2 border border-surface-container-lowest/20 shadow-sm cursor-pointer" id="btnExportAudit" title="Generate and export full audit log" type="button">
         <span class="material-symbols-outlined text-[16px]">summarize</span>
         <span>Export Audit Report</span>
@@ -197,6 +210,8 @@
         <div class="flex items-center gap-1"><kbd class="px-1.5 py-0.2 rounded bg-surface-container-lowest/15 border border-surface-container-lowest/25 text-inverse-on-surface font-bold text-[10px] shadow-xs">Alt+0</kbd><span class="opacity-80">Dashboard</span></div>
         <span class="text-outline-variant opacity-40">•</span>
         <div class="flex items-center gap-1"><kbd class="px-1.5 py-0.2 rounded bg-surface-container-lowest/15 border border-surface-container-lowest/25 text-inverse-on-surface font-bold text-[10px] shadow-xs">F2</kbd><span class="opacity-80">Folder</span></div>
+        <span class="text-outline-variant opacity-40">•</span>
+        <div class="flex items-center gap-1"><kbd class="px-1.5 py-0.2 rounded bg-primary/40 border border-primary/50 text-primary-fixed-dim font-bold text-[10px] shadow-xs">F4</kbd><span class="opacity-80">Smart Scan</span></div>
         <span class="text-outline-variant opacity-40">•</span>
         <div class="flex items-center gap-1"><kbd class="px-1.5 py-0.2 rounded bg-surface-container-lowest/15 border border-surface-container-lowest/25 text-inverse-on-surface font-bold text-[10px] shadow-xs">Tab</kbd><span class="opacity-80">Keep/Next</span></div>
         <span class="text-outline-variant opacity-40">•</span>

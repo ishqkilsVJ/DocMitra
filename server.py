@@ -307,6 +307,24 @@ class DocMitraHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode('utf-8'))
                 return
 
+        if parsed.path == '/api/ocr-extract':
+            try:
+                length = int(self.headers.get('Content-Length', 0))
+                body = json.loads(self.rfile.read(length).decode('utf-8'))
+                from tools.rename_tool.rename_tool import ocr_extract_text
+                res = ocr_extract_text(body.get('filePath', ''), body.get('base64Image', ''))
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(res).encode('utf-8'))
+                return
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode('utf-8'))
+                return
+
         if parsed.path == '/api/native-batch-rename':
             try:
                 length = int(self.headers.get('Content-Length', 0))

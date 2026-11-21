@@ -1253,3 +1253,275 @@ export async function undoRename(dir, plan, onProgress = null) {
     }
   }
 }
+
+/* ==========================================================================
+   10. Smart Auto-Rename OCR Detection & Multi-Signal Scoring Engine
+   ========================================================================== */
+
+export const SMART_DOC_SIGNATURES = [
+  {
+    canonical: 'AADHAAR CARD',
+    code: 'ADR',
+    patterns: [
+      /\bunique identification authority\b/i,
+      /\buidai\b/i,
+      /\baadhaar\b/i,
+      /\badhar\b/i,
+      /\bmera aadhaar\b/i,
+      /\bidentification authority of india\b/i,
+      /\b\d{4}\s\d{4}\s\d{4}\b/,
+      /\bvid\s*:\s*\d{4}\b/i
+    ],
+    primaryKeywords: ['aadhaar', 'uidai', 'unique identification', 'आधार', 'enrollment'],
+    secondaryKeywords: ['male', 'female', 'dob', 'year of birth', 'father', 'address']
+  },
+  {
+    canonical: '10TH MARKSHEET',
+    code: '10M',
+    patterns: [
+      /\bsecondary school certificate\b/i,
+      /\bs\.s\.c\b/i,
+      /\bssc examination\b/i,
+      /\bboard of secondary\b/i,
+      /\b10th marksheet\b/i,
+      /\bstd\.?\s*10\b/i,
+      /\bstandard x\b/i,
+      /\bmatriculation\b/i
+    ],
+    primaryKeywords: ['secondary school', 's.s.c', 'ssc', 'xth', '10th', 'matric'],
+    secondaryKeywords: ['statement of marks', 'candidate name', 'seat no', 'centre no', 'pass']
+  },
+  {
+    canonical: '12TH MARKSHEET',
+    code: '12M',
+    patterns: [
+      /\bhigher secondary certificate\b/i,
+      /\bh\.s\.c\b/i,
+      /\bhsc examination\b/i,
+      /\bboard of higher secondary\b/i,
+      /\b12th marksheet\b/i,
+      /\bstd\.?\s*12\b/i,
+      /\bstandard xii\b/i,
+      /\bintermediate\b/i
+    ],
+    primaryKeywords: ['higher secondary', 'h.s.c', 'hsc', 'xiith', '12th', 'science', 'commerce', 'arts'],
+    secondaryKeywords: ['statement of marks', 'candidate name', 'seat no', 'centre no', 'stream', 'pass']
+  },
+  {
+    canonical: '12TH LEAVING CERTIFICATE',
+    code: '12LC',
+    patterns: [
+      /\bleaving certificate\b/i,
+      /\btransfer certificate\b/i,
+      /\bcollege leaving\b/i,
+      /\bschool leaving\b/i,
+      /\bconduct\s*:\s*good\b/i,
+      /\bdate of leaving\b/i,
+      /\bdate of birth\b/i
+    ],
+    primaryKeywords: ['leaving certificate', 'transfer certificate', 'tc', 'school leaving', 'college leaving'],
+    secondaryKeywords: ['date of birth', 'conduct', 'progress', 'religion', 'caste', 'nationality']
+  },
+  {
+    canonical: 'CASTE CERTIFICATE',
+    code: 'CST',
+    patterns: [
+      /\bcaste certificate\b/i,
+      /\bform of caste\b/i,
+      /\bbelong to\s+\w+\s+caste\b/i,
+      /\bbackward class\b/i,
+      /\bscheduled caste\b/i,
+      /\bscheduled tribe\b/i,
+      /\bother backward class\b/i,
+      /\bobc\b/i,
+      /\bvjnt\b/i,
+      /\bnt-[a-d]\b/i,
+      /\bsebc\b/i,
+      /\bजात प्रमाणपत्र\b/i
+    ],
+    primaryKeywords: ['caste certificate', 'backward class', 'sub divisional officer', 'competent authority', 'caste'],
+    secondaryKeywords: ['ordinance', 'constitution', 'tahasildar', 'deputy collector']
+  },
+  {
+    canonical: 'CASTE VALIDITY CERTIFICATE',
+    code: 'VLD',
+    patterns: [
+      /\bcaste validity\b/i,
+      /\bvalidity certificate\b/i,
+      /\bscrutiny committee\b/i,
+      /\bverification of caste\b/i,
+      /\bvalidity of caste\b/i,
+      /\bजात वैधता प्रमाणपत्र\b/i
+    ],
+    primaryKeywords: ['caste validity', 'validity certificate', 'scrutiny committee', 'caste certificate scrutiny'],
+    secondaryKeywords: ['district caste', 'certificate of validity', 'verified']
+  },
+  {
+    canonical: 'INCOME CERTIFICATE',
+    code: 'INC',
+    patterns: [
+      /\bincome certificate\b/i,
+      /\bannual family income\b/i,
+      /\bannual income\b/i,
+      /\bउत्पन्नाचा दाखला\b/i,
+      /\bउत्पन्न प्रमाणपत्र\b/i,
+      /\bfinancial year\b/i
+    ],
+    primaryKeywords: ['income certificate', 'annual income', 'tahsildar', 'taluka executive magistrate'],
+    secondaryKeywords: ['rupees', 'lakhs', 'financial year', 'head of family']
+  },
+  {
+    canonical: 'DOMICILE CERTIFICATE',
+    code: 'DOM',
+    patterns: [
+      /\bdomicile certificate\b/i,
+      /\bage,?\s*nationality\s*(and|&)\s*domicile\b/i,
+      /\bage and domicile\b/i,
+      /\bresident of\s+state of maharashtra\b/i,
+      /\bstate of maharashtra\b/i,
+      /\bअधिवास प्रमाणपत्र\b/i
+    ],
+    primaryKeywords: ['domicile', 'age and nationality', 'state of maharashtra', 'ordinary resident'],
+    secondaryKeywords: ['executive magistrate', 'tahsildar', 'mumbai', 'pune', 'nagpur', 'district']
+  },
+  {
+    canonical: 'NON CREAMY LAYER CERTIFICATE',
+    code: 'NCL',
+    patterns: [
+      /\bnon[-\s]creamy layer\b/i,
+      /\bdoes not belong to the persons\/sections \(creamy layer\)\b/i,
+      /\bcreamy layer\b/i
+    ],
+    primaryKeywords: ['non creamy layer', 'creamy layer', 'other backward classes'],
+    secondaryKeywords: ['annual income', 'sub divisional officer', 'valid upto']
+  },
+  {
+    canonical: 'RATION CARD',
+    code: 'RAT',
+    patterns: [
+      /\bration card\b/i,
+      /\bfood (and|&) civil supplies\b/i,
+      /\bconsumer affairs\b/i,
+      /\bcard no\b/i
+    ],
+    primaryKeywords: ['ration card', 'food civil supplies', 'fair price'],
+    secondaryKeywords: ['head of family', 'gas connection', 'bpl', 'apl']
+  },
+  {
+    canonical: 'BANK PASSBOOK',
+    code: 'BNK',
+    patterns: [
+      /\bpassbook\b/i,
+      /\baccount (number|no)\b/i,
+      /\bifsc\s*code\b/i,
+      /\bbranch\b/i,
+      /\bstate bank of india\b/i,
+      /\bbank of maharashtra\b/i,
+      /\bbank of baroda\b/i
+    ],
+    primaryKeywords: ['passbook', 'ifsc', 'account number', 'bank'],
+    secondaryKeywords: ['savings', 'branch', 'micr', 'cif']
+  },
+  {
+    canonical: 'GAP CERTIFICATE',
+    code: 'GAP',
+    patterns: [
+      /\bgap certificate\b/i,
+      /\baffidavit for gap\b/i,
+      /\bgap in education\b/i,
+      /\beducational gap\b/i
+    ],
+    primaryKeywords: ['gap certificate', 'affidavit', 'educational gap'],
+    secondaryKeywords: ['notary', 'stamp paper', 'solemnly affirm']
+  }
+];
+
+export function evaluateSmartOcrDocument(text, studentName = '') {
+  if (!text || typeof text !== 'string') {
+    return {
+      docType: null,
+      canonical: null,
+      code: null,
+      confidence: 0,
+      studentNameMatchRatio: 0,
+      isConfident: false,
+      reason: 'No text extracted'
+    };
+  }
+
+  const cleanText = text.replace(/\s+/g, ' ');
+  let bestMatch = null;
+  let highestDocScore = 0;
+
+  for (const sig of SMART_DOC_SIGNATURES) {
+    let score = 0;
+    const matchedKeywords = [];
+
+    // 1. Strong Regex Patterns (up to 35 pts)
+    for (const pat of sig.patterns) {
+      if (pat.test(cleanText)) {
+        score += 35;
+        break;
+      }
+    }
+
+    // 2. Primary Keywords (up to 25 pts)
+    let primCount = 0;
+    for (const kw of sig.primaryKeywords) {
+      if (cleanText.toLowerCase().includes(kw.toLowerCase())) {
+        primCount++;
+        matchedKeywords.push(kw);
+      }
+    }
+    score += Math.min(25, primCount * 15);
+
+    // 3. Secondary Keywords (up to 10 pts)
+    let secCount = 0;
+    for (const kw of sig.secondaryKeywords) {
+      if (cleanText.toLowerCase().includes(kw.toLowerCase())) {
+        secCount++;
+      }
+    }
+    score += Math.min(10, secCount * 5);
+
+    if (score > highestDocScore) {
+      highestDocScore = score;
+      bestMatch = {
+        sig,
+        score,
+        matchedKeywords
+      };
+    }
+  }
+
+  // Student Name Matching (up to 30 pts)
+  let nameMatchRatio = 0;
+  if (studentName && studentName.trim()) {
+    const tokens = studentName.trim().toUpperCase().split(/\s+/).filter(t => t.length > 2);
+    if (tokens.length > 0) {
+      let matchedTokens = 0;
+      const upperText = cleanText.toUpperCase();
+      for (const tok of tokens) {
+        if (upperText.includes(tok)) {
+          matchedTokens++;
+        }
+      }
+      nameMatchRatio = Math.round((matchedTokens / tokens.length) * 100);
+    }
+  }
+
+  const docScore = bestMatch ? Math.min(70, bestMatch.score) : 0;
+  const nameBonus = Math.round((nameMatchRatio / 100) * 30);
+  const totalConfidence = Math.min(100, docScore + nameBonus);
+
+  return {
+    docType: bestMatch && docScore >= 35 ? bestMatch.sig.canonical : null,
+    canonical: bestMatch && docScore >= 35 ? bestMatch.sig.canonical : null,
+    code: bestMatch && docScore >= 35 ? bestMatch.sig.code : null,
+    confidence: bestMatch && docScore >= 35 ? totalConfidence : Math.min(45, totalConfidence),
+    docScore,
+    nameMatchRatio,
+    isConfident: totalConfidence >= 80 && docScore >= 50,
+    matchedKeywords: bestMatch ? bestMatch.matchedKeywords : []
+  };
+}

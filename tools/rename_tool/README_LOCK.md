@@ -37,6 +37,7 @@
 - [x] **Safe Atomic File Operations:** Native atomic rename with intermediate temporary files for Windows case-insensitive changes.
 - [x] **Duplicate Collision Prevention:** Non-colliding sequential suffixing (` 1`, ` 2`, etc.).
 - [x] **Multi-Level Undo:** Undo stack with full restoration of disk state and UI models.
+- [x] **Smart Auto-Rename (OCR & Confidence Engine):** Dual-tier text extraction (PDF.js digital text + Tesseract v5.3.3 scanned OCR), canonical pattern recognition (`AADHAAR CARD`, `10TH MARKSHEET`, `12TH MARKSHEET`, `12LC`, `CST`, `VLD`, `INC`, `DOM`, etc.), multi-signal scoring (0–100%), student name similarity bonus, live confidence badges (🟢 high, 🟡 review, 🔴 unmatched), batch `Rename Matched` (≥80%), and `Review Unmatched` navigation with `F4` hotkey.
 - [x] **3-Column Empty State:** Clean, consistent empty state with center action buttons and zero dummy student data.
 - [x] **Zero Marathi Text:** 100% English professional administrative workstation UI.
 

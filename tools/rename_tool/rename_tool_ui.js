@@ -51,7 +51,9 @@ import {
   CANONICAL_NAMES,
   DEFAULT_SPELLING_RULES,
   DEFAULT_LINKED_RULES,
-  DEFAULT_CHECKLISTS_DATA
+  DEFAULT_CHECKLISTS_DATA,
+  evaluateSmartOcrDocument,
+  SMART_DOC_SIGNATURES
 } from './rename_tool_logic.js';
 import { recordRenameEvent } from '../../src/services/analytics-service.js';
 import { loadSettings, saveSettings } from '../../src/services/storage-service.js';
@@ -107,7 +109,8 @@ export class RenamerUIManager {
       currentPdfPage: 1,
       totalPdfPages: 1,
       activePdfDoc: null,
-      activePdfUrl: null
+      activePdfUrl: null,
+      isSmartScanning: false
     };
 
     // 21 Canonical Shortcut Engine List
@@ -226,6 +229,22 @@ export class RenamerUIManager {
       btnExport.addEventListener('click', () => this.handleExportAudit());
     }
 
+    // Smart Auto-Rename Buttons
+    const btnSmartScan = document.getElementById('btnSmartScanBatch');
+    if (btnSmartScan) {
+      btnSmartScan.addEventListener('click', () => this.handleSmartScanBatch());
+    }
+
+    const btnRenameMatched = document.getElementById('btnRenameMatched');
+    if (btnRenameMatched) {
+      btnRenameMatched.addEventListener('click', () => this.handleRenameAllMatched());
+    }
+
+    const btnReviewUnmatched = document.getElementById('btnReviewUnmatched');
+    if (btnReviewUnmatched) {
+      btnReviewUnmatched.addEventListener('click', () => this.handleReviewUnmatched());
+    }
+
     // Casing Style Radios (UPPER, Title, lower, As Is)
     const updateCasingPillStyles = () => {
       document.querySelectorAll('#casingRadiosGroup label').forEach(lbl => {
@@ -325,6 +344,13 @@ export class RenamerUIManager {
       if (e.key === 'F2') {
         e.preventDefault();
         this.handleSelectFolder();
+        return;
+      }
+
+      // F4: Smart Scan Batch
+      if (e.key === 'F4') {
+        e.preventDefault();
+        this.handleSmartScanBatch();
         return;
       }
 
@@ -1012,6 +1038,23 @@ export class RenamerUIManager {
         span.textContent = `Rename All (${pendingToRename.length} Files)`;
       }
     }
+
+    // Smart Auto-Rename Action Buttons Counter Sync
+    const smartMatchedBtn = document.getElementById('btnRenameMatched');
+    if (smartMatchedBtn) {
+      const matchedCount = this.state.files.filter(f => !f.isRenamed && !f.isKept && (f.smartConfidence >= 80 || (f.smartConfidence === undefined && f.isMatched))).length;
+      const span = smartMatchedBtn.querySelector('span:not(.material-symbols-outlined)');
+      if (span) span.textContent = `Rename Matched (${matchedCount})`;
+      smartMatchedBtn.disabled = matchedCount === 0;
+    }
+
+    const reviewUnmatchedBtn = document.getElementById('btnReviewUnmatched');
+    if (reviewUnmatchedBtn) {
+      const unmatchedCount = this.state.files.filter(f => !f.isRenamed && !f.isKept && (f.smartConfidence !== undefined ? f.smartConfidence < 80 : !f.isMatched)).length;
+      const span = reviewUnmatchedBtn.querySelector('span:not(.material-symbols-outlined)');
+      if (span) span.textContent = `Review Unmatched (${unmatchedCount})`;
+      reviewUnmatchedBtn.disabled = unmatchedCount === 0;
+    }
   }
 
   renderQueue() {
@@ -1147,14 +1190,34 @@ export class RenamerUIManager {
       badgeGroup.appendChild(editingBadge);
       headerRow.appendChild(badgeGroup);
 
-      // Binary status tag: Green Matched or Red Unmatched
+      // Binary status tag: Green Matched or Red Unmatched & Smart Confidence Badge
+      const rightBadgeGroup = document.createElement('div');
+      rightBadgeGroup.className = 'flex items-center gap-1.5';
+
+      if (currentFile.smartConfidence !== undefined) {
+        const smartConfBadge = document.createElement('span');
+        if (currentFile.smartConfidence >= 80) {
+          smartConfBadge.className = 'confidence-badge confidence-badge-high';
+          smartConfBadge.textContent = `🟢 ${currentFile.smartConfidence}% ${currentFile.smartDocType || 'MATCH'}`;
+        } else if (currentFile.smartConfidence >= 60) {
+          smartConfBadge.className = 'confidence-badge confidence-badge-med';
+          smartConfBadge.textContent = `🟡 ${currentFile.smartConfidence}% ${currentFile.smartDocType || 'REVIEW'}`;
+        } else {
+          smartConfBadge.className = 'confidence-badge confidence-badge-low';
+          smartConfBadge.textContent = `🔴 ${currentFile.smartConfidence}% UNMATCHED`;
+        }
+        rightBadgeGroup.appendChild(smartConfBadge);
+      }
+
       const isReady = currentFile.isMatched || currentFile.isRenamed || currentFile.isKept;
       const statusTag = document.createElement('span');
       statusTag.className = isReady
         ? 'px-2 py-0.5 rounded font-mono-code text-[10px] bg-tertiary-fixed text-on-tertiary-fixed font-bold'
         : 'px-2 py-0.5 rounded font-mono-code text-[10px] bg-error-container text-on-error-container font-bold';
       statusTag.textContent = isReady ? 'Matched' : 'Unmatched';
-      headerRow.appendChild(statusTag);
+      rightBadgeGroup.appendChild(statusTag);
+
+      headerRow.appendChild(rightBadgeGroup);
 
       activeCardWrapper.appendChild(headerRow);
 
@@ -1386,6 +1449,21 @@ export class RenamerUIManager {
         leftCol.appendChild(targetTitle);
 
         item.appendChild(leftCol);
+
+        if (f.smartConfidence !== undefined) {
+          const confBadge = document.createElement('span');
+          if (f.smartConfidence >= 80) {
+            confBadge.className = 'confidence-badge confidence-badge-high';
+            confBadge.textContent = `🟢 ${f.smartConfidence}% ${f.smartDocType || 'MATCH'}`;
+          } else if (f.smartConfidence >= 60) {
+            confBadge.className = 'confidence-badge confidence-badge-med';
+            confBadge.textContent = `🟡 ${f.smartConfidence}% ${f.smartDocType || 'REVIEW'}`;
+          } else {
+            confBadge.className = 'confidence-badge confidence-badge-low';
+            confBadge.textContent = `🔴 ${f.smartConfidence}% UNMATCHED`;
+          }
+          item.appendChild(confBadge);
+        }
 
         upList.appendChild(item);
       });
@@ -2239,6 +2317,203 @@ export class RenamerUIManager {
     } catch (err) {
       toast.show('Undo Failed', err.message, 'error');
     }
+  }
+
+  async extractTextFromFile(file) {
+    if (!file) return '';
+    const isPdf = (file.ext === '.pdf' || (file.name && file.name.toLowerCase().endsWith('.pdf')));
+
+    if (isPdf) {
+      try {
+        if (!window.pdfjsLib) {
+          await new Promise((resolve) => this._loadPdfJs(resolve));
+        }
+        if (window.pdfjsLib && file.url) {
+          const loadingTask = window.pdfjsLib.getDocument(file.url);
+          const pdfDoc = await loadingTask.promise;
+          const page = await pdfDoc.getPage(1);
+          const textContent = await page.getTextContent();
+          const extractedText = (textContent.items || []).map(item => item.str).join(' ').trim();
+          if (extractedText && extractedText.length >= 35) {
+            return extractedText;
+          }
+
+          // Fallback: Scanned PDF page 1 rendered to canvas for Tesseract OCR
+          const viewport = page.getViewport({ scale: 1.5 });
+          const offscreenCanvas = document.createElement('canvas');
+          offscreenCanvas.width = viewport.width;
+          offscreenCanvas.height = viewport.height;
+          const ctx = offscreenCanvas.getContext('2d');
+          await page.render({ canvasContext: ctx, viewport }).promise;
+          const base64Data = offscreenCanvas.toDataURL('image/jpeg', 0.85);
+
+          const res = await fetch('http://localhost:3000/api/ocr-extract', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ base64Image: base64Data })
+          });
+          const data = await res.json();
+          if (data && data.success) {
+            return data.text || '';
+          }
+        }
+      } catch (err) {
+        console.warn('[DocMitra Renamer] PDF OCR extraction warning:', err);
+      }
+    } else {
+      // Image documents (JPG, PNG, TIFF, etc.)
+      try {
+        const res = await fetch('http://localhost:3000/api/ocr-extract', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filePath: file.path || file.nativePath || '' })
+        });
+        const data = await res.json();
+        if (data && data.success) {
+          return data.text || '';
+        }
+      } catch (err) {
+        console.warn('[DocMitra Renamer] Image OCR extraction warning:', err);
+      }
+    }
+    return '';
+  }
+
+  async handleSmartScanBatch() {
+    if (this.state.files.length === 0) {
+      toast.show('Intake Folder Needed', 'Press "Select Folder" (F2) before running Smart Scan.', 'warning');
+      return;
+    }
+    if (this.state.isSmartScanning) {
+      toast.show('Smart Scan Active', 'Scan is currently running in background...', 'info');
+      return;
+    }
+
+    const pending = this.state.files.filter(f => !f.isRenamed && !f.isKept);
+    if (pending.length === 0) {
+      toast.show('No Pending Files', 'All files are already renamed or kept.', 'info');
+      return;
+    }
+
+    this.state.isSmartScanning = true;
+    const btnSmart = document.getElementById('btnSmartScanBatch');
+    const origHtml = btnSmart ? btnSmart.innerHTML : '';
+    if (btnSmart) {
+      btnSmart.classList.add('smart-scan-pulse');
+      btnSmart.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-primary">sync</span><span>Scanning (0/${pending.length})...</span>`;
+    }
+
+    toast.show('Smart Scan Started', `Analyzing ${pending.length} documents with local OCR...`, 'info');
+
+    let highConfCount = 0;
+
+    for (let i = 0; i < pending.length; i++) {
+      const f = pending[i];
+      if (btnSmart) {
+        btnSmart.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-primary">sync</span><span>Scanning (${i + 1}/${pending.length})...</span>`;
+      }
+      try {
+        const text = await this.extractTextFromFile(f);
+        const evalRes = evaluateSmartOcrDocument(text, this.state.studentName);
+        f.smartEvaluation = evalRes;
+        f.smartConfidence = evalRes.confidence;
+        f.smartDocType = evalRes.docType;
+        f.smartText = text;
+
+        if (evalRes.isConfident && evalRes.docType) {
+          highConfCount++;
+          f.docType = evalRes.docType;
+          f.isMatched = true;
+          const formulaBase = buildName(evalRes.docType, this.state.studentName, this.state.settings?.groups, this.state.style);
+          const currentExt = f.ext || ('.' + f.name.split('.').pop()).toLowerCase();
+          f.targetName = formulaBase.endsWith(currentExt) ? formulaBase : `${formulaBase}${currentExt}`;
+          f.status = 'matched';
+        }
+      } catch (err) {
+        console.error('[DocMitra Renamer] OCR error on file:', f.name, err);
+        f.smartConfidence = 0;
+      }
+    }
+
+    this.state.isSmartScanning = false;
+    if (btnSmart) {
+      btnSmart.classList.remove('smart-scan-pulse');
+      btnSmart.innerHTML = origHtml;
+    }
+
+    this.updateTelemetry();
+    this.renderQueue();
+    this.renderCurrentPreview();
+
+    toast.show(
+      'Smart Scan Complete',
+      `${highConfCount} of ${pending.length} documents identified with high confidence (>=80%).`,
+      highConfCount > 0 ? 'success' : 'info'
+    );
+  }
+
+  async handleRenameAllMatched() {
+    const toRename = this.state.files.filter(f => !f.isRenamed && !f.isKept && (f.smartConfidence >= 80 || (f.smartConfidence === undefined && f.isMatched)) && f.targetName !== f.name);
+    if (toRename.length === 0) {
+      toast.show('No Matched Files', 'Run Smart Scan (F4) or match documents with shortcuts first.', 'info');
+      return;
+    }
+
+    for (const f of toRename) {
+      const err = validateFilename(f.targetName);
+      if (err) {
+        toast.show('Validation Error', `${f.name}: ${err}`, 'error');
+        return;
+      }
+    }
+
+    const plan = toRename.map(f => ({
+      old: f.name,
+      next: f.targetName,
+      file: f,
+      nativePath: f.path
+    }));
+
+    toast.show('Executing Matched Batch', `Renaming ${plan.length} matched files (>=80% confidence)...`, 'info');
+
+    try {
+      const result = await executeRename(this.state.folder, plan, (pct, status) => {
+        console.log(`[Smart Rename Progress] ${pct}%: ${status}`);
+      });
+
+      undoManager.pushBatch(this.state.folder, plan);
+
+      toRename.forEach(f => {
+        f.name = f.targetName;
+        f.isRenamed = true;
+        f.status = 'renamed';
+      });
+
+      toast.show('Matched Batch Complete!', `Successfully renamed ${plan.length} documents.`, 'success');
+      this.updateTelemetry();
+      this.renderQueue();
+      this.renderCurrentPreview();
+    } catch (err) {
+      toast.show('Rename Failed', err.message, 'error');
+    }
+  }
+
+  handleReviewUnmatched() {
+    const unmatchedIdx = this.state.files.findIndex(f => !f.isRenamed && !f.isKept && (f.smartConfidence !== undefined ? f.smartConfidence < 80 : !f.isMatched));
+    if (unmatchedIdx === -1) {
+      toast.show('Queue Clear', 'All pending files have high confidence or are already resolved.', 'info');
+      return;
+    }
+
+    this.state.currentIndex = unmatchedIdx;
+    this.renderQueue();
+    this.renderCurrentPreview();
+    const targetFile = this.state.files[unmatchedIdx];
+    toast.show(
+      'Reviewing File',
+      `Jumped to file #${unmatchedIdx + 1} (${targetFile.name}) for manual inspection.`,
+      'info'
+    );
   }
 
   handleSaveBatch() {
