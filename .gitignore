@@ -1,5 +1,6 @@
 # Temporary design references
 _design_ref/
+_backup_archive/
 
 # Build artifacts & releases
 releases/*.exe

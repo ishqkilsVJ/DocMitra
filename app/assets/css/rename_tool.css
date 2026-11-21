@@ -1,0 +1,93 @@
+/**
+ * tools/rename_tool/rename_tool.css
+ * DocMitra Bulk Document Renamer — Strictly Scoped Stylesheet
+ * All selectors are prefixed with .rename-tool-scope to ensure zero cross-tool style leakage.
+ */
+
+/* ==========================================================================
+   1. Scoped Scrollbar & Pan Scrolling Container
+   ========================================================================== */
+
+.rename-tool-scope .custom-pan-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(116, 118, 134, 0.3) transparent;
+}
+
+.rename-tool-scope .custom-pan-scroll::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.rename-tool-scope .custom-pan-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.rename-tool-scope .custom-pan-scroll::-webkit-scrollbar-thumb {
+  background: rgba(116, 118, 134, 0.3);
+  border-radius: 9999px;
+}
+
+.rename-tool-scope .custom-pan-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(116, 118, 134, 0.6);
+}
+
+.rename-tool-scope .pan-grab-active {
+  cursor: grab;
+}
+
+.rename-tool-scope .pan-grab-active.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+/* ==========================================================================
+   2. Scoped Inspection Viewport Stage
+   ========================================================================== */
+
+.rename-tool-scope .inspection-stage {
+  background-color: #f1f5f9;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.rename-tool-scope .queue-scroll-area {
+  scroll-behavior: smooth;
+}
+
+/* ==========================================================================
+   3. Scoped Hero Card & Input Interactivity
+   ========================================================================== */
+
+.rename-tool-scope .hero-card {
+  position: relative;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rename-tool-scope .hero-card:focus-within {
+  border-color: var(--color-primary, #0037b0);
+  box-shadow: 0 0 0 1px var(--color-primary, #0037b0);
+}
+
+.rename-tool-scope input[type="text"]:focus {
+  outline: none;
+}
+
+/* ==========================================================================
+   4. Scoped Badges & Status Indicators
+   ========================================================================== */
+
+.rename-tool-scope .badge-code {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* Status Indicator Transitions */
+.rename-tool-scope .status-indicator {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Keyboard hint styling */
+.rename-tool-scope kbd {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  user-select: none;
+}
