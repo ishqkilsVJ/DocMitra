@@ -215,10 +215,26 @@ export class RenamerUIManager {
       });
     });
 
-    // Clear Queue
+    // Clear Workspace (Top-Right Action Button & Footer Legacy)
+    const btnClearWs = document.getElementById('btnClearWorkspace');
+    if (btnClearWs) {
+      btnClearWs.addEventListener('click', () => this.handleClearQueue());
+    }
+
     const btnClear = document.getElementById('btnClearQueue');
     if (btnClear) {
       btnClear.addEventListener('click', () => this.handleClearQueue());
+    }
+
+    // Empty State Skeleton Action Buttons
+    const btnEmptySelect = document.getElementById('btnEmptySelectFolder');
+    if (btnEmptySelect) {
+      btnEmptySelect.addEventListener('click', () => this.handleSelectFolder());
+    }
+
+    const btnEmptyAdd = document.getElementById('btnEmptyAddFiles');
+    if (btnEmptyAdd) {
+      btnEmptyAdd.addEventListener('click', () => this.handleAddFiles());
     }
 
     // Wire initial mockup elements if user interacts before selecting folder
@@ -896,8 +912,20 @@ export class RenamerUIManager {
     if (counterPill) {
       if (this.state.subfolders.length > 0) {
         counterPill.textContent = `Folder ${this.state.currentSubfolderIndex + 1} of ${this.state.subfolders.length}`;
-      } else {
+      } else if (total > 0) {
         counterPill.textContent = 'Folder 1 of 1';
+      } else {
+        counterPill.textContent = 'Folder 0 of 0';
+      }
+    }
+
+    // Toggle Empty Skeleton Overlay (Zero Fake Files)
+    const skeletonOverlay = document.getElementById('renamerEmptySkeletonOverlay');
+    if (skeletonOverlay) {
+      if (total === 0) {
+        skeletonOverlay.classList.remove('hidden');
+      } else {
+        skeletonOverlay.classList.add('hidden');
       }
     }
 
@@ -993,7 +1021,7 @@ export class RenamerUIManager {
       activeCardWrapper.appendChild(headerRow);
 
       const card = document.createElement('article');
-      card.className = 'bg-surface-container-lowest rounded-xl shadow-md p-space-md flex flex-col gap-space-md border-2 border-primary ring-2 ring-primary/20 relative';
+      card.className = 'bg-surface-container-lowest rounded-xl shadow-md p-3 flex flex-col gap-2.5 border-2 border-primary ring-2 ring-primary/20 relative';
 
       // Original filename label with click-to-reset
       const origRow = document.createElement('div');
@@ -1216,57 +1244,6 @@ export class RenamerUIManager {
       inputSection.appendChild(suggestionsWrapper);
 
       card.appendChild(inputSection);
-
-      // 21 Quick Document Presets Grid (One-Click Instant Rename)
-      const presetsSection = document.createElement('div');
-      presetsSection.className = 'flex flex-col gap-1.5 pt-2 border-t border-surface-container';
-
-      const presetHeader = document.createElement('div');
-      presetHeader.className = 'flex items-center justify-between';
-      const presetTitle = document.createElement('span');
-      presetTitle.className = 'font-label-sm text-secondary font-semibold flex items-center gap-1.5';
-      const boltIcon = document.createElement('span');
-      boltIcon.className = 'material-symbols-outlined text-[15px] text-primary';
-      boltIcon.textContent = 'bolt';
-      presetTitle.appendChild(boltIcon);
-      presetTitle.appendChild(document.createTextNode('Quick 21-Shortcut Presets:'));
-      presetHeader.appendChild(presetTitle);
-
-      const presetTip = document.createElement('span');
-      presetTip.className = 'text-label-sm text-secondary font-mono-code text-[10px]';
-      presetTip.textContent = '1-Click Instant Rename';
-      presetHeader.appendChild(presetTip);
-      presetsSection.appendChild(presetHeader);
-
-      const presetsGrid = document.createElement('div');
-      presetsGrid.className = 'grid grid-cols-3 gap-1.5 max-h-48 overflow-y-auto pr-0.5';
-
-      this.shortcuts21.forEach(sc => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'px-2 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[11px] font-semibold border border-outline-variant/40 hover:border-primary/50 transition-all flex items-center gap-1 shadow-xs justify-center cursor-pointer active:scale-95';
-
-        const badge = document.createElement('span');
-        badge.className = 'px-1 py-0.2 rounded bg-surface-container-highest text-secondary text-[9px] font-bold';
-        badge.textContent = sc.code;
-        btn.appendChild(badge);
-
-        const lbl = document.createElement('span');
-        lbl.className = 'truncate';
-        lbl.textContent = sc.label;
-        btn.appendChild(lbl);
-
-        // One-Click Instant Rename
-        btn.addEventListener('click', () => {
-          this.applyShortcutToCurrent(sc);
-        });
-
-        presetsGrid.appendChild(btn);
-      });
-
-      presetsSection.appendChild(presetsGrid);
-      card.appendChild(presetsSection);
-
       activeCardWrapper.appendChild(card);
       scrollContainer.appendChild(activeCardWrapper);
 
@@ -1302,12 +1279,13 @@ export class RenamerUIManager {
       scrollContainer.appendChild(upHeader);
 
       const upList = document.createElement('div');
-      upList.className = 'flex flex-col gap-1.5 shrink-0';
+      upList.className = 'flex flex-col gap-1 shrink-0';
 
-      upcomingFiles.slice(0, 10).forEach(f => {
+      upcomingFiles.forEach(f => {
         const fIdx = this.state.files.indexOf(f);
         const item = document.createElement('article');
-        item.className = 'bg-surface-container-lowest rounded-xl shadow-xs px-space-md py-2 flex items-center justify-between gap-space-sm hover:bg-surface-container-low transition-colors border border-outline-variant/30 cursor-pointer';
+        item.className = 'h-8 px-2.5 py-1 rounded-lg bg-surface-container-lowest shadow-xs flex items-center justify-between gap-2 hover:bg-surface-container-low transition-colors border border-outline-variant/30 cursor-pointer shrink-0';
+        item.title = `Original: ${f.name} (Click to jump & edit)`;
 
         // Click upcoming item to jump and focus
         item.addEventListener('click', () => {
@@ -1317,33 +1295,24 @@ export class RenamerUIManager {
         });
 
         const leftCol = document.createElement('div');
-        leftCol.className = 'flex items-center gap-2.5 min-w-0 flex-1';
+        leftCol.className = 'flex items-center gap-2 min-w-0 flex-1';
 
         const numBadge = document.createElement('span');
-        numBadge.className = 'w-5 h-5 rounded bg-surface-container text-secondary font-mono-code font-medium text-[11px] flex items-center justify-center shrink-0';
+        numBadge.className = 'w-4 h-4 rounded bg-surface-container text-secondary font-mono-code font-bold text-[10px] flex items-center justify-center shrink-0';
         numBadge.textContent = String(fIdx + 1);
         leftCol.appendChild(numBadge);
 
-        const nameCol = document.createElement('div');
-        nameCol.className = 'flex flex-col min-w-0';
-
         const targetTitle = document.createElement('span');
-        targetTitle.className = 'font-mono-code text-[12px] text-on-surface font-semibold truncate';
+        targetTitle.className = 'font-mono-code text-[11px] text-on-surface font-semibold truncate';
         targetTitle.textContent = cleanName(f.targetName || f.suggestedName || f.name);
-        nameCol.appendChild(targetTitle);
+        leftCol.appendChild(targetTitle);
 
-        const origTitle = document.createElement('span');
-        origTitle.className = 'text-[10px] font-mono-code text-secondary truncate';
-        origTitle.textContent = f.name;
-        nameCol.appendChild(origTitle);
-
-        leftCol.appendChild(nameCol);
         item.appendChild(leftCol);
 
         const tag = document.createElement('span');
         tag.className = f.isMatched
-          ? 'px-1.5 py-0.5 rounded font-mono-code text-[9px] bg-tertiary-fixed text-on-tertiary-fixed font-bold uppercase shrink-0'
-          : 'px-1.5 py-0.5 rounded font-mono-code text-[9px] bg-surface-variant text-on-surface-variant font-bold uppercase shrink-0';
+          ? 'px-1.5 py-0.2 rounded font-mono-code text-[9px] bg-tertiary-fixed text-on-tertiary-fixed font-bold uppercase shrink-0'
+          : 'px-1.5 py-0.2 rounded font-mono-code text-[9px] bg-surface-variant text-on-surface-variant font-bold uppercase shrink-0';
         tag.textContent = f.docType || 'Select';
         item.appendChild(tag);
 
@@ -1395,45 +1364,41 @@ export class RenamerUIManager {
         scrollContainer.appendChild(missingHeader);
 
         const missingList = document.createElement('div');
-        missingList.className = 'flex flex-col gap-1.5 shrink-0';
+        missingList.className = 'flex flex-col gap-1 shrink-0';
 
         missingRules.forEach(([ruleName]) => {
           const mItem = document.createElement('article');
-          mItem.className = 'bg-surface-container-lowest rounded-xl shadow-xs px-space-md py-2 flex flex-col gap-1.5 border border-amber-500/30 hover:border-amber-500/50 transition-colors';
+          mItem.className = 'h-8 px-2.5 py-1 rounded-lg bg-surface-container-lowest shadow-xs flex items-center justify-between gap-2 border border-amber-500/30 hover:border-amber-500/50 transition-colors shrink-0';
 
-          const topRow = document.createElement('div');
-          topRow.className = 'flex items-center justify-between gap-2';
-
-          const nameCol = document.createElement('div');
-          nameCol.className = 'flex items-center gap-1.5 min-w-0 flex-1';
+          const leftCol = document.createElement('div');
+          leftCol.className = 'flex items-center gap-1.5 min-w-0 flex-1';
 
           const redDot = document.createElement('span');
-          redDot.className = 'w-2 h-2 rounded-full bg-error shrink-0';
-          nameCol.appendChild(redDot);
+          redDot.className = 'w-1.5 h-1.5 rounded-full bg-error shrink-0';
+          leftCol.appendChild(redDot);
 
           const titleSpan = document.createElement('span');
-          titleSpan.className = 'font-mono-code text-[12px] font-bold text-on-surface truncate';
+          titleSpan.className = 'font-mono-code text-[11px] font-bold text-on-surface truncate';
           titleSpan.textContent = ruleName;
-          nameCol.appendChild(titleSpan);
-          topRow.appendChild(nameCol);
+          leftCol.appendChild(titleSpan);
 
           const studentName = this.state.studentName || this.state.folder?.name || 'Student';
           const pendingFollowup = getPendingFollowUp(studentName, ruleName);
 
           const statusBadge = document.createElement('span');
           if (pendingFollowup) {
-            statusBadge.className = 'px-1.5 py-0.5 rounded font-mono-code text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold shrink-0 flex items-center gap-1';
+            statusBadge.className = 'px-1.5 py-0.2 rounded font-mono-code text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold shrink-0 flex items-center gap-0.5';
             statusBadge.textContent = `📅 ${formatFriendlyDate(pendingFollowup.promisedDate)}`;
           } else {
-            statusBadge.className = 'px-1.5 py-0.5 rounded font-mono-code text-[9px] bg-error-container text-on-error-container font-bold shrink-0';
+            statusBadge.className = 'px-1.5 py-0.2 rounded font-mono-code text-[9px] bg-error-container text-on-error-container font-bold shrink-0';
             statusBadge.textContent = 'Missing';
           }
-          topRow.appendChild(statusBadge);
-          mItem.appendChild(topRow);
+          leftCol.appendChild(statusBadge);
+          mItem.appendChild(leftCol);
 
-          // Action Row: 1. Follow-up Date Popover, 2. Direct Import Button
+          // Inline Action Buttons (Follow-up + Import)
           const actionRow = document.createElement('div');
-          actionRow.className = 'flex items-center justify-end gap-1.5 pt-1 border-t border-surface-container';
+          actionRow.className = 'flex items-center gap-1 shrink-0';
 
           // 1. Follow-up Date Picker Popover Button
           const popoverWrapper = document.createElement('div');
@@ -1441,12 +1406,12 @@ export class RenamerUIManager {
 
           const btnFollowup = document.createElement('button');
           btnFollowup.type = 'button';
-          btnFollowup.className = 'px-2 py-1 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[10px] font-semibold flex items-center gap-1 border border-outline-variant/30 cursor-pointer transition-colors';
+          btnFollowup.className = 'px-1.5 py-0.5 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[9px] font-semibold flex items-center gap-0.5 border border-outline-variant/30 cursor-pointer transition-colors';
           const calIcon = document.createElement('span');
-          calIcon.className = 'material-symbols-outlined text-[13px] text-primary';
+          calIcon.className = 'material-symbols-outlined text-[12px] text-primary';
           calIcon.textContent = 'event';
           btnFollowup.appendChild(calIcon);
-          btnFollowup.appendChild(document.createTextNode('Follow-up'));
+          btnFollowup.appendChild(document.createTextNode('Date'));
           popoverWrapper.appendChild(btnFollowup);
 
           const dateMenu = document.createElement('div');
@@ -1548,9 +1513,9 @@ export class RenamerUIManager {
           // 2. Direct Import Button
           const btnImport = document.createElement('button');
           btnImport.type = 'button';
-          btnImport.className = 'px-2.5 py-1 rounded bg-primary hover:bg-primary/90 text-on-primary font-mono-code text-[10px] font-bold flex items-center gap-1 shadow-xs cursor-pointer transition-colors';
+          btnImport.className = 'px-2 py-0.5 rounded bg-primary hover:bg-primary/90 text-on-primary font-mono-code text-[9px] font-bold flex items-center gap-0.5 shadow-xs cursor-pointer transition-colors';
           const impIcon = document.createElement('span');
-          impIcon.className = 'material-symbols-outlined text-[13px]';
+          impIcon.className = 'material-symbols-outlined text-[12px]';
           impIcon.textContent = 'download';
           btnImport.appendChild(impIcon);
           btnImport.appendChild(document.createTextNode('Import'));
@@ -1630,7 +1595,7 @@ export class RenamerUIManager {
       completedFiles.forEach(f => {
         const fIdx = this.state.files.indexOf(f);
         const item = document.createElement('article');
-        item.className = 'bg-surface-container-lowest rounded-xl shadow-xs px-space-md py-1.5 flex items-center justify-between gap-space-sm border border-emerald-300 cursor-pointer hover:bg-emerald-50/50 transition-colors';
+        item.className = 'h-8 px-2.5 py-1 rounded-lg bg-surface-container-lowest shadow-xs flex items-center justify-between gap-2 border border-emerald-300 cursor-pointer hover:bg-emerald-50/50 transition-colors shrink-0';
         item.title = 'Click to re-open and re-rename in Active Card';
 
         // USER APPROVED SPEC: Clicking completed item re-opens it in Active Card
@@ -1644,9 +1609,9 @@ export class RenamerUIManager {
         left.className = 'flex items-center gap-2 min-w-0 flex-1';
 
         const iconBadge = document.createElement('span');
-        iconBadge.className = 'w-4 h-4 rounded-full bg-emerald-500 text-on-primary font-mono-code font-bold text-[9px] flex items-center justify-center shrink-0';
+        iconBadge.className = 'w-3.5 h-3.5 rounded-full bg-emerald-500 text-on-primary font-mono-code font-bold text-[9px] flex items-center justify-center shrink-0';
         const ok = document.createElement('span');
-        ok.className = 'material-symbols-outlined text-[11px]';
+        ok.className = 'material-symbols-outlined text-[10px]';
         ok.textContent = 'check';
         iconBadge.appendChild(ok);
         left.appendChild(iconBadge);
@@ -2003,11 +1968,16 @@ export class RenamerUIManager {
   handleClearQueue() {
     this.state.files = [];
     this.state.folder = null;
+    this.state.subfolders = [];
+    this.state.currentSubfolderIndex = 0;
+    this.state.studentName = '';
     this.state.currentIndex = 0;
+    this.state.activePdfDoc = null;
+    this.state.activePdfUrl = null;
     this.updateTelemetry();
     this.renderQueue();
     this.renderCurrentPreview();
-    toast.show('Queue Cleared', 'Intake workstation reset.', 'info');
+    toast.show('Workspace Cleared', 'Intake queue and preview have been reset.', 'info');
   }
 
   renderCurrentPreview() {
