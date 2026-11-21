@@ -73,8 +73,11 @@ def pick_native_files(title="Select Files to Process", file_filter="All Files (*
         from tkinter import filedialog
         root = tk.Tk()
         root.withdraw()
+        root.lift()
         root.attributes('-topmost', True)
-        selected = filedialog.askopenfilenames(title=title)
+        root.focus_force()
+        selected = filedialog.askopenfilenames(parent=root, title=title)
+        root.update()
         root.destroy()
         if selected:
             files = []
@@ -98,7 +101,7 @@ def pick_native_files(title="Select Files to Process", file_filter="All Files (*
     except Exception:
         pass
 
-    # 2. PowerShell Fallback with CREATE_NO_WINDOW (Never opens black console window)
+    # 2. PowerShell Fallback with CREATE_NO_WINDOW and WindowStyle Hidden
     ps_cmd = (
         "Add-Type -AssemblyName System.Windows.Forms; "
         "[System.Windows.Forms.Application]::EnableVisualStyles(); "
@@ -117,7 +120,7 @@ def pick_native_files(title="Select Files to Process", file_filter="All Files (*
     try:
         CREATE_NO_WINDOW = 0x08000000
         proc = subprocess.run(
-            ['powershell.exe', '-NoProfile', '-STA', '-Command', ps_cmd],
+            ['powershell.exe', '-NoProfile', '-NonInteractive', '-WindowStyle', 'Hidden', '-STA', '-Command', ps_cmd],
             capture_output=True,
             text=True,
             timeout=300,
@@ -156,8 +159,11 @@ def pick_native_folder(title="Select Folder"):
         from tkinter import filedialog
         root = tk.Tk()
         root.withdraw()
+        root.lift()
         root.attributes('-topmost', True)
-        folder = filedialog.askdirectory(title=title)
+        root.focus_force()
+        folder = filedialog.askdirectory(parent=root, title=title)
+        root.update()
         root.destroy()
         if folder:
             norm = os.path.normpath(folder)
@@ -167,7 +173,7 @@ def pick_native_folder(title="Select Folder"):
     except Exception:
         pass
 
-    # 2. PowerShell Fallback with CREATE_NO_WINDOW (Never opens black console window)
+    # 2. PowerShell Fallback with CREATE_NO_WINDOW and WindowStyle Hidden
     ps_cmd = (
         "Add-Type -AssemblyName System.Windows.Forms; "
         "[System.Windows.Forms.Application]::EnableVisualStyles(); "
@@ -185,7 +191,7 @@ def pick_native_folder(title="Select Folder"):
     try:
         CREATE_NO_WINDOW = 0x08000000
         proc = subprocess.run(
-            ['powershell.exe', '-NoProfile', '-STA', '-Command', ps_cmd],
+            ['powershell.exe', '-NoProfile', '-NonInteractive', '-WindowStyle', 'Hidden', '-STA', '-Command', ps_cmd],
             capture_output=True,
             text=True,
             timeout=300,

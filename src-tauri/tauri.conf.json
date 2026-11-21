@@ -10,8 +10,10 @@
     "beforeBuildCommand": "node build-ui.js"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
+        "label": "main",
         "title": "DocMitra - Administrative Bento Workstation",
         "width": 1440,
         "height": 900,

@@ -1,15 +1,30 @@
 /**
- * ClerkMaster — Native Desktop Bridge Service
- * Connects the web UI directly to the local Python desktop engine
- * providing zero-prompt OS-level file operations, native folder pickers,
- * and multi-format document preview extraction.
+ * DocMitra — Native Desktop Bridge Service
+ * Seamlessly connects UI to:
+ * 1. Tauri 2.0 Rust native API (rfd COM Windows Explorer dialog, instant & zero console window)
+ * 2. Modern Chromium / WebView2 File System Access API (showDirectoryPicker / showOpenFilePicker)
+ * 3. Local Python desktop engine fallback
+ * 4. Standard HTML5 input element fallback
  */
 
 const BACKEND_BASE = 'http://localhost:3000';
 
+function getTauriInvoke() {
+  if (typeof window !== 'undefined') {
+    if (window.__TAURI__?.core?.invoke) return window.__TAURI__.core.invoke;
+    if (window.__TAURI_INTERNALS__?.invoke) return window.__TAURI_INTERNALS__.invoke;
+  }
+  return null;
+}
+
+export function isTauriEnvironment() {
+  return !!getTauriInvoke();
+}
+
 export async function isNativeAvailable() {
+  if (isTauriEnvironment()) return true;
   try {
-    const res = await fetch(`${BACKEND_BASE}/api/license-status`, { signal: AbortSignal.timeout(3000) });
+    const res = await fetch(`${BACKEND_BASE}/api/license-status`, { signal: AbortSignal.timeout(2000) });
     return res.ok;
   } catch {
     return false;
@@ -17,24 +32,31 @@ export async function isNativeAvailable() {
 }
 
 /**
- * Triggers authentic Windows Explorer Folder Picker with fallback to native browser File System API
+ * Triggers authentic Windows Explorer Folder Picker:
+ * Priority 1: Tauri native Rust `rfd` dialog (instant, foreground, zero black window)
+ * Priority 2: Direct Chromium / WebView2 showDirectoryPicker
+ * Priority 3: Python local backend
+ * Priority 4: Hidden webkitdirectory input fallback
  */
 export async function selectNativeFolder() {
-  // 1. Try Python local desktop bridge
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 120000);
-    const res = await fetch(`${BACKEND_BASE}/api/native-select-folder`, { signal: controller.signal });
-    clearTimeout(timeoutId);
-    if (res.ok) {
-      const data = await res.json();
-      if (data.success || data.cancelled) return data;
+  const invoke = getTauriInvoke();
+
+  // 1. TAURI RUST NATIVE DIALOG (FASTEST, 0 BLACK CONSOLES)
+  if (invoke) {
+    try {
+      const folderPath = await invoke('pick_native_folder');
+      if (!folderPath) {
+        return { success: false, cancelled: true };
+      }
+      // Scan directory immediately using Rust
+      const dirData = await invoke('list_native_directory', { path: folderPath });
+      return dirData;
+    } catch (err) {
+      console.warn('[NativeBridge] Tauri pick_native_folder failed, falling back:', err);
     }
-  } catch (err) {
-    console.warn('[NativeBridge] Backend folder picker failed or unavailable, falling back:', err);
   }
 
-  // 2. Direct Chromium / WebView2 File System API
+  // 2. DIRECT CHROMIUM / WEBVIEW2 FILE SYSTEM ACCESS API
   if (typeof window !== 'undefined' && typeof window.showDirectoryPicker === 'function') {
     try {
       const dirHandle = await window.showDirectoryPicker();
@@ -72,10 +94,25 @@ export async function selectNativeFolder() {
       if (pickerErr.name === 'AbortError') {
         return { success: false, cancelled: true };
       }
+      console.warn('[NativeBridge] showDirectoryPicker error, trying backend:', pickerErr);
     }
   }
 
-  // 3. Fallback: Hidden HTML webkitdirectory input
+  // 3. PYTHON BACKEND BRIDGE
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    const res = await fetch(`${BACKEND_BASE}/api/native-select-folder`, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success || data.cancelled) return data;
+    }
+  } catch (err) {
+    console.warn('[NativeBridge] Backend folder picker failed:', err);
+  }
+
+  // 4. HIDDEN HTML WEBKITDIRECTORY INPUT FALLBACK
   return new Promise((resolve) => {
     let input = document.getElementById('hiddenFallbackFolderInput');
     if (!input) {
@@ -86,6 +123,7 @@ export async function selectNativeFolder() {
       input.style.display = 'none';
       document.body.appendChild(input);
     }
+    input.value = '';
     input.onchange = (e) => {
       const fileList = Array.from(e.target.files || []);
       if (fileList.length === 0) return resolve({ success: false, cancelled: true });
@@ -110,22 +148,126 @@ export async function selectNativeFolder() {
 }
 
 /**
- * Lists all subfolders and files in a directory using Python's fast os.scandir
+ * Triggers authentic Windows Multi-File Selection:
+ * Priority 1: Tauri native Rust `rfd` dialog
+ * Priority 2: Direct Chromium / WebView2 showOpenFilePicker
+ * Priority 3: Python local backend
+ * Priority 4: Hidden multiple file input
+ */
+export async function selectNativeFiles(filter = 'All Files (*.*)|*.*', title = 'Select Files') {
+  const invoke = getTauriInvoke();
+
+  // 1. TAURI RUST NATIVE DIALOG
+  if (invoke) {
+    try {
+      const res = await invoke('pick_native_files');
+      return res;
+    } catch (err) {
+      console.warn('[NativeBridge] Tauri pick_native_files failed, falling back:', err);
+    }
+  }
+
+  // 2. DIRECT CHROMIUM / WEBVIEW2 FILE SYSTEM ACCESS API
+  if (typeof window !== 'undefined' && typeof window.showOpenFilePicker === 'function') {
+    try {
+      const handles = await window.showOpenFilePicker({ multiple: true });
+      const files = [];
+      for (const h of handles) {
+        const file = await h.getFile();
+        file.handle = h;
+        files.push({
+          name: file.name,
+          path: file.name,
+          size: file.size,
+          ext: ('.' + file.name.split('.').pop()).toLowerCase(),
+          url: URL.createObjectURL(file),
+          fileObj: file
+        });
+      }
+      return { success: true, files };
+    } catch (pickerErr) {
+      if (pickerErr.name === 'AbortError') return { success: false, cancelled: true };
+      console.warn('[NativeBridge] showOpenFilePicker error, trying backend:', pickerErr);
+    }
+  }
+
+  // 3. PYTHON BACKEND BRIDGE
+  try {
+    const res = await fetch(`${BACKEND_BASE}/api/native-select-files?filter=${encodeURIComponent(filter)}&title=${encodeURIComponent(title)}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success || data.cancelled) return data;
+    }
+  } catch (err) {
+    console.warn('[NativeBridge] Backend file picker failed:', err);
+  }
+
+  // 4. HIDDEN HTML MULTIPLE FILE INPUT FALLBACK
+  return new Promise((resolve) => {
+    let input = document.getElementById('hiddenFallbackFilesInput');
+    if (!input) {
+      input = document.createElement('input');
+      input.id = 'hiddenFallbackFilesInput';
+      input.type = 'file';
+      input.multiple = true;
+      input.style.display = 'none';
+      document.body.appendChild(input);
+    }
+    input.value = '';
+    input.onchange = (e) => {
+      const fileList = Array.from(e.target.files || []);
+      if (fileList.length === 0) return resolve({ success: false, cancelled: true });
+      const mapped = fileList.map(f => ({
+        name: f.name,
+        path: f.name,
+        size: f.size,
+        ext: ('.' + f.name.split('.').pop()).toLowerCase(),
+        url: URL.createObjectURL(f),
+        fileObj: f
+      }));
+      resolve({ success: true, files: mapped });
+    };
+    input.click();
+  });
+}
+
+/**
+ * Lists all subfolders and files in a directory
  */
 export async function listNativeDirectory(dirPath) {
+  const invoke = getTauriInvoke();
+  if (invoke) {
+    try {
+      const res = await invoke('list_native_directory', { path: dirPath });
+      return res;
+    } catch (err) {
+      console.warn('[NativeBridge] Tauri list_native_directory failed, trying backend:', err);
+    }
+  }
+
   try {
     const res = await fetch(`${BACKEND_BASE}/api/list-directory?path=${encodeURIComponent(dirPath)}`);
-    if (!res.ok) return { success: false, errorCode: 'CM-104', error: `Server error: ${res.status}` };
+    if (!res.ok) return { success: false, errorCode: 'DM-104', error: `Server error: ${res.status}` };
     return await res.json();
   } catch (err) {
-    return { success: false, errorCode: 'CM-104', error: err.message };
+    return { success: false, errorCode: 'DM-104', error: err.message };
   }
 }
 
 /**
- * Atomically renames a file on disk via Python os.rename
+ * Atomically renames a file on disk
  */
 export async function renameNativeFile(oldPath, newName) {
+  const invoke = getTauriInvoke();
+  if (invoke) {
+    try {
+      const res = await invoke('rename_native_file', { oldPath, newName });
+      return res;
+    } catch (err) {
+      console.warn('[NativeBridge] Tauri rename_native_file failed, trying backend:', err);
+    }
+  }
+
   try {
     const res = await fetch(`${BACKEND_BASE}/api/native-rename`, {
       method: 'POST',
@@ -142,12 +284,32 @@ export async function renameNativeFile(oldPath, newName) {
  * Batch renames multiple files on disk atomically
  */
 export async function batchRenameNativeFiles(renames) {
+  const results = [];
+  for (const item of renames) {
+    const r = await renameNativeFile(item.oldPath, item.newName);
+    results.push(r);
+  }
+  const allSuccess = results.every(r => r.success);
+  return { success: allSuccess, results };
+}
+
+/**
+ * Reveals a directory natively in Windows Explorer
+ */
+export async function openFolderInExplorer(folderPath) {
+  const invoke = getTauriInvoke();
+  if (invoke) {
+    try {
+      const res = await invoke('open_in_explorer', { path: folderPath });
+      return { success: !!res };
+    } catch (err) {
+      console.warn('[NativeBridge] Tauri open_in_explorer failed:', err);
+    }
+  }
+
   try {
-    const res = await fetch(`${BACKEND_BASE}/api/native-batch-rename`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ renames })
-    });
+    const res = await fetch(`${BACKEND_BASE}/api/open-folder?path=${encodeURIComponent(folderPath)}`);
+    if (!res.ok) return { success: false, error: `Failed to open Explorer: ${res.status}` };
     return await res.json();
   } catch (err) {
     return { success: false, error: err.message };
@@ -171,6 +333,7 @@ export async function getDocPreview(filePath) {
  * Converts a native file descriptor to a standard browser File/Blob object
  */
 export async function createNativeFileObject(nativeItem) {
+  if (nativeItem.fileObj) return nativeItem.fileObj;
   try {
     const resp = await fetch(nativeItem.url);
     const blob = await resp.blob();
@@ -192,83 +355,3 @@ export async function createNativeFileObject(nativeItem) {
     };
   }
 }
-
-/**
- * Triggers authentic Windows OpenFileDialog for native multi-file selection with browser fallback
- */
-export async function selectNativeFiles(filter = 'All Files (*.*)|*.*', title = 'Select Files') {
-  // 1. Try Python local desktop bridge
-  try {
-    const res = await fetch(`${BACKEND_BASE}/api/native-select-files?filter=${encodeURIComponent(filter)}&title=${encodeURIComponent(title)}`);
-    if (res.ok) {
-      const data = await res.json();
-      if (data.success || data.cancelled) return data;
-    }
-  } catch (err) {
-    console.warn('[NativeBridge] Backend file picker failed or unavailable, falling back:', err);
-  }
-
-  // 2. Direct Chromium / WebView2 File System API
-  if (typeof window !== 'undefined' && typeof window.showOpenFilePicker === 'function') {
-    try {
-      const handles = await window.showOpenFilePicker({ multiple: true });
-      const files = [];
-      for (const h of handles) {
-        const file = await h.getFile();
-        file.handle = h;
-        files.push({
-          name: file.name,
-          path: file.name,
-          size: file.size,
-          ext: ('.' + file.name.split('.').pop()).toLowerCase(),
-          url: URL.createObjectURL(file),
-          fileObj: file
-        });
-      }
-      return { success: true, files };
-    } catch (pickerErr) {
-      if (pickerErr.name === 'AbortError') return { success: false, cancelled: true };
-    }
-  }
-
-  // 3. Fallback: Hidden multi-file HTML input
-  return new Promise((resolve) => {
-    let input = document.getElementById('hiddenFallbackFilesInput');
-    if (!input) {
-      input = document.createElement('input');
-      input.id = 'hiddenFallbackFilesInput';
-      input.type = 'file';
-      input.multiple = true;
-      input.style.display = 'none';
-      document.body.appendChild(input);
-    }
-    input.onchange = (e) => {
-      const fileList = Array.from(e.target.files || []);
-      if (fileList.length === 0) return resolve({ success: false, cancelled: true });
-      const mapped = fileList.map(f => ({
-        name: f.name,
-        path: f.name,
-        size: f.size,
-        ext: ('.' + f.name.split('.').pop()).toLowerCase(),
-        url: URL.createObjectURL(f),
-        fileObj: f
-      }));
-      resolve({ success: true, files: mapped });
-    };
-    input.click();
-  });
-}
-
-/**
- * Reveals a directory natively in Windows Explorer
- */
-export async function openFolderInExplorer(folderPath) {
-  try {
-    const res = await fetch(`${BACKEND_BASE}/api/open-folder?path=${encodeURIComponent(folderPath)}`);
-    if (!res.ok) return { success: false, error: `Failed to open Explorer: ${res.status}` };
-    return await res.json();
-  } catch (err) {
-    return { success: false, error: err.message };
-  }
-}
-
