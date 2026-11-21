@@ -58,7 +58,8 @@ import {
   matchFilenameSmart,
   SMART_DOC_SIGNATURES,
   registerDocumentSignature,
-  extractSignatureKeywords
+  extractSignatureKeywords,
+  extractCleanTokens
 } from './rename_tool_logic.js';
 import { recordRenameEvent } from '../../src/services/analytics-service.js';
 import { loadSettings, saveSettings, loadDocumentPresets, saveDocumentPresets } from '../../src/services/storage-service.js';
@@ -73,17 +74,31 @@ import {
 } from '../../src/services/followup-service.js';
 
 /**
+ * Get Tauri invoke function across all Tauri v2 runtime variations
+ */
+export function getTauriInvoke() {
+  if (typeof window !== 'undefined') {
+    if (window.__TAURI__?.core?.invoke) return window.__TAURI__.core.invoke;
+    if (window.__TAURI_INTERNALS__?.invoke) return window.__TAURI_INTERNALS__.invoke;
+    if (window.__TAURI__?.invoke) return window.__TAURI__.invoke;
+  }
+  return null;
+}
+
+/**
  * Universal file preview URL resolver
  * Handles blob URLs, Tauri convertFileSrc, dynamic origin localhost endpoints, and base64 fallbacks
  */
 export function resolveFilePreviewUrl(f) {
   if (!f) return null;
+  if (f._blobUrl) return f._blobUrl;
   if (typeof f.url === 'string' && (f.url.startsWith('blob:') || f.url.startsWith('data:'))) {
     return f.url;
   }
   if (f.fileObj && typeof URL !== 'undefined' && URL.createObjectURL) {
     try {
-      f.url = URL.createObjectURL(f.fileObj);
+      f._blobUrl = URL.createObjectURL(f.fileObj);
+      f.url = f._blobUrl;
       return f.url;
     } catch (_) { }
   }
@@ -136,6 +151,122 @@ export function getShortcutBadgeColor(code) {
   return 'bg-primary text-on-primary font-extrabold';
 }
 
+
+export const BUILTIN_PRESETS = {
+  "MAHA DBT": [
+    { name: "Aadhaar Card", code: "ADR", keywords: ["aadhaar card", "aadhar", "adhar", "uidai", "uid"] },
+    { name: "Income Certificate", code: "INC", keywords: ["income certificate", "income", "tahsildar income", "utpann"] },
+    { name: "Domicile Certificate", code: "DOM", keywords: ["domicile certificate", "domicile", "adhiwas"] },
+    { name: "Nationality Certificate", code: "NAT", keywords: ["nationality certificate", "nationality", "indian nationality"] },
+    { name: "Caste Certificate", code: "CST", keywords: ["caste certificate", "caste", "jati", "category cert"] },
+    { name: "Caste Validity Certificate", code: "VLD", keywords: ["caste validity certificate", "validity", "caste validity", "padtalni"] },
+    { name: "Non Creamy Layer Certificate", code: "NCL", keywords: ["non creamy layer certificate", "non creamy layer", "ncl", "creamy layer"] },
+    { name: "10th Marksheet", code: "10M", keywords: ["10th marksheet", "10 marksheet", "10th mark", "ssc marksheet", "ssc mark"] },
+    { name: "12th Marksheet", code: "12M", keywords: ["12th marksheet", "12 marksheet", "12th mark", "hsc marksheet", "hsc mark"] },
+    { name: "Leaving Certificate", code: "LC", keywords: ["leaving certificate", "lc", "school leaving", "college leaving", "tc", "transfer certificate"] },
+    { name: "Bonafide Certificate", code: "BON", keywords: ["bonafide certificate", "bonafide", "bonafied", "college bonafide"] },
+    { name: "Admission Fee Receipt", code: "FEE", keywords: ["admission fee receipt", "fee receipt", "admission fee", "fees paid", "fee challan"] },
+    { name: "Bank Passbook", code: "BNK", keywords: ["bank passbook", "passbook", "bank account", "bank front page", "ifsc"] },
+    { name: "Ration Card", code: "RAT", keywords: ["ration card", "ration", "shidori patrika"] },
+    { name: "Declaration Certificate", code: "DEC", keywords: ["declaration certificate", "declaration", "self declaration", "hamipatra"] }
+  ],
+  "CET CELL": [
+    { name: "CET Scorecard", code: "CET", keywords: ["cet scorecard", "cet score", "cet result", "mht cet", "cet"] },
+    { name: "CET Application Confirmation", code: "APP", keywords: ["cet application confirmation", "application form", "confirmation receipt", "cet form"] },
+    { name: "Aadhaar Card", code: "ADR", keywords: ["aadhaar card", "aadhar", "adhar", "uidai", "uid"] },
+    { name: "APAAR ID", code: "APR", keywords: ["apaar id", "apaar", "abc id", "academic bank of credits"] },
+    { name: "10th Marksheet", code: "10M", keywords: ["10th marksheet", "10 marksheet", "10th mark", "ssc marksheet", "ssc mark"] },
+    { name: "10th Passing Certificate", code: "10P", keywords: ["10th passing certificate", "10th passing", "10 passing", "ssc passing", "10th board cert"] },
+    { name: "12th Marksheet", code: "12M", keywords: ["12th marksheet", "12 marksheet", "12th mark", "hsc marksheet", "hsc mark"] },
+    { name: "12th Passing Certificate", code: "12P", keywords: ["12th passing certificate", "12th passing", "12 passing", "hsc passing", "12th board cert"] },
+    { name: "Leaving Certificate", code: "LC", keywords: ["leaving certificate", "lc", "school leaving", "college leaving", "tc"] },
+    { name: "Domicile Certificate", code: "DOM", keywords: ["domicile certificate", "domicile", "adhiwas"] },
+    { name: "Nationality Certificate", code: "NAT", keywords: ["nationality certificate", "nationality", "indian nationality"] },
+    { name: "Caste Certificate", code: "CST", keywords: ["caste certificate", "caste", "jati", "category cert"] },
+    { name: "Caste Validity Certificate", code: "VLD", keywords: ["caste validity certificate", "validity", "caste validity", "padtalni"] },
+    { name: "Non Creamy Layer Certificate", code: "NCL", keywords: ["non creamy layer certificate", "non creamy layer", "ncl"] },
+    { name: "EWS Certificate", code: "EWS", keywords: ["ews certificate", "ews", "economically weaker section"] },
+    { name: "Disability Certificate", code: "PWD", keywords: ["disability certificate", "pwd", "handicap", "divyang"] },
+    { name: "Minority Declaration", code: "MIN", keywords: ["minority declaration", "minority", "religious minority", "linguistic minority"] },
+    { name: "Photo", code: "PIC", keywords: ["photo", "pic", "photograph", "passport photo", "student photo"] }
+  ],
+  "SWAYAM": [
+    { name: "Aadhaar Card", code: "ADR", keywords: ["aadhaar card", "aadhar", "adhar", "uidai"] },
+    { name: "Income Certificate", code: "INC", keywords: ["income certificate", "income", "utpann"] },
+    { name: "Domicile Certificate", code: "DOM", keywords: ["domicile certificate", "domicile", "adhiwas"] },
+    { name: "Caste Certificate", code: "CST", keywords: ["caste certificate", "caste", "jati"] },
+    { name: "Caste Validity Certificate", code: "VLD", keywords: ["caste validity certificate", "validity", "caste validity"] },
+    { name: "Bonafide Certificate", code: "BON", keywords: ["bonafide certificate", "bonafide", "bonafied"] },
+    { name: "Admission Fee Receipt", code: "FEE", keywords: ["admission fee receipt", "fee receipt", "admission fee", "fee paid"] },
+    { name: "Hostel Receipt / Bonafide", code: "HST", keywords: ["hostel receipt", "hostel bonafide", "hostel", "vasatigruh"] },
+    { name: "Bank Passbook", code: "BNK", keywords: ["bank passbook", "passbook", "bank", "ifsc"] },
+    { name: "Ration Card", code: "RAT", keywords: ["ration card", "ration"] },
+    { name: "Self Declaration", code: "DEC", keywords: ["self declaration", "declaration", "hamipatra"] },
+    { name: "Photo", code: "PIC", keywords: ["photo", "pic", "photograph", "passport photo"] }
+  ],
+  "EDUCATIONAL": [
+    { name: "Aadhaar Card", code: "ADR", keywords: ["aadhaar card", "aadhar", "adhar", "uidai", "uid"] },
+    { name: "Photo", code: "PIC", keywords: ["photo", "pic", "photograph", "passport photo", "student photo"] },
+    { name: "10th Marksheet", code: "10M", keywords: ["10th marksheet", "10 marksheet", "10th mark", "ssc marksheet", "ssc mark"] },
+    { name: "10th Passing Certificate", code: "10P", keywords: ["10th passing certificate", "10th passing", "10 passing", "ssc passing"] },
+    { name: "10th Marksheet and Passing Certificate", code: "10MP", keywords: ["10th marksheet and passing certificate", "10th marksheet passing", "10 mp", "cbse 10th marksheet passing"] },
+    { name: "11th Marksheet", code: "11M", keywords: ["11th marksheet", "11 marksheet", "11th mark", "fyjc marksheet"] },
+    { name: "12th Marksheet", code: "12M", keywords: ["12th marksheet", "12 marksheet", "12th mark", "hsc marksheet", "hsc mark"] },
+    { name: "12th Passing Certificate", code: "12P", keywords: ["12th passing certificate", "12th passing", "12 passing", "hsc passing"] },
+    { name: "12th Marksheet and Passing Certificate", code: "12MP", keywords: ["12th marksheet and passing certificate", "12th marksheet passing", "12 mp", "cbse 12th marksheet passing"] },
+    { name: "Leaving Certificate", code: "LC", keywords: ["leaving certificate", "lc", "12lc", "12l", "school leaving", "college leaving", "tc"] },
+    { name: "Caste Certificate", code: "CST", keywords: ["caste certificate", "caste", "cas", "jati"] },
+    { name: "Caste Validity Certificate", code: "VLD", keywords: ["caste validity certificate", "validity", "caste validity", "padtalni"] },
+    { name: "Non Creamy Layer Certificate", code: "NCL", keywords: ["non creamy layer certificate", "non creamy layer", "ncl"] },
+    { name: "Domicile Certificate", code: "DOM", keywords: ["domicile certificate", "domicile", "domi", "adhiwas"] },
+    { name: "Nationality Certificate", code: "NAT", keywords: ["nationality certificate", "nationality", "nat", "indian nationality"] },
+    { name: "Income Certificate", code: "INC", keywords: ["income certificate", "income", "inc", "utpann"] },
+    { name: "Self Declaration", code: "SDC", keywords: ["self declaration", "self decl", "declaration", "hamipatra"] },
+    { name: "Parent Declaration", code: "PDC", keywords: ["parent declaration", "parent decl", "parents declaration"] },
+    { name: "Residential Document", code: "RES", keywords: ["residential document", "residential", "residence proof"] },
+    { name: "Ration Card", code: "RAT", keywords: ["ration card", "ration", "rat"] },
+    { name: "PAN Card", code: "PAN", keywords: ["pan card", "pan", "permanent account number"] },
+    { name: "Birth Certificate", code: "BRT", keywords: ["birth certificate", "birth", "brt", "janma dakhla"] },
+    { name: "Bank Passbook", code: "BNK", keywords: ["bank passbook", "passbook", "bank", "bnk", "ifsc"] }
+  ]
+};
+
+export const DEFAULT_SHORTCUTS = [
+  { code: 'ADR', label: 'Aadhaar Card', canonical: 'AADHAAR CARD', keywords: ['aadhaar', 'aadhar', 'adhar', 'uidai', 'uid'] },
+  { code: 'PIC', label: 'Photo', canonical: 'PHOTO', keywords: ['photo', 'pic', 'photograph', 'passport photo', 'student photo'] },
+  { code: '10M', label: '10th Marksheet', canonical: '10TH MARKSHEET', keywords: ['10th marksheet', '10 marksheet', '10th mark', 'ssc marksheet', 'ssc'] },
+  { code: '10P', label: '10th Passing Certificate', canonical: '10TH PASSING CERTIFICATE', keywords: ['10th passing', '10 passing', 'ssc passing', '10th pass cert'] },
+  { code: '10MP', label: '10th Marksheet and Passing Certificate', canonical: '10TH MARKSHEET AND PASSING CERTIFICATE', keywords: ['10th marksheet passing', '10th combined', 'cbse 10th marksheet passing'] },
+  { code: '11M', label: '11th Marksheet', canonical: '11TH MARKSHEET', keywords: ['11th marksheet', '11 marksheet', '11th mark', 'fyjc marksheet'] },
+  { code: '12M', label: '12th Marksheet', canonical: '12TH MARKSHEET', keywords: ['12th marksheet', '12 marksheet', '12th mark', 'hsc marksheet', 'hsc'] },
+  { code: '12P', label: '12th Passing Certificate', canonical: '12TH PASSING CERTIFICATE', keywords: ['12th passing', '12 passing', 'hsc passing', '12th pass cert'] },
+  { code: '12MP', label: '12th Marksheet and Passing Certificate', canonical: '12TH MARKSHEET AND PASSING CERTIFICATE', keywords: ['12th marksheet passing', '12th combined', 'cbse 12th marksheet passing'] },
+  { code: 'LC', label: 'Leaving Certificate', canonical: 'LEAVING CERTIFICATE', keywords: ['leaving certificate', 'lc', '12lc', '12l', 'tc', 'transfer certificate'] },
+  { code: 'CST', label: 'Caste Certificate', canonical: 'CASTE CERTIFICATE', keywords: ['caste certificate', 'caste', 'cas', 'jati', 'category'] },
+  { code: 'VLD', label: 'Caste Validity Certificate', canonical: 'CASTE VALIDITY CERTIFICATE', keywords: ['caste validity', 'validity', 'vld', 'padtalni'] },
+  { code: 'NCL', label: 'Non Creamy Layer Certificate', canonical: 'NON CREAMY LAYER CERTIFICATE', keywords: ['non creamy layer', 'ncl', 'creamy layer'] },
+  { code: 'DOM', label: 'Domicile Certificate', canonical: 'DOMICILE CERTIFICATE', keywords: ['domicile', 'domi', 'adhiwas'] },
+  { code: 'NAT', label: 'Nationality Certificate', canonical: 'NATIONALITY CERTIFICATE', keywords: ['nationality', 'nat', 'indian nationality'] },
+  { code: 'INC', label: 'Income Certificate', canonical: 'INCOME CERTIFICATE', keywords: ['income certificate', 'income', 'inc', 'utpann'] },
+  { code: 'SDC', label: 'Self Declaration', canonical: 'SELF DECLARATION', keywords: ['self declaration', 'self decl', 'declaration', 'hamipatra'] },
+  { code: 'PDC', label: 'Parent Declaration', canonical: 'PARENT DECLARATION', keywords: ['parent declaration', 'parent decl', 'parents declaration'] },
+  { code: 'RES', label: 'Residential Document', canonical: 'RESIDENTIAL DOCUMENT', keywords: ['residential document', 'residential', 'residence proof'] },
+  { code: 'RAT', label: 'Ration Card', canonical: 'RATION CARD', keywords: ['ration card', 'ration', 'rat'] },
+  { code: 'PAN', label: 'PAN Card', canonical: 'PAN CARD', keywords: ['pan card', 'pan'] },
+  { code: 'BRT', label: 'Birth Certificate', canonical: 'BIRTH CERTIFICATE', keywords: ['birth certificate', 'birth', 'brt', 'janma dakhla'] },
+  { code: 'BNK', label: 'Bank Passbook', canonical: 'BANK PASSBOOK', keywords: ['bank passbook', 'passbook', 'bank', 'bnk'] },
+  { code: 'CET', label: 'CET Scorecard', canonical: 'CET SCORECARD', keywords: ['cet scorecard', 'cet score', 'cet result', 'mht cet'] },
+  { code: 'APP', label: 'CET Application Confirmation', canonical: 'CET APPLICATION CONFIRMATION', keywords: ['cet application', 'application confirmation', 'cet form', 'confirmation receipt'] },
+  { code: 'APR', label: 'APAAR ID', canonical: 'APAAR ID', keywords: ['apaar id', 'apaar', 'abc id'] },
+  { code: 'EWS', label: 'EWS Certificate', canonical: 'EWS CERTIFICATE', keywords: ['ews certificate', 'ews', 'economically weaker'] },
+  { code: 'PWD', label: 'Disability Certificate', canonical: 'DISABILITY CERTIFICATE', keywords: ['disability certificate', 'pwd', 'divyang', 'handicap'] },
+  { code: 'MIN', label: 'Minority Declaration', canonical: 'MINORITY DECLARATION', keywords: ['minority declaration', 'minority'] },
+  { code: 'BON', label: 'Bonafide Certificate', canonical: 'BONAFIDE CERTIFICATE', keywords: ['bonafide certificate', 'bonafide', 'bonafied'] },
+  { code: 'FEE', label: 'Admission Fee Receipt', canonical: 'ADMISSION FEE RECEIPT', keywords: ['admission fee receipt', 'fee receipt', 'admission fee', 'fees'] },
+  { code: 'HST', label: 'Hostel Receipt / Bonafide', canonical: 'HOSTEL RECEIPT / BONAFIDE', keywords: ['hostel receipt', 'hostel bonafide', 'hostel', 'vasatigruh'] },
+  { code: 'DEC', label: 'Declaration Certificate', canonical: 'DECLARATION CERTIFICATE', keywords: ['declaration certificate', 'declaration', 'hamipatra'] }
+];
+
 export class RenamerUIManager {
   constructor() {
     this.state = {
@@ -148,6 +279,8 @@ export class RenamerUIManager {
       style: 'preserve', // 'preserve' | 'upper' | 'lower' | 'title'
       settings: null,
       documentPresets: null,
+      activePreset: 'MAHA DBT',
+      customShortcuts: [],
       history: [],
       zoom: 100,
       rotation: 0,
@@ -164,76 +297,14 @@ export class RenamerUIManager {
     };
     this._scanAbortController = null;
 
-    // 21 Canonical Shortcut Engine List
-    this.shortcuts21 = [
-      { code: 'ADR', label: 'Aadhaar Card', canonical: 'AADHAAR CARD' },
-      { code: 'PAN', label: 'PAN Card', canonical: 'PAN CARD' },
-      { code: 'PIC', label: 'Student Photo', canonical: 'PHOTO' },
-      { code: '10M', label: '10th Marksheet', canonical: '10TH MARKSHEET' },
-      { code: '10P', label: '10th Passing', canonical: '10TH PASSING CERTIFICATE' },
-      { code: '12M', label: '12th Marksheet', canonical: '12TH MARKSHEET' },
-      { code: '12P', label: '12th Passing', canonical: '12TH PASSING CERTIFICATE' },
-      { code: '12LC', label: '12th Leaving Cert', canonical: '12TH LC' },
-      { code: '12MP', label: '12th Mark & Pass', canonical: '12TH MARKSHEET AND PASSING' },
-      { code: 'CST', label: 'Caste Certificate', canonical: 'CASTE CERTIFICATE' },
-      { code: 'VLD', label: 'Validity Cert', canonical: 'VALIDITY CERTIFICATE' },
-      { code: 'DOM', label: 'Domicile Cert', canonical: 'DOMICILE CERTIFICATE' },
-      { code: 'NAT', label: 'Nationality Cert', canonical: 'NATIONALITY CERTIFICATE' },
-      { code: 'INC', label: 'Income Certificate', canonical: 'INCOME CERTIFICATE' },
-      { code: 'BNK', label: 'Bank Passbook', canonical: 'PASSBOOK BANK' },
-      { code: 'ATM', label: 'Attempt Cert', canonical: 'ATTEMPT CERTIFICATE' },
-      { code: 'BRT', label: 'Birth Certificate', canonical: 'BIRTH CERTIFICATE' },
-      { code: 'BNF', label: 'Bonafide Cert', canonical: 'BONAFIDE CERTIFICATE' },
-      { code: 'GAP', label: 'Gap Certificate', canonical: 'GAP CERTIFICATE' },
-      { code: 'SLF', label: 'Self Declaration', canonical: 'SELF DECLARATION' },
-      { code: 'PAR', label: 'Parent Declaration', canonical: 'PARENT DECLARATION' }
-    ];
+    // Master Shortcuts & Rules List (33 Rules)
+    this.shortcuts21 = JSON.parse(JSON.stringify(DEFAULT_SHORTCUTS));
   }
 
   init() {
     this.state.settings = loadSettings();
-    loadDocumentPresets().then(presets => {
-      if (presets) {
-        if (presets.forms) {
-          this.state.documentPresets = presets.forms;
-          for (const formKey of Object.keys(presets.forms)) {
-            const list = presets.forms[formKey];
-            if (Array.isArray(list)) {
-              for (const item of list) {
-                if (item.name) {
-                  registerDocumentSignature({
-                    canonical: item.name,
-                    code: item.code || '',
-                    primaryKeywords: item.primaryKeywords || [item.name.toLowerCase()],
-                    secondaryKeywords: item.secondaryKeywords || []
-                  });
-                  if (item.code && !this.shortcuts21.some(s => s.code.toUpperCase() === item.code.toUpperCase())) {
-                    this.shortcuts21.push({
-                      code: item.code.toUpperCase(),
-                      label: item.name,
-                      canonical: item.name
-                    });
-                  }
-                }
-              }
-            }
-          }
-        }
-        if (Array.isArray(presets.customSignatures)) {
-          for (const sig of presets.customSignatures) {
-            registerDocumentSignature(sig);
-            if (sig.code && !this.shortcuts21.some(s => s.code.toUpperCase() === sig.code.toUpperCase())) {
-              this.shortcuts21.push({
-                code: sig.code.toUpperCase(),
-                label: sig.canonical,
-                canonical: sig.canonical
-              });
-            }
-          }
-        }
-        this.renderQueue();
-      }
-    }).catch(() => { });
+    this.loadPresetsAndSettings();
+
     const savedCasing = localStorage.getItem('docmitra_casing_style');
     this.state.style = (savedCasing && ['upper', 'title', 'lower'].includes(savedCasing.toLowerCase()))
       ? savedCasing.toLowerCase()
@@ -244,11 +315,12 @@ export class RenamerUIManager {
 
     // Listen for external settings updates from Settings modal
     window.addEventListener('storage', (e) => {
-      if (e.key === 'docmitra_settings' || e.key === 'docmitra_casing_style') {
+      if (e.key === 'docmitra_settings' || e.key === 'docmitra_casing_style' || e.key === 'docmitra_active_preset') {
         this.state.settings = loadSettings();
         const sc = localStorage.getItem('docmitra_casing_style');
         this.state.style = (sc && ['upper', 'title', 'lower'].includes(sc.toLowerCase())) ? sc.toLowerCase() : 'upper';
-        this._recalculateTargetNames();
+        this.loadPresetsAndSettings();
+        this._recalculateTargetNames(true);
         this.renderQueue();
         this.renderCurrentPreview();
       }
@@ -338,11 +410,7 @@ export class RenamerUIManager {
       btnReviewUnmatched.addEventListener('click', () => this.handleReviewUnmatched());
     }
 
-    // Modal: Add Document (Self-Learning Flow)
-    const btnAddDoc = document.getElementById('btnAddNewDocument');
-    if (btnAddDoc) {
-      btnAddDoc.addEventListener('click', () => this.openAddDocumentModal());
-    }
+    // Modal: Add Document to Preset Flow
     const btnCloseAddDoc = document.getElementById('btnCloseAddDocModal');
     if (btnCloseAddDoc) {
       btnCloseAddDoc.addEventListener('click', () => this.closeAddDocumentModal());
@@ -353,7 +421,61 @@ export class RenamerUIManager {
     }
     const btnSaveAddDoc = document.getElementById('btnSaveAddDoc');
     if (btnSaveAddDoc) {
-      btnSaveAddDoc.addEventListener('click', () => this.handleSaveAndLearnDocument());
+      btnSaveAddDoc.addEventListener('click', () => this.handleSaveDocumentType());
+    }
+
+    // Modal: Dedicated Rename Tool Settings
+    const btnSettings = document.getElementById('btnRenameSettings');
+    if (btnSettings) {
+      btnSettings.addEventListener('click', () => this.handleOpenSettingsModal('presets'));
+    }
+    const btnCloseSettings = document.getElementById('btnCloseRenameSettings');
+    if (btnCloseSettings) {
+      btnCloseSettings.addEventListener('click', () => this.handleCloseSettingsModal());
+    }
+    const btnDoneSettings = document.getElementById('btnDoneRenameSettings');
+    if (btnDoneSettings) {
+      btnDoneSettings.addEventListener('click', () => this.handleCloseSettingsModal());
+    }
+    const tabBtnPresets = document.getElementById('tabBtnPresets');
+    if (tabBtnPresets) {
+      tabBtnPresets.addEventListener('click', () => this.renderSettingsModal('presets'));
+    }
+    const tabBtnShortcuts = document.getElementById('tabBtnShortcuts');
+    if (tabBtnShortcuts) {
+      tabBtnShortcuts.addEventListener('click', () => this.renderSettingsModal('shortcuts'));
+    }
+    const selectActivePreset = document.getElementById('selectActivePreset');
+    if (selectActivePreset) {
+      selectActivePreset.addEventListener('change', (e) => this.handleSwitchActivePreset(e.target.value));
+    }
+    const btnNewPreset = document.getElementById('btnNewPreset');
+    if (btnNewPreset) {
+      btnNewPreset.addEventListener('click', () => this.handleNewPreset());
+    }
+    const btnCopyPreset = document.getElementById('btnCopyPreset');
+    if (btnCopyPreset) {
+      btnCopyPreset.addEventListener('click', () => this.handleCopyPreset());
+    }
+    const btnRenamePreset = document.getElementById('btnRenamePreset');
+    if (btnRenamePreset) {
+      btnRenamePreset.addEventListener('click', () => this.handleRenamePreset());
+    }
+    const btnDeletePreset = document.getElementById('btnDeletePreset');
+    if (btnDeletePreset) {
+      btnDeletePreset.addEventListener('click', () => this.handleDeletePreset());
+    }
+    const btnResetPresets = document.getElementById('btnResetPresetsDefault');
+    if (btnResetPresets) {
+      btnResetPresets.addEventListener('click', () => this.handleResetPresetsDefault());
+    }
+    const btnAddDocToPreset = document.getElementById('btnAddDocToPreset');
+    if (btnAddDocToPreset) {
+      btnAddDocToPreset.addEventListener('click', () => this.openAddDocumentModal());
+    }
+    const btnAddNewShortcut = document.getElementById('btnAddNewShortcut');
+    if (btnAddNewShortcut) {
+      btnAddNewShortcut.addEventListener('click', () => this.openAddDocumentModal(null, true));
     }
 
     // Modal: Cross-Check Preview
@@ -467,6 +589,12 @@ export class RenamerUIManager {
 
       // Escape: Dismiss active modal if open
       if (e.key === 'Escape') {
+        const modalRenameSettings = document.getElementById('modalRenameSettings');
+        if (modalRenameSettings && !modalRenameSettings.classList.contains('hidden')) {
+          e.preventDefault();
+          this.handleCloseSettingsModal();
+          return;
+        }
         const modalAddDoc = document.getElementById('modalAddDocument');
         if (modalAddDoc && !modalAddDoc.classList.contains('hidden')) {
           e.preventDefault();
@@ -909,7 +1037,7 @@ export class RenamerUIManager {
       const mapped = newFiles.map((f, i) => {
         const extension = f.ext || ext(f.name);
         const baseName = cleanName(f.name);
-        const matchSmart = matchFilenameSmart(f.name, this.state.studentName, this.state.settings?.groups);
+        const matchSmart = matchFilenameSmart(f.name, this.state.studentName, this.state.settings?.groups, this.getAllPresetDocuments());
         const docType = matchSmart.docType;
         const isMatched = matchSmart.confidence >= 30;
 
@@ -1014,7 +1142,7 @@ export class RenamerUIManager {
 
       // Batch spelling auto-correction: correct scanner typos before matching
       // Filename-based matching (30%+ threshold) & preview URL resolution
-      const matchSmart = matchFilenameSmart(f.name, this.state.studentName, this.state.settings?.groups);
+      const matchSmart = matchFilenameSmart(f.name, this.state.studentName, this.state.settings?.groups, this.getAllPresetDocuments());
       const docType = matchSmart.docType;
       const isMatched = matchSmart.confidence >= 30;
 
@@ -1068,15 +1196,26 @@ export class RenamerUIManager {
     }
   }
 
-  _recalculateTargetNames() {
+  _recalculateTargetNames(reMatch = false) {
     const usedDestinations = new Set();
     for (const f of this.state.files) {
       if (f.isRenamed || f.isKept) {
         usedDestinations.add(f.targetName || f.name);
       }
     }
+    const presetDocs = this.getAllPresetDocuments();
     for (const f of this.state.files) {
       if (!f.isRenamed && !f.isKept) {
+        if (reMatch || !f.isMatched) {
+          const matchSmart = matchFilenameSmart(f.name, this.state.studentName, this.state.settings?.groups, presetDocs);
+          if (matchSmart.confidence >= 30) {
+            f.docType = matchSmart.docType;
+            f.smartDocType = matchSmart.docType;
+            f.smartConfidence = matchSmart.confidence;
+            f.isMatched = true;
+            f.status = matchSmart.confidence >= 80 ? 'matched' : 'needs_review';
+          }
+        }
         const docBase = f.docType || cleanName(f.name);
         const currentExt = f.ext || ('.' + f.name.split('.').pop()).toLowerCase();
         const newBase = buildName(docBase, this.state.studentName, this.state.settings?.groups, this.state.style);
@@ -1359,22 +1498,27 @@ export class RenamerUIManager {
       const rightBadgeGroup = document.createElement('div');
       rightBadgeGroup.className = 'flex items-center gap-1.5';
 
+      const liveBadge = document.createElement('span');
+      liveBadge.id = 'activeFileLiveBadge';
       if (currentFile.status === 'needs_review') {
-        const smartConfBadge = document.createElement('span');
-        smartConfBadge.className = 'confidence-badge confidence-badge-med';
-        smartConfBadge.textContent = '🟡 Needs Review';
-        rightBadgeGroup.appendChild(smartConfBadge);
+        liveBadge.className = 'confidence-badge confidence-badge-med';
+        liveBadge.textContent = '🟡 Needs Review';
       } else if (currentFile.smartConfidence !== undefined && currentFile.smartConfidence >= 30) {
-        const smartConfBadge = document.createElement('span');
         if (currentFile.smartConfidence >= 80) {
-          smartConfBadge.className = 'confidence-badge confidence-badge-high';
-          smartConfBadge.textContent = `🟢 ${currentFile.smartConfidence}% ${currentFile.smartDocType || currentFile.docType || 'DOCUMENT'}`;
+          liveBadge.className = 'confidence-badge confidence-badge-high';
+          liveBadge.textContent = `🟢 ${currentFile.smartConfidence}% ${currentFile.smartDocType || currentFile.docType || 'DOCUMENT'}`;
         } else {
-          smartConfBadge.className = 'confidence-badge confidence-badge-med';
-          smartConfBadge.textContent = `🟡 ${currentFile.smartConfidence}% ${currentFile.smartDocType || currentFile.docType || 'DOCUMENT'}`;
+          liveBadge.className = 'confidence-badge confidence-badge-med';
+          liveBadge.textContent = `🟡 ${currentFile.smartConfidence}% ${currentFile.smartDocType || currentFile.docType || 'DOCUMENT'}`;
         }
-        rightBadgeGroup.appendChild(smartConfBadge);
+      } else if (currentFile.isMatched && currentFile.docType) {
+        liveBadge.className = 'confidence-badge confidence-badge-high';
+        liveBadge.textContent = `🟢 Matched: ${currentFile.docType}`;
+      } else {
+        liveBadge.className = 'confidence-badge confidence-badge-low';
+        liveBadge.textContent = '🔴 Unmatched';
       }
+      rightBadgeGroup.appendChild(liveBadge);
 
       headerRow.appendChild(rightBadgeGroup);
 
@@ -1398,9 +1542,12 @@ export class RenamerUIManager {
 
       origVal.addEventListener('click', () => {
         const cleanOriginal = cleanName(currentFile.name);
+        delete currentFile.userEditedName;
+        currentFile.hasUserEdited = false;
         currentFile.targetName = currentFile.name;
+        targetInput.value = cleanOriginal;
         this.updateTelemetry();
-        this.renderQueue();
+        this.renderCoreShortcuts('');
         toast.show('Input Reset', cleanOriginal, 'info');
       });
 
@@ -1448,15 +1595,28 @@ export class RenamerUIManager {
       targetInput.setAttribute('name', `docmitra_rename_${Date.now()}`);
       targetInput.className = 'w-full h-10 px-3 rounded-lg bg-surface-container-lowest font-mono-code text-[13px] text-on-surface font-semibold border-2 border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-xs';
 
-      // USER APPROVED SPEC: ONLY NAME WITHOUT EXTENSION IN EDIT FIELD
-      targetInput.value = cleanName(currentFile.targetName || currentFile.suggestedName || currentFile.name);
+      // USER APPROVED SPEC: Show original filename without extension in edit field first
+      if (currentFile.userEditedName !== undefined) {
+        targetInput.value = currentFile.userEditedName;
+      } else {
+        targetInput.value = cleanName(currentFile.name);
+      }
 
       // Live keystroke filtering for illegal characters
       targetInput.addEventListener('keydown', (e) => {
         // Tab key: confirm and advance
         if (e.key === 'Tab' && !e.shiftKey) {
           e.preventDefault();
-          this.handleConfirmCurrentName(targetInput.value.trim());
+          const typedVal = targetInput.value.trim();
+          if (!currentFile.hasUserEdited && typedVal === cleanName(currentFile.name)) {
+            if (currentFile.isMatched && (currentFile.targetName || currentFile.suggestedName)) {
+              this.handleConfirmCurrentName(currentFile.targetName || currentFile.suggestedName);
+            } else {
+              this.handleKeepOriginal();
+            }
+          } else {
+            this.handleConfirmCurrentName(typedVal);
+          }
           return;
         }
 
@@ -1470,7 +1630,16 @@ export class RenamerUIManager {
         // Enter key: confirm and advance (identical to Tab)
         if (e.key === 'Enter') {
           e.preventDefault();
-          this.handleConfirmCurrentName(targetInput.value.trim());
+          const typedVal = targetInput.value.trim();
+          if (!currentFile.hasUserEdited && typedVal === cleanName(currentFile.name)) {
+            if (currentFile.isMatched && (currentFile.targetName || currentFile.suggestedName)) {
+              this.handleConfirmCurrentName(currentFile.targetName || currentFile.suggestedName);
+            } else {
+              this.handleKeepOriginal();
+            }
+          } else {
+            this.handleConfirmCurrentName(typedVal);
+          }
           return;
         }
 
@@ -1490,15 +1659,21 @@ export class RenamerUIManager {
           toast.show('Character Not Allowed', 'Illegal Windows filename characters removed', 'warning');
         }
 
+        currentFile.hasUserEdited = true;
+        currentFile.userEditedName = val;
+
         const currentExt = currentFile.ext || ext(currentFile.name);
         const trimmedVal = val.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+        const liveBadge = document.getElementById('activeFileLiveBadge');
 
         if (!trimmedVal) {
           currentFile.targetName = currentFile.name;
           currentFile.docType = null;
           currentFile.isMatched = false;
-          statusTag.className = 'px-2 py-0.5 rounded font-mono-code text-[10px] bg-error-container text-on-error-container font-bold';
-          statusTag.textContent = 'Unmatched';
+          if (liveBadge) {
+            liveBadge.className = 'confidence-badge confidence-badge-low';
+            liveBadge.textContent = '🔴 Unmatched';
+          }
           this.updateTelemetry();
           this.renderCoreShortcuts('');
           return;
@@ -1510,8 +1685,10 @@ export class RenamerUIManager {
           const canonical = exactShortcut.canonical;
           currentFile.docType = canonical;
           currentFile.isMatched = true;
-          statusTag.className = 'px-2 py-0.5 rounded font-mono-code text-[10px] bg-tertiary-fixed text-on-tertiary-fixed font-bold';
-          statusTag.textContent = `Matched: ${canonical}`;
+          if (liveBadge) {
+            liveBadge.className = 'confidence-badge confidence-badge-high';
+            liveBadge.textContent = `🟢 Matched: ${canonical}`;
+          }
 
           const formulaBase = buildName(canonical, this.state.studentName, this.state.settings?.groups, this.state.style);
           const cleanBase = formulaBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
@@ -1520,8 +1697,10 @@ export class RenamerUIManager {
           // Custom name: preserve user's typed name and append student name with selected case
           currentFile.docType = trimmedVal;
           currentFile.isMatched = false;
-          statusTag.className = 'px-2 py-0.5 rounded font-mono-code text-[10px] bg-surface-container-high text-secondary font-bold';
-          statusTag.textContent = 'Custom Name';
+          if (liveBadge) {
+            liveBadge.className = 'confidence-badge confidence-badge-med';
+            liveBadge.textContent = `✏️ Custom: ${trimmedVal}`;
+          }
 
           const formulaBase = buildName(trimmedVal, this.state.studentName, null, this.state.style);
           const cleanBase = formulaBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
@@ -1536,7 +1715,7 @@ export class RenamerUIManager {
           stageTitle.textContent = cleanName(currentFile.targetName);
         }
 
-        // Live narrow shortcuts in Right-Side CORE SHORTCUTS Panel
+        // Live narrow shortcuts in Right-Side SMART SUGGESTIONS Panel
         this.renderCoreShortcuts(val);
       });
 
@@ -1558,157 +1737,128 @@ export class RenamerUIManager {
       });
     }
 
-    // 2. UPCOMING QUEUE (Strict Queue Rule: files stay until actually renamed on disk)
-    const upcomingFiles = this.state.files.filter((f, i) => i !== this.state.currentIndex && !f.isRenamed);
-    if (upcomingFiles.length > 0) {
-      const upHeader = document.createElement('div');
-      upHeader.className = 'flex items-center justify-between px-2 py-1 rounded bg-surface-container border border-outline-variant/40 text-[11px] font-mono-code text-secondary shrink-0';
+        // 2. UNIFIED FILES LIST (ONE list for all loaded files)
+    const listWrapper = document.createElement('div');
+    listWrapper.className = 'flex flex-col gap-1.5 pt-1.5 flex-1 min-h-0 select-none';
 
-      const leftPart = document.createElement('div');
-      leftPart.className = 'flex items-center gap-1.5 text-primary font-semibold';
-      const upIcon = document.createElement('span');
-      upIcon.className = 'material-symbols-outlined text-[15px]';
-      upIcon.textContent = 'north';
-      leftPart.appendChild(upIcon);
-      leftPart.appendChild(document.createTextNode('UPCOMING QUEUE'));
-      upHeader.appendChild(leftPart);
+    const listHeader = document.createElement('div');
+    listHeader.className = 'flex items-center justify-between px-2 py-1 rounded bg-surface-container border border-outline-variant/40 text-[11px] font-mono-code text-secondary shrink-0';
 
-      const rightPart = document.createElement('span');
-      rightPart.className = 'text-[10px] text-secondary font-medium uppercase';
-      rightPart.textContent = `${upcomingFiles.length} files waiting`;
-      upHeader.appendChild(rightPart);
+    const leftPart = document.createElement('div');
+    leftPart.className = 'flex items-center gap-1.5 text-primary font-semibold';
+    const listIcon = document.createElement('span');
+    listIcon.className = 'material-symbols-outlined text-[15px]';
+    listIcon.textContent = 'format_list_bulleted';
+    leftPart.appendChild(listIcon);
+    leftPart.appendChild(document.createTextNode('ALL LOADED DOCUMENTS'));
+    listHeader.appendChild(leftPart);
 
-      scrollContainer.appendChild(upHeader);
+    const completedCount = this.state.files.filter(f => f.isRenamed).length;
+    const rightPart = document.createElement('span');
+    rightPart.className = 'text-[10px] text-secondary font-medium';
+    rightPart.textContent = `${completedCount} / ${this.state.files.length} Done`;
+    listHeader.appendChild(rightPart);
 
-      const upList = document.createElement('div');
-      upList.className = 'flex flex-col gap-1 shrink-0';
+    listWrapper.appendChild(listHeader);
 
-      upcomingFiles.forEach(f => {
-        const fIdx = this.state.files.indexOf(f);
-        const item = document.createElement('article');
-        item.className = 'h-8 px-2.5 py-1 rounded-lg bg-surface-container-lowest shadow-xs flex items-center justify-between gap-2 hover:bg-surface-container-low transition-colors border border-outline-variant/30 cursor-pointer shrink-0';
-        item.title = `Original: ${cleanName(f.name)} (Click to jump & edit)`;
+    const filesContainer = document.createElement('div');
+    filesContainer.className = 'flex flex-col gap-1 overflow-y-auto pr-0.5 custom-pan-scroll flex-1';
 
-        // Click upcoming item to jump and focus
-        item.addEventListener('click', () => {
-          this.state.currentIndex = fIdx;
-          this.renderQueue();
-          this.renderCurrentPreview();
-        });
+    this.state.files.forEach((f, fIdx) => {
+      const isActive = (fIdx === this.state.currentIndex);
+      const isDone = !!f.isRenamed;
 
-        const leftCol = document.createElement('div');
-        leftCol.className = 'flex items-center gap-2 min-w-0 flex-1';
+      const item = document.createElement('article');
+      item.dataset.index = String(fIdx);
+      item.className = isActive
+        ? 'h-8 px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/50 ring-1 ring-primary/30 shadow-xs flex items-center justify-between gap-2 transition-all cursor-pointer shrink-0 font-semibold active-queue-item'
+        : (isDone
+          ? 'h-8 px-2.5 py-1 rounded-lg bg-surface-container-lowest/80 border border-emerald-500/30 shadow-xs flex items-center justify-between gap-2 hover:bg-surface-container-low transition-colors cursor-pointer shrink-0 text-secondary'
+          : 'h-8 px-2.5 py-1 rounded-lg bg-surface-container-lowest shadow-xs flex items-center justify-between gap-2 hover:bg-surface-container-low transition-colors border border-outline-variant/30 cursor-pointer shrink-0');
 
-        const numBadge = document.createElement('span');
-        numBadge.className = 'w-4 h-4 rounded bg-surface-container text-secondary font-mono-code font-bold text-[10px] flex items-center justify-center shrink-0';
-        numBadge.textContent = String(fIdx + 1);
-        leftCol.appendChild(numBadge);
+      item.title = `Original: ${cleanName(f.name)}\nTarget: ${cleanName(f.targetName || f.name)} (Click to jump & edit)`;
 
-        // Original filename (without extension) - clean single-line display (zero triple repetition)
-        const origTitle = document.createElement('span');
-        origTitle.className = 'font-mono-code text-[11px] text-on-surface font-medium truncate flex-1 min-w-0';
-        origTitle.textContent = cleanName(f.name);
-        leftCol.appendChild(origTitle);
+      // Click to jump and edit (works for both completed and upcoming)
+      item.addEventListener('click', () => {
+        this.state.currentIndex = fIdx;
+        this.renderQueue();
+        this.renderCurrentPreview();
+      });
 
-        item.appendChild(leftCol);
+      const leftCol = document.createElement('div');
+      leftCol.className = 'flex items-center gap-1.5 min-w-0 flex-1';
 
-        if (f.isScanning) {
-          const scanBadge = document.createElement('span');
-          scanBadge.className = 'confidence-badge bg-primary/20 text-primary flex items-center gap-1 font-bold shrink-0';
-          const scanSpin = document.createElement('span');
-          scanSpin.className = 'material-symbols-outlined text-[12px] animate-spin';
-          scanSpin.textContent = 'sync';
-          scanBadge.appendChild(scanSpin);
-          scanBadge.appendChild(document.createTextNode('SCANNING'));
-          item.appendChild(scanBadge);
-        } else if (f.smartConfidence !== undefined && f.smartConfidence >= 30) {
-          const confBadge = document.createElement('span');
-          const docLabel = f.smartDocType || f.docType || 'DOCUMENT';
-          if (f.smartConfidence >= 80) {
-            confBadge.className = 'confidence-badge confidence-badge-high shrink-0';
-            confBadge.textContent = `🟢 ${f.smartConfidence}% ${docLabel}`;
-          } else {
-            confBadge.className = 'confidence-badge confidence-badge-med shrink-0';
-            confBadge.textContent = `🟡 ${f.smartConfidence}% ${docLabel}`;
-          }
-          item.appendChild(confBadge);
-        } else if (f.isMatched && f.docType) {
-          const confBadge = document.createElement('span');
-          confBadge.className = 'confidence-badge confidence-badge-high shrink-0';
-          confBadge.textContent = `🟢 90% ${f.docType}`;
-          item.appendChild(confBadge);
+      // Compact number badge with ✓ symbol on completed files
+      const numBadge = document.createElement('span');
+      numBadge.className = isDone
+        ? 'w-4 h-4 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-mono-code font-bold text-[10px] flex items-center justify-center shrink-0 border border-emerald-300 dark:border-emerald-700'
+        : (isActive
+          ? 'w-4 h-4 rounded bg-primary text-on-primary font-mono-code font-bold text-[10px] flex items-center justify-center shrink-0 shadow-2xs'
+          : 'w-4 h-4 rounded bg-surface-container text-secondary font-mono-code font-bold text-[10px] flex items-center justify-center shrink-0');
+      numBadge.textContent = isDone ? '✓' : String(fIdx + 1);
+      leftCol.appendChild(numBadge);
+
+      // Clean original filename (single line, no extension in UI) - clean single-line display (zero triple repetition)
+      const origTitle = document.createElement('span');
+      origTitle.className = isActive
+        ? 'font-mono-code text-[11px] text-primary font-bold truncate flex-1 min-w-0'
+        : (isDone
+          ? 'font-mono-code text-[11px] text-on-surface/80 line-through truncate flex-1 min-w-0'
+          : 'font-mono-code text-[11px] text-on-surface font-medium truncate flex-1 min-w-0');
+      origTitle.textContent = cleanName(f.name);
+      leftCol.appendChild(origTitle);
+
+      item.appendChild(leftCol);
+
+      // Compact Badge (~5-7 characters: score + short code)
+      const shortCode = this.getShortCodeForDoc(f.smartDocType || f.docType);
+      const conf = f.smartConfidence !== undefined ? f.smartConfidence : (f.isMatched ? 90 : 0);
+
+      if (f.isScanning) {
+        const scanBadge = document.createElement('span');
+        scanBadge.className = 'confidence-badge bg-primary/20 text-primary flex items-center gap-1 font-bold shrink-0 text-[10px] px-1.5 py-0.5';
+        const scanSpin = document.createElement('span');
+        scanSpin.className = 'material-symbols-outlined text-[11px] animate-spin';
+        scanSpin.textContent = 'sync';
+        scanBadge.appendChild(scanSpin);
+        scanBadge.appendChild(document.createTextNode('SCANNING'));
+        item.appendChild(scanBadge);
+      } else if (isDone) {
+        const doneBadge = document.createElement('span');
+        doneBadge.className = 'confidence-badge bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold shrink-0 text-[10px] px-1.5 py-0.5';
+        doneBadge.textContent = shortCode ? `✓ ${shortCode}` : '✓ DONE';
+        item.appendChild(doneBadge);
+      } else if (conf >= 30) {
+        const confBadge = document.createElement('span');
+        const label = shortCode || (f.smartDocType || f.docType || 'DOC').substring(0, 6).toUpperCase();
+        if (conf >= 80) {
+          confBadge.className = 'confidence-badge confidence-badge-high shrink-0 text-[10px] px-1.5 py-0.5';
+          confBadge.textContent = `🟢 ${conf}% ${label}`;
         } else {
-          const confBadge = document.createElement('span');
-          confBadge.className = 'confidence-badge confidence-badge-low shrink-0';
-          confBadge.textContent = `🔴 UNMATCHED`;
-          item.appendChild(confBadge);
+          confBadge.className = 'confidence-badge confidence-badge-med shrink-0 text-[10px] px-1.5 py-0.5';
+          confBadge.textContent = `🟡 ${conf}% ${label}`;
         }
+        item.appendChild(confBadge);
+      } else {
+        const unmatchBadge = document.createElement('span');
+        unmatchBadge.className = 'confidence-badge confidence-badge-low shrink-0 text-[10px] px-1.5 py-0.5';
+        unmatchBadge.textContent = '🔴 UNMATCH';
+        item.appendChild(unmatchBadge);
+      }
 
-        upList.appendChild(item);
-      });
+      filesContainer.appendChild(item);
+    });
 
-      scrollContainer.appendChild(upList);
-    }
+    listWrapper.appendChild(filesContainer);
+    scrollContainer.appendChild(listWrapper);
 
-    // 3. COMPLETED FILES (Strict: ONLY genuinely renamed on disk files)
-    const completedFiles = this.state.files.filter(f => f.isRenamed);
-    if (completedFiles.length > 0) {
-      const compHeader = document.createElement('div');
-      compHeader.className = 'mt-auto pt-2 flex flex-col gap-1.5 shrink-0';
-
-      const bar = document.createElement('div');
-      bar.className = 'flex items-center justify-between px-2 py-1 rounded bg-emerald-100 border border-emerald-300 text-[11px] font-mono-code text-emerald-900';
-
-      const leftBar = document.createElement('div');
-      leftBar.className = 'flex items-center gap-1.5 font-bold';
-      const chkIcon = document.createElement('span');
-      chkIcon.className = 'material-symbols-outlined text-[15px] text-tertiary';
-      chkIcon.textContent = 'south';
-      leftBar.appendChild(chkIcon);
-      leftBar.appendChild(document.createTextNode('COMPLETED FILES'));
-      bar.appendChild(leftBar);
-
-      const rightBar = document.createElement('span');
-      rightBar.className = 'text-[10px] font-semibold text-tertiary uppercase';
-      rightBar.textContent = `${completedFiles.length} finished`;
-      bar.appendChild(rightBar);
-      compHeader.appendChild(bar);
-
-      completedFiles.forEach(f => {
-        const fIdx = this.state.files.indexOf(f);
-        const item = document.createElement('article');
-        item.className = 'h-8 px-2.5 py-1 rounded-lg bg-surface-container-lowest shadow-xs flex items-center justify-between gap-2 border border-emerald-300 cursor-pointer hover:bg-emerald-50/50 transition-colors shrink-0';
-        item.title = 'Click to re-open and re-rename in Active Card';
-
-        // USER APPROVED SPEC: Clicking completed item re-opens it in Active Card
-        item.addEventListener('click', () => {
-          this.state.currentIndex = fIdx;
-          this.renderQueue();
-          this.renderCurrentPreview();
-        });
-
-        const left = document.createElement('div');
-        left.className = 'flex items-center gap-2 min-w-0 flex-1';
-
-        const iconBadge = document.createElement('span');
-        iconBadge.className = 'w-3.5 h-3.5 rounded-full bg-emerald-500 text-on-primary font-mono-code font-bold text-[9px] flex items-center justify-center shrink-0';
-        const ok = document.createElement('span');
-        ok.className = 'material-symbols-outlined text-[10px]';
-        ok.textContent = 'check';
-        iconBadge.appendChild(ok);
-        left.appendChild(iconBadge);
-
-        const txt = document.createElement('span');
-        txt.className = 'font-mono-code text-[11px] text-tertiary font-bold truncate';
-        txt.textContent = cleanName(f.targetName || f.name);
-        left.appendChild(txt);
-        item.appendChild(left);
-
-        compHeader.appendChild(item);
-      });
-
-      scrollContainer.appendChild(compHeader);
-    }
+    // Auto-scroll active row smoothly into view
+    requestAnimationFrame(() => {
+      const activeItem = filesContainer.querySelector('.active-queue-item');
+      if (activeItem) {
+        activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    });
 
     queueCol.appendChild(scrollContainer);
 
@@ -1768,16 +1918,8 @@ export class RenamerUIManager {
       return;
     }
 
-    // 1. MISSING DOCUMENTS / CHECKLIST AUDIT
-    const presetsData = this.state.documentPresets || this.state.settings?.checklists || DEFAULT_CHECKLISTS_DATA;
-    const formRules = presetsData["MAHA DBT FORM"] || DEFAULT_CHECKLISTS_DATA["MAHA DBT FORM"] || [];
-
-    // Extract rule names and shortcodes
-    const activeRules = formRules.map(r => {
-      if (typeof r === 'string') return { name: r, code: '', required: true };
-      if (Array.isArray(r)) return { name: r[0], code: '', required: true };
-      return { name: r.name, code: r.code || '', required: r.required !== undefined ? !!r.required : true };
-    }).filter(r => r.required !== false);
+    // 1. MISSING DOCUMENTS / CHECKLIST AUDIT (Dynamic per Active Preset)
+    const activeRules = this.getActivePresetDocuments();
 
     const presentDocs = new Set(
       this.state.files.map(f => (f.docType || '').toUpperCase()).filter(Boolean)
@@ -1814,6 +1956,26 @@ export class RenamerUIManager {
       warnIcon.textContent = 'warning';
       leftMissing.appendChild(warnIcon);
       leftMissing.appendChild(document.createTextNode(`${missingRules.length} Missing Documents Found`));
+
+      const presetSelect = document.createElement('select');
+      presetSelect.id = 'selectQuickPreset';
+      presetSelect.className = 'px-1.5 py-0.5 rounded bg-amber-600/20 hover:bg-amber-600/30 text-amber-900 dark:text-amber-200 text-[10px] font-mono-code uppercase font-bold ml-1 border-none outline-none cursor-pointer';
+      presetSelect.title = 'Switch active document preset';
+      const availablePresets = this.state.documentPresets ? Object.keys(this.state.documentPresets) : ['MAHA DBT', 'SWAYAM'];
+      availablePresets.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = p;
+        if (p === this.state.activePreset) opt.selected = true;
+        presetSelect.appendChild(opt);
+      });
+      presetSelect.addEventListener('click', (e) => e.stopPropagation());
+      presetSelect.addEventListener('change', (e) => {
+        e.stopPropagation();
+        this.handleSwitchActivePreset(e.target.value);
+      });
+      leftMissing.appendChild(presetSelect);
+
       missingHeader.appendChild(leftMissing);
 
       const rightMissing = document.createElement('div');
@@ -2094,22 +2256,38 @@ export class RenamerUIManager {
       container.appendChild(missingSection);
     } else {
       const allDoneCard = document.createElement('div');
-      allDoneCard.className = 'p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 flex items-center gap-2 text-emerald-800 dark:text-emerald-300';
+      allDoneCard.className = 'p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 flex items-center justify-between gap-2 text-emerald-800 dark:text-emerald-300';
+      const doneLeft = document.createElement('div');
+      doneLeft.className = 'flex items-center gap-2';
       const checkIcon = document.createElement('span');
       checkIcon.className = 'material-symbols-outlined text-[18px] text-tertiary';
       checkIcon.textContent = 'check_circle';
-      allDoneCard.appendChild(checkIcon);
+      doneLeft.appendChild(checkIcon);
       const doneText = document.createElement('span');
       doneText.className = 'font-mono-code text-[11px] font-bold';
       doneText.textContent = 'All Required Documents Present';
-      allDoneCard.appendChild(doneText);
+      doneLeft.appendChild(doneText);
+      allDoneCard.appendChild(doneLeft);
+
+      const donePresetSelect = document.createElement('select');
+      donePresetSelect.className = 'px-1.5 py-0.5 rounded bg-emerald-600/20 text-emerald-900 dark:text-emerald-200 text-[10px] font-mono-code uppercase font-bold border-none outline-none cursor-pointer';
+      const availablePresets = this.state.documentPresets ? Object.keys(this.state.documentPresets) : ['MAHA DBT', 'SWAYAM'];
+      availablePresets.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = p;
+        if (p === this.state.activePreset) opt.selected = true;
+        donePresetSelect.appendChild(opt);
+      });
+      donePresetSelect.addEventListener('change', (e) => this.handleSwitchActivePreset(e.target.value));
+      allDoneCard.appendChild(donePresetSelect);
       container.appendChild(allDoneCard);
     }
 
-    // 2. CORE SHORTCUTS CONTAINER (Hidden from UI per operator preference)
+    // 2. SMART SUGGESTIONS CONTAINER (Always visible below Missing Documents)
     const shortcutsSection = document.createElement('div');
     shortcutsSection.id = 'coreShortcutsContainer';
-    shortcutsSection.className = 'hidden';
+    shortcutsSection.className = 'flex flex-col gap-1.5 shrink-0 mt-2 bg-surface-container-lowest/80 p-2.5 rounded-xl border border-outline-variant/30 shadow-xs';
     container.appendChild(shortcutsSection);
 
     const inputVal = document.getElementById('inputRenameTarget')?.value || '';
@@ -2117,7 +2295,7 @@ export class RenamerUIManager {
   }
 
   /**
-   * Dynamically filters and renders CORE SHORTCUTS in Column 3 based on Rename box typing
+   * Dynamically filters and renders SMART SUGGESTIONS in Column 3 based on Rename box typing
    */
   renderCoreShortcuts(query = '') {
     const scContainer = document.getElementById('coreShortcutsContainer');
@@ -2134,262 +2312,140 @@ export class RenamerUIManager {
     const currentFile = this.state.files[this.state.currentIndex];
     const baseOriginal = currentFile ? cleanName(currentFile.name) : '';
     let q = (query || '').trim();
-    if (q === baseOriginal) q = '';
+    const isUntouched = (!currentFile?.hasUserEdited) && (q.toLowerCase() === baseOriginal.toLowerCase());
+    if (isUntouched) q = '';
 
-    const defaultTop5 = [
-      { code: '10M', label: '10th Marksheet', canonical: '10TH MARKSHEET' },
-      { code: '12M', label: '12th Marksheet', canonical: '12TH MARKSHEET' },
-      { code: 'ADR', label: 'Aadhaar Card', canonical: 'AADHAAR CARD' },
-      { code: 'CST', label: 'Caste Certificate', canonical: 'CASTE CERTIFICATE' },
-      { code: 'DOM', label: 'Domicile Cert', canonical: 'DOMICILE CERTIFICATE' }
-    ];
+    // Build unified suggestion pool across ALL presets and ALL shortcuts
+    const allDocs = this.getAllPresetDocuments();
+    const pool = [];
+    const poolCodes = new Set();
+
+    for (const sc of this.shortcuts21) {
+      const code = (sc.code || '').toUpperCase();
+      if (code && !poolCodes.has(code)) {
+        pool.push(sc);
+        poolCodes.add(code);
+      }
+    }
+    for (const doc of allDocs) {
+      const code = (doc.code || '').toUpperCase();
+      if (code && !poolCodes.has(code)) {
+        pool.push({
+          code,
+          label: doc.name,
+          canonical: doc.name.toUpperCase(),
+          keywords: doc.keywords
+        });
+        poolCodes.add(code);
+      }
+    }
 
     let itemsToRender = [];
     let isFiltered = false;
     let zeroMatches = false;
 
     if (!q) {
-      itemsToRender = defaultTop5;
-    } else {
-      const lowerQ = q.toLowerCase();
-      const filtered = this.shortcuts21.filter(s =>
-        s.code.toLowerCase().includes(lowerQ) ||
-        s.label.toLowerCase().includes(lowerQ) ||
-        s.canonical.toLowerCase().includes(lowerQ)
+      // Prioritize top missing documents from active preset, then default shortcuts
+      const activeRules = this.getActivePresetDocuments();
+      const presentDocs = new Set(
+        this.state.files.map(f => (f.docType || '').toUpperCase()).filter(Boolean)
       );
+      const missingRules = activeRules.filter(r => !presentDocs.has(r.name.toUpperCase()));
+      const topMissingItems = [];
+      for (const m of missingRules) {
+        const found = pool.find(s => s.canonical === m.name.toUpperCase() || s.code === m.code);
+        if (found && !topMissingItems.some(x => x.code === found.code)) {
+          topMissingItems.push(found);
+          if (topMissingItems.length >= 5) break;
+        }
+      }
 
-      if (filtered.length > 0) {
-        itemsToRender = filtered.slice(0, 5);
-        isFiltered = true;
+      for (const s of pool) {
+        if (topMissingItems.length >= 5) break;
+        if (!topMissingItems.some(x => x.code === s.code)) {
+          topMissingItems.push(s);
+        }
+      }
+      itemsToRender = topMissingItems.slice(0, 5);
+      isFiltered = false;
+    } else {
+      isFiltered = true;
+      const lowerQ = q.toLowerCase();
+      // Match exact code > startsWith code > keywords > label/canonical
+      const exactCodeMatches = pool.filter(s => s.code.toLowerCase() === lowerQ);
+      const prefixCodeMatches = pool.filter(s => s.code.toLowerCase().startsWith(lowerQ) && s.code.toLowerCase() !== lowerQ);
+      const keywordMatches = pool.filter(s => {
+        if (s.code.toLowerCase().startsWith(lowerQ)) return false;
+        const kws = Array.isArray(s.keywords) ? s.keywords : [];
+        return kws.some(k => k.toLowerCase().includes(lowerQ));
+      });
+      const textMatches = pool.filter(s => {
+        if (s.code.toLowerCase().startsWith(lowerQ)) return false;
+        const kws = Array.isArray(s.keywords) ? s.keywords : [];
+        if (kws.some(k => k.toLowerCase().includes(lowerQ))) return false;
+        return (s.label || '').toLowerCase().includes(lowerQ) || (s.canonical || '').toLowerCase().includes(lowerQ);
+      });
+
+      const combined = [...exactCodeMatches, ...prefixCodeMatches, ...keywordMatches, ...textMatches];
+      // Deduplicate by code
+      const seen = new Set();
+      const uniqueResults = [];
+      for (const item of combined) {
+        if (!seen.has(item.code)) {
+          seen.add(item.code);
+          uniqueResults.push(item);
+        }
+      }
+
+      if (uniqueResults.length > 0) {
+        itemsToRender = uniqueResults.slice(0, 5);
+        zeroMatches = false;
       } else {
-        // Zero matches: display default top 5 dimmed with italic note per locked spec
-        itemsToRender = defaultTop5;
+        itemsToRender = pool.slice(0, 5);
         zeroMatches = true;
       }
     }
 
-    // Header
-    const scHeader = document.createElement('div');
-    scHeader.className = 'flex items-center justify-between mb-1.5';
-    const scTitle = document.createElement('div');
-    scTitle.className = 'flex items-center gap-1.5 font-bold font-mono-code text-[11px] text-primary';
-    const boltIcon = document.createElement('span');
-    boltIcon.className = 'material-symbols-outlined text-[15px]';
-    boltIcon.textContent = 'bolt';
-    scTitle.appendChild(boltIcon);
-    scTitle.appendChild(document.createTextNode('CORE SHORTCUTS'));
-    scHeader.appendChild(scTitle);
-
-    const scBadge = document.createElement('span');
-    if (zeroMatches) {
-      scBadge.className = 'px-1.5 py-0.2 rounded font-mono-code text-[10px] bg-surface-container text-secondary font-bold';
-      scBadge.textContent = 'Custom';
-    } else if (isFiltered) {
-      scBadge.className = 'px-1.5 py-0.2 rounded font-mono-code text-[10px] bg-primary/20 text-primary font-bold';
-      scBadge.textContent = `${itemsToRender.length} Match${itemsToRender.length > 1 ? 'es' : ''}`;
-    } else {
-      scBadge.className = 'px-1.5 py-0.2 rounded font-mono-code text-[10px] bg-surface-container text-secondary font-bold';
-      scBadge.textContent = 'Top 5';
-    }
-    scHeader.appendChild(scBadge);
-    scContainer.appendChild(scHeader);
-
-    // Italic note if custom name (zero matches)
-    if (zeroMatches) {
-      const note = document.createElement('div');
-      note.className = 'text-[10px] font-mono-code text-secondary italic py-1 px-2 mb-1.5 rounded bg-surface-container/60 border border-outline-variant/30 text-center select-none';
-      note.textContent = 'No shortcode matches — saving as custom text';
-      scContainer.appendChild(note);
-    }
-
-    const scList = document.createElement('div');
-    scList.className = 'flex flex-col gap-1.5';
-
+    // Render suggestions chips
     itemsToRender.forEach(item => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
+      const chip = document.createElement('div');
+      chip.className = 'flex items-center justify-between p-2 rounded-lg bg-surface-container-lowest border border-outline-variant/30 hover:border-primary/50 hover:bg-surface-container-low transition-all cursor-pointer shadow-xs group';
+      chip.title = `Click or type ${item.code} to rename`;
 
-      if (zeroMatches) {
-        btn.className = 'h-8 px-2.5 rounded-lg bg-surface-container text-on-surface font-mono-code text-[11px] font-semibold flex items-center justify-between gap-2 border border-outline-variant/20 opacity-40 pointer-events-none cursor-not-allowed select-none';
-      } else {
-        btn.className = 'h-8 px-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[11px] font-semibold flex items-center justify-between gap-2 border border-outline-variant/30 hover:border-primary/50 cursor-pointer active:scale-95 transition-all shadow-xs';
-        btn.title = `Click to apply ${item.code} (${item.label}) to active document`;
-        btn.addEventListener('click', () => {
-          this.applyShortcutToCurrent(item);
-        });
-      }
+      const left = document.createElement('div');
+      left.className = 'flex items-center gap-2 min-w-0 flex-1';
 
-      const badge = document.createElement('span');
-      badge.className = `px-2 py-0.5 rounded text-[10px] ${getShortcutBadgeColor(item.code)} shadow-xs`;
-      badge.textContent = item.code;
-      btn.appendChild(badge);
+      const codeBadge = document.createElement('span');
+      codeBadge.className = `px-2 py-0.5 rounded font-mono-code font-bold text-[11px] shrink-0 ${getShortcutBadgeColor(item.code)}`;
+      codeBadge.textContent = item.code;
+      left.appendChild(codeBadge);
 
-      const label = document.createElement('span');
-      label.className = 'truncate flex-1 text-left text-on-surface text-[11px] font-medium';
-      label.textContent = item.label;
-      btn.appendChild(label);
+      const labelSpan = document.createElement('span');
+      labelSpan.className = 'text-[12px] font-semibold text-on-surface truncate flex-1';
+      labelSpan.textContent = item.label || item.canonical;
+      left.appendChild(labelSpan);
 
-      if (!zeroMatches) {
-        const enterHint = document.createElement('span');
-        enterHint.className = 'text-[9px] font-mono-code text-secondary opacity-60';
-        enterHint.textContent = '↵';
-        btn.appendChild(enterHint);
-      }
+      chip.appendChild(left);
 
-      scList.appendChild(btn);
+      const rightIcon = document.createElement('span');
+      rightIcon.className = 'material-symbols-outlined text-[16px] text-secondary group-hover:text-primary transition-colors shrink-0';
+      rightIcon.textContent = 'arrow_forward';
+      chip.appendChild(rightIcon);
+
+      chip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.applyShortcutToCurrentFile(item.code);
+      });
+
+      scContainer.appendChild(chip);
     });
 
-    scContainer.appendChild(scList);
-  }
-
-  /**
-   * One-Click Instant Rename via Shortcut Button
-   */
-  async applyShortcutToCurrent(shortcut) {
-    const current = this.state.files[this.state.currentIndex];
-    if (!current) return;
-
-    const canonical = shortcut.canonical;
-    const extension = current.ext || ('.' + current.name.split('.').pop()).toLowerCase();
-    const formatted = buildName(canonical, this.state.studentName, this.state.settings?.groups, this.state.style);
-    const cleanFormatted = formatted.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
-    const targetWithExt = `${cleanFormatted}${extension}`;
-
-    // Unique destination check with studentName sequential duplicate avoidance
-    const used = new Set(this.state.files.map(f => f.targetName));
-    used.delete(current.targetName);
-    const unique = uniqueDestination(targetWithExt, current.name, used, this.state.studentName);
-
-    current.targetName = unique;
-    current.docType = canonical;
-    current.isMatched = true;
-    current.status = 'matched';
-
-    // USER APPROVED SPEC: Instant atomic rename & advance
-    await this.handleConfirmCurrentName(unique);
-  }
-
-  /**
-   * Tab & Enter Key Immediate Atomic Rename on Disk
-   */
-  async handleConfirmCurrentName(rawInput) {
-    const current = this.state.files[this.state.currentIndex];
-    if (!current) return;
-
-    let targetFilename = (rawInput || '').trim();
-    const currentExt = current.ext || ('.' + current.name.split('.').pop()).toLowerCase();
-
-    // If empty input, keep original name
-    if (!targetFilename) {
-      await this.handleKeepOriginal();
-      return;
+    if (zeroMatches) {
+      const noMatchMsg = document.createElement('div');
+      noMatchMsg.className = 'text-[11px] text-secondary italic px-1 pt-1';
+      noMatchMsg.textContent = `No shortcode matches — saving as custom text (Showing top suggestions for "${q}")`;
+      scContainer.prepend(noMatchMsg);
     }
-
-    const baseTyped = targetFilename.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
-
-    // Exact-Match Shortcut Rule vs. Custom User Name (+ Student Name)
-    const exactShortcut = this.shortcuts21.find(s => s.code.toLowerCase() === baseTyped.toLowerCase());
-    if (exactShortcut) {
-      const canonical = exactShortcut.canonical;
-      const formatted = buildName(canonical, this.state.studentName, this.state.settings?.groups, this.state.style);
-      const cleanFormatted = formatted.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
-      targetFilename = `${cleanFormatted}${currentExt}`;
-      current.docType = canonical;
-      current.isMatched = true;
-    } else {
-      // Custom user name: preserve exact custom text and automatically append Student Name
-      let customBase = baseTyped;
-      if (this.state.studentName && !customBase.toLowerCase().includes(this.state.studentName.toLowerCase())) {
-        customBase = `${customBase} ${this.state.studentName}`;
-      }
-      if (this.state.style === 'upper') customBase = customBase.toUpperCase();
-      else if (this.state.style === 'lower') customBase = customBase.toLowerCase();
-      else if (this.state.style === 'title') customBase = customBase.toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase());
-
-      const cleanCustom = customBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
-      targetFilename = `${cleanCustom}${currentExt}`;
-      current.docType = baseTyped;
-      current.isMatched = false;
-    }
-
-    // UNIQUE DESTINATION NUMBERING: Ensure no duplicate overwrites!
-    const used = new Set(this.state.files.map(f => f.targetName || f.name));
-    if (this.state.folder?.files) {
-      for (const diskFile of this.state.folder.files) {
-        if (diskFile.name) used.add(diskFile.name);
-      }
-    }
-    used.delete(current.targetName);
-    used.delete(current.name);
-    targetFilename = uniqueDestination(targetFilename, current.name, used, this.state.studentName);
-
-    const error = validateFilename(targetFilename);
-    if (error) {
-      toast.show('Invalid Filename', error, 'error');
-      return;
-    }
-
-    // Perform atomic rename on disk immediately with rotation support
-    try {
-      const dirPath = this.state.folder?.path || '';
-      const oldPath = current.path || (dirPath ? `${dirPath}/${current.name}` : null);
-      const studentName = this.state.studentName || '';
-      const rotation = current.rotation || 0;
-
-      if (oldPath && (current.name !== targetFilename || rotation % 360 !== 0)) {
-        const res = await renameNativeFile(oldPath, targetFilename, studentName, rotation);
-        if (res.success) {
-          const actualFilename = res.name || targetFilename;
-          const updatedPath = res.path || (oldPath.replace(/\\/g, '/').replace(/\/[^\/]+$/, '') + '/' + actualFilename);
-          // Push to undo stack
-          undoManager.pushBatch(this.state.folder, [{
-            old: current.name,
-            next: actualFilename,
-            file: current,
-            nativePath: current.path
-          }]);
-
-          current.name = actualFilename;
-          current.targetName = actualFilename;
-          current.path = updatedPath;
-          current.nativePath = updatedPath;
-          current.url = `http://localhost:3000/api/serve-file?path=${encodeURIComponent(updatedPath)}`;
-          current.isRenamed = true;
-          current.status = 'renamed';
-          current.rotation = 0; // successfully applied to output file
-          recordRenameEvent(1);
-          toast.show('Renamed', cleanName(actualFilename), 'success');
-        } else {
-          toast.show('Rename Error', res.error || 'Failed to rename on disk', 'error');
-          return;
-        }
-      } else {
-        current.name = targetFilename;
-        current.targetName = targetFilename;
-        current.isRenamed = true;
-        current.status = 'renamed';
-        toast.show('Name Confirmed', cleanName(targetFilename), 'info');
-      }
-    } catch (err) {
-      toast.show('Rename Failed', err.message, 'error');
-      return;
-    }
-
-    this.updateTelemetry();
-
-    // Advance to next pending file
-    const nextPending = this.state.files.findIndex((f, idx) => idx > this.state.currentIndex && !f.isRenamed);
-    if (nextPending !== -1) {
-      this.state.currentIndex = nextPending;
-    } else {
-      const firstPending = this.state.files.findIndex(f => !f.isRenamed);
-      if (firstPending !== -1) {
-        this.state.currentIndex = firstPending;
-      }
-    }
-
-    this.renderQueue();
-    this.renderCurrentPreview();
   }
 
   handleNavigateBackward() {
@@ -2663,7 +2719,7 @@ export class RenamerUIManager {
 
         try {
           // Strictly Filename-Based Smart Matching (No OCR extraction)
-          const evalRes = matchFilenameSmart(f.name, this.state.studentName, this.state.settings?.groups);
+          const evalRes = matchFilenameSmart(f.name, this.state.studentName, this.state.settings?.groups, this.getActivePresetDocuments());
           f.smartEvaluation = evalRes;
           f.smartConfidence = evalRes.confidence;
           f.smartDocType = evalRes.docType;
@@ -2730,223 +2786,705 @@ export class RenamerUIManager {
     }
 
   /* ==========================================================================
-     New Document Found / Add Document Self-Learning Handlers
+     Dedicated Rename Tool Settings & Document Presets Management
      ========================================================================== */
-  async openAddDocumentModal() {
-      const currentFile = this.state.files[this.state.currentIndex];
-      if (!currentFile) {
-        toast.show('No Document', 'Please select an unrecognized document first.', 'warning');
-        return;
+
+  loadPresetsAndSettings() {
+    // 1. Load active preset
+    const savedActive = localStorage.getItem('docmitra_active_preset');
+    if (savedActive) {
+      this.state.activePreset = (savedActive === 'MAHA DBT FORM' || savedActive === 'MAHA DBT') ? 'MAHA DBT' :
+                                (savedActive === 'SWAYAM FORM' || savedActive === 'SWAYAM') ? 'SWAYAM' : savedActive;
+    } else {
+      this.state.activePreset = 'MAHA DBT';
+    }
+
+    // 2. Load presets from localStorage or default
+    try {
+      const storedPresets = localStorage.getItem('docmitra_rename_presets');
+      if (storedPresets) {
+        this.state.documentPresets = JSON.parse(storedPresets);
       }
+    } catch (e) {
+      console.warn('[DocMitra Renamer] Failed to parse local presets:', e);
+    }
 
-      const modal = document.getElementById('modalAddDocument');
-      if (!modal) return;
-
-      const inputCode = document.getElementById('inputAddDocCode');
-      const inputName = document.getElementById('inputAddDocName');
-      const previewEl = document.getElementById('addDocTargetPreview');
-      const countEl = document.getElementById('addDocKeywordCount');
-      const keywordsList = document.getElementById('addDocKeywordsList');
-
-      if (inputCode) inputCode.value = '';
-      if (inputName) inputName.value = '';
-
-      const updatePreview = () => {
-        const docName = inputName?.value.trim() || 'DOCUMENT';
-        const formula = buildName(docName, this.state.studentName, null, this.state.style);
-        const cleanBase = formula.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
-        const extension = currentFile.ext || ext(currentFile.name) || '.pdf';
-        if (previewEl) previewEl.textContent = `${cleanBase}${extension}`;
+    if (!this.state.documentPresets || Object.keys(this.state.documentPresets).length === 0) {
+      // Initialize with factory defaults: MAHA DBT and SWAYAM only
+      this.state.documentPresets = {
+        "MAHA DBT": [
+          { name: "AADHAAR CARD", code: "ADR", keywords: ["aadhaar card", "adhar", "aadhar"] },
+          { name: "PHOTO", code: "PIC", keywords: ["photo", "pic", "photograph"] },
+          { name: "10TH MARKSHEET", code: "10M", keywords: ["10th marksheet", "10th mark", "ssc marksheet"] },
+          { name: "10TH PASSING CERTIFICATE", code: "10P", keywords: ["10th passing", "ssc passing", "10th sanad"] },
+          { name: "12TH MARKSHEET", code: "12M", keywords: ["12th marksheet", "12th mark", "hsc marksheet"] },
+          { name: "12TH PASSING CERTIFICATE", code: "12P", keywords: ["12th passing", "hsc passing", "12th sanad"] },
+          { name: "12TH LC", code: "12LC", keywords: ["12th lc", "12th tc", "leaving certificate"] },
+          { name: "CASTE CERTIFICATE", code: "CST", keywords: ["caste certificate", "jati dakhla"] },
+          { name: "VALIDITY CERTIFICATE", code: "VLD", keywords: ["validity certificate", "caste validity"] },
+          { name: "INCOME CERTIFICATE", code: "INC", keywords: ["income certificate", "utpanna"] },
+          { name: "NATIONALITY CERTIFICATE", code: "NAT", keywords: ["nationality certificate"] },
+          { name: "DOMICILE CERTIFICATE", code: "DOM", keywords: ["domicile certificate", "adivasi dakhla", "rahavasi"] },
+          { name: "PASSBOOK BANK", code: "BNK", keywords: ["passbook bank", "bank passbook", "bank account"] }
+        ],
+        "SWAYAM": [
+          { name: "PHOTO", code: "PIC", keywords: ["photo", "pic", "photograph"] },
+          { name: "AADHAAR CARD", code: "ADR", keywords: ["aadhaar card", "adhar", "aadhar"] },
+          { name: "10TH MARKSHEET", code: "10M", keywords: ["10th marksheet", "10th mark"] },
+          { name: "12TH MARKSHEET", code: "12M", keywords: ["12th marksheet", "12th mark"] },
+          { name: "12TH LC", code: "12LC", keywords: ["12th lc", "leaving certificate"] },
+          { name: "CASTE CERTIFICATE", code: "CST", keywords: ["caste certificate"] },
+          { name: "DOMICILE CERTIFICATE", code: "DOM", keywords: ["domicile certificate"] },
+          { name: "SELF DECLARATION", code: "SLF", keywords: ["self declaration", "svayam ghoshana"] },
+          { name: "PARENT DECLARATION", code: "PAR", keywords: ["parent declaration", "palak ghoshana"] },
+          { name: "PASSBOOK BANK", code: "BNK", keywords: ["passbook bank", "bank passbook"] },
+          { name: "BONAFIDE CERTIFICATE", code: "BNF", keywords: ["bonafide certificate", "bonafide"] }
+        ]
       };
+      this.savePresetsAndSettings();
+    }
 
-      if (inputName) {
-        inputName.oninput = updatePreview;
-        inputName.onkeydown = (e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            this.handleSaveAndLearnDocument();
+    // 3. Load custom shortcuts
+    try {
+      const storedShortcuts = localStorage.getItem('docmitra_custom_shortcuts');
+      if (storedShortcuts) {
+        this.state.customShortcuts = JSON.parse(storedShortcuts);
+        if (Array.isArray(this.state.customShortcuts)) {
+          for (const cs of this.state.customShortcuts) {
+            if (cs.code && !this.shortcuts21.some(s => s.code.toUpperCase() === cs.code.toUpperCase())) {
+              this.shortcuts21.push({
+                code: cs.code.toUpperCase(),
+                label: cs.label || cs.canonical,
+                canonical: cs.canonical
+              });
+            }
           }
-        };
-      }
-      if (inputCode) {
-        inputCode.oninput = () => {
-          inputCode.value = inputCode.value.toUpperCase();
-        };
-        inputCode.onkeydown = (e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            inputName?.focus();
-          }
-        };
-      }
-
-      updatePreview();
-
-      if (keywordsList) {
-        keywordsList.innerHTML = '<span class="text-secondary italic">Extracting keywords from active document...</span>';
-      }
-
-      modal.classList.remove('hidden');
-
-      let text = currentFile.smartText;
-      if (!text) {
-        text = await this.extractTextFromFile(currentFile);
-        currentFile.smartText = text;
-      }
-
-      const { primary, secondary } = extractSignatureKeywords(text || '', currentFile.name);
-      this._currentLearningKeywords = { primary, secondary };
-
-      if (keywordsList) {
-        keywordsList.innerHTML = '';
-        const allKws = [...primary, ...secondary];
-        if (countEl) countEl.textContent = String(allKws.length);
-
-        if (allKws.length === 0) {
-          keywordsList.innerHTML = '<span class="text-secondary text-[11px] italic">No unique OCR keywords detected (document will match by name).</span>';
-        } else {
-          allKws.forEach(kw => {
-            const pill = document.createElement('span');
-            pill.className = 'px-1.5 py-0.5 rounded bg-surface-container-high text-primary font-bold text-[10px]';
-            pill.textContent = kw;
-            keywordsList.appendChild(pill);
-          });
         }
       }
-
-      if (inputCode) inputCode.focus();
+    } catch (e) {
+      console.warn('[DocMitra Renamer] Failed to parse custom shortcuts:', e);
     }
+  }
 
-    closeAddDocumentModal() {
-      const modal = document.getElementById('modalAddDocument');
-      if (modal) modal.classList.add('hidden');
-    }
-
-  async handleSaveAndLearnDocument() {
-      const currentFile = this.state.files[this.state.currentIndex];
-      if (!currentFile) return;
-
-      const inputCode = document.getElementById('inputAddDocCode');
-      const inputName = document.getElementById('inputAddDocName');
-
-      const code = (inputCode?.value || '').trim().toUpperCase();
-      const name = (inputName?.value || '').trim().toUpperCase();
-
-      if (!code || !name) {
-        toast.show('Incomplete Details', 'Please enter both Short Code and Full Document Name.', 'warning');
-        return;
+  savePresetsAndSettings() {
+    try {
+      localStorage.setItem('docmitra_rename_presets', JSON.stringify(this.state.documentPresets));
+      localStorage.setItem('docmitra_active_preset', this.state.activePreset);
+      if (this.state.settings) {
+        this.state.settings.activeChecklist = this.state.activePreset;
+        this.state.settings.checklists = this.state.documentPresets;
+        saveSettings(this.state.settings);
       }
+      if (this.state.customShortcuts) {
+        localStorage.setItem('docmitra_custom_shortcuts', JSON.stringify(this.state.customShortcuts));
+      }
+      saveDocumentPresets({ forms: this.state.documentPresets }).catch(() => {});
+    } catch (e) {
+      console.warn('[DocMitra Renamer] Failed to persist presets and settings:', e);
+    }
+  }
 
-      const { primary = [], secondary = [] } = this._currentLearningKeywords || {};
+    syncPresetsToShortcuts() {
+    if (!this.state.documentPresets) return;
+    const existingMap = new Map();
+    for (const sc of this.shortcuts21) {
+      if (sc && sc.code) {
+        existingMap.set(sc.code.toUpperCase(), sc);
+      }
+    }
 
-      // 1. Permanently register in memory signatures for Smart Scan
-      registerDocumentSignature({
-        canonical: name,
-        code: code,
-        primaryKeywords: primary,
-        secondaryKeywords: secondary
-      });
+    for (const presetKey of Object.keys(this.state.documentPresets)) {
+      const docList = this.state.documentPresets[presetKey];
+      if (!Array.isArray(docList)) continue;
+      for (const doc of docList) {
+        if (!doc) continue;
+        const code = (doc.code || '').trim().toUpperCase();
+        if (!code) continue;
+        const name = (doc.name || '').trim();
+        const kws = Array.isArray(doc.keywords)
+          ? doc.keywords
+          : (typeof doc.keywords === 'string' ? doc.keywords.split(',').map(s => s.trim()) : []);
 
-      if (code && !this.shortcuts21.some(s => s.code.toUpperCase() === code)) {
-        this.shortcuts21.push({
-          code: code,
-          label: name,
-          canonical: name
+        if (existingMap.has(code)) {
+          const item = existingMap.get(code);
+          if (name && (!item.canonical || item.canonical === item.code)) {
+            item.canonical = name.toUpperCase();
+            item.label = name;
+          }
+          if (Array.isArray(item.keywords)) {
+            const combinedKws = new Set([...item.keywords, ...kws]);
+            item.keywords = Array.from(combinedKws);
+          } else {
+            item.keywords = kws;
+          }
+        } else {
+          const newEntry = {
+            code,
+            label: name || code,
+            canonical: (name || code).toUpperCase(),
+            keywords: kws
+          };
+          this.shortcuts21.push(newEntry);
+          existingMap.set(code, newEntry);
+        }
+      }
+    }
+  }
+
+  getAllPresetDocuments() {
+    const map = new Map();
+    if (this.state.documentPresets) {
+      for (const presetKey of Object.keys(this.state.documentPresets)) {
+        const list = this.state.documentPresets[presetKey];
+        if (Array.isArray(list)) {
+          for (const item of list) {
+            if (!item) continue;
+            const code = (item.code || '').toUpperCase().trim();
+            const name = (item.name || '').toUpperCase().trim();
+            const key = code || name;
+            if (key && !map.has(key)) {
+              map.set(key, {
+                name: (item.name || '').toUpperCase(),
+                code,
+                keywords: Array.isArray(item.keywords) ? item.keywords : []
+              });
+            }
+          }
+        }
+      }
+    }
+    // Also include shortcuts
+    for (const s of this.shortcuts21) {
+      const code = (s.code || '').toUpperCase().trim();
+      const canon = (s.canonical || s.label || '').toUpperCase().trim();
+      const key = code || canon;
+      if (key && !map.has(key)) {
+        map.set(key, {
+          name: canon,
+          code,
+          keywords: Array.isArray(s.keywords) ? s.keywords : []
         });
       }
+    }
+    return Array.from(map.values());
+  }
 
-      // 2. Persist into config/document_presets.json via storage-service
-      try {
-        const presets = await loadDocumentPresets();
-        if (!presets.forms) presets.forms = {};
-        for (const formKey of Object.keys(presets.forms)) {
-          const list = presets.forms[formKey];
-          if (Array.isArray(list)) {
-            const existing = list.find(item => item.code === code || item.name === name);
-            if (existing) {
-              existing.code = code;
-              existing.name = name;
-              existing.primaryKeywords = primary;
-              existing.secondaryKeywords = secondary;
-            } else {
-              list.push({ code, name, required: false, primaryKeywords: primary, secondaryKeywords: secondary });
-            }
-          }
-        }
-        if (!Array.isArray(presets.customSignatures)) {
-          presets.customSignatures = [];
-        }
-        const existingSigIdx = presets.customSignatures.findIndex(s => s.canonical === name);
-        if (existingSigIdx !== -1) {
-          presets.customSignatures[existingSigIdx] = { canonical: name, code, primaryKeywords: primary, secondaryKeywords: secondary };
-        } else {
-          presets.customSignatures.push({ canonical: name, code, primaryKeywords: primary, secondaryKeywords: secondary });
-        }
+  getShortCodeForDoc(docType) {
+    if (!docType) return null;
+    const upper = docType.toUpperCase().trim();
+    // 1. Check shortcuts
+    const foundSc = this.shortcuts21.find(s => 
+      s.code.toUpperCase() === upper ||
+      (s.canonical && s.canonical.toUpperCase() === upper) ||
+      (s.label && s.label.toUpperCase() === upper)
+    );
+    if (foundSc && foundSc.code) return foundSc.code;
 
-        await saveDocumentPresets(presets);
-        if (this.state.documentPresets) {
-          for (const formKey of Object.keys(this.state.documentPresets)) {
-            const list = this.state.documentPresets[formKey];
-            if (Array.isArray(list)) {
-              const existing = list.find(item => item.code === code || item.name === name);
-              if (existing) {
-                existing.code = code;
-                existing.name = name;
-                existing.primaryKeywords = primary;
-                existing.secondaryKeywords = secondary;
-              } else {
-                list.push({ code, name, required: false, primaryKeywords: primary, secondaryKeywords: secondary });
-              }
-            }
-          }
-        }
-      } catch (e) {
-        console.warn('[DocMitra] Failed to persist learned preset to disk:', e);
+    // 2. Check all presets
+    const allDocs = this.getAllPresetDocuments();
+    const foundDoc = allDocs.find(d => 
+      d.code.toUpperCase() === upper ||
+      d.name.toUpperCase() === upper
+    );
+    if (foundDoc && foundDoc.code) return foundDoc.code;
+
+    return null;
+  }
+
+  getActivePresetDocuments() {
+    const presetKey = this.state.activePreset || 'MAHA DBT';
+    const rawList = (this.state.documentPresets && this.state.documentPresets[presetKey]) ||
+                    (this.state.documentPresets && this.state.documentPresets['MAHA DBT']) || [];
+
+    return rawList.map(item => {
+      if (typeof item === 'string') {
+        return { name: item.toUpperCase(), code: '', keywords: [item.toLowerCase()] };
       }
-
-      // 3. Match active document immediately
-      currentFile.docType = name;
-      currentFile.isMatched = true;
-      currentFile.smartDocType = name;
-      currentFile.smartConfidence = 95;
-      currentFile.status = 'matched';
-
-      const formulaBase = buildName(name, this.state.studentName, this.state.settings?.groups, this.state.style);
-      const cleanBase = formulaBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
-      const currentExt = currentFile.ext || ('.' + currentFile.name.split('.').pop()).toLowerCase();
-      const desiredWithExt = `${cleanBase}${currentExt}`;
-
-      const usedDestinations = new Set(this.state.files.filter(x => x !== currentFile).map(x => x.targetName || x.name));
-      currentFile.targetName = uniqueDestination(desiredWithExt, currentFile.name, usedDestinations, this.state.studentName);
-
-      // 4. Scan any other unrecognized files in queue to see if they match this learned signature
-      for (const other of this.state.files) {
-        if (other !== currentFile && !other.isRenamed && !other.isKept && !other.isMatched && other.smartText) {
-          const evalRes = evaluateSmartOcrDocument(other.smartText, this.state.studentName);
-          if (evalRes.isConfident && evalRes.docType === name) {
-            other.docType = name;
-            other.isMatched = true;
-            other.smartDocType = name;
-            other.smartConfidence = evalRes.confidence;
-            other.status = 'matched';
-            const oFormula = buildName(name, this.state.studentName, this.state.settings?.groups, this.state.style);
-            const oBase = oFormula.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
-            const oExt = other.ext || ('.' + other.name.split('.').pop()).toLowerCase();
-            const oDesired = `${oBase}${oExt}`;
-            const oUnique = uniqueDestination(oDesired, other.name, usedDestinations, this.state.studentName);
-            usedDestinations.add(oUnique);
-            other.targetName = oUnique;
-          }
-        }
+      if (Array.isArray(item)) {
+        return { name: item[0].toUpperCase(), code: item[2] || '', keywords: item[1] || [item[0].toLowerCase()] };
       }
+      return {
+        name: (item.name || '').toUpperCase(),
+        code: (item.code || '').toUpperCase(),
+        keywords: item.keywords || [item.name?.toLowerCase()]
+      };
+    });
+  }
 
-      this.closeAddDocumentModal();
-      toast.show('Document Learned', `Registered "${name}" (${code}) & applied pattern.`, 'success');
+  handleOpenSettingsModal(tab = 'presets') {
+    const modal = document.getElementById('modalRenameSettings');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    this.renderSettingsModal(tab);
+  }
 
+  handleCloseSettingsModal() {
+    const modal = document.getElementById('modalRenameSettings');
+    if (modal) modal.classList.add('hidden');
+    this._recalculateTargetNames(true);
+    this.updateTelemetry();
+    this.renderQueue();
+    this.renderCurrentPreview();
+  }
+
+  renderSettingsModal(activeTab = 'presets') {
+    const tabPresets = document.getElementById('tabContentPresets');
+    const tabShortcuts = document.getElementById('tabContentShortcuts');
+    const btnTabPresets = document.getElementById('tabBtnPresets');
+    const btnTabShortcuts = document.getElementById('tabBtnShortcuts');
+
+    if (activeTab === 'presets') {
+      tabPresets?.classList.remove('hidden');
+      tabShortcuts?.classList.add('hidden');
+      btnTabPresets?.classList.add('text-primary', 'border-primary', 'font-bold');
+      btnTabPresets?.classList.remove('text-secondary', 'border-transparent', 'font-medium');
+      btnTabShortcuts?.classList.remove('text-primary', 'border-primary', 'font-bold');
+      btnTabShortcuts?.classList.add('text-secondary', 'border-transparent', 'font-medium');
+    } else {
+      tabPresets?.classList.add('hidden');
+      tabShortcuts?.classList.remove('hidden');
+      btnTabShortcuts?.classList.add('text-primary', 'border-primary', 'font-bold');
+      btnTabShortcuts?.classList.remove('text-secondary', 'border-transparent', 'font-medium');
+      btnTabPresets?.classList.remove('text-primary', 'border-primary', 'font-bold');
+      btnTabPresets?.classList.add('text-secondary', 'border-transparent', 'font-medium');
+    }
+
+    // 1. Populate Active Preset Selector
+    const select = document.getElementById('selectActivePreset');
+    if (select && this.state.documentPresets) {
+      select.innerHTML = '';
+      const presetKeys = Object.keys(this.state.documentPresets);
+      presetKeys.forEach(key => {
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = key;
+        if (key === this.state.activePreset) {
+          opt.selected = true;
+        }
+        select.appendChild(opt);
+      });
+    }
+
+    // 2. Populate Documents in Active Preset Table
+    const docs = this.getActivePresetDocuments();
+    const countBadge = document.getElementById('presetDocCountBadge');
+    if (countBadge) countBadge.textContent = String(docs.length);
+
+    const tbody = document.getElementById('presetDocsTableBody');
+    if (tbody) {
+      tbody.innerHTML = '';
+      if (docs.length === 0) {
+        const emptyRow = document.createElement('tr');
+        emptyRow.innerHTML = '<td colspan="5" class="py-4 text-center text-secondary italic">No documents in this preset. Click "Add Document to Preset" above.</td>';
+        tbody.appendChild(emptyRow);
+      } else {
+        docs.forEach((doc, idx) => {
+          const row = document.createElement('tr');
+          row.className = 'hover:bg-surface-container-low transition-colors';
+
+          const kwDisplay = Array.isArray(doc.keywords) ? doc.keywords.join(', ') : (doc.keywords || '');
+
+          row.innerHTML = `
+            <td class="py-2 px-3 text-center text-secondary font-mono-code">${idx + 1}</td>
+            <td class="py-2 px-3 font-semibold text-on-surface">${doc.name}</td>
+            <td class="py-2 px-3 font-mono-code font-bold text-primary">${doc.code || '-'}</td>
+            <td class="py-2 px-3 text-secondary text-[11px] truncate max-w-xs" title="${kwDisplay}">${kwDisplay}</td>
+            <td class="py-2 px-3 text-center">
+              <div class="flex items-center justify-center gap-1">
+                <button class="w-6 h-6 rounded hover:bg-primary/10 text-secondary hover:text-primary transition-colors flex items-center justify-center cursor-pointer btn-edit-doc" title="Edit document" type="button" data-doc-idx="${idx}">
+                  <span class="material-symbols-outlined text-[15px]">edit</span>
+                </button>
+                <button class="w-6 h-6 rounded hover:bg-error/10 text-secondary hover:text-error transition-colors flex items-center justify-center cursor-pointer btn-del-doc" title="Remove document from preset" type="button" data-doc-idx="${idx}">
+                  <span class="material-symbols-outlined text-[15px]">delete</span>
+                </button>
+              </div>
+            </td>
+          `;
+
+          const editBtn = row.querySelector('.btn-edit-doc');
+          if (editBtn) {
+            editBtn.addEventListener('click', () => this.openEditDocumentModal(doc, idx));
+          }
+          const delBtn = row.querySelector('.btn-del-doc');
+          if (delBtn) {
+            delBtn.addEventListener('click', () => this.handleRemoveDocFromPreset(idx));
+          }
+
+          tbody.appendChild(row);
+        });
+      }
+    }
+
+    // 3. Populate Shortcuts Table
+    const sTbody = document.getElementById('shortcutsTableBody');
+    if (sTbody) {
+      sTbody.innerHTML = '';
+      const sCountBadge = document.getElementById('shortcutsCountBadge');
+      if (sCountBadge) sCountBadge.textContent = String(this.shortcuts21.length);
+
+      this.shortcuts21.forEach((s) => {
+        const sRow = document.createElement('tr');
+        sRow.className = 'hover:bg-surface-container-low transition-colors';
+        const isCustom = (this.state.customShortcuts || []).some(cs => cs.code.toUpperCase() === s.code.toUpperCase());
+        sRow.innerHTML = `
+          <td class="py-2 px-3 font-mono-code font-bold text-primary">${s.code}</td>
+          <td class="py-2 px-3 font-semibold text-on-surface">${s.canonical || s.label}</td>
+          <td class="py-2 px-3 text-secondary text-[11px] font-mono-code">${s.label !== s.canonical ? s.label : '-'}</td>
+          <td class="py-2 px-3 text-center">
+            <div class="flex items-center justify-center gap-1">
+              <button class="w-6 h-6 rounded hover:bg-primary/10 text-secondary hover:text-primary transition-colors flex items-center justify-center cursor-pointer btn-edit-shortcut" title="Edit shortcut" type="button" data-code="${s.code}">
+                <span class="material-symbols-outlined text-[15px]">edit</span>
+              </button>
+              <button class="w-6 h-6 rounded hover:bg-error/10 text-secondary hover:text-error transition-colors flex items-center justify-center cursor-pointer btn-del-shortcut" title="Delete shortcut" type="button" data-code="${s.code}">
+                <span class="material-symbols-outlined text-[15px]">delete</span>
+              </button>
+            </div>
+          </td>
+        `;
+
+        const sEditBtn = sRow.querySelector('.btn-edit-shortcut');
+        if (sEditBtn) {
+          sEditBtn.addEventListener('click', () => this.handleEditShortcut(s.code));
+        }
+        const sDelBtn = sRow.querySelector('.btn-del-shortcut');
+        if (sDelBtn) {
+          sDelBtn.addEventListener('click', () => this.handleRemoveShortcut(s.code));
+        }
+        sTbody.appendChild(sRow);
+      });
+    }
+  }
+
+  handleSwitchActivePreset(newPreset) {
+    if (!newPreset || !this.state.documentPresets[newPreset]) return;
+    this.state.activePreset = newPreset;
+    this.savePresetsAndSettings();
+
+    // Re-evaluate unmatched files against newly selected preset
+    this._recalculateTargetNames(true);
+    this.updateTelemetry();
+    this.renderQueue();
+    this.renderCurrentPreview();
+    this.renderSettingsModal('presets');
+    toast.show('Preset Switched', `Active preset: ${newPreset}`, 'success');
+  }
+
+  handleNewPreset() {
+    const name = window.prompt('Enter name for the new document preset (e.g. CET CELL, MSBNPE):');
+    if (!name || !name.trim()) return;
+    const cleanPreset = name.trim().toUpperCase();
+    if (this.state.documentPresets[cleanPreset]) {
+      toast.show('Preset Exists', `Preset "${cleanPreset}" already exists.`, 'warning');
+      return;
+    }
+    this.state.documentPresets[cleanPreset] = [];
+    this.handleSwitchActivePreset(cleanPreset);
+    toast.show('Preset Created', `New preset "${cleanPreset}" created. You can now add documents to it.`, 'success');
+  }
+
+  handleCopyPreset() {
+    const srcPreset = this.state.activePreset;
+    const list = this.state.documentPresets[srcPreset] || [];
+    let newName = `${srcPreset} 2`;
+    let counter = 2;
+    while (this.state.documentPresets[newName]) {
+      counter++;
+      newName = `${srcPreset} ${counter}`;
+    }
+    const entered = window.prompt(`Copy preset "${srcPreset}" to new name:`, newName);
+    if (!entered || !entered.trim()) return;
+    const cleanNew = entered.trim().toUpperCase();
+    if (this.state.documentPresets[cleanNew]) {
+      toast.show('Duplicate Preset', `Preset "${cleanNew}" already exists.`, 'warning');
+      return;
+    }
+    this.state.documentPresets[cleanNew] = JSON.parse(JSON.stringify(list));
+    this.handleSwitchActivePreset(cleanNew);
+    toast.show('Preset Copied', `Copied "${srcPreset}" to "${cleanNew}".`, 'success');
+  }
+
+  handleRenamePreset() {
+    const currentName = this.state.activePreset;
+    const newName = window.prompt(`Rename preset "${currentName}" to:`, currentName);
+    if (!newName || !newName.trim() || newName.trim().toUpperCase() === currentName) return;
+    const cleanNew = newName.trim().toUpperCase();
+    if (this.state.documentPresets[cleanNew]) {
+      toast.show('Duplicate Name', `Preset "${cleanNew}" already exists.`, 'warning');
+      return;
+    }
+    this.state.documentPresets[cleanNew] = this.state.documentPresets[currentName];
+    delete this.state.documentPresets[currentName];
+    this.handleSwitchActivePreset(cleanNew);
+    toast.show('Preset Renamed', `Preset renamed to "${cleanNew}".`, 'success');
+  }
+
+  handleDeletePreset() {
+    const presetKeys = Object.keys(this.state.documentPresets);
+    if (presetKeys.length <= 1) {
+      toast.show('Cannot Delete', 'At least one preset must remain.', 'warning');
+      return;
+    }
+    const toDelete = this.state.activePreset;
+    const confirmDel = window.confirm(`Are you sure you want to delete preset "${toDelete}"?`);
+    if (!confirmDel) return;
+    delete this.state.documentPresets[toDelete];
+    const remaining = Object.keys(this.state.documentPresets);
+    this.state.activePreset = remaining[0] || 'MAHA DBT';
+    this.savePresetsAndSettings();
+    this._recalculateTargetNames(true);
+    this.updateTelemetry();
+    this.renderQueue();
+    this.renderCurrentPreview();
+    this.renderSettingsModal('presets');
+    toast.show('Preset Deleted', `Preset "${toDelete}" deleted. Switched to ${this.state.activePreset}.`, 'info');
+  }
+
+  handleResetPresetsDefault() {
+    const confirmReset = window.confirm('Reset document presets to factory defaults? All custom presets will be removed and default MahaDBT and Swayam restored.');
+    if (!confirmReset) return;
+
+    this.state.documentPresets = {
+      "MAHA DBT": [
+        { name: "AADHAAR CARD", code: "ADR", keywords: ["aadhaar card", "adhar", "aadhar"] },
+        { name: "PHOTO", code: "PIC", keywords: ["photo", "pic", "photograph"] },
+        { name: "10TH MARKSHEET", code: "10M", keywords: ["10th marksheet", "10th mark", "ssc marksheet"] },
+        { name: "10TH PASSING CERTIFICATE", code: "10P", keywords: ["10th passing", "ssc passing", "10th sanad"] },
+        { name: "12TH MARKSHEET", code: "12M", keywords: ["12th marksheet", "12th mark", "hsc marksheet"] },
+        { name: "12TH PASSING CERTIFICATE", code: "12P", keywords: ["12th passing", "hsc passing", "12th sanad"] },
+        { name: "12TH LC", code: "12LC", keywords: ["12th lc", "12th tc", "leaving certificate"] },
+        { name: "CASTE CERTIFICATE", code: "CST", keywords: ["caste certificate", "jati dakhla"] },
+        { name: "VALIDITY CERTIFICATE", code: "VLD", keywords: ["validity certificate", "caste validity"] },
+        { name: "INCOME CERTIFICATE", code: "INC", keywords: ["income certificate", "utpanna"] },
+        { name: "NATIONALITY CERTIFICATE", code: "NAT", keywords: ["nationality certificate"] },
+        { name: "DOMICILE CERTIFICATE", code: "DOM", keywords: ["domicile certificate", "adivasi dakhla", "rahavasi"] },
+        { name: "PASSBOOK BANK", code: "BNK", keywords: ["passbook bank", "bank passbook", "bank account"] }
+      ],
+      "SWAYAM": [
+        { name: "PHOTO", code: "PIC", keywords: ["photo", "pic", "photograph"] },
+        { name: "AADHAAR CARD", code: "ADR", keywords: ["aadhaar card", "adhar", "aadhar"] },
+        { name: "10TH MARKSHEET", code: "10M", keywords: ["10th marksheet", "10th mark"] },
+        { name: "12TH MARKSHEET", code: "12M", keywords: ["12th marksheet", "12th mark"] },
+        { name: "12TH LC", code: "12LC", keywords: ["12th lc", "leaving certificate"] },
+        { name: "CASTE CERTIFICATE", code: "CST", keywords: ["caste certificate"] },
+        { name: "DOMICILE CERTIFICATE", code: "DOM", keywords: ["domicile certificate"] },
+        { name: "SELF DECLARATION", code: "SLF", keywords: ["self declaration", "svayam ghoshana"] },
+        { name: "PARENT DECLARATION", code: "PAR", keywords: ["parent declaration", "palak ghoshana"] },
+        { name: "PASSBOOK BANK", code: "BNK", keywords: ["passbook bank", "bank passbook"] },
+        { name: "BONAFIDE CERTIFICATE", code: "BNF", keywords: ["bonafide certificate", "bonafide"] }
+      ]
+    };
+    this.state.activePreset = 'MAHA DBT';
+    this.state.customShortcuts = [];
+    this.savePresetsAndSettings();
+    this._recalculateTargetNames(true);
+    this.updateTelemetry();
+    this.renderQueue();
+    this.renderCurrentPreview();
+    this.renderSettingsModal('presets');
+    toast.show('Reset Complete', 'Document presets restored to factory defaults.', 'success');
+  }
+
+  handleRemoveDocFromPreset(idx) {
+    const list = this.state.documentPresets[this.state.activePreset];
+    if (list && list[idx]) {
+      const removed = list.splice(idx, 1)[0];
+      this.savePresetsAndSettings();
+      this._recalculateTargetNames(true);
       this.updateTelemetry();
       this.renderQueue();
       this.renderCurrentPreview();
+      this.renderSettingsModal('presets');
+      toast.show('Document Removed', `${removed.name || 'Document'} removed from preset.`, 'info');
     }
+  }
+
+  handleRemoveShortcut(code) {
+    if (!code) return;
+    this.state.customShortcuts = (this.state.customShortcuts || []).filter(s => s.code.toUpperCase() !== code.toUpperCase());
+    this.shortcuts21 = this.shortcuts21.filter(s => s.code.toUpperCase() !== code.toUpperCase());
+    this.savePresetsAndSettings();
+    this.renderSettingsModal('shortcuts');
+    toast.show('Shortcut Removed', `Shortcut ${code} removed.`, 'info');
+  }
+
+  openEditDocumentModal(doc, idx) {
+    this._editingDocIdx = idx;
+    this.openAddDocumentModal(doc, false);
+  }
+
+  handleEditShortcut(code) {
+    const s = this.shortcuts21.find(x => x.code.toUpperCase() === code.toUpperCase());
+    if (!s) return;
+    const cs = (this.state.customShortcuts || []).find(x => x.code.toUpperCase() === code.toUpperCase());
+    this._editingShortcutCode = code.toUpperCase();
+    this.openAddDocumentModal({
+      code: s.code,
+      name: s.canonical || s.label,
+      keywords: cs ? cs.keywords : []
+    }, true);
+  }
+
+  openAddDocumentModal(editDoc = null, isShortcutOnly = false) {
+    const modal = document.getElementById('modalAddDocument');
+    if (!modal) return;
+    const inputCode = document.getElementById('inputAddDocCode');
+    const inputName = document.getElementById('inputAddDocName');
+    const inputAliases = document.getElementById('inputAddDocAliases');
+    const previewEl = document.getElementById('addDocTargetPreview');
+    const titleEl = modal.querySelector('h3');
+
+    this._isShortcutOnly = Boolean(isShortcutOnly);
+
+    if (editDoc) {
+      if (titleEl) titleEl.textContent = isShortcutOnly ? 'Edit Shortcut' : 'Edit Document in Preset';
+      if (inputCode) inputCode.value = editDoc.code || '';
+      if (inputName) inputName.value = editDoc.name || editDoc.canonical || '';
+      if (inputAliases) inputAliases.value = Array.isArray(editDoc.keywords) ? editDoc.keywords.join(', ') : (editDoc.keywords || '');
+    } else {
+      this._editingDocIdx = null;
+      this._editingShortcutCode = null;
+      if (titleEl) titleEl.textContent = isShortcutOnly ? 'Add Shortcut' : 'Add Document to Preset';
+      if (inputCode) inputCode.value = '';
+      if (inputName) inputName.value = '';
+      if (inputAliases) inputAliases.value = '';
+    }
+
+    const updatePreview = () => {
+      const docName = inputName?.value.trim() || 'DOCUMENT';
+      const formula = buildName(docName, this.state.studentName, null, this.state.style);
+      const cleanBase = formula.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+      if (previewEl) previewEl.textContent = `${cleanBase}.pdf`;
+    };
+
+    if (inputName) {
+      inputName.oninput = updatePreview;
+      inputName.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          this.handleSaveDocumentType();
+        }
+      };
+    }
+    if (inputCode) {
+      inputCode.oninput = () => {
+        inputCode.value = inputCode.value.toUpperCase();
+      };
+      inputCode.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          inputName?.focus();
+        }
+      };
+    }
+    updatePreview();
+    modal.classList.remove('hidden');
+    if (inputCode) inputCode.focus();
+  }
+
+  closeAddDocumentModal() {
+    const modal = document.getElementById('modalAddDocument');
+    if (modal) modal.classList.add('hidden');
+    this._editingDocIdx = null;
+    this._editingShortcutCode = null;
+    this._isShortcutOnly = false;
+  }
+
+  handleSaveDocumentType() {
+    const inputCode = document.getElementById('inputAddDocCode');
+    const inputName = document.getElementById('inputAddDocName');
+    const inputAliases = document.getElementById('inputAddDocAliases');
+
+    const rawName = (inputName?.value || '').trim();
+    if (!rawName) {
+      toast.show('Document Name Required', 'Please enter a Full Document Name.', 'warning');
+      return;
+    }
+
+    const docName = rawName.toUpperCase();
+    let docCode = (inputCode?.value || '').trim().toUpperCase();
+    if (!docCode) {
+      const words = docName.split(/\s+/).filter(Boolean);
+      docCode = words.map(w => w[0]).join('').slice(0, 4);
+    }
+
+    const rawAliases = (inputAliases?.value || '').trim();
+    let keywords = [];
+    if (rawAliases) {
+      keywords = rawAliases.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    } else {
+      keywords = [docName.toLowerCase(), ...extractCleanTokens(docName)];
+    }
+
+    const wasShortcutOnly = this._isShortcutOnly;
+
+    // 1. Add/update in active preset documents unless shortcut-only mode
+    if (!wasShortcutOnly) {
+      if (!this.state.documentPresets[this.state.activePreset]) {
+        this.state.documentPresets[this.state.activePreset] = [];
+      }
+      const currentList = this.state.documentPresets[this.state.activePreset];
+      const docEntry = { name: docName, code: docCode, keywords };
+
+      if (this._editingDocIdx !== null && this._editingDocIdx !== undefined && currentList[this._editingDocIdx]) {
+        currentList[this._editingDocIdx] = docEntry;
+      } else {
+        const existingIdx = currentList.findIndex(item => {
+          const n = (typeof item === 'string' ? item : item.name || '').toUpperCase();
+          return n === docName;
+        });
+        if (existingIdx !== -1) {
+          currentList[existingIdx] = docEntry;
+        } else {
+          currentList.push(docEntry);
+        }
+      }
+    }
+
+    // 2. Add/update in shortcuts dictionary
+    if (docCode) {
+      // If editing an existing shortcut with a different code, clean old code
+      if (this._editingShortcutCode && this._editingShortcutCode !== docCode) {
+        this.shortcuts21 = this.shortcuts21.filter(s => s.code.toUpperCase() !== this._editingShortcutCode);
+        this.state.customShortcuts = (this.state.customShortcuts || []).filter(s => s.code.toUpperCase() !== this._editingShortcutCode);
+      }
+
+      const existingShortcutIdx = this.shortcuts21.findIndex(s => s.code.toUpperCase() === docCode);
+      if (existingShortcutIdx !== -1) {
+        this.shortcuts21[existingShortcutIdx] = { code: docCode, label: rawName, canonical: docName };
+      } else {
+        this.shortcuts21.push({ code: docCode, label: rawName, canonical: docName });
+      }
+
+      if (!this.state.customShortcuts) this.state.customShortcuts = [];
+      const csIdx = this.state.customShortcuts.findIndex(s => s.code.toUpperCase() === docCode);
+      if (csIdx !== -1) {
+        this.state.customShortcuts[csIdx] = { code: docCode, label: rawName, canonical: docName, keywords };
+      } else {
+        this.state.customShortcuts.push({ code: docCode, label: rawName, canonical: docName, keywords });
+      }
+
+      registerDocumentSignature({
+        canonical: docName,
+        code: docCode,
+        primaryKeywords: [docName.toLowerCase(), docCode.toLowerCase()],
+        secondaryKeywords: keywords
+      });
+    }
+
+    this._editingDocIdx = null;
+    this._editingShortcutCode = null;
+    this._isShortcutOnly = false;
+
+    // 3. Persist and refresh
+    this.savePresetsAndSettings();
+    this.closeAddDocumentModal();
+    this._recalculateTargetNames(true);
+    this.updateTelemetry();
+    this.renderQueue();
+    this.renderCurrentPreview();
+    this.renderSettingsModal(wasShortcutOnly ? 'shortcuts' : 'presets');
+    toast.show('Saved', `${docName} saved successfully.`, 'success');
+  }
 
     /* ==========================================================================
        High-Speed Cross-Check Preview Modal & Batch Execution Handlers
@@ -2976,73 +3514,99 @@ export class RenamerUIManager {
 
       if (tbody) {
         tbody.innerHTML = '';
+        const sName = (this.state.studentName || '').trim();
+
         matched.forEach(f => {
           const tr = document.createElement('tr');
           tr.className = 'hover:bg-surface-container-high/40 transition-colors';
           tr.dataset.fileId = f.id;
 
-          // Checkbox column
+          const oldClean = cleanName(f.name);
+          const newClean = cleanName(f.targetName || f.name);
+
+          // Determine difference status
+          let changeStatus = 'rename'; // 'identical' | 'casing' | 'student' | 'rename'
+          if (oldClean === newClean) {
+            changeStatus = 'identical';
+          } else if (oldClean.toLowerCase() === newClean.toLowerCase()) {
+            changeStatus = 'casing';
+          } else if (sName && newClean.toLowerCase().includes(sName.toLowerCase()) && !oldClean.toLowerCase().includes(sName.toLowerCase())) {
+            changeStatus = 'student';
+          }
+
+          // Checkbox: Default unchecked for identical rows, checked for changes
           const tdCb = document.createElement('td');
           tdCb.className = 'py-2 px-3 text-center';
           const cb = document.createElement('input');
           cb.type = 'checkbox';
-          cb.checked = true;
+          cb.checked = (changeStatus !== 'identical');
           cb.className = 'w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer crosscheck-row-cb';
           cb.addEventListener('change', () => this._updateCrossCheckSelectionCount());
           tdCb.appendChild(cb);
           tr.appendChild(tdCb);
 
-          // Old Name
+          // Old Name (clean basename, NO extension)
           const tdOld = document.createElement('td');
-          tdOld.className = 'py-2 px-3 text-secondary truncate max-w-[220px]';
-          tdOld.title = f.name;
-          tdOld.textContent = cleanName(f.name) + (ext(f.name) || '');
+          tdOld.className = 'py-2 px-3 text-secondary truncate max-w-[220px] font-mono-code text-[12px]';
+          tdOld.title = oldClean;
+          tdOld.textContent = oldClean;
           tr.appendChild(tdOld);
 
           // Arrow
           const tdArr = document.createElement('td');
-          tdArr.className = 'py-2 px-2 text-center text-outline-variant font-bold';
+          tdArr.className = 'py-2 px-2 text-center text-outline-variant font-bold select-none';
           tdArr.textContent = '→';
           tr.appendChild(tdArr);
 
-          // Suggested New Name (student name highlighted)
+          // Suggested New Name (clean basename, NO extension, student highlighted)
           const tdNew = document.createElement('td');
-          tdNew.className = 'py-2 px-3 font-bold text-on-surface truncate max-w-[260px]';
-          tdNew.title = f.targetName || f.name;
+          tdNew.className = 'py-2 px-3 font-bold text-on-surface truncate max-w-[260px] font-mono-code text-[12px]';
+          tdNew.title = newClean;
 
-          const targetClean = cleanName(f.targetName || f.name);
-          const targetExt = ext(f.targetName || f.name);
-          const sName = (this.state.studentName || '').trim();
-
-          if (sName && targetClean.toLowerCase().includes(sName.toLowerCase())) {
-            const idx = targetClean.toLowerCase().indexOf(sName.toLowerCase());
-            const before = targetClean.slice(0, idx);
-            const matchStr = targetClean.slice(idx, idx + sName.length);
-            const after = targetClean.slice(idx + sName.length);
+          if (sName && newClean.toLowerCase().includes(sName.toLowerCase())) {
+            const idx = newClean.toLowerCase().indexOf(sName.toLowerCase());
+            const before = newClean.slice(0, idx);
+            const matchStr = newClean.slice(idx, idx + sName.length);
+            const after = newClean.slice(idx + sName.length);
             tdNew.appendChild(document.createTextNode(before));
             const hl = document.createElement('span');
             hl.className = 'text-primary bg-primary/10 px-1 rounded';
             hl.textContent = matchStr;
             tdNew.appendChild(hl);
-            tdNew.appendChild(document.createTextNode(after + targetExt));
+            tdNew.appendChild(document.createTextNode(after));
           } else {
-            tdNew.textContent = targetClean + targetExt;
+            tdNew.textContent = newClean;
           }
           tr.appendChild(tdNew);
 
-          // Confidence badge
+          // Difference / Status badge
           const tdConf = document.createElement('td');
           tdConf.className = 'py-2 px-3 text-right';
           const confBadge = document.createElement('span');
-          const conf = f.smartConfidence !== undefined ? f.smartConfidence : 95;
-          confBadge.className = 'confidence-badge confidence-badge-high';
-          confBadge.textContent = `🟢 ${conf}%`;
+
+          if (changeStatus === 'identical') {
+            confBadge.className = 'px-2 py-0.5 rounded text-[10px] font-mono-code font-bold bg-surface-container-high text-secondary';
+            confBadge.textContent = 'Identical';
+          } else if (changeStatus === 'casing') {
+            confBadge.className = 'px-2 py-0.5 rounded text-[10px] font-mono-code font-bold bg-primary/10 text-primary';
+            confBadge.textContent = 'Case Change';
+          } else if (changeStatus === 'student') {
+            confBadge.className = 'px-2 py-0.5 rounded text-[10px] font-mono-code font-bold bg-tertiary-fixed text-on-tertiary-fixed';
+            confBadge.textContent = '+ Student';
+          } else {
+            const conf = f.smartConfidence !== undefined ? f.smartConfidence : 90;
+            confBadge.className = 'confidence-badge confidence-badge-high';
+            confBadge.textContent = `🟢 ${conf}% Rename`;
+          }
+
           tdConf.appendChild(confBadge);
           tr.appendChild(tdConf);
 
           tbody.appendChild(tr);
         });
       }
+
+      this._updateCrossCheckSelectionCount();
 
       if (selectAllCb) {
         selectAllCb.onchange = (e) => {
@@ -3063,9 +3627,12 @@ export class RenamerUIManager {
       const selectedEl = document.getElementById('crossCheckSelectedCount');
       const confirmLabel = document.getElementById('confirmRenameLabel');
       const confirmBtn = document.getElementById('btnConfirmBatchRename');
+      const selectAllCb = document.getElementById('chkCrossCheckSelectAll');
+
       if (selectedEl) selectedEl.textContent = String(checked.length);
       if (confirmLabel) confirmLabel.textContent = `Confirm & Rename (${checked.length})`;
       if (confirmBtn) confirmBtn.disabled = checked.length === 0;
+      if (selectAllCb) selectAllCb.checked = (checkboxes.length > 0 && checked.length === checkboxes.length);
     }
 
     closeCrossCheckModal() {
@@ -3353,88 +3920,138 @@ export class RenamerUIManager {
 
       const isImage = /\.(jpe?g|png|webp|bmp|gif)$/i.test(file.name);
       const isPdf = /\.pdf$/i.test(file.name);
-      const previewUrl = resolveFilePreviewUrl(file);
 
-        if (isImage && previewUrl) {
-          const img = document.createElement('img');
-          img.src = previewUrl;
-          img.alt = file.name;
-          img.className = 'w-full h-full object-contain';
-          img.onerror = () => {
-            // Fallback: If URL failed to load (e.g. backend offline or path change),
-            // try object url from fileObj, or Tauri read_binary_file
-            if (file.fileObj) {
-              try {
-                img.src = URL.createObjectURL(file.fileObj);
-                return;
-              } catch (_) { }
+      if (isImage) {
+        const img = document.createElement('img');
+        img.alt = file.name;
+        img.className = 'w-full h-full object-contain';
+
+        const applyBlob = (blobUrl) => {
+          file._blobUrl = blobUrl;
+          img.src = blobUrl;
+          if (!stage.contains(img)) {
+            stage.innerHTML = '';
+            stage.appendChild(img);
+          }
+        };
+
+        if (file._blobUrl) {
+          applyBlob(file._blobUrl);
+        } else if (file.fileObj) {
+          try {
+            applyBlob(URL.createObjectURL(file.fileObj));
+          } catch (_) {
+            this._renderDocumentInfoFallback(stage, file);
+          }
+        } else {
+          const tauriInvoke = getTauriInvoke();
+          if (file.path && tauriInvoke) {
+            stage.innerHTML = '<div class="flex items-center justify-center w-full h-full text-secondary text-[12px]"><span class="material-symbols-outlined text-[20px] animate-spin text-primary mr-2">sync</span><span>Loading document preview...</span></div>';
+            tauriInvoke('read_binary_file', { path: file.path })
+              .then(bytes => {
+                const mime = file.name.toLowerCase().endsWith('.png') ? 'image/png' : (file.name.toLowerCase().endsWith('.webp') ? 'image/webp' : 'image/jpeg');
+                const blob = new Blob([new Uint8Array(bytes)], { type: mime });
+                applyBlob(URL.createObjectURL(blob));
+              })
+              .catch(err => {
+                console.warn('Native read_binary_file error, falling back:', err);
+                const previewUrl = resolveFilePreviewUrl(file);
+                if (previewUrl) {
+                  img.src = previewUrl;
+                  img.onload = () => { stage.innerHTML = ''; stage.appendChild(img); };
+                  img.onerror = () => this._renderDocumentInfoFallback(stage, file);
+                } else {
+                  this._renderDocumentInfoFallback(stage, file);
+                }
+              });
+          } else {
+            const previewUrl = resolveFilePreviewUrl(file);
+            if (previewUrl) {
+              img.src = previewUrl;
+              img.onload = () => { stage.innerHTML = ''; stage.appendChild(img); };
+              img.onerror = () => this._renderDocumentInfoFallback(stage, file);
+            } else {
+              this._renderDocumentInfoFallback(stage, file);
             }
-            if (file.path && typeof window !== 'undefined' && window.__TAURI__?.core?.invoke) {
-              window.__TAURI__.core.invoke('read_binary_file', { path: file.path })
-                .then(bytes => {
-                  const mime = file.name.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
-                  const blob = new Blob([new Uint8Array(bytes)], { type: mime });
-                  img.src = URL.createObjectURL(blob);
+          }
+        }
+      } else if (isPdf) {
+        const canvas = document.createElement('canvas');
+        canvas.id = 'previewPdfCanvas';
+        canvas.className = 'w-full h-full object-contain';
+
+        const renderFromBytes = async (bytes) => {
+          if (!window.pdfjsLib) {
+            this._loadPdfJs(() => renderFromBytes(bytes));
+            return;
+          }
+          try {
+            stage.innerHTML = '';
+            stage.appendChild(canvas);
+            this.state.activePdfDoc = await window.pdfjsLib.getDocument({ data: bytes }).promise;
+            this.state.activePdfUrl = file.path || file.name;
+            this.state.totalPdfPages = this.state.activePdfDoc.numPages || 1;
+            this.state.currentPdfPage = 1;
+            await this._renderPdfPage(1, canvas);
+          } catch (pdfErr) {
+            console.warn('PDF render error:', pdfErr);
+            this._renderDocumentInfoFallback(stage, file);
+          }
+        };
+
+        if (file._pdfBytes) {
+          renderFromBytes(file._pdfBytes);
+        } else if (file.fileObj) {
+          file.fileObj.arrayBuffer()
+            .then(buf => {
+              file._pdfBytes = new Uint8Array(buf);
+              renderFromBytes(file._pdfBytes);
+            })
+            .catch(() => this._renderDocumentInfoFallback(stage, file));
+        } else {
+          const tauriInvoke = getTauriInvoke();
+          if (file.path && tauriInvoke) {
+            stage.innerHTML = '<div class="flex items-center justify-center w-full h-full text-secondary text-[12px]"><span class="material-symbols-outlined text-[20px] animate-spin text-primary mr-2">sync</span><span>Loading PDF preview...</span></div>';
+            tauriInvoke('read_binary_file', { path: file.path })
+              .then(bytes => {
+                file._pdfBytes = new Uint8Array(bytes);
+                renderFromBytes(file._pdfBytes);
+              })
+              .catch(err => {
+                console.warn('Native PDF read error, falling back to fetch:', err);
+                const previewUrl = resolveFilePreviewUrl(file);
+                if (previewUrl) {
+                  fetch(previewUrl)
+                    .then(r => r.arrayBuffer())
+                    .then(buf => {
+                      file._pdfBytes = new Uint8Array(buf);
+                      renderFromBytes(file._pdfBytes);
+                    })
+                    .catch(() => this._renderDocumentInfoFallback(stage, file));
+                } else {
+                  this._renderDocumentInfoFallback(stage, file);
+                }
+              });
+          } else {
+            const previewUrl = resolveFilePreviewUrl(file);
+            if (previewUrl) {
+              fetch(previewUrl)
+                .then(r => r.arrayBuffer())
+                .then(buf => {
+                  file._pdfBytes = new Uint8Array(buf);
+                  renderFromBytes(file._pdfBytes);
                 })
                 .catch(() => this._renderDocumentInfoFallback(stage, file));
             } else {
               this._renderDocumentInfoFallback(stage, file);
             }
-          };
-          stage.appendChild(img);
-        } else if (isPdf && previewUrl) {
-          const canvas = document.createElement('canvas');
-          canvas.id = 'previewPdfCanvas';
-          canvas.className = 'w-full h-full object-contain';
-          stage.appendChild(canvas);
-
-          const loadAndRenderPdf = async () => {
-            try {
-              if (!window.pdfjsLib) {
-                this._loadPdfJs(() => loadAndRenderPdf());
-                return;
-              }
-                if (!this.state.activePdfDoc || this.state.activePdfUrl !== previewUrl) {
-                  let docParam = previewUrl;
-                  if (file.fileObj) {
-                    const arrayBuffer = await file.fileObj.arrayBuffer();
-                    docParam = { data: arrayBuffer };
-                  }
-                  this.state.activePdfDoc = await window.pdfjsLib.getDocument(docParam).promise;
-                  this.state.activePdfUrl = previewUrl;
-                  this.state.totalPdfPages = this.state.activePdfDoc.numPages || 1;
-                  this.state.currentPdfPage = 1;
-                }
-                await this._renderPdfPage(this.state.currentPdfPage, canvas);
-              } catch (err) {
-                console.warn('PDF.js render error, attempting ArrayBuffer fallback:', err);
-                try {
-                  const resp = await fetch(previewUrl);
-                  if (resp.ok) {
-                    const buf = await resp.arrayBuffer();
-                    this.state.activePdfDoc = await window.pdfjsLib.getDocument({ data: buf }).promise;
-                    this.state.activePdfUrl = previewUrl;
-                    this.state.totalPdfPages = this.state.activePdfDoc.numPages || 1;
-                    this.state.currentPdfPage = 1;
-                    await this._renderPdfPage(this.state.currentPdfPage, canvas);
-                    return;
-                  }
-                } catch (fetchErr) {
-                  console.warn('PDF fetch fallback failed:', fetchErr);
-                }
-                this._renderDocumentInfoFallback(stage, file);
-              }
-            };
-
-            loadAndRenderPdf();
-          } else {
-            if (isPdf && !window.pdfjsLib) {
-            this._loadPdfJs(() => this.renderCurrentPreview());
           }
-          this._renderDocumentInfoFallback(stage, file);
         }
+      } else {
+        this._renderDocumentInfoFallback(stage, file);
+      }
 
-        return stage;
+      return stage;
       }
 
   async _renderPdfPage(pageNumber, canvasEl = null) {

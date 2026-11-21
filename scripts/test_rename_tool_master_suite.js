@@ -238,7 +238,7 @@ const presetsFilePath = path.join(ROOT, 'config/document_presets.json');
 assert.ok(fs.existsSync(presetsFilePath), 'config/document_presets.json must exist');
 const presetsData = JSON.parse(fs.readFileSync(presetsFilePath, 'utf-8'));
 assert.ok(presetsData.forms, 'document_presets.json must contain forms object');
-assert.ok(presetsData.forms['MAHA DBT FORM'], 'MAHA DBT FORM preset must exist');
+assert.ok(presetsData.forms['MAHA DBT'] || presetsData.forms['MAHA DBT FORM'], 'MAHA DBT preset must exist');
 
 // Verify CRUD operations in settings-ui.js
 const settingsUiPath = path.join(ROOT, 'src/ui/settings-ui.js');
@@ -299,15 +299,12 @@ console.log('✓ TC-11 Passed: Sequential Live Streaming Smart Scan prioritizes 
 // ---------------------------------------------------------------------------
 console.log('[TC-12] Self-Learning: Verifying "New Document Found" Alert Bar & Add Document Flow...');
 // Check markup in rename_tool.html and app/index.html
-assert.ok(htmlContent.includes('id="newDocAlertBar"'), 'rename_tool.html must contain newDocAlertBar');
-assert.ok(htmlContent.includes('id="btnAddNewDocument"'), 'rename_tool.html must contain btnAddNewDocument');
+// Note: newDocAlertBar was intentionally removed in commit 785759f to keep center preview clean (enforced in test_rename_tool_fixes.js)
 assert.ok(htmlContent.includes('id="modalAddDocument"'), 'rename_tool.html must contain modalAddDocument');
 assert.ok(htmlContent.includes('id="inputAddDocCode"'), 'rename_tool.html must contain inputAddDocCode');
 assert.ok(htmlContent.includes('id="inputAddDocName"'), 'rename_tool.html must contain inputAddDocName');
 assert.ok(htmlContent.includes('id="btnSaveAddDoc"'), 'rename_tool.html must contain btnSaveAddDoc');
 
-assert.ok(appIndexContent.includes('id="newDocAlertBar"'), 'app/index.html must contain newDocAlertBar');
-assert.ok(appIndexContent.includes('id="btnAddNewDocument"'), 'app/index.html must contain btnAddNewDocument');
 assert.ok(appIndexContent.includes('id="modalAddDocument"'), 'app/index.html must contain modalAddDocument');
 
 // Test dynamic signature registration in logic module

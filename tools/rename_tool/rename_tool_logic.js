@@ -30,6 +30,7 @@ export const CANONICAL_NAMES = {
   "PHOTO": "Photo",
   "10TH MARKSHEET": "10th Marksheet",
   "10TH PASSING CERTIFICATE": "10th Passing",
+  "10TH MARKSHEET AND PASSING CERTIFICATE": "10th Marksheet and Passing Certificate",
   "11TH MARKSHEET": "11th Marksheet",
   "11TH PASSING CERTIFICATE": "11th Passing",
   "10TH LC": "10TH LC",
@@ -41,21 +42,35 @@ export const CANONICAL_NAMES = {
   "RATION CARD": "Ration Card",
   "12TH MARKSHEET": "12th Marksheet",
   "12TH PASSING CERTIFICATE": "12th Passing",
+  "12TH MARKSHEET AND PASSING CERTIFICATE": "12th Marksheet and Passing Certificate",
   "12TH LC": "12TH LC",
   "12TH MARKSHEET AND PASSING": "12th Marksheet and Passing",
+  "LEAVING CERTIFICATE": "Leaving Certificate",
   "CASTE CERTIFICATE": "Caste Certificate",
   "VALIDITY CERTIFICATE": "Validity Certificate",
+  "CASTE VALIDITY CERTIFICATE": "Caste Validity Certificate",
+  "NON CREAMY LAYER CERTIFICATE": "Non Creamy Layer Certificate",
   "DOMICILE CERTIFICATE": "Domicile Certificate",
   "NATIONALITY CERTIFICATE": "Nationality Certificate",
   "PASSBOOK BANK": "Bank Passbook",
+  "BANK PASSBOOK": "Bank Passbook",
   "INCOME CERTIFICATE": "Income Certificate",
   "SELF DECLARATION": "Self Declaration",
   "PARENT DECLARATION": "Parent Declaration",
+  "DECLARATION CERTIFICATE": "Declaration Certificate",
+  "RESIDENTIAL DOCUMENT": "Residential Document",
   "BIRTH CERTIFICATE": "Birth Certificate",
   "BONAFIDE CERTIFICATE": "Bonafide Certificate",
   "GAP CERTIFICATE": "Gap Certificate",
   "ATTEMPT CERTIFICATE": "Attempt Certificate",
-  "CAP ALLOTMENT LETTER": "CAP Allotment Letter"
+  "CAP ALLOTMENT LETTER": "CAP Allotment Letter",
+  "CET SCORECARD": "CET Scorecard",
+  "CET APPLICATION CONFIRMATION": "CET Application Confirmation",
+  "EWS CERTIFICATE": "EWS Certificate",
+  "DISABILITY CERTIFICATE": "Disability Certificate",
+  "MINORITY DECLARATION": "Minority Declaration",
+  "ADMISSION FEE RECEIPT": "Admission Fee Receipt",
+  "HOSTEL RECEIPT / BONAFIDE": "Hostel Receipt / Bonafide"
 };
 
 export const DEFAULT_SPELLING_RULES = {
@@ -116,50 +131,38 @@ export const DEFAULT_LINKED_RULES = [
 ];
 
 export const DEFAULT_CHECKLISTS_DATA = {
-  "MAHA DBT FORM": [
-    ["AADHAAR CARD", ["aadhaar card"]],
-    ["PHOTO", ["photo"]],
-    ["10TH MARKSHEET", ["10th marksheet"]],
-    ["10TH PASSING CERTIFICATE", ["10th passing certificate", "10th passing"]],
-    ["12TH MARKSHEET", ["12th marksheet"]],
-    ["12TH PASSING CERTIFICATE", ["12th passing certificate", "12th passing"]],
-    ["12TH LC", ["12th lc"]],
-    ["CASTE CERTIFICATE", ["caste certificate"]],
-    ["VALIDITY CERTIFICATE", ["validity certificate"]],
-    ["INCOME CERTIFICATE", ["income certificate"]],
+  "MAHA DBT": [
+    ["AADHAAR CARD", ["aadhaar card", "adhar", "aadhar"]],
+    ["PHOTO", ["photo", "pic", "photograph"]],
+    ["10TH MARKSHEET", ["10th marksheet", "10th mark", "ssc marksheet"]],
+    ["10TH PASSING CERTIFICATE", ["10th passing certificate", "10th passing", "10th sanad"]],
+    ["12TH MARKSHEET", ["12th marksheet", "12th mark", "hsc marksheet"]],
+    ["12TH PASSING CERTIFICATE", ["12th passing certificate", "12th passing", "12th sanad"]],
+    ["12TH LC", ["12th lc", "12th tc", "leaving certificate"]],
+    ["CASTE CERTIFICATE", ["caste certificate", "jati dakhla"]],
+    ["VALIDITY CERTIFICATE", ["validity certificate", "caste validity"]],
+    ["INCOME CERTIFICATE", ["income certificate", "utpanna"]],
     ["NATIONALITY CERTIFICATE", ["nationality certificate"]],
-    ["DOMICILE CERTIFICATE", ["domicile certificate"]],
-    ["PASSBOOK BANK", ["passbook bank", "bank passbook"]]
+    ["DOMICILE CERTIFICATE", ["domicile certificate", "adivasi dakhla", "rahavasi"]],
+    ["PASSBOOK BANK", ["passbook bank", "bank passbook", "bank account"]]
   ],
-  "MH CET FORM": [
-    ["PHOTO", ["photo"]],
-    ["AADHAAR CARD", ["aadhaar card"]],
-    ["10TH MARKSHEET", ["10th marksheet"]],
-    ["10TH PASSING CERTIFICATE", ["10th passing certificate", "10th passing"]],
-    ["12TH MARKSHEET", ["12th marksheet"]],
-    ["12TH PASSING CERTIFICATE", ["12th passing certificate", "12th passing"]],
-    ["12TH LC", ["12th lc"]],
-    ["CASTE CERTIFICATE", ["caste certificate"]],
-    ["VALIDITY CERTIFICATE", ["validity certificate"]],
-    ["DOMICILE CERTIFICATE", ["domicile certificate"]],
-    ["NATIONALITY CERTIFICATE", ["nationality certificate"]],
-    ["INCOME CERTIFICATE", ["income certificate"]],
-    ["ATTEMPT CERTIFICATE", ["attempt certificate"]]
-  ],
-  "SWAYAM FORM": [
-    ["PHOTO", ["photo"]],
-    ["AADHAAR CARD", ["aadhaar card"]],
-    ["10TH MARKSHEET", ["10th marksheet"]],
-    ["12TH MARKSHEET", ["12th marksheet"]],
-    ["12TH LC", ["12th lc"]],
+  "SWAYAM": [
+    ["PHOTO", ["photo", "pic", "photograph"]],
+    ["AADHAAR CARD", ["aadhaar card", "adhar", "aadhar"]],
+    ["10TH MARKSHEET", ["10th marksheet", "10th mark"]],
+    ["12TH MARKSHEET", ["12th marksheet", "12th mark"]],
+    ["12TH LC", ["12th lc", "leaving certificate"]],
     ["CASTE CERTIFICATE", ["caste certificate"]],
     ["DOMICILE CERTIFICATE", ["domicile certificate"]],
-    ["SELF DECLARATION", ["self declaration"]],
-    ["PARENT DECLARATION", ["parent declaration"]],
+    ["SELF DECLARATION", ["self declaration", "svayam ghoshana"]],
+    ["PARENT DECLARATION", ["parent declaration", "palak ghoshana"]],
     ["PASSBOOK BANK", ["passbook bank", "bank passbook"]],
-    ["BONAFIDE CERTIFICATE", ["bonafide certificate"]]
+    ["BONAFIDE CERTIFICATE", ["bonafide certificate", "bonafide"]]
   ]
 };
+// Backward-compatibility aliases
+DEFAULT_CHECKLISTS_DATA["MAHA DBT FORM"] = DEFAULT_CHECKLISTS_DATA["MAHA DBT"];
+DEFAULT_CHECKLISTS_DATA["SWAYAM FORM"] = DEFAULT_CHECKLISTS_DATA["SWAYAM"];
 
 /* ==========================================================================
    2. Shortcut Keyword Dictionary & Matching
@@ -367,8 +370,7 @@ export const DOCUMENT_PATTERNS = [
     patterns: [
       /\b12m\b/i,
       /\b12(th)?\s*(mark|marksheet|mark-sheet|marks|scorecard)\b/i,
-      /\bhsc\s*(mark|marksheet|mark-sheet)\b/i,
-      /\b12th\b/i
+      /\bhsc\s*(mark|marksheet|mark-sheet)\b/i
     ]
   },
   {
@@ -401,8 +403,7 @@ export const DOCUMENT_PATTERNS = [
     patterns: [
       /\b10m\b/i,
       /\b10(th)?\s*(mark|marksheet|mark-sheet|marks|scorecard)\b/i,
-      /\bssc\s*(mark|marksheet|mark-sheet)\b/i,
-      /\b10th\b/i
+      /\bssc\s*(mark|marksheet|mark-sheet)\b/i
     ]
   },
   {
@@ -575,11 +576,9 @@ export const DOCUMENT_PATTERNS = [
     outputName: "PARENT DECLARATION",
     shortcut: "PAR",
     patterns: [
-      /\bpar\b/i,
-      /\bparent\b/i,
-      /\bfather\b/i,
-      /\bmother\b/i,
-      /\bpalak\b/i
+      /\bparent\s*(declaration|undertaking|form)\b/i,
+      /\bpalak\s*(ghoshana|pratigya|pratigyapatra|declaration|undertaking)\b/i,
+      /\bpar\b/i
     ]
   }
 ];
@@ -632,9 +631,8 @@ export function ext(name) {
 }
 
 export function cleanName(name) {
-  if (!name) return '';
-  const e = ext(name);
-  return e ? name.slice(0, -e.length) : name;
+  if (!name || typeof name !== 'string') return '';
+  return name.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
 }
 
 export function group(name, groups) {
@@ -673,8 +671,15 @@ export function buildName(input, student, groups, style = 'preserve') {
   }
 
   let combined = baseDoc;
-  if (student && !baseDoc.toLowerCase().includes(student.toLowerCase())) {
-    combined = `${baseDoc} ${student}`;
+  if (student && student.trim()) {
+    const normStudent = student.trim().replace(/[_\-]+/g, ' ').replace(/\s+/g, ' ');
+    const normBase = baseDoc.replace(/[_\-]+/g, ' ').replace(/\s+/g, ' ');
+    const alreadyContains = normBase.toLowerCase().includes(normStudent.toLowerCase());
+    if (!alreadyContains) {
+      combined = `${baseDoc} ${normStudent}`;
+    } else {
+      combined = baseDoc;
+    }
   }
 
   return applyCase(combined, style);
@@ -1644,11 +1649,114 @@ export function extractSignatureKeywords(text, docName = '') {
 }
 
 /**
- * Filename-Based Smart Matching Engine (Strictly Non-OCR)
- * Evaluates document type strictly from the original filename and optional student name context.
- * Threshold: 30%+ match suggests a document match cleanly; 80%+ is high confidence.
+ * Computes Levenshtein distance between two strings
  */
-export function matchFilenameSmart(filename, studentName = '', groups = null) {
+export function levenshteinDistance(a, b) {
+  if (a === b) return 0;
+  if (!a || !a.length) return (b || '').length;
+  if (!b || !b.length) return a.length;
+
+  const s1 = a.toLowerCase();
+  const s2 = b.toLowerCase();
+  const d = [];
+
+  for (let i = 0; i <= s1.length; i++) {
+    d[i] = [i];
+  }
+  for (let j = 0; j <= s2.length; j++) {
+    d[0][j] = j;
+  }
+
+  for (let i = 1; i <= s1.length; i++) {
+    for (let j = 1; j <= s2.length; j++) {
+      const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(
+        d[i - 1][j] + 1,
+        d[i][j - 1] + 1,
+        d[i - 1][j - 1] + cost
+      );
+    }
+  }
+  return d[s1.length][s2.length];
+}
+
+/**
+ * Calculates string similarity between 0.0 and 1.0 using Levenshtein distance
+ */
+export function stringSimilarity(a, b) {
+  if (!a && !b) return 1.0;
+  if (!a || !b) return 0.0;
+  const s1 = a.toLowerCase().trim();
+  const s2 = b.toLowerCase().trim();
+  if (s1 === s2) return 1.0;
+  const maxLen = Math.max(s1.length, s2.length);
+  if (maxLen === 0) return 1.0;
+  const dist = levenshteinDistance(s1, s2);
+  return Math.max(0, 1 - dist / maxLen);
+}
+
+/**
+ * Extracts clean words/tokens from a filename or text
+ */
+export function extractCleanTokens(str) {
+  if (!str || typeof str !== 'string') return [];
+  const withoutExt = str.replace(/\.[a-zA-Z0-9]+$/i, '');
+  const normalized = withoutExt.replace(/[^a-zA-Z0-9]+/g, ' ').toLowerCase();
+  return normalized.split(/\s+/).filter(t => t.length > 0);
+}
+
+/**
+ * Strict Numeric / Standard Group Classifier
+ * Standards: 10th (ssc), 11th (xi), 12th (hsc), 1st, 2nd, 3rd, 4th
+ */
+const NUMERIC_STANDARDS = [
+  { id: '10', tags: ['10', '10th', 'ssc', 'tenth', 'x'] },
+  { id: '11', tags: ['11', '11th', 'xi', 'eleventh'] },
+  { id: '12', tags: ['12', '12th', 'hsc', 'twelfth', 'xii'] },
+  { id: '1st', tags: ['1st', 'first', 'fy', 'sem1', 'sem-1'] },
+  { id: '2nd', tags: ['2nd', 'second', 'sy', 'sem2', 'sem-2'] },
+  { id: '3rd', tags: ['3rd', 'third', 'ty', 'sem3', 'sem-3'] },
+  { id: '4th', tags: ['4th', 'fourth', 'sem4', 'sem-4'] }
+];
+
+export function getNumericStandard(token) {
+  const tok = (token || '').toLowerCase();
+  for (const item of NUMERIC_STANDARDS) {
+    if (item.tags.includes(tok)) return item.id;
+  }
+  return null;
+}
+
+export function extractNumericStandards(tokens) {
+  const set = new Set();
+  for (const t of tokens) {
+    const std = getNumericStandard(t);
+    if (std) set.add(std);
+  }
+  return set;
+}
+
+export function hasNumericConflict(fileStandards, targetStandards) {
+  if (targetStandards && targetStandards.size > 0) {
+    for (const fs of fileStandards) {
+      if (!targetStandards.has(fs)) {
+        return true; // Conflicting standard detected!
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * Filename-Based Smart Matching Engine (Strictly Non-OCR)
+ * Features:
+ * 1. Order-independent token matching (e.g. '12th Marksheet Vijay' = 'Marksheet Vijay 12th')
+ * 2. Fuzzy typo tolerance (Levenshtein similarity >= 80% matches 'Marksheetdd', 'Adhar', 'Bonfide')
+ * 3. Strict numeric guard (never confuses distinct standards like '10' vs '12' or '1st' vs '2nd')
+ * 4. Dynamic Preset Documents integration
+ * Thresholds: >= 80% High Confidence, 30-79% Suggested Match, < 30% Unmatched
+ */
+export function matchFilenameSmart(filename, studentName = '', groups = null, presetDocuments = null) {
   if (!filename || typeof filename !== 'string') {
     return {
       docType: null,
@@ -1674,6 +1782,8 @@ export function matchFilenameSmart(filename, studentName = '', groups = null) {
 
   const spellingFixed = correctSpelling(baseOriginal, DEFAULT_SPELLING_RULES);
   const normalized = spellingFixed.replace(/[_\-\.\+,\(\)\[\]]+/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+  const fileTokens = extractCleanTokens(spellingFixed);
+  const fileStandards = extractNumericStandards(fileTokens);
 
   // 1. Direct Pattern Match (Regex & Groups)
   let directMatch = evaluateMatch(spellingFixed, groups);
@@ -1708,38 +1818,76 @@ export function matchFilenameSmart(filename, studentName = '', groups = null) {
     };
   }
 
-  // 3. Token-based Multi-Signal Scoring on Filename
+  // 3. Profiles Dictionary
   const PROFILES = [
-    { type: '12TH MARKSHEET AND PASSING', code: '12MP', tokens: ['12mp', '12tmp', '12th passing marksheet', '12 marksheet passing', '12th marksheet and passing'], minScore: 90 },
-    { type: '10TH MARKSHEET AND PASSING', code: '10MP', tokens: ['10mp', '10tmp', '10th passing marksheet', '10 marksheet passing', '10th marksheet and passing'], minScore: 90 },
-    { type: '12TH MARKSHEET', code: '12M', patterns: [/\b12(th)?\s*(m|mark|marksheet|hsc)\b/i, /\bhsc\s*mark/i], tokens: ['12th marksheet', 'hsc marksheet', '12 marksheet', '12th mark', '12m', 'hsc'], primary: ['marksheet', 'markshet', 'mark'], qualifier: ['12', '12th', 'hsc'] },
-    { type: '10TH MARKSHEET', code: '10M', patterns: [/\b10(th)?\s*(m|mark|marksheet|ssc)\b/i, /\bssc\s*mark/i], tokens: ['10th marksheet', 'ssc marksheet', '10 marksheet', '10th mark', '10m', 'ssc'], primary: ['marksheet', 'markshet', 'mark'], qualifier: ['10', '10th', 'ssc'] },
-    { type: '12TH PASSING CERTIFICATE', code: '12P', tokens: ['12th passing', 'hsc passing', '12p', '12th pass'], primary: ['passing', 'sanad'], qualifier: ['12', '12th', 'hsc'] },
-    { type: '10TH PASSING CERTIFICATE', code: '10P', tokens: ['10th passing', 'ssc passing', '10p', '10th pass'], primary: ['passing', 'sanad'], qualifier: ['10', '10th', 'ssc'] },
+    { type: '12TH MARKSHEET AND PASSING', code: '12MP', tokens: ['12mp', '12tmp', '12th passing marksheet', '12 marksheet passing', '12th marksheet and passing'], standard: '12', minScore: 90 },
+    { type: '10TH MARKSHEET AND PASSING', code: '10MP', tokens: ['10mp', '10tmp', '10th passing marksheet', '10 marksheet passing', '10th marksheet and passing'], standard: '10', minScore: 90 },
+    { type: '12TH MARKSHEET', code: '12M', patterns: [/\b12(th)?\s*(m|mark|marksheet|hsc)\b/i, /\bhsc\s*mark/i], tokens: ['12th marksheet', 'hsc marksheet', '12 marksheet', '12th mark', '12m', 'hsc'], primary: ['marksheet', 'markshet', 'mark'], qualifier: ['12', '12th', 'hsc'], standard: '12' },
+    { type: '10TH MARKSHEET', code: '10M', patterns: [/\b10(th)?\s*(m|mark|marksheet|ssc)\b/i, /\bssc\s*mark/i], tokens: ['10th marksheet', 'ssc marksheet', '10 marksheet', '10th mark', '10m', 'ssc'], primary: ['marksheet', 'markshet', 'mark'], qualifier: ['10', '10th', 'ssc'], standard: '10' },
+    { type: '12TH PASSING CERTIFICATE', code: '12P', tokens: ['12th passing', 'hsc passing', '12p', '12th pass'], primary: ['passing', 'sanad'], qualifier: ['12', '12th', 'hsc'], standard: '12' },
+    { type: '10TH PASSING CERTIFICATE', code: '10P', tokens: ['10th passing', 'ssc passing', '10p', '10th pass'], primary: ['passing', 'sanad'], qualifier: ['10', '10th', 'ssc'], standard: '10' },
+    { type: '12TH LC', code: '12LC', patterns: [/\b12(th)?\s*(lc|tc|leaving|l)\b/i, /\b12l\b/i], tokens: ['12th lc', '12 lc', '12th tc', '12 tc', '12th leaving', '12 leaving', '12lc', '12l'], primary: ['lc', 'tc', 'leaving', 'transfer', '12l', '12lc'], qualifier: ['12', '12th', 'hsc'], standard: '12' },
+    { type: '10TH LC', code: '10LC', patterns: [/\b10(th)?\s*(lc|tc|leaving|l)\b/i, /\b10l\b/i], tokens: ['10th lc', '10 lc', '10th tc', '10 tc', '10th leaving', '10 leaving', '10lc', '10l'], primary: ['lc', 'tc', 'leaving', 'transfer', '10l', '10lc'], qualifier: ['10', '10th', 'ssc'], standard: '10' },
     { type: 'AADHAAR CARD', code: 'ADR', tokens: ['aadhaar', 'adhar', 'aadhar', 'adr', 'uid', 'uidai', 'adhaar'], primary: ['aadhaar', 'adhar', 'aadhar', 'adr'] },
-    { type: 'CASTE CERTIFICATE', code: 'CST', tokens: ['caste certificate', 'caste cert', 'cst', 'caste', 'jati'], primary: ['caste', 'jati', 'cst'] },
-    { type: 'CASTE VALIDITY', code: 'CVAL', tokens: ['caste validity', 'validity', 'cval', 'padtani'], primary: ['validity', 'padtani', 'cval'] },
+    { type: 'CASTE CERTIFICATE', code: 'CST', patterns: [/\b(cst|cas|caste)\b/i], tokens: ['caste certificate', 'caste cert', 'cst', 'cas', 'caste', 'jati'], primary: ['caste', 'jati', 'cst', 'cas'] },
+    { type: 'VALIDITY CERTIFICATE', code: 'VLD', tokens: ['caste validity', 'validity', 'vld', 'cval', 'padtani'], primary: ['validity', 'padtani', 'vld', 'cval'] },
     { type: 'DOMICILE CERTIFICATE', code: 'DOM', tokens: ['domicile', 'dom', 'adivasi', 'rahavasi', 'residential certificate', 'residence'], primary: ['domicile', 'dom', 'adivasi', 'rahavasi'] },
-    { type: 'INCOME CERTIFICATE', code: 'INC', tokens: ['income certificate', 'income cert', 'inc', 'utpanna', 'tahsildar'], primary: ['income', 'inc', 'utpanna'] },
+    { type: 'NATIONALITY CERTIFICATE', code: 'NAT', tokens: ['nationality', 'nat', 'rashtriyatva'], primary: ['nationality', 'nat'] },
+    { type: 'INCOME CERTIFICATE', code: 'INC', patterns: [/\b(income|inc|utpanna)\b/i, /\bin\s*\(\d+\)/i, /\bin\./i, /\binc\b/i], tokens: ['income certificate', 'income cert', 'inc', 'in', 'utpanna', 'tahsildar'], primary: ['income', 'inc', 'utpanna'] },
     { type: 'NON CREAMY LAYER', code: 'NCL', tokens: ['non creamy', 'creamy layer', 'ncl', 'noncreamy'], primary: ['ncl', 'non creamy', 'creamy'] },
     { type: 'RATION CARD', code: 'RC', tokens: ['ration card', 'ration', 'rc'], primary: ['ration', 'rc'] },
-    { type: 'LEAVING CERTIFICATE', code: 'LC', tokens: ['leaving certificate', 'transfer certificate', 'tc', 'lc', 'leaving cert', 'shala sodlyacha'], primary: ['leaving', 'transfer', 'tc', 'lc'] },
-    { type: 'PHOTO', code: 'PHO', tokens: ['passport photo', 'photo', 'photograph', 'pic', 'image', 'student photo'], primary: ['photo', 'pic', 'photograph'] },
+    { type: 'PHOTO', code: 'PIC', tokens: ['passport photo', 'photo', 'photograph', 'pic', 'image', 'student photo'], primary: ['photo', 'pic', 'photograph'] },
     { type: 'SIGNATURE', code: 'SIG', tokens: ['signature', 'sign', 'signatur', 'sahi'], primary: ['signature', 'sign', 'signatur', 'sahi'] },
-    { type: 'BANK PASSBOOK', code: 'BNK', tokens: ['bank passbook', 'passbook', 'bank statement', 'account'], primary: ['passbook', 'bank'] },
+    { type: 'PASSBOOK BANK', code: 'BNK', tokens: ['bank passbook', 'passbook', 'bank statement', 'account', 'passbook bank'], primary: ['passbook', 'bank'] },
     { type: 'PAN CARD', code: 'PAN', tokens: ['pan card', 'pancard', 'pan'], primary: ['pan', 'pancard'] },
     { type: 'GAP CERTIFICATE', code: 'GAP', tokens: ['gap certificate', 'gap affidavit', 'gap cert', 'affidavit for gap'], primary: ['gap', 'affidavit'] },
-    { type: 'FEE RECEIPT', code: 'FEE', tokens: ['fee receipt', 'fees receipt', 'challan', 'pavti'], primary: ['fee', 'receipt', 'pavti'] },
-    { type: 'ALLOTMENT LETTER', code: 'ALT', tokens: ['allotment letter', 'cap allotment', 'merit list'], primary: ['allotment', 'cap'] },
-    { type: 'SELF DECLARATION', code: 'DEC', tokens: ['self declaration', 'undertaking', 'declaration form', 'pratigyapatra'], primary: ['declaration', 'undertaking'] }
+    { type: 'BONAFIDE CERTIFICATE', code: 'BNF', tokens: ['bonafide certificate', 'bonafide cert', 'bonfide', 'bnf', 'bonafied'], primary: ['bonafide', 'bonfide', 'bnf', 'bonafied'] },
+    { type: 'SELF DECLARATION', code: 'SLF', patterns: [/\bself\s*declaration\b/i, /\bsvayam\s*ghoshana\b/i, /\bslf\b/i], tokens: ['self declaration', 'undertaking', 'declaration form', 'pratigyapatra', 'svayam'], primary: ['declaration', 'undertaking', 'self'] },
+    { type: 'PARENT DECLARATION', code: 'PAR', patterns: [/\bparent\s*(declaration|undertaking|form)\b/i, /\bpalak\s*(ghoshana|pratigya|pratigyapatra|declaration|undertaking)\b/i, /\bpar\b/i], tokens: ['parent declaration', 'palak ghoshana', 'palak declaration', 'parent undertaking', 'par'], primary: ['parent declaration', 'palak ghoshana', 'palak declaration'] },
+    { type: 'ATTEMPT CERTIFICATE', code: 'ATM', tokens: ['attempt certificate', 'attempt', 'atm'], primary: ['attempt', 'atm'] },
+    { type: 'BIRTH CERTIFICATE', code: 'BRT', tokens: ['birth certificate', 'janma dakhla', 'brt', 'birth'], primary: ['birth', 'janma', 'brt'] },
+    { type: 'CAP ALLOTMENT LETTER', code: 'CAP', tokens: ['allotment letter', 'cap allotment', 'merit list', 'cap letter'], primary: ['allotment', 'cap'] }
   ];
+
+  // Merge any dynamically configured preset documents
+  if (presetDocuments) {
+    const list = Array.isArray(presetDocuments) ? presetDocuments : Object.values(presetDocuments);
+    for (const item of list) {
+      const docName = (typeof item === 'string' ? item : (item.name || (Array.isArray(item) ? item[0] : ''))).toUpperCase();
+      if (!docName) continue;
+      const docCode = (item.code || (Array.isArray(item) && item[2]) || '').toUpperCase();
+      const rawKws = item.keywords || (Array.isArray(item) && item[1]) || [];
+      const kws = Array.isArray(rawKws) ? rawKws : (typeof rawKws === 'string' ? rawKws.split(',').map(k => k.trim()) : []);
+
+      const existing = PROFILES.find(p => p.type === docName);
+      if (!existing) {
+        const itemTokens = extractCleanTokens(docName);
+        const itemStandards = extractNumericStandards(itemTokens);
+        const std = itemStandards.size > 0 ? Array.from(itemStandards)[0] : null;
+        PROFILES.push({
+          type: docName,
+          code: docCode,
+          tokens: [docName.toLowerCase(), ...kws.map(k => k.toLowerCase())],
+          primary: itemTokens.filter(t => !['certificate', 'card', 'form', 'letter', 'doc'].includes(t)),
+          standard: std
+        });
+      }
+    }
+  }
 
   let bestMatch = null;
   let highestScore = 0;
 
   for (const prof of PROFILES) {
+    // Numeric Guard: if profile specifies standard (e.g. '12' or '10'), verify against filename standards
+    const targetStandards = prof.standard ? new Set([prof.standard]) : extractNumericStandards(extractCleanTokens(prof.type));
+    if (hasNumericConflict(fileStandards, targetStandards)) {
+      continue; // Strictly skip conflicting standard!
+    }
+
     let score = 0;
 
+    // A. Pattern Test
     if (prof.patterns) {
       for (const pat of prof.patterns) {
         if (pat.test(normalized)) {
@@ -1749,31 +1897,84 @@ export function matchFilenameSmart(filename, studentName = '', groups = null) {
       }
     }
 
+    // B. Substring & Exact Token Test (Strict Word Boundaries for Short Tokens <= 3 chars)
     if (prof.tokens) {
       for (const tok of prof.tokens) {
-        const tokClean = tok.toLowerCase();
-        if (normalized.includes(tokClean)) {
+        const tokClean = tok.toLowerCase().trim();
+        if (!tokClean) continue;
+        if (tokClean.length <= 3) {
+          const wordPat = new RegExp(`(^|[^a-z0-9])${tokClean}([^a-z0-9]|$)`, 'i');
+          if (wordPat.test(normalized)) {
+            score = Math.max(score, 90);
+            break;
+          }
+        } else if (normalized.includes(tokClean)) {
           score = Math.max(score, 90);
           break;
         }
       }
     }
 
+    // C. Order-Independent Token Matching with Typo/Levenshtein Tolerance
+    const reqTokens = extractCleanTokens(prof.type);
+    if (reqTokens.length > 0) {
+      let matchedCount = 0;
+      let totalFuzzyScore = 0;
+
+      for (const rt of reqTokens) {
+        const rtStd = getNumericStandard(rt);
+        if (rtStd) {
+          if (fileStandards.has(rtStd)) {
+            matchedCount++;
+            totalFuzzyScore += 1.0;
+          }
+          continue;
+        }
+
+        let bestTokenSim = 0;
+        for (const ft of fileTokens) {
+          if (ft === rt) {
+            bestTokenSim = 1.0;
+            break;
+          }
+          const sim = stringSimilarity(ft, rt);
+          if (sim > bestTokenSim) {
+            bestTokenSim = sim;
+          }
+        }
+
+        if (bestTokenSim >= 0.80) {
+          matchedCount++;
+          totalFuzzyScore += bestTokenSim;
+        }
+      }
+
+      if (matchedCount === reqTokens.length && reqTokens.length > 0) {
+        const avgSim = totalFuzzyScore / reqTokens.length;
+        const calcScore = avgSim >= 0.98 ? 95 : Math.round(80 + (avgSim - 0.80) * 75);
+        score = Math.max(score, calcScore);
+      } else if (matchedCount >= 1 && reqTokens.length <= 2 && !['card', 'certificate'].includes(reqTokens[0])) {
+        score = Math.max(score, 50);
+      }
+    }
+
+    // D. Primary & Qualifier Evaluation
     if (prof.primary && prof.qualifier) {
-      const hasPrim = prof.primary.some(p => normalized.includes(p));
+      const hasPrim = prof.primary.some(p => {
+        return fileTokens.some(ft => ft === p || stringSimilarity(ft, p) >= 0.80);
+      });
       const hasQual = prof.qualifier.some(q => {
         const pat = new RegExp(`(^|[^a-z0-9])${q}([^a-z0-9]|$)`, 'i');
         return pat.test(normalized);
       });
       if (hasPrim && hasQual) {
         score = Math.max(score, 90);
-      } else if (hasPrim && !hasQual) {
+      } else if (hasPrim && !hasQual && !prof.standard) {
         score = Math.max(score, 50);
       }
     } else if (prof.primary) {
       const hasPrim = prof.primary.some(p => {
-        const pat = new RegExp(`(^|[^a-z0-9])${p}([^a-z0-9]|$)`, 'i');
-        return pat.test(normalized);
+        return fileTokens.some(ft => ft === p || stringSimilarity(ft, p) >= 0.80);
       });
       if (hasPrim) {
         score = Math.max(score, 85);
@@ -1786,19 +1987,18 @@ export function matchFilenameSmart(filename, studentName = '', groups = null) {
     }
   }
 
-  // Student name matching bonus (up to +10 pts if student name is present in filename)
+  // Bonus for student name match in filename
   if (studentName && studentName.trim() && highestScore > 0) {
     const studentTokens = studentName.trim().toLowerCase().split(/\s+/).filter(t => t.length > 2);
     if (studentTokens.some(tok => normalized.includes(tok))) {
-      highestScore = Math.min(100, highestScore + 10);
+      highestScore = Math.min(100, highestScore + 5);
     }
   }
 
-  // Threshold check: 30%+ matches document cleanly
   if (bestMatch && highestScore >= 30) {
     return {
       docType: bestMatch.type,
-      canonical: bestMatch.type,
+      canonical: CANONICAL_NAMES[bestMatch.type] || bestMatch.type,
       code: bestMatch.code || null,
       confidence: highestScore,
       isConfident: highestScore >= 80,

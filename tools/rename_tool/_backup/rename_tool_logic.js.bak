@@ -1,0 +1,1996 @@
+/**
+ * tools/rename_tool/rename_tool_logic.js
+ * DocMitra Bulk Document Renamer — Pure Business Logic Module
+ *
+ * Encapsulates:
+ * 1. Naming & Case Enforcement (UPPER, Title, lower, As Is)
+ * 2. 21-Shortcut Keyword & Canonical Name Resolution
+ * 3. Document Pattern Matching & Word-Boundary Safety
+ * 4. Duplicate Filename Auto-Suffixing (Sequential ' 1', ' 2'...)
+ * 5. Windows Filename Validation & Reserved Names Protection
+ * 6. Multi-Level Undo Manager
+ * 7. Scanner Misspelling Typo Auto-Correction
+ * 8. Checklist & Multi-Document Linking Engine
+ * 9. Batch Audit CSV Report Generation
+ * 10. Atomic Rename & Rollback Orchestration
+ *
+ * STRICT RULE: Pure logic only. Zero DOM dependencies, zero Marathi text.
+ */
+
+import { renameNativeFile } from '../../shared/native-bridge.js';
+
+/* ==========================================================================
+   1. Canonical Naming & Default Rules Constants
+   ========================================================================== */
+
+export const CANONICAL_NAMES = {
+  "AADHAAR CARD": "Aadhaar Card",
+  "AADHAR CARD": "Aadhaar Card",
+  "PAN CARD": "PAN Card",
+  "PHOTO": "Photo",
+  "10TH MARKSHEET": "10th Marksheet",
+  "10TH PASSING CERTIFICATE": "10th Passing",
+  "11TH MARKSHEET": "11th Marksheet",
+  "11TH PASSING CERTIFICATE": "11th Passing",
+  "10TH LC": "10TH LC",
+  "10TH MARKSHEET AND PASSING": "10th Marksheet and Passing",
+  "APAAR ID": "APAAR ID",
+  "ABC ID": "ABC ID",
+  "DEGREE CERTIFICATE": "Degree Certificate",
+  "REGISTRATION CERTIFICATE": "Registration Certificate",
+  "RATION CARD": "Ration Card",
+  "12TH MARKSHEET": "12th Marksheet",
+  "12TH PASSING CERTIFICATE": "12th Passing",
+  "12TH LC": "12TH LC",
+  "12TH MARKSHEET AND PASSING": "12th Marksheet and Passing",
+  "CASTE CERTIFICATE": "Caste Certificate",
+  "VALIDITY CERTIFICATE": "Validity Certificate",
+  "DOMICILE CERTIFICATE": "Domicile Certificate",
+  "NATIONALITY CERTIFICATE": "Nationality Certificate",
+  "PASSBOOK BANK": "Bank Passbook",
+  "INCOME CERTIFICATE": "Income Certificate",
+  "SELF DECLARATION": "Self Declaration",
+  "PARENT DECLARATION": "Parent Declaration",
+  "BIRTH CERTIFICATE": "Birth Certificate",
+  "BONAFIDE CERTIFICATE": "Bonafide Certificate",
+  "GAP CERTIFICATE": "Gap Certificate",
+  "ATTEMPT CERTIFICATE": "Attempt Certificate",
+  "CAP ALLOTMENT LETTER": "CAP Allotment Letter"
+};
+
+export const DEFAULT_SPELLING_RULES = {
+  "marskheet": "marksheet",
+  "markshet": "marksheet",
+  "markshit": "marksheet",
+  "pasing": "passing",
+  "pasingg": "passing",
+  "aadhhar": "aadhaar",
+  "adhar": "aadhaar",
+  "aadhar": "aadhaar",
+  "bonafied": "bonafide",
+  "bonafidee": "bonafide",
+  "domocile": "domicile",
+  "pasbook": "passbook",
+  "pasbok": "passbook",
+  "incom": "income",
+  "incme": "income",
+  "certifcte": "certificate",
+  "certifcate": "certificate",
+  "certificte": "certificate",
+  "certficate": "certificate",
+  "certifitcate": "certificate",
+  "atempt": "attempt",
+  "attmpt": "attempt",
+  "phot": "photo"
+};
+
+export const DEFAULT_LINKED_RULES = [
+  {
+    id: "12th-marksheet-passing-link",
+    part1: "12TH MARKSHEET",
+    part2: "12TH PASSING CERTIFICATE",
+    combined: "12TH MARKSHEET AND PASSING",
+    type: "combined"
+  },
+  {
+    id: "10th-marksheet-passing-link",
+    part1: "10TH MARKSHEET",
+    part2: "10TH PASSING CERTIFICATE",
+    combined: "10TH MARKSHEET AND PASSING",
+    type: "combined"
+  },
+  {
+    id: "domicile-nationality-link",
+    part1: "DOMICILE CERTIFICATE",
+    part2: "NATIONALITY CERTIFICATE",
+    combined: "DOMICILE AND NATIONALITY CERTIFICATE",
+    type: "combined"
+  },
+  {
+    id: "lc-tc-alias",
+    part1: "12TH LC",
+    part2: "12TH TC",
+    combined: "12TH LC",
+    type: "alias"
+  }
+];
+
+export const DEFAULT_CHECKLISTS_DATA = {
+  "MAHA DBT": [
+    ["AADHAAR CARD", ["aadhaar card", "adhar", "aadhar"]],
+    ["PHOTO", ["photo", "pic", "photograph"]],
+    ["10TH MARKSHEET", ["10th marksheet", "10th mark", "ssc marksheet"]],
+    ["10TH PASSING CERTIFICATE", ["10th passing certificate", "10th passing", "10th sanad"]],
+    ["12TH MARKSHEET", ["12th marksheet", "12th mark", "hsc marksheet"]],
+    ["12TH PASSING CERTIFICATE", ["12th passing certificate", "12th passing", "12th sanad"]],
+    ["12TH LC", ["12th lc", "12th tc", "leaving certificate"]],
+    ["CASTE CERTIFICATE", ["caste certificate", "jati dakhla"]],
+    ["VALIDITY CERTIFICATE", ["validity certificate", "caste validity"]],
+    ["INCOME CERTIFICATE", ["income certificate", "utpanna"]],
+    ["NATIONALITY CERTIFICATE", ["nationality certificate"]],
+    ["DOMICILE CERTIFICATE", ["domicile certificate", "adivasi dakhla", "rahavasi"]],
+    ["PASSBOOK BANK", ["passbook bank", "bank passbook", "bank account"]]
+  ],
+  "SWAYAM": [
+    ["PHOTO", ["photo", "pic", "photograph"]],
+    ["AADHAAR CARD", ["aadhaar card", "adhar", "aadhar"]],
+    ["10TH MARKSHEET", ["10th marksheet", "10th mark"]],
+    ["12TH MARKSHEET", ["12th marksheet", "12th mark"]],
+    ["12TH LC", ["12th lc", "leaving certificate"]],
+    ["CASTE CERTIFICATE", ["caste certificate"]],
+    ["DOMICILE CERTIFICATE", ["domicile certificate"]],
+    ["SELF DECLARATION", ["self declaration", "svayam ghoshana"]],
+    ["PARENT DECLARATION", ["parent declaration", "palak ghoshana"]],
+    ["PASSBOOK BANK", ["passbook bank", "bank passbook"]],
+    ["BONAFIDE CERTIFICATE", ["bonafide certificate", "bonafide"]]
+  ]
+};
+// Backward-compatibility aliases
+DEFAULT_CHECKLISTS_DATA["MAHA DBT FORM"] = DEFAULT_CHECKLISTS_DATA["MAHA DBT"];
+DEFAULT_CHECKLISTS_DATA["SWAYAM FORM"] = DEFAULT_CHECKLISTS_DATA["SWAYAM"];
+
+/* ==========================================================================
+   2. Shortcut Keyword Dictionary & Matching
+   ========================================================================== */
+
+export const DEFAULT_SHORTCUT_DICTIONARY = [
+  { id: "aadhaar-card", displayName: "Aadhaar Card", primaryShortcut: "ADR", alternateKeywords: [], outputName: "AADHAAR CARD" },
+  { id: "pan-card", displayName: "PAN Card", primaryShortcut: "PAN", alternateKeywords: [], outputName: "PAN CARD" },
+  { id: "photo", displayName: "Student Photo", primaryShortcut: "PIC", alternateKeywords: [], outputName: "PHOTO" },
+  { id: "10th-marksheet", displayName: "10th Marksheet", primaryShortcut: "10M", alternateKeywords: [], outputName: "10TH MARKSHEET" },
+  { id: "10th-passing", displayName: "10th Passing Certificate", primaryShortcut: "10P", alternateKeywords: [], outputName: "10TH PASSING CERTIFICATE" },
+  { id: "11th-marksheet", displayName: "11th Marksheet", primaryShortcut: "11M", alternateKeywords: [], outputName: "11TH MARKSHEET" },
+  { id: "11th-passing", displayName: "11th Passing Certificate", primaryShortcut: "11P", alternateKeywords: [], outputName: "11TH PASSING CERTIFICATE" },
+  { id: "10th-lc", displayName: "10th LC (Leaving)", primaryShortcut: "10LC", alternateKeywords: [], outputName: "10TH LC" },
+  { id: "10th-marksheet-passing", displayName: "10th Marksheet & Passing", primaryShortcut: "10MP", alternateKeywords: [], outputName: "10TH MARKSHEET AND PASSING" },
+  { id: "12th-marksheet", displayName: "12th Marksheet", primaryShortcut: "12M", alternateKeywords: [], outputName: "12TH MARKSHEET" },
+  { id: "12th-passing", displayName: "12th Passing Certificate", primaryShortcut: "12P", alternateKeywords: [], outputName: "12TH PASSING CERTIFICATE" },
+  { id: "12th-lc", displayName: "12th LC (Leaving)", primaryShortcut: "12LC", alternateKeywords: [], outputName: "12TH LC" },
+  { id: "12th-marksheet-passing", displayName: "12th Marksheet & Passing", primaryShortcut: "12MP", alternateKeywords: [], outputName: "12TH MARKSHEET AND PASSING" },
+  { id: "caste-certificate", displayName: "Caste Certificate", primaryShortcut: "CST", alternateKeywords: [], outputName: "CASTE CERTIFICATE" },
+  { id: "validity-certificate", displayName: "Caste Validity", primaryShortcut: "VLD", alternateKeywords: [], outputName: "VALIDITY CERTIFICATE" },
+  { id: "income-certificate", displayName: "Income Certificate", primaryShortcut: "INC", alternateKeywords: [], outputName: "INCOME CERTIFICATE" },
+  { id: "domicile-certificate", displayName: "Domicile Certificate", primaryShortcut: "DOM", alternateKeywords: [], outputName: "DOMICILE CERTIFICATE" },
+  { id: "nationality-certificate", displayName: "Nationality Certificate", primaryShortcut: "NAT", alternateKeywords: [], outputName: "NATIONALITY CERTIFICATE" },
+  { id: "bank-passbook", displayName: "Bank Passbook", primaryShortcut: "BNK", alternateKeywords: [], outputName: "PASSBOOK BANK" },
+  { id: "attempt-certificate", displayName: "Attempt Certificate", primaryShortcut: "ATM", alternateKeywords: [], outputName: "ATTEMPT CERTIFICATE" },
+  { id: "birth-certificate", displayName: "Birth Certificate", primaryShortcut: "BRT", alternateKeywords: [], outputName: "BIRTH CERTIFICATE" },
+  { id: "bonafide-certificate", displayName: "Bonafide Certificate", primaryShortcut: "BNF", alternateKeywords: [], outputName: "BONAFIDE CERTIFICATE" },
+  { id: "gap-certificate", displayName: "Gap Certificate", primaryShortcut: "GAP", alternateKeywords: [], outputName: "GAP CERTIFICATE" },
+  { id: "self-declaration", displayName: "Self Declaration", primaryShortcut: "SLF", alternateKeywords: [], outputName: "SELF DECLARATION" },
+  { id: "parent-declaration", displayName: "Parent Declaration", primaryShortcut: "PAR", alternateKeywords: [], outputName: "PARENT DECLARATION" },
+  { id: "apaar-id", displayName: "APAAR ID", primaryShortcut: "UID", alternateKeywords: [], outputName: "APAAR ID" },
+  { id: "abc-id", displayName: "ABC ID", primaryShortcut: "ABC", alternateKeywords: [], outputName: "ABC ID" },
+  { id: "cap-allotment", displayName: "CAP Allotment Letter", primaryShortcut: "CAP", alternateKeywords: [], outputName: "CAP ALLOTMENT LETTER" }
+];
+
+export function exportDictionaryToGroups(dictionary = DEFAULT_SHORTCUT_DICTIONARY) {
+  const groups = {};
+  for (const item of dictionary) {
+    const keywords = [item.primaryShortcut.toLowerCase()];
+    if (item.alternateKeywords && Array.isArray(item.alternateKeywords)) {
+      for (const kw of item.alternateKeywords) {
+        if (kw && typeof kw === 'string') {
+          keywords.push(kw.trim().toLowerCase());
+        }
+      }
+    }
+    groups[item.outputName] = keywords;
+  }
+  return groups;
+}
+
+export function getActiveShortcutDictionary(groups = null) {
+  if (!groups) return DEFAULT_SHORTCUT_DICTIONARY;
+  return DEFAULT_SHORTCUT_DICTIONARY.map(item => {
+    const customList = groups[item.outputName];
+    if (customList && Array.isArray(customList) && customList.length > 0) {
+      return {
+        ...item,
+        primaryShortcut: customList[0].toUpperCase(),
+        alternateKeywords: customList.slice(1)
+      };
+    }
+    return item;
+  });
+}
+
+export function findKeywordConflict(keyword, targetRuleName, groups) {
+  const cleanKeyword = (keyword || '').toLowerCase().trim();
+  if (!cleanKeyword) return null;
+  const activeDict = getActiveShortcutDictionary(groups);
+  for (const item of activeDict) {
+    if (item.outputName === targetRuleName) continue;
+    if (item.primaryShortcut.toLowerCase() === cleanKeyword) {
+      return { conflictingRule: item.outputName, keyword: item.primaryShortcut };
+    }
+    if (item.alternateKeywords && item.alternateKeywords.map(k => k.toLowerCase()).includes(cleanKeyword)) {
+      return { conflictingRule: item.outputName, keyword: cleanKeyword };
+    }
+  }
+  return null;
+}
+
+export function matchDocument(input, groups = null) {
+  if (!input || typeof input !== 'string') return null;
+  const clean = input.toLowerCase().trim();
+  if (!clean) return null;
+
+  const activeDict = getActiveShortcutDictionary(groups);
+
+  // Exact match against primary shortcut
+  for (const item of activeDict) {
+    if (clean === item.primaryShortcut.toLowerCase()) {
+      return item.outputName;
+    }
+  }
+
+  // Exact match against alternate keywords
+  for (const item of activeDict) {
+    if (item.alternateKeywords) {
+      for (const alt of item.alternateKeywords) {
+        if (clean === alt.toLowerCase().trim()) {
+          return item.outputName;
+        }
+      }
+    }
+  }
+
+  // Word-boundary match
+  for (const item of activeDict) {
+    const sc = item.primaryShortcut.toLowerCase();
+    const pattern = new RegExp(`(^|[^a-z0-9])${sc}([^a-z0-9]|$)`, 'i');
+    if (pattern.test(clean)) {
+      return item.outputName;
+    }
+    if (item.alternateKeywords) {
+      for (const alt of item.alternateKeywords) {
+        const altClean = alt.toLowerCase().trim();
+        const altPattern = new RegExp(`(^|[^a-z0-9])${altClean}([^a-z0-9]|$)`, 'i');
+        if (altPattern.test(clean)) {
+          return item.outputName;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+export function getMatchingSuggestions(query = '', groups = null, limit = 5) {
+  const activeDict = getActiveShortcutDictionary(groups);
+  const q = (query || '').toLowerCase().trim();
+
+  if (!q) {
+    return activeDict.slice(0, limit);
+  }
+
+  const exact = [];
+  const prefix = [];
+  const contains = [];
+
+  for (const item of activeDict) {
+    const code = item.primaryShortcut.toLowerCase();
+    const name = item.displayName.toLowerCase();
+    const out = item.outputName.toLowerCase();
+
+    if (code === q) {
+      exact.push(item);
+    } else if (code.startsWith(q) || name.startsWith(q)) {
+      prefix.push(item);
+    } else if (code.includes(q) || name.includes(q) || out.includes(q)) {
+      contains.push(item);
+    }
+  }
+
+  return [...exact, ...prefix, ...contains].slice(0, limit);
+}
+
+/* ==========================================================================
+   3. Document Pattern Matching Engine
+   ========================================================================== */
+
+export const DOCUMENT_PATTERNS = [
+  {
+    id: "12th-marksheet-passing-combined",
+    outputName: "12TH MARKSHEET AND PASSING",
+    shortcut: "12MP",
+    patterns: [
+      /\b12mp\b/i,
+      /\b12tmp\b/i,
+      /\b12(th)?\s*(mark|marksheet).*(pass|passing)\b/i,
+      /\b12(th)?\s*(pass|passing).*(mark|marksheet)\b/i,
+      /\b12(th)?\s*combined\b/i
+    ]
+  },
+  {
+    id: "10th-marksheet-passing-combined",
+    outputName: "10TH MARKSHEET AND PASSING",
+    shortcut: "10MP",
+    patterns: [
+      /\b10mp\b/i,
+      /\b10tmp\b/i,
+      /\b10(th)?\s*(mark|marksheet).*(pass|passing)\b/i,
+      /\b10(th)?\s*(pass|passing).*(mark|marksheet)\b/i,
+      /\b10(th)?\s*combined\b/i
+    ]
+  },
+  {
+    id: "12th-lc",
+    outputName: "12TH LC",
+    shortcut: "12LC",
+    patterns: [
+      /\b12lc\b/i,
+      /\b12(th)?\s*lc\b/i,
+      /\b12(th)?\s*leaving\b/i,
+      /\b12(th)?\s*tc\b/i,
+      /\bhsc\s*lc\b/i,
+      /\bhsc\s*leaving\b/i
+    ]
+  },
+  {
+    id: "12th-marksheet",
+    outputName: "12TH MARKSHEET",
+    shortcut: "12M",
+    patterns: [
+      /\b12m\b/i,
+      /\b12(th)?\s*(mark|marksheet|mark-sheet|marks|scorecard)\b/i,
+      /\bhsc\s*(mark|marksheet|mark-sheet)\b/i
+    ]
+  },
+  {
+    id: "12th-passing",
+    outputName: "12TH PASSING CERTIFICATE",
+    shortcut: "12P",
+    patterns: [
+      /\b12p\b/i,
+      /\b12(th)?\s*(pass|passing|board|sanad)\b/i,
+      /\bhsc\s*(pass|passing|board|sanad)\b/i
+    ]
+  },
+  {
+    id: "10th-lc",
+    outputName: "10TH LC",
+    shortcut: "10LC",
+    patterns: [
+      /\b10lc\b/i,
+      /\b10(th)?\s*lc\b/i,
+      /\b10(th)?\s*leaving\b/i,
+      /\b10(th)?\s*tc\b/i,
+      /\bssc\s*lc\b/i,
+      /\bssc\s*leaving\b/i
+    ]
+  },
+  {
+    id: "10th-marksheet",
+    outputName: "10TH MARKSHEET",
+    shortcut: "10M",
+    patterns: [
+      /\b10m\b/i,
+      /\b10(th)?\s*(mark|marksheet|mark-sheet|marks|scorecard)\b/i,
+      /\bssc\s*(mark|marksheet|mark-sheet)\b/i
+    ]
+  },
+  {
+    id: "10th-passing",
+    outputName: "10TH PASSING CERTIFICATE",
+    shortcut: "10P",
+    patterns: [
+      /\b10p\b/i,
+      /\b10(th)?\s*(pass|passing|board|sanad)\b/i,
+      /\bssc\s*(pass|passing|board|sanad)\b/i
+    ]
+  },
+  {
+    id: "aadhaar-card",
+    outputName: "AADHAAR CARD",
+    shortcut: "ADR",
+    patterns: [
+      /\badr\b/i,
+      /\baadhar\b/i,
+      /\baadhaar\b/i,
+      /\badhar\b/i,
+      /\buidai\b/i,
+      /\be-?aadhaar\b/i
+    ]
+  },
+  {
+    id: "pan-card",
+    outputName: "PAN CARD",
+    shortcut: "PAN",
+    patterns: [
+      /\bpan\b/i,
+      /\bpancard\b/i,
+      /\bnsdl\b/i,
+      /\butiitsl\b/i
+    ]
+  },
+  {
+    id: "photo",
+    outputName: "PHOTO",
+    shortcut: "PIC",
+    patterns: [
+      /\bpic\b/i,
+      /\bphoto\b/i,
+      /\bphotograph\b/i,
+      /\bpassport_?size\b/i,
+      /\bimage\b/i
+    ]
+  },
+  {
+    id: "caste-validity",
+    outputName: "VALIDITY CERTIFICATE",
+    shortcut: "VLD",
+    patterns: [
+      /\bvld\b/i,
+      /\bvalidity\b/i,
+      /\bcaste\s*validity\b/i,
+      /\bpramanpatra\b/i
+    ]
+  },
+  {
+    id: "caste-certificate",
+    outputName: "CASTE CERTIFICATE",
+    shortcut: "CST",
+    patterns: [
+      /\bcst\b/i,
+      /\bcaste\b/i,
+      /\bcast\b/i,
+      /\bjati\b/i,
+      /\bcategory\b/i
+    ]
+  },
+  {
+    id: "income-certificate",
+    outputName: "INCOME CERTIFICATE",
+    shortcut: "INC",
+    patterns: [
+      /\binc\b/i,
+      /\bincome\b/i,
+      /\butpann\b/i,
+      /\btahsildar\b/i
+    ]
+  },
+  {
+    id: "domicile-certificate",
+    outputName: "DOMICILE CERTIFICATE",
+    shortcut: "DOM",
+    patterns: [
+      /\bdom\b/i,
+      /\bdomicile\b/i,
+      /\badhivasa\b/i,
+      /\bnivas\b/i
+    ]
+  },
+  {
+    id: "nationality-certificate",
+    outputName: "NATIONALITY CERTIFICATE",
+    shortcut: "NAT",
+    patterns: [
+      /\bnat\b/i,
+      /\bnationality\b/i,
+      /\brastriyatva\b/i
+    ]
+  },
+  {
+    id: "bank-passbook",
+    outputName: "PASSBOOK BANK",
+    shortcut: "BNK",
+    patterns: [
+      /\bbnk\b/i,
+      /\bpassbook\b/i,
+      /\bbank\b/i,
+      /\bstatement\b/i,
+      /\bcheque\b/i
+    ]
+  },
+  {
+    id: "attempt-certificate",
+    outputName: "ATTEMPT CERTIFICATE",
+    shortcut: "ATM",
+    patterns: [
+      /\batm\b/i,
+      /\battempt\b/i,
+      /\bprayatna\b/i
+    ]
+  },
+  {
+    id: "birth-certificate",
+    outputName: "BIRTH CERTIFICATE",
+    shortcut: "BRT",
+    patterns: [
+      /\bbrt\b/i,
+      /\bbirth\b/i,
+      /\bjanma\b/i,
+      /\bdob\b/i
+    ]
+  },
+  {
+    id: "bonafide-certificate",
+    outputName: "BONAFIDE CERTIFICATE",
+    shortcut: "BNF",
+    patterns: [
+      /\bbnf\b/i,
+      /\bbonafide\b/i,
+      /\bbonafied\b/i
+    ]
+  },
+  {
+    id: "gap-certificate",
+    outputName: "GAP CERTIFICATE",
+    shortcut: "GAP",
+    patterns: [
+      /\bgap\b/i,
+      /\bgap\s*affidavit\b/i,
+      /\bgap\s*cert\b/i
+    ]
+  },
+  {
+    id: "self-declaration",
+    outputName: "SELF DECLARATION",
+    shortcut: "SLF",
+    patterns: [
+      /\bslf\b/i,
+      /\bself\b/i,
+      /\bself\s*declaration\b/i,
+      /\bswayam\b/i
+    ]
+  },
+  {
+    id: "parent-declaration",
+    outputName: "PARENT DECLARATION",
+    shortcut: "PAR",
+    patterns: [
+      /\bparent\s*(declaration|undertaking|form)\b/i,
+      /\bpalak\s*(ghoshana|pratigya|pratigyapatra|declaration|undertaking)\b/i,
+      /\bpar\b/i
+    ]
+  }
+];
+
+export function evaluateMatch(text, groups = null) {
+  if (!text || typeof text !== 'string') {
+    return { docType: null, confidence: 0, matchedPattern: null };
+  }
+
+  const clean = text.replace(/[_\-\.]+/g, ' ').trim();
+  const lower = clean.toLowerCase();
+
+  // Custom groups override
+  if (groups) {
+    for (const [outputName, keywords] of Object.entries(groups)) {
+      for (const kw of keywords) {
+        const kwClean = kw.toLowerCase().trim();
+        const pattern = new RegExp(`(^|[^a-z0-9])${kwClean}([^a-z0-9]|$)`, 'i');
+        if (pattern.test(lower)) {
+          return { docType: outputName, confidence: 95, matchedPattern: kw };
+        }
+      }
+    }
+  }
+
+  // Precedence patterns
+  for (const entry of DOCUMENT_PATTERNS) {
+    for (const pattern of entry.patterns) {
+      if (pattern.test(lower)) {
+        return {
+          docType: entry.outputName,
+          confidence: 90,
+          matchedPattern: pattern.toString()
+        };
+      }
+    }
+  }
+
+  return { docType: null, confidence: 0, matchedPattern: null };
+}
+
+/* ==========================================================================
+   4. Filename Operations, Casing, and Construction
+   ========================================================================== */
+
+export function ext(name) {
+  if (!name) return '';
+  const i = name.lastIndexOf('.');
+  return i > 0 ? name.slice(i) : '';
+}
+
+export function cleanName(name) {
+  if (!name || typeof name !== 'string') return '';
+  return name.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+}
+
+export function group(name, groups) {
+  const match = evaluateMatch(name, groups);
+  if (match && match.docType) return match.docType;
+
+  const matched = matchDocument(name, groups);
+  if (matched) return matched;
+
+  return null;
+}
+
+export function applyCase(textOrSource, targetOrStyle = 'preserve', optionalStyle = null) {
+  let text = textOrSource;
+  let style = targetOrStyle;
+  if (optionalStyle !== null) {
+    text = targetOrStyle;
+    style = optionalStyle;
+  }
+  if (!text) return '';
+  if (style === 'upper') return text.toUpperCase();
+  if (style === 'lower') return text.toLowerCase();
+  if (style === 'title') {
+    return text.toLowerCase().replace(/(^|[\s\-_])\S/g, c => c.toUpperCase());
+  }
+  return text; // 'preserve' or 'as_is'
+}
+
+export function buildName(input, student, groups, style = 'preserve') {
+  const g = group(input, groups);
+  let baseDoc = '';
+  if (!g) {
+    baseDoc = cleanName(input);
+  } else {
+    baseDoc = CANONICAL_NAMES[g.toUpperCase()] || g;
+  }
+
+  let combined = baseDoc;
+  if (student && !baseDoc.toLowerCase().includes(student.toLowerCase())) {
+    combined = `${baseDoc} ${student}`;
+  }
+
+  return applyCase(combined, style);
+}
+
+export function validateFilename(name) {
+  if (!name || !name.trim()) return 'File name cannot be empty.';
+  const trimmed = name.trim();
+  if (name.endsWith('.') || name.endsWith(' ') || trimmed.endsWith('.')) {
+    return 'File name cannot end with a period or space.';
+  }
+  if (/[\x00-\x1f\\/:*?"<>|]/.test(name)) return 'File name cannot contain \\ / : * ? " < > | or control characters.';
+  if (trimmed === '.' || trimmed === '..') return 'Invalid file name.';
+
+  const base = trimmed.toUpperCase().split('.')[0].trim();
+  const reserved = [
+    'CON', 'PRN', 'AUX', 'NUL',
+    'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9',
+    'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'
+  ];
+  if (reserved.includes(base)) {
+    return 'This file name is reserved by Windows OS.';
+  }
+
+  return '';
+}
+
+/* ==========================================================================
+   5. Duplicate Name Handling (Non-colliding Suffixing)
+   ========================================================================== */
+
+export function uniqueDestination(desired, currentName, usedNames, studentName = '') {
+  const usedLower = new Map();
+  if (usedNames) {
+    for (const name of usedNames) {
+      if (name) usedLower.set(name.toLowerCase(), name);
+    }
+  }
+
+  if (!usedLower.has(desired.toLowerCase()) || desired.toLowerCase() === (currentName || '').toLowerCase()) {
+    return desired;
+  }
+
+  const suffix = ext(desired);
+  const base = cleanName(desired);
+  const sClean = (studentName || '').trim();
+
+  if (sClean && base.toLowerCase().endsWith(sClean.toLowerCase())) {
+    let docPart = base.slice(0, -sClean.length).trim();
+    let counter = 1;
+    const match = docPart.match(/^(.*?)\s+(\d+)$/);
+    if (match) {
+      const prefix = match[1].trim();
+      const num = parseInt(match[2], 10);
+      const baseCheck = `${prefix} ${sClean}${suffix}`.toLowerCase();
+      if (usedLower.has(baseCheck)) {
+        docPart = prefix;
+        counter = num + 1;
+      }
+    }
+    let candidate = `${docPart} ${counter} ${sClean}${suffix}`;
+    while (usedLower.has(candidate.toLowerCase()) && candidate.toLowerCase() !== (currentName || '').toLowerCase()) {
+      counter++;
+      candidate = `${docPart} ${counter} ${sClean}${suffix}`;
+    }
+    return candidate;
+  } else {
+    let stem = base;
+    let counter = 1;
+    const match = stem.match(/^(.*?)\s+(\d+)$/);
+    if (match) {
+      const prefix = match[1].trim();
+      const num = parseInt(match[2], 10);
+      const baseCheck = `${prefix}${suffix}`.toLowerCase();
+      if (usedLower.has(baseCheck)) {
+        stem = prefix;
+        counter = num + 1;
+      }
+    }
+    let candidate = `${stem} ${counter}${suffix}`;
+    while (usedLower.has(candidate.toLowerCase()) && candidate.toLowerCase() !== (currentName || '').toLowerCase()) {
+      counter++;
+      candidate = `${stem} ${counter}${suffix}`;
+    }
+    return candidate;
+  }
+}
+
+/* ==========================================================================
+   6. Multi-Level Undo Manager
+   ========================================================================== */
+
+export class UndoManager {
+  constructor(maxHistory = 10) {
+    this.history = [];
+    this.maxHistory = maxHistory;
+  }
+
+  pushBatch(dir, plan) {
+    if (!plan || !plan.length) return;
+    this.history.push({
+      dir,
+      dirName: dir ? dir.name : '',
+      plan: [...plan],
+      timestamp: new Date().toISOString()
+    });
+    if (this.history.length > this.maxHistory) {
+      this.history.shift();
+    }
+  }
+
+  peek() {
+    return this.history[this.history.length - 1] || null;
+  }
+
+  pop() {
+    return this.history.pop() || null;
+  }
+
+  canUndo() {
+    return this.history.length > 0;
+  }
+
+  clear() {
+    this.history = [];
+  }
+}
+
+export const undoManager = new UndoManager();
+
+/* ==========================================================================
+   7. Spelling Auto-Correction Library
+   ========================================================================== */
+
+const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+export function preserveCase(found, replacement) {
+  if (found === found.toUpperCase()) return replacement.toUpperCase();
+  if (found === found.toLowerCase()) return replacement.toLowerCase();
+  if (found[0] === found[0].toUpperCase()) {
+    return replacement[0].toUpperCase() + replacement.slice(1).toLowerCase();
+  }
+  return replacement;
+}
+
+export function correctSpelling(text, rules) {
+  if (!text || typeof text !== 'string') return text;
+  let out = text;
+  for (const [wrong, right] of Object.entries(rules || {})) {
+    if (!wrong) continue;
+    const re = new RegExp(`(^|[^a-zA-Z0-9])(${esc(wrong)})([^a-zA-Z0-9]|$)`, 'gi');
+    out = out.replace(re, (match, prefix, found, suffix) => {
+      return prefix + preserveCase(found, right) + suffix;
+    });
+  }
+  return out;
+}
+
+export function issuesFor(dirName, files, rules) {
+  const out = [];
+
+  if (dirName) {
+    const folderFixed = correctSpelling(dirName, rules);
+    if (folderFixed !== dirName) {
+      out.push({ type: 'folder', old: dirName, corrected: folderFixed });
+    }
+  }
+
+  files.forEach((file, index) => {
+    const lastDot = file.name.lastIndexOf('.');
+    const base = lastDot > 0 ? file.name.slice(0, lastDot) : file.name;
+    const extension = lastDot > 0 ? file.name.slice(lastDot) : '';
+
+    const fixedBase = correctSpelling(base, rules);
+    if (base !== fixedBase) {
+      out.push({
+        type: 'file',
+        fileIndex: index,
+        old: file.name,
+        corrected: fixedBase + extension
+      });
+    }
+  });
+
+  return out;
+}
+
+/* ==========================================================================
+   8. Checklist & Document Linking Engine
+   ========================================================================== */
+
+export function makeChecklist(raw) {
+  return Object.fromEntries(
+    Object.entries(raw).map(([name, rows]) => [
+      name,
+      rows.map(x =>
+        Array.isArray(x)
+          ? {
+            name: x[0],
+            keywords: x[1],
+            short: x[0].replace(/ CERTIFICATE| MARK SHEET| MARKSHEET/g, '').slice(0, 18)
+          }
+          : x
+      )
+    ])
+  );
+}
+
+function fileMatchesKeyword(fileName, keyword, ruleName = '') {
+  const lowerName = fileName.toLowerCase();
+  const q = keyword.toLowerCase().trim();
+
+  // Safety: Caste certificate must NOT match validity-only files
+  if (ruleName === 'CASTE CERTIFICATE' && (lowerName.includes('validity') || lowerName.includes('vld'))) {
+    if (!lowerName.includes('caste certificate') && !lowerName.includes('cast certificate')) {
+      return false;
+    }
+  }
+
+  if (!q.includes(' ')) {
+    return new RegExp(`(^|[^a-z0-9])${q}([^a-z0-9]|$)`, 'i').test(lowerName);
+  }
+
+  return lowerName.includes(q);
+}
+
+export function evaluateChecklistRule(fileNames, rule, linkedRules = DEFAULT_LINKED_RULES) {
+  const normalizedRuleName = rule.name.trim().toUpperCase();
+  const activeLinks = Array.isArray(linkedRules) ? linkedRules : DEFAULT_LINKED_RULES;
+
+  // 1. Combined document link
+  for (const link of activeLinks) {
+    if (link.type === 'combined' && (link.part1 === normalizedRuleName || link.part2 === normalizedRuleName)) {
+      const combinedClean = link.combined.toLowerCase();
+      const matched = fileNames.find(fn => {
+        const lower = fn.toLowerCase();
+        return lower.includes(combinedClean) ||
+          (lower.includes('12th') && lower.includes('marksheet') && lower.includes('passing')) ||
+          (lower.includes('10th') && lower.includes('marksheet') && lower.includes('passing')) ||
+          (lower.includes('12mp') || lower.includes('10mp'));
+      });
+      if (matched) {
+        return {
+          status: 'green',
+          matchedFile: matched,
+          isLinked: true,
+          linkedReason: `Fulfilled via combined file "${link.combined}"`
+        };
+      }
+    }
+  }
+
+  // 2. Alias document link
+  for (const link of activeLinks) {
+    if (link.type === 'alias' && link.part1 === normalizedRuleName) {
+      const aliasClean = link.part2.toLowerCase();
+      const matched = fileNames.find(fn => fn.toLowerCase().includes(aliasClean));
+      if (matched) {
+        return {
+          status: 'green',
+          matchedFile: matched,
+          isLinked: true,
+          linkedReason: `Fulfilled via alias "${link.part2}"`
+        };
+      }
+    }
+  }
+
+  // 3. Direct keyword matching
+  const keywords = Array.isArray(rule.keywords) ? rule.keywords : [rule.name];
+  for (const kw of keywords) {
+    const matched = fileNames.find(fn => fileMatchesKeyword(fn, kw, normalizedRuleName));
+    if (matched) {
+      return { status: 'green', matchedFile: matched, isLinked: false };
+    }
+  }
+
+  return { status: 'red', matchedFile: null, isLinked: false };
+}
+
+export function getChecklistStatus(fileNames, rule, linkedRules = DEFAULT_LINKED_RULES) {
+  const res = evaluateChecklistRule(fileNames, rule, linkedRules);
+  return res.status;
+}
+
+export function evaluateChecklistSummary(fileNames, rules = [], linkedRules = DEFAULT_LINKED_RULES) {
+  const evaluations = rules.map(rule => ({
+    rule,
+    ...evaluateChecklistRule(fileNames, rule, linkedRules)
+  }));
+
+  const foundCount = evaluations.filter(e => e.status === 'green').length;
+  const missingCount = evaluations.filter(e => e.status === 'red').length;
+  const totalRequired = rules.length;
+  const percentComplete = totalRequired > 0 ? Math.round((foundCount / totalRequired) * 100) : 100;
+  const isReady = missingCount === 0;
+
+  const missingList = evaluations
+    .filter(e => e.status === 'red')
+    .map(e => e.rule.name);
+
+  return {
+    evaluations,
+    foundCount,
+    missingCount,
+    totalRequired,
+    percentComplete,
+    isReady,
+    missingList
+  };
+}
+
+export async function allFileNames(handle, path = '') {
+  const out = [];
+  try {
+    for await (const entry of handle.values()) {
+      if (entry.kind === 'file') {
+        out.push(path ? `${path}/${entry.name}` : entry.name);
+      } else if (entry.kind === 'directory') {
+        const sub = await allFileNames(entry, path ? `${path}/${entry.name}` : entry.name);
+        out.push(...sub);
+      }
+    }
+  } catch (err) {
+    console.warn('[rename_tool_logic] allFileNames error:', err);
+  }
+  return out;
+}
+
+/* ==========================================================================
+   9. Batch Audit CSV Report Export
+   ========================================================================== */
+
+export function downloadCSV(filename, csvContent) {
+  const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+export function escapeCSV(val) {
+  if (val === null || val === undefined) return '""';
+  const str = String(val);
+  if (str.includes('"') || str.includes(',') || str.includes('\n') || str.includes('\r')) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return `"${str}"`;
+}
+
+export function generateBatchAuditCSV(batchResults, rules, checklistName = 'Checklist') {
+  const headers = [
+    'Sr No',
+    'Student Name',
+    'Folder Name',
+    ...rules.map(r => r.name),
+    'Verified Count',
+    'Missing Count',
+    'Total Rules',
+    'Completion %',
+    'Readiness Status',
+    'Missing Documents'
+  ];
+
+  const rows = [headers.map(escapeCSV).join(',')];
+
+  batchResults.forEach((item, idx) => {
+    const evMap = {};
+    if (item.summary && Array.isArray(item.summary.evaluations)) {
+      item.summary.evaluations.forEach(ev => {
+        evMap[ev.rule.name] = ev.status === 'green' ? (ev.isLinked ? 'LINKED' : 'PRESENT') : 'MISSING';
+      });
+    }
+
+    const row = [
+      idx + 1,
+      item.studentName || 'Unknown Student',
+      item.folderName || '',
+      ...rules.map(r => evMap[r.name] || 'MISSING'),
+      item.summary?.foundCount || 0,
+      item.summary?.missingCount || 0,
+      item.summary?.totalRequired || rules.length,
+      `${item.summary?.percentComplete || 0}%`,
+      item.summary?.isReady ? 'READY FOR SUBMISSION' : 'INCOMPLETE',
+      (item.summary?.missingList || []).join('; ')
+    ];
+    rows.push(row.map(escapeCSV).join(','));
+  });
+
+  return rows.join('\r\n');
+}
+
+/* ==========================================================================
+   10. Rename Plan and Execution
+   ========================================================================== */
+
+export function planRename(files, inputs, student, groups, style, selectedIndices = null) {
+  const plan = [];
+  const used = new Set(files.map(f => f.name));
+  const indices = selectedIndices !== null ? selectedIndices : files.map((_, i) => i);
+
+  for (const i of indices) {
+    const file = files[i];
+    if (!file) continue;
+    const typed = (inputs[i] ?? cleanName(file.name)).trim();
+    const error = validateFilename(typed);
+    if (error) return { error: `${file.name}: ${error}` };
+
+    const desired = buildName(typed, student, groups, style) + ext(file.name);
+    if (desired === file.name) continue;
+
+    const next = uniqueDestination(desired, file.name, used);
+    used.add(next);
+    plan.push({ old: file.name, next, file, handle: file.handle || null, index: i });
+  }
+
+  return { plan };
+}
+
+export async function executeRename(dir, plan, onProgress = null) {
+  const written = [];
+  try {
+    let completed = 0;
+    for (const item of plan) {
+      // 1. Native Desktop Rename (0 browser prompt, atomic rename)
+      const dirPath = dir ? (dir.nativePath || dir.path || '') : '';
+      const oldPath = item.nativePath || (item.file && (item.file.path || item.file.nativePath)) || (dirPath ? `${dirPath}/${item.old}` : null);
+      if (oldPath) {
+        const studentName = item.studentName || (item.file && item.file.studentName) || '';
+        const rotation = item.rotation || (item.file && item.file.rotation) || 0;
+        const res = await renameNativeFile(oldPath, item.next, studentName, rotation);
+        if (!res.success) {
+          throw new Error(res.error || `Failed to rename ${item.old}`);
+        }
+        const actualName = res.name || item.next;
+        item.next = actualName;
+        if (item.file) {
+          const newPath = res.path || res.newPath;
+          if (newPath) {
+            item.file.path = newPath;
+            item.file.nativePath = newPath;
+            const origin = (typeof window !== 'undefined' && window.location?.origin && !window.location.origin.startsWith('file:') && !window.location.origin.includes('tauri'))
+              ? window.location.origin : 'http://localhost:3000';
+            item.file.url = `${origin}/api/serve-file?path=${encodeURIComponent(newPath)}`;
+          }
+          item.file.name = actualName;
+          item.file.targetName = actualName;
+          item.file.isRenamed = true;
+          item.file.status = 'renamed';
+          item.file.rotation = 0; // rotation applied to disk
+        }
+        written.push(item);
+        completed++;
+        if (onProgress) {
+          const pct = Math.round((completed / plan.length) * 100);
+          onProgress(pct, `Renamed ${completed} of ${plan.length} files...`);
+        }
+        continue;
+      }
+
+      // 2. Browser File System Access API Rename fallback
+      const isCaseOnly = item.old.toLowerCase() === item.next.toLowerCase() && item.old !== item.next;
+
+      if (!isCaseOnly) {
+        let finalNext = item.next;
+        let handle = await dir.getFileHandle(finalNext, { create: false }).catch(() => null);
+        if (handle) {
+          const suffix = ext(finalNext);
+          const base = cleanName(finalNext).replace(/\s+\d+$/, '');
+          let counter = 1;
+          finalNext = `${base} ${counter}${suffix}`;
+          handle = await dir.getFileHandle(finalNext, { create: false }).catch(() => null);
+          while (handle) {
+            counter++;
+            finalNext = `${base} ${counter}${suffix}`;
+            handle = await dir.getFileHandle(finalNext, { create: false }).catch(() => null);
+          }
+          item.next = finalNext;
+        }
+      }
+
+      let sourceHandle = item.handle;
+      if (!sourceHandle) {
+        sourceHandle = await dir.getFileHandle(item.old, { create: false }).catch(() => null);
+      }
+
+      let movedSuccessfully = false;
+      if (sourceHandle && typeof sourceHandle.move === 'function') {
+        try {
+          if (isCaseOnly) {
+            const tempName = `__tmp_${Date.now()}_${item.next}`;
+            await sourceHandle.move(tempName);
+            await sourceHandle.move(item.next);
+          } else {
+            await sourceHandle.move(item.next);
+          }
+          movedSuccessfully = true;
+          written.push(item);
+        } catch (moveErr) {
+          console.warn('sourceHandle.move() not supported on this handle, falling back to stream copy:', moveErr);
+          movedSuccessfully = false;
+        }
+      }
+
+      if (!movedSuccessfully) {
+        const data = await item.file.arrayBuffer();
+        let targetHandle;
+
+        if (isCaseOnly) {
+          const tempName = `__tmp_${Date.now()}_${item.next}`;
+          const tempOut = await dir.getFileHandle(tempName, { create: true });
+          const tw = await tempOut.createWritable();
+          await tw.write(data);
+          await tw.close();
+          await dir.removeEntry(item.old);
+
+          targetHandle = await dir.getFileHandle(item.next, { create: true });
+          const w = await targetHandle.createWritable();
+          await w.write(data);
+          await w.close();
+          await dir.removeEntry(tempName);
+        } else {
+          targetHandle = await dir.getFileHandle(item.next, { create: true });
+          const writer = await targetHandle.createWritable();
+          await writer.write(data);
+          await writer.close();
+          await dir.removeEntry(item.old);
+        }
+        written.push(item);
+      }
+
+      completed++;
+      if (onProgress) {
+        onProgress(Math.round((completed / plan.length) * 100), `${completed}/${plan.length} files renamed`);
+      }
+    }
+    return written;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function undoRename(dir, plan, onProgress = null) {
+  const reversed = [...plan].reverse();
+  let completed = 0;
+
+  for (const item of reversed) {
+    const dirPath = dir ? (dir.nativePath || dir.path || '') : '';
+    const currentPath = (item.file && (item.file.path || item.file.nativePath)) ||
+      (dirPath ? `${dirPath}/${item.next}` : null) ||
+      (item.nativePath ? item.nativePath.replace(/[^\\\/]+$/, item.next) : null);
+
+    if (currentPath) {
+      const res = await renameNativeFile(currentPath, item.old);
+      if (res && res.success) {
+        const restoredPath = res.path || (item.nativePath || (dirPath ? `${dirPath}/${item.old}` : currentPath.replace(/[^\\\/]+$/, item.old)));
+        if (item.file) {
+          item.file.path = restoredPath;
+          item.file.nativePath = restoredPath;
+          item.file.name = item.old;
+          item.file.targetName = item.old;
+          const origin = (typeof window !== 'undefined' && window.location?.origin && !window.location.origin.startsWith('file:') && !window.location.origin.includes('tauri'))
+            ? window.location.origin : 'http://localhost:3000';
+          item.file.url = `${origin}/api/serve-file?path=${encodeURIComponent(restoredPath)}`;
+          item.file.isRenamed = false;
+          item.file.status = 'pending';
+        }
+      }
+      completed++;
+      if (onProgress) {
+        onProgress(Math.round((completed / reversed.length) * 100), `Undo: ${completed}/${reversed.length}`);
+      }
+      continue;
+    }
+
+    const isCaseOnly = item.old.toLowerCase() === item.next.toLowerCase() && item.old !== item.next;
+    const currentHandle = await dir.getFileHandle(item.next, { create: false }).catch(() => null);
+
+    if (currentHandle && typeof currentHandle.move === 'function') {
+      if (isCaseOnly) {
+        const tempName = `__tmp_undo_${Date.now()}_${item.old}`;
+        await currentHandle.move(tempName);
+        await currentHandle.move(item.old);
+      } else {
+        await currentHandle.move(item.old);
+      }
+    } else if (currentHandle) {
+      const data = await (await currentHandle.getFile()).arrayBuffer();
+      const oldHandle = await dir.getFileHandle(item.old, { create: true });
+      const writer = await oldHandle.createWritable();
+      await writer.write(data);
+      await writer.close();
+      await dir.removeEntry(item.next);
+    }
+
+    completed++;
+    if (onProgress) {
+      onProgress(Math.round((completed / reversed.length) * 100), `Undo: ${completed}/${reversed.length}`);
+    }
+  }
+}
+
+/* ==========================================================================
+   10. Smart Auto-Rename OCR Detection & Multi-Signal Scoring Engine
+   ========================================================================== */
+
+export const SMART_DOC_SIGNATURES = [
+  {
+    canonical: 'AADHAAR CARD',
+    code: 'ADR',
+    patterns: [
+      /\bunique identification authority\b/i,
+      /\buidai\b/i,
+      /\baadhaar\b/i,
+      /\badhar\b/i,
+      /\bmera aadhaar\b/i,
+      /\bidentification authority of india\b/i,
+      /\b\d{4}\s\d{4}\s\d{4}\b/,
+      /\bvid\s*:\s*\d{4}\b/i
+    ],
+    primaryKeywords: ['aadhaar', 'uidai', 'unique identification', 'आधार', 'enrollment'],
+    secondaryKeywords: ['male', 'female', 'dob', 'year of birth', 'father', 'address']
+  },
+  {
+    canonical: '10TH MARKSHEET',
+    code: '10M',
+    patterns: [
+      /\bsecondary school certificate\b/i,
+      /\bs\.s\.c\b/i,
+      /\bssc examination\b/i,
+      /\bboard of secondary\b/i,
+      /\b10th marksheet\b/i,
+      /\bstd\.?\s*10\b/i,
+      /\bstandard x\b/i,
+      /\bmatriculation\b/i
+    ],
+    primaryKeywords: ['secondary school', 's.s.c', 'ssc', 'xth', '10th', 'matric'],
+    secondaryKeywords: ['statement of marks', 'candidate name', 'seat no', 'centre no', 'pass']
+  },
+  {
+    canonical: '12TH MARKSHEET',
+    code: '12M',
+    patterns: [
+      /\bhigher secondary certificate\b/i,
+      /\bh\.s\.c\b/i,
+      /\bhsc examination\b/i,
+      /\bboard of higher secondary\b/i,
+      /\b12th marksheet\b/i,
+      /\bstd\.?\s*12\b/i,
+      /\bstandard xii\b/i,
+      /\bintermediate\b/i
+    ],
+    primaryKeywords: ['higher secondary', 'h.s.c', 'hsc', 'xiith', '12th', 'science', 'commerce', 'arts'],
+    secondaryKeywords: ['statement of marks', 'candidate name', 'seat no', 'centre no', 'stream', 'pass']
+  },
+  {
+    canonical: '12TH LEAVING CERTIFICATE',
+    code: '12LC',
+    patterns: [
+      /\bleaving certificate\b/i,
+      /\btransfer certificate\b/i,
+      /\bcollege leaving\b/i,
+      /\bschool leaving\b/i,
+      /\bconduct\s*:\s*good\b/i,
+      /\bdate of leaving\b/i,
+      /\bdate of birth\b/i
+    ],
+    primaryKeywords: ['leaving certificate', 'transfer certificate', 'tc', 'school leaving', 'college leaving'],
+    secondaryKeywords: ['date of birth', 'conduct', 'progress', 'religion', 'caste', 'nationality']
+  },
+  {
+    canonical: 'CASTE CERTIFICATE',
+    code: 'CST',
+    patterns: [
+      /\bcaste certificate\b/i,
+      /\bform of caste\b/i,
+      /\bbelong to\s+\w+\s+caste\b/i,
+      /\bbackward class\b/i,
+      /\bscheduled caste\b/i,
+      /\bscheduled tribe\b/i,
+      /\bother backward class\b/i,
+      /\bobc\b/i,
+      /\bvjnt\b/i,
+      /\bnt-[a-d]\b/i,
+      /\bsebc\b/i,
+      /\bजात प्रमाणपत्र\b/i
+    ],
+    primaryKeywords: ['caste certificate', 'backward class', 'sub divisional officer', 'competent authority', 'caste'],
+    secondaryKeywords: ['ordinance', 'constitution', 'tahasildar', 'deputy collector']
+  },
+  {
+    canonical: 'CASTE VALIDITY CERTIFICATE',
+    code: 'VLD',
+    patterns: [
+      /\bcaste validity\b/i,
+      /\bvalidity certificate\b/i,
+      /\bscrutiny committee\b/i,
+      /\bverification of caste\b/i,
+      /\bvalidity of caste\b/i,
+      /\bजात वैधता प्रमाणपत्र\b/i
+    ],
+    primaryKeywords: ['caste validity', 'validity certificate', 'scrutiny committee', 'caste certificate scrutiny'],
+    secondaryKeywords: ['district caste', 'certificate of validity', 'verified']
+  },
+  {
+    canonical: 'INCOME CERTIFICATE',
+    code: 'INC',
+    patterns: [
+      /\bincome certificate\b/i,
+      /\bannual family income\b/i,
+      /\bannual income\b/i,
+      /\bउत्पन्नाचा दाखला\b/i,
+      /\bउत्पन्न प्रमाणपत्र\b/i,
+      /\bfinancial year\b/i
+    ],
+    primaryKeywords: ['income certificate', 'annual income', 'tahsildar', 'taluka executive magistrate'],
+    secondaryKeywords: ['rupees', 'lakhs', 'financial year', 'head of family']
+  },
+  {
+    canonical: 'DOMICILE CERTIFICATE',
+    code: 'DOM',
+    patterns: [
+      /\bdomicile certificate\b/i,
+      /\bage,?\s*nationality\s*(and|&)\s*domicile\b/i,
+      /\bage and domicile\b/i,
+      /\bresident of\s+state of maharashtra\b/i,
+      /\bstate of maharashtra\b/i,
+      /\bअधिवास प्रमाणपत्र\b/i
+    ],
+    primaryKeywords: ['domicile', 'age and nationality', 'state of maharashtra', 'ordinary resident'],
+    secondaryKeywords: ['executive magistrate', 'tahsildar', 'mumbai', 'pune', 'nagpur', 'district']
+  },
+  {
+    canonical: 'NON CREAMY LAYER CERTIFICATE',
+    code: 'NCL',
+    patterns: [
+      /\bnon[-\s]creamy layer\b/i,
+      /\bdoes not belong to the persons\/sections \(creamy layer\)\b/i,
+      /\bcreamy layer\b/i
+    ],
+    primaryKeywords: ['non creamy layer', 'creamy layer', 'other backward classes'],
+    secondaryKeywords: ['annual income', 'sub divisional officer', 'valid upto']
+  },
+  {
+    canonical: 'RATION CARD',
+    code: 'RAT',
+    patterns: [
+      /\bration card\b/i,
+      /\bfood (and|&) civil supplies\b/i,
+      /\bconsumer affairs\b/i,
+      /\bcard no\b/i
+    ],
+    primaryKeywords: ['ration card', 'food civil supplies', 'fair price'],
+    secondaryKeywords: ['head of family', 'gas connection', 'bpl', 'apl']
+  },
+  {
+    canonical: 'BANK PASSBOOK',
+    code: 'BNK',
+    patterns: [
+      /\bpassbook\b/i,
+      /\baccount (number|no)\b/i,
+      /\bifsc\s*code\b/i,
+      /\bbranch\b/i,
+      /\bstate bank of india\b/i,
+      /\bbank of maharashtra\b/i,
+      /\bbank of baroda\b/i
+    ],
+    primaryKeywords: ['passbook', 'ifsc', 'account number', 'bank'],
+    secondaryKeywords: ['savings', 'branch', 'micr', 'cif']
+  },
+  {
+    canonical: 'GAP CERTIFICATE',
+    code: 'GAP',
+    patterns: [
+      /\bgap certificate\b/i,
+      /\baffidavit for gap\b/i,
+      /\bgap in education\b/i,
+      /\beducational gap\b/i
+    ],
+    primaryKeywords: ['gap certificate', 'affidavit', 'educational gap'],
+    secondaryKeywords: ['notary', 'stamp paper', 'solemnly affirm']
+  }
+];
+
+export function evaluateSmartOcrDocument(text, studentName = '') {
+  if (!text || typeof text !== 'string') {
+    return {
+      docType: null,
+      canonical: null,
+      code: null,
+      confidence: 0,
+      studentNameMatchRatio: 0,
+      isConfident: false,
+      reason: 'No text extracted'
+    };
+  }
+
+  const cleanText = text.replace(/\s+/g, ' ');
+  let bestMatch = null;
+  let highestDocScore = 0;
+
+  for (const sig of SMART_DOC_SIGNATURES) {
+    let score = 0;
+    const matchedKeywords = [];
+
+    // 1. Strong Regex Patterns (up to 35 pts)
+    for (const pat of sig.patterns) {
+      if (pat.test(cleanText)) {
+        score += 35;
+        break;
+      }
+    }
+
+    // 2. Primary Keywords (up to 25 pts)
+    let primCount = 0;
+    for (const kw of sig.primaryKeywords) {
+      if (cleanText.toLowerCase().includes(kw.toLowerCase())) {
+        primCount++;
+        matchedKeywords.push(kw);
+      }
+    }
+    score += Math.min(25, primCount * 15);
+
+    // 3. Secondary Keywords (up to 10 pts)
+    let secCount = 0;
+    for (const kw of sig.secondaryKeywords) {
+      if (cleanText.toLowerCase().includes(kw.toLowerCase())) {
+        secCount++;
+      }
+    }
+    score += Math.min(10, secCount * 5);
+
+    if (score > highestDocScore) {
+      highestDocScore = score;
+      bestMatch = {
+        sig,
+        score,
+        matchedKeywords
+      };
+    }
+  }
+
+  // Student Name Matching (up to 30 pts)
+  let nameMatchRatio = 0;
+  if (studentName && studentName.trim()) {
+    const tokens = studentName.trim().toUpperCase().split(/\s+/).filter(t => t.length > 2);
+    if (tokens.length > 0) {
+      let matchedTokens = 0;
+      const upperText = cleanText.toUpperCase();
+      for (const tok of tokens) {
+        if (upperText.includes(tok)) {
+          matchedTokens++;
+        }
+      }
+      nameMatchRatio = Math.round((matchedTokens / tokens.length) * 100);
+    }
+  }
+
+  const docScore = bestMatch ? Math.min(70, bestMatch.score) : 0;
+  const nameBonus = Math.round((nameMatchRatio / 100) * 30);
+  const totalConfidence = Math.min(100, docScore + nameBonus);
+
+  return {
+    docType: bestMatch && docScore >= 35 ? bestMatch.sig.canonical : null,
+    canonical: bestMatch && docScore >= 35 ? bestMatch.sig.canonical : null,
+    code: bestMatch && docScore >= 35 ? bestMatch.sig.code : null,
+    confidence: bestMatch && docScore >= 35 ? totalConfidence : Math.min(45, totalConfidence),
+    docScore,
+    nameMatchRatio,
+    isConfident: totalConfidence >= 80 && docScore >= 50,
+    matchedKeywords: bestMatch ? bestMatch.matchedKeywords : []
+  };
+}
+
+/**
+ * Register a new document type dynamically into in-memory signatures and canonical names
+ */
+export function registerDocumentSignature({ canonical, code = '', primaryKeywords = [], secondaryKeywords = [] }) {
+  if (!canonical || typeof canonical !== 'string') return null;
+  const upperCanonical = canonical.trim().toUpperCase();
+  const upperCode = (code || '').trim().toUpperCase() || upperCanonical.slice(0, 3);
+
+  CANONICAL_NAMES[upperCanonical] = upperCanonical;
+
+  const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const patterns = [
+    new RegExp(`\\b${escapeRegex(upperCanonical)}\\b`, 'i')
+  ];
+  if (upperCode && upperCode.length >= 2) {
+    patterns.push(new RegExp(`\\b${escapeRegex(upperCode)}\\b`, 'i'));
+  }
+  for (const kw of primaryKeywords) {
+    if (kw && kw.trim().length >= 3) {
+      patterns.push(new RegExp(`\\b${escapeRegex(kw.trim())}\\b`, 'i'));
+    }
+  }
+
+  const prim = [upperCanonical.toLowerCase()];
+  for (const kw of primaryKeywords) {
+    if (kw && typeof kw === 'string' && kw.trim().length >= 3) {
+      const k = kw.trim().toLowerCase();
+      if (!prim.includes(k)) prim.push(k);
+    }
+  }
+
+  const sec = [];
+  for (const kw of secondaryKeywords) {
+    if (kw && typeof kw === 'string' && kw.trim().length >= 3) {
+      const k = kw.trim().toLowerCase();
+      if (!prim.includes(k) && !sec.includes(k)) sec.push(k);
+    }
+  }
+
+  const sig = {
+    canonical: upperCanonical,
+    code: upperCode,
+    patterns,
+    primaryKeywords: prim,
+    secondaryKeywords: sec
+  };
+
+  const existingIdx = SMART_DOC_SIGNATURES.findIndex(s => s.canonical === upperCanonical);
+  if (existingIdx !== -1) {
+    SMART_DOC_SIGNATURES[existingIdx] = sig;
+  } else {
+    SMART_DOC_SIGNATURES.push(sig);
+  }
+
+  return sig;
+}
+
+/**
+ * Extract candidate OCR signature keywords from document text
+ */
+export function extractSignatureKeywords(text, docName = '') {
+  if (!text || typeof text !== 'string') return { primary: [], secondary: [] };
+
+  const stopWords = new Set([
+    'the', 'and', 'for', 'with', 'that', 'this', 'from', 'have', 'has', 'had',
+    'what', 'when', 'where', 'who', 'which', 'why', 'how', 'all', 'any', 'both',
+    'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not',
+    'only', 'own', 'same', 'so', 'than', 'too', 'very', 'can', 'will', 'just',
+    'should', 'now', 'page', 'date', 'number', 'govt', 'government', 'state',
+    'signature', 'verified', 'copy', 'true', 'name', 'sign', 'photo', 'form'
+  ]);
+
+  const clean = text.replace(/[^a-zA-Z0-9\s]/g, ' ').toLowerCase();
+  const tokens = clean.split(/\s+/).filter(t => t.length >= 4 && !stopWords.has(t));
+  const counts = new Map();
+  for (const t of tokens) {
+    counts.set(t, (counts.get(t) || 0) + 1);
+  }
+
+  const sorted = Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(e => e[0]);
+
+  const primary = sorted.slice(0, 6);
+  const secondary = sorted.slice(6, 14);
+
+  return { primary, secondary };
+}
+
+/**
+ * Computes Levenshtein distance between two strings
+ */
+export function levenshteinDistance(a, b) {
+  if (a === b) return 0;
+  if (!a || !a.length) return (b || '').length;
+  if (!b || !b.length) return a.length;
+
+  const s1 = a.toLowerCase();
+  const s2 = b.toLowerCase();
+  const d = [];
+
+  for (let i = 0; i <= s1.length; i++) {
+    d[i] = [i];
+  }
+  for (let j = 0; j <= s2.length; j++) {
+    d[0][j] = j;
+  }
+
+  for (let i = 1; i <= s1.length; i++) {
+    for (let j = 1; j <= s2.length; j++) {
+      const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(
+        d[i - 1][j] + 1,
+        d[i][j - 1] + 1,
+        d[i - 1][j - 1] + cost
+      );
+    }
+  }
+  return d[s1.length][s2.length];
+}
+
+/**
+ * Calculates string similarity between 0.0 and 1.0 using Levenshtein distance
+ */
+export function stringSimilarity(a, b) {
+  if (!a && !b) return 1.0;
+  if (!a || !b) return 0.0;
+  const s1 = a.toLowerCase().trim();
+  const s2 = b.toLowerCase().trim();
+  if (s1 === s2) return 1.0;
+  const maxLen = Math.max(s1.length, s2.length);
+  if (maxLen === 0) return 1.0;
+  const dist = levenshteinDistance(s1, s2);
+  return Math.max(0, 1 - dist / maxLen);
+}
+
+/**
+ * Extracts clean words/tokens from a filename or text
+ */
+export function extractCleanTokens(str) {
+  if (!str || typeof str !== 'string') return [];
+  const withoutExt = str.replace(/\.[a-zA-Z0-9]+$/i, '');
+  const normalized = withoutExt.replace(/[^a-zA-Z0-9]+/g, ' ').toLowerCase();
+  return normalized.split(/\s+/).filter(t => t.length > 0);
+}
+
+/**
+ * Strict Numeric / Standard Group Classifier
+ * Standards: 10th (ssc), 11th (xi), 12th (hsc), 1st, 2nd, 3rd, 4th
+ */
+const NUMERIC_STANDARDS = [
+  { id: '10', tags: ['10', '10th', 'ssc', 'tenth', 'x'] },
+  { id: '11', tags: ['11', '11th', 'xi', 'eleventh'] },
+  { id: '12', tags: ['12', '12th', 'hsc', 'twelfth', 'xii'] },
+  { id: '1st', tags: ['1st', 'first', 'fy', 'sem1', 'sem-1'] },
+  { id: '2nd', tags: ['2nd', 'second', 'sy', 'sem2', 'sem-2'] },
+  { id: '3rd', tags: ['3rd', 'third', 'ty', 'sem3', 'sem-3'] },
+  { id: '4th', tags: ['4th', 'fourth', 'sem4', 'sem-4'] }
+];
+
+export function getNumericStandard(token) {
+  const tok = (token || '').toLowerCase();
+  for (const item of NUMERIC_STANDARDS) {
+    if (item.tags.includes(tok)) return item.id;
+  }
+  return null;
+}
+
+export function extractNumericStandards(tokens) {
+  const set = new Set();
+  for (const t of tokens) {
+    const std = getNumericStandard(t);
+    if (std) set.add(std);
+  }
+  return set;
+}
+
+export function hasNumericConflict(fileStandards, targetStandards) {
+  if (targetStandards && targetStandards.size > 0) {
+    for (const fs of fileStandards) {
+      if (!targetStandards.has(fs)) {
+        return true; // Conflicting standard detected!
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * Filename-Based Smart Matching Engine (Strictly Non-OCR)
+ * Features:
+ * 1. Order-independent token matching (e.g. '12th Marksheet Vijay' = 'Marksheet Vijay 12th')
+ * 2. Fuzzy typo tolerance (Levenshtein similarity >= 80% matches 'Marksheetdd', 'Adhar', 'Bonfide')
+ * 3. Strict numeric guard (never confuses distinct standards like '10' vs '12' or '1st' vs '2nd')
+ * 4. Dynamic Preset Documents integration
+ * Thresholds: >= 80% High Confidence, 30-79% Suggested Match, < 30% Unmatched
+ */
+export function matchFilenameSmart(filename, studentName = '', groups = null, presetDocuments = null) {
+  if (!filename || typeof filename !== 'string') {
+    return {
+      docType: null,
+      canonical: null,
+      code: null,
+      confidence: 0,
+      isConfident: false,
+      reason: 'Empty filename'
+    };
+  }
+
+  const baseOriginal = cleanName(filename).trim();
+  if (!baseOriginal) {
+    return {
+      docType: null,
+      canonical: null,
+      code: null,
+      confidence: 0,
+      isConfident: false,
+      reason: 'Empty basename'
+    };
+  }
+
+  const spellingFixed = correctSpelling(baseOriginal, DEFAULT_SPELLING_RULES);
+  const normalized = spellingFixed.replace(/[_\-\.\+,\(\)\[\]]+/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+  const fileTokens = extractCleanTokens(spellingFixed);
+  const fileStandards = extractNumericStandards(fileTokens);
+
+  // 1. Direct Pattern Match (Regex & Groups)
+  let directMatch = evaluateMatch(spellingFixed, groups);
+  if (!directMatch.docType) {
+    directMatch = evaluateMatch(baseOriginal, groups);
+  }
+
+  // 2. Exact or Word-Boundary Shortcut Match
+  const shortcutDoc = matchDocument(spellingFixed, groups) || matchDocument(baseOriginal, groups);
+
+  if (directMatch && directMatch.docType) {
+    const upperDoc = directMatch.docType.toUpperCase();
+    return {
+      docType: upperDoc,
+      canonical: CANONICAL_NAMES[upperDoc] || upperDoc,
+      code: null,
+      confidence: 95,
+      isConfident: true,
+      reason: 'Pattern match'
+    };
+  }
+
+  if (shortcutDoc) {
+    const upperDoc = shortcutDoc.toUpperCase();
+    return {
+      docType: upperDoc,
+      canonical: CANONICAL_NAMES[upperDoc] || upperDoc,
+      code: null,
+      confidence: 90,
+      isConfident: true,
+      reason: 'Shortcut match'
+    };
+  }
+
+  // 3. Profiles Dictionary
+  const PROFILES = [
+    { type: '12TH MARKSHEET AND PASSING', code: '12MP', tokens: ['12mp', '12tmp', '12th passing marksheet', '12 marksheet passing', '12th marksheet and passing'], standard: '12', minScore: 90 },
+    { type: '10TH MARKSHEET AND PASSING', code: '10MP', tokens: ['10mp', '10tmp', '10th passing marksheet', '10 marksheet passing', '10th marksheet and passing'], standard: '10', minScore: 90 },
+    { type: '12TH MARKSHEET', code: '12M', patterns: [/\b12(th)?\s*(m|mark|marksheet|hsc)\b/i, /\bhsc\s*mark/i], tokens: ['12th marksheet', 'hsc marksheet', '12 marksheet', '12th mark', '12m', 'hsc'], primary: ['marksheet', 'markshet', 'mark'], qualifier: ['12', '12th', 'hsc'], standard: '12' },
+    { type: '10TH MARKSHEET', code: '10M', patterns: [/\b10(th)?\s*(m|mark|marksheet|ssc)\b/i, /\bssc\s*mark/i], tokens: ['10th marksheet', 'ssc marksheet', '10 marksheet', '10th mark', '10m', 'ssc'], primary: ['marksheet', 'markshet', 'mark'], qualifier: ['10', '10th', 'ssc'], standard: '10' },
+    { type: '12TH PASSING CERTIFICATE', code: '12P', tokens: ['12th passing', 'hsc passing', '12p', '12th pass'], primary: ['passing', 'sanad'], qualifier: ['12', '12th', 'hsc'], standard: '12' },
+    { type: '10TH PASSING CERTIFICATE', code: '10P', tokens: ['10th passing', 'ssc passing', '10p', '10th pass'], primary: ['passing', 'sanad'], qualifier: ['10', '10th', 'ssc'], standard: '10' },
+    { type: '12TH LC', code: '12LC', patterns: [/\b12(th)?\s*(lc|tc|leaving|l)\b/i, /\b12l\b/i], tokens: ['12th lc', '12 lc', '12th tc', '12 tc', '12th leaving', '12 leaving', '12lc', '12l'], primary: ['lc', 'tc', 'leaving', 'transfer', '12l', '12lc'], qualifier: ['12', '12th', 'hsc'], standard: '12' },
+    { type: '10TH LC', code: '10LC', patterns: [/\b10(th)?\s*(lc|tc|leaving|l)\b/i, /\b10l\b/i], tokens: ['10th lc', '10 lc', '10th tc', '10 tc', '10th leaving', '10 leaving', '10lc', '10l'], primary: ['lc', 'tc', 'leaving', 'transfer', '10l', '10lc'], qualifier: ['10', '10th', 'ssc'], standard: '10' },
+    { type: 'AADHAAR CARD', code: 'ADR', tokens: ['aadhaar', 'adhar', 'aadhar', 'adr', 'uid', 'uidai', 'adhaar'], primary: ['aadhaar', 'adhar', 'aadhar', 'adr'] },
+    { type: 'CASTE CERTIFICATE', code: 'CST', patterns: [/\b(cst|cas|caste)\b/i], tokens: ['caste certificate', 'caste cert', 'cst', 'cas', 'caste', 'jati'], primary: ['caste', 'jati', 'cst', 'cas'] },
+    { type: 'VALIDITY CERTIFICATE', code: 'VLD', tokens: ['caste validity', 'validity', 'vld', 'cval', 'padtani'], primary: ['validity', 'padtani', 'vld', 'cval'] },
+    { type: 'DOMICILE CERTIFICATE', code: 'DOM', tokens: ['domicile', 'dom', 'adivasi', 'rahavasi', 'residential certificate', 'residence'], primary: ['domicile', 'dom', 'adivasi', 'rahavasi'] },
+    { type: 'NATIONALITY CERTIFICATE', code: 'NAT', tokens: ['nationality', 'nat', 'rashtriyatva'], primary: ['nationality', 'nat'] },
+    { type: 'INCOME CERTIFICATE', code: 'INC', patterns: [/\b(income|inc|utpanna)\b/i, /\bin\s*\(\d+\)/i, /\bin\./i, /\binc\b/i], tokens: ['income certificate', 'income cert', 'inc', 'in', 'utpanna', 'tahsildar'], primary: ['income', 'inc', 'utpanna'] },
+    { type: 'NON CREAMY LAYER', code: 'NCL', tokens: ['non creamy', 'creamy layer', 'ncl', 'noncreamy'], primary: ['ncl', 'non creamy', 'creamy'] },
+    { type: 'RATION CARD', code: 'RC', tokens: ['ration card', 'ration', 'rc'], primary: ['ration', 'rc'] },
+    { type: 'PHOTO', code: 'PIC', tokens: ['passport photo', 'photo', 'photograph', 'pic', 'image', 'student photo'], primary: ['photo', 'pic', 'photograph'] },
+    { type: 'SIGNATURE', code: 'SIG', tokens: ['signature', 'sign', 'signatur', 'sahi'], primary: ['signature', 'sign', 'signatur', 'sahi'] },
+    { type: 'PASSBOOK BANK', code: 'BNK', tokens: ['bank passbook', 'passbook', 'bank statement', 'account', 'passbook bank'], primary: ['passbook', 'bank'] },
+    { type: 'PAN CARD', code: 'PAN', tokens: ['pan card', 'pancard', 'pan'], primary: ['pan', 'pancard'] },
+    { type: 'GAP CERTIFICATE', code: 'GAP', tokens: ['gap certificate', 'gap affidavit', 'gap cert', 'affidavit for gap'], primary: ['gap', 'affidavit'] },
+    { type: 'BONAFIDE CERTIFICATE', code: 'BNF', tokens: ['bonafide certificate', 'bonafide cert', 'bonfide', 'bnf', 'bonafied'], primary: ['bonafide', 'bonfide', 'bnf', 'bonafied'] },
+    { type: 'SELF DECLARATION', code: 'SLF', patterns: [/\bself\s*declaration\b/i, /\bsvayam\s*ghoshana\b/i, /\bslf\b/i], tokens: ['self declaration', 'undertaking', 'declaration form', 'pratigyapatra', 'svayam'], primary: ['declaration', 'undertaking', 'self'] },
+    { type: 'PARENT DECLARATION', code: 'PAR', patterns: [/\bparent\s*(declaration|undertaking|form)\b/i, /\bpalak\s*(ghoshana|pratigya|pratigyapatra|declaration|undertaking)\b/i, /\bpar\b/i], tokens: ['parent declaration', 'palak ghoshana', 'palak declaration', 'parent undertaking', 'par'], primary: ['parent declaration', 'palak ghoshana', 'palak declaration'] },
+    { type: 'ATTEMPT CERTIFICATE', code: 'ATM', tokens: ['attempt certificate', 'attempt', 'atm'], primary: ['attempt', 'atm'] },
+    { type: 'BIRTH CERTIFICATE', code: 'BRT', tokens: ['birth certificate', 'janma dakhla', 'brt', 'birth'], primary: ['birth', 'janma', 'brt'] },
+    { type: 'CAP ALLOTMENT LETTER', code: 'CAP', tokens: ['allotment letter', 'cap allotment', 'merit list', 'cap letter'], primary: ['allotment', 'cap'] }
+  ];
+
+  // Merge any dynamically configured preset documents
+  if (presetDocuments) {
+    const list = Array.isArray(presetDocuments) ? presetDocuments : Object.values(presetDocuments);
+    for (const item of list) {
+      const docName = (typeof item === 'string' ? item : (item.name || (Array.isArray(item) ? item[0] : ''))).toUpperCase();
+      if (!docName) continue;
+      const docCode = (item.code || (Array.isArray(item) && item[2]) || '').toUpperCase();
+      const rawKws = item.keywords || (Array.isArray(item) && item[1]) || [];
+      const kws = Array.isArray(rawKws) ? rawKws : (typeof rawKws === 'string' ? rawKws.split(',').map(k => k.trim()) : []);
+
+      const existing = PROFILES.find(p => p.type === docName);
+      if (!existing) {
+        const itemTokens = extractCleanTokens(docName);
+        const itemStandards = extractNumericStandards(itemTokens);
+        const std = itemStandards.size > 0 ? Array.from(itemStandards)[0] : null;
+        PROFILES.push({
+          type: docName,
+          code: docCode,
+          tokens: [docName.toLowerCase(), ...kws.map(k => k.toLowerCase())],
+          primary: itemTokens.filter(t => !['certificate', 'card', 'form', 'letter', 'doc'].includes(t)),
+          standard: std
+        });
+      }
+    }
+  }
+
+  let bestMatch = null;
+  let highestScore = 0;
+
+  for (const prof of PROFILES) {
+    // Numeric Guard: if profile specifies standard (e.g. '12' or '10'), verify against filename standards
+    const targetStandards = prof.standard ? new Set([prof.standard]) : extractNumericStandards(extractCleanTokens(prof.type));
+    if (hasNumericConflict(fileStandards, targetStandards)) {
+      continue; // Strictly skip conflicting standard!
+    }
+
+    let score = 0;
+
+    // A. Pattern Test
+    if (prof.patterns) {
+      for (const pat of prof.patterns) {
+        if (pat.test(normalized)) {
+          score = Math.max(score, 90);
+          break;
+        }
+      }
+    }
+
+    // B. Substring & Exact Token Test (Strict Word Boundaries for Short Tokens <= 3 chars)
+    if (prof.tokens) {
+      for (const tok of prof.tokens) {
+        const tokClean = tok.toLowerCase().trim();
+        if (!tokClean) continue;
+        if (tokClean.length <= 3) {
+          const wordPat = new RegExp(`(^|[^a-z0-9])${tokClean}([^a-z0-9]|$)`, 'i');
+          if (wordPat.test(normalized)) {
+            score = Math.max(score, 90);
+            break;
+          }
+        } else if (normalized.includes(tokClean)) {
+          score = Math.max(score, 90);
+          break;
+        }
+      }
+    }
+
+    // C. Order-Independent Token Matching with Typo/Levenshtein Tolerance
+    const reqTokens = extractCleanTokens(prof.type);
+    if (reqTokens.length > 0) {
+      let matchedCount = 0;
+      let totalFuzzyScore = 0;
+
+      for (const rt of reqTokens) {
+        const rtStd = getNumericStandard(rt);
+        if (rtStd) {
+          if (fileStandards.has(rtStd)) {
+            matchedCount++;
+            totalFuzzyScore += 1.0;
+          }
+          continue;
+        }
+
+        let bestTokenSim = 0;
+        for (const ft of fileTokens) {
+          if (ft === rt) {
+            bestTokenSim = 1.0;
+            break;
+          }
+          const sim = stringSimilarity(ft, rt);
+          if (sim > bestTokenSim) {
+            bestTokenSim = sim;
+          }
+        }
+
+        if (bestTokenSim >= 0.80) {
+          matchedCount++;
+          totalFuzzyScore += bestTokenSim;
+        }
+      }
+
+      if (matchedCount === reqTokens.length && reqTokens.length > 0) {
+        const avgSim = totalFuzzyScore / reqTokens.length;
+        const calcScore = avgSim >= 0.98 ? 95 : Math.round(80 + (avgSim - 0.80) * 75);
+        score = Math.max(score, calcScore);
+      } else if (matchedCount >= 1 && reqTokens.length <= 2 && !['card', 'certificate'].includes(reqTokens[0])) {
+        score = Math.max(score, 50);
+      }
+    }
+
+    // D. Primary & Qualifier Evaluation
+    if (prof.primary && prof.qualifier) {
+      const hasPrim = prof.primary.some(p => {
+        return fileTokens.some(ft => ft === p || stringSimilarity(ft, p) >= 0.80);
+      });
+      const hasQual = prof.qualifier.some(q => {
+        const pat = new RegExp(`(^|[^a-z0-9])${q}([^a-z0-9]|$)`, 'i');
+        return pat.test(normalized);
+      });
+      if (hasPrim && hasQual) {
+        score = Math.max(score, 90);
+      } else if (hasPrim && !hasQual && !prof.standard) {
+        score = Math.max(score, 50);
+      }
+    } else if (prof.primary) {
+      const hasPrim = prof.primary.some(p => {
+        return fileTokens.some(ft => ft === p || stringSimilarity(ft, p) >= 0.80);
+      });
+      if (hasPrim) {
+        score = Math.max(score, 85);
+      }
+    }
+
+    if (score > highestScore) {
+      highestScore = score;
+      bestMatch = prof;
+    }
+  }
+
+  // Bonus for student name match in filename
+  if (studentName && studentName.trim() && highestScore > 0) {
+    const studentTokens = studentName.trim().toLowerCase().split(/\s+/).filter(t => t.length > 2);
+    if (studentTokens.some(tok => normalized.includes(tok))) {
+      highestScore = Math.min(100, highestScore + 5);
+    }
+  }
+
+  if (bestMatch && highestScore >= 30) {
+    return {
+      docType: bestMatch.type,
+      canonical: CANONICAL_NAMES[bestMatch.type] || bestMatch.type,
+      code: bestMatch.code || null,
+      confidence: highestScore,
+      isConfident: highestScore >= 80,
+      reason: `Filename token match (${highestScore}%)`
+    };
+  }
+
+  return {
+    docType: null,
+    canonical: null,
+    code: null,
+    confidence: highestScore,
+    isConfident: false,
+    reason: 'Below 30% threshold'
+  };
+}
+

@@ -322,6 +322,19 @@ fn open_in_explorer(path: String) -> Result<bool, String> {
     }
 }
 
+#[tauri::command]
+fn read_binary_file(path: String) -> Result<Vec<u8>, String> {
+    let clean_path = path.replace('/', "\\");
+    let p = PathBuf::from(&clean_path);
+    if !p.exists() || !p.is_file() {
+        return Err(format!("File '{}' does not exist on disk", path));
+    }
+    match fs::read(&p) {
+        Ok(bytes) => Ok(bytes),
+        Err(e) => Err(format!("Failed to read file bytes: {}", e)),
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
@@ -340,7 +353,8 @@ pub fn run() {
       pick_native_files,
       list_native_directory,
       rename_native_file,
-      open_in_explorer
+      open_in_explorer,
+      read_binary_file
     ])
     .run(tauri::generate_context!())
     .expect("error while building tauri application");

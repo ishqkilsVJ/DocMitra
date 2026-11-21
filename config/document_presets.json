@@ -1,230 +1,208 @@
 {
   "forms": {
-    "MAHA DBT FORM": [
+    "MAHA DBT": [
       {
-        "code": "ADR",
         "name": "AADHAAR CARD",
-        "required": true
+        "code": "ADR",
+        "keywords": [
+          "aadhaar card",
+          "adhar",
+          "aadhar"
+        ]
       },
       {
-        "code": "PIC",
         "name": "PHOTO",
-        "required": true
+        "code": "PIC",
+        "keywords": [
+          "photo",
+          "pic",
+          "photograph"
+        ]
       },
       {
-        "code": "10M",
         "name": "10TH MARKSHEET",
-        "required": true
+        "code": "10M",
+        "keywords": [
+          "10th marksheet",
+          "10th mark",
+          "ssc marksheet"
+        ]
       },
       {
-        "code": "10P",
         "name": "10TH PASSING CERTIFICATE",
-        "required": true
+        "code": "10P",
+        "keywords": [
+          "10th passing",
+          "ssc passing",
+          "10th sanad"
+        ]
       },
       {
-        "code": "12M",
         "name": "12TH MARKSHEET",
-        "required": true
+        "code": "12M",
+        "keywords": [
+          "12th marksheet",
+          "12th mark",
+          "hsc marksheet"
+        ]
       },
       {
-        "code": "12P",
         "name": "12TH PASSING CERTIFICATE",
-        "required": true
+        "code": "12P",
+        "keywords": [
+          "12th passing",
+          "hsc passing",
+          "12th sanad"
+        ]
       },
       {
-        "code": "12LC",
         "name": "12TH LC",
-        "required": true
+        "code": "12LC",
+        "keywords": [
+          "12th lc",
+          "12th tc",
+          "leaving certificate"
+        ]
       },
       {
-        "code": "CST",
         "name": "CASTE CERTIFICATE",
-        "required": true
+        "code": "CST",
+        "keywords": [
+          "caste certificate",
+          "jati dakhla"
+        ]
       },
       {
-        "code": "VLD",
         "name": "VALIDITY CERTIFICATE",
-        "required": true
+        "code": "VLD",
+        "keywords": [
+          "validity certificate",
+          "caste validity"
+        ]
       },
       {
-        "code": "INC",
         "name": "INCOME CERTIFICATE",
-        "required": true
+        "code": "INC",
+        "keywords": [
+          "income certificate",
+          "utpanna"
+        ]
       },
       {
-        "code": "NAT",
         "name": "NATIONALITY CERTIFICATE",
-        "required": true
+        "code": "NAT",
+        "keywords": [
+          "nationality certificate"
+        ]
       },
       {
-        "code": "DOM",
         "name": "DOMICILE CERTIFICATE",
-        "required": true
+        "code": "DOM",
+        "keywords": [
+          "domicile certificate",
+          "adivasi dakhla",
+          "rahavasi"
+        ]
       },
       {
-        "code": "BNK",
         "name": "PASSBOOK BANK",
-        "required": true
+        "code": "BNK",
+        "keywords": [
+          "passbook bank",
+          "bank passbook",
+          "bank account"
+        ]
       }
     ],
-    "MH CET FORM": [
+    "SWAYAM": [
       {
-        "code": "PIC",
         "name": "PHOTO",
-        "required": true
-      },
-      {
-        "code": "ADR",
-        "name": "AADHAAR CARD",
-        "required": true
-      },
-      {
-        "code": "10M",
-        "name": "10TH MARKSHEET",
-        "required": true
-      },
-      {
-        "code": "10P",
-        "name": "10TH PASSING CERTIFICATE",
-        "required": true
-      },
-      {
-        "code": "12M",
-        "name": "12TH MARKSHEET",
-        "required": true
-      },
-      {
-        "code": "12P",
-        "name": "12TH PASSING CERTIFICATE",
-        "required": true
-      },
-      {
-        "code": "12LC",
-        "name": "12TH LC",
-        "required": true
-      },
-      {
-        "code": "CST",
-        "name": "CASTE CERTIFICATE",
-        "required": true
-      },
-      {
-        "code": "VLD",
-        "name": "VALIDITY CERTIFICATE",
-        "required": true
-      },
-      {
-        "code": "DOM",
-        "name": "DOMICILE CERTIFICATE",
-        "required": true
-      },
-      {
-        "code": "NAT",
-        "name": "NATIONALITY CERTIFICATE",
-        "required": true
-      },
-      {
-        "code": "INC",
-        "name": "INCOME CERTIFICATE",
-        "required": true
-      },
-      {
-        "code": "ATM",
-        "name": "ATTEMPT CERTIFICATE",
-        "required": false
-      }
-    ],
-    "SWAYAM FORM": [
-      {
         "code": "PIC",
-        "name": "PHOTO",
-        "required": true
+        "keywords": [
+          "photo",
+          "pic",
+          "photograph"
+        ]
       },
       {
-        "code": "ADR",
         "name": "AADHAAR CARD",
-        "required": true
+        "code": "ADR",
+        "keywords": [
+          "aadhaar card",
+          "adhar",
+          "aadhar"
+        ]
       },
       {
-        "code": "10M",
         "name": "10TH MARKSHEET",
-        "required": true
+        "code": "10M",
+        "keywords": [
+          "10th marksheet",
+          "10th mark"
+        ]
       },
       {
-        "code": "12M",
         "name": "12TH MARKSHEET",
-        "required": true
+        "code": "12M",
+        "keywords": [
+          "12th marksheet",
+          "12th mark"
+        ]
       },
       {
-        "code": "12LC",
         "name": "12TH LC",
-        "required": true
+        "code": "12LC",
+        "keywords": [
+          "12th lc",
+          "leaving certificate"
+        ]
       },
       {
-        "code": "CST",
         "name": "CASTE CERTIFICATE",
-        "required": true
+        "code": "CST",
+        "keywords": [
+          "caste certificate"
+        ]
       },
       {
-        "code": "DOM",
         "name": "DOMICILE CERTIFICATE",
-        "required": true
+        "code": "DOM",
+        "keywords": [
+          "domicile certificate"
+        ]
       },
       {
-        "code": "SLF",
         "name": "SELF DECLARATION",
-        "required": true
+        "code": "SLF",
+        "keywords": [
+          "self declaration",
+          "svayam ghoshana"
+        ]
       },
       {
-        "code": "PAR",
         "name": "PARENT DECLARATION",
-        "required": true
+        "code": "PAR",
+        "keywords": [
+          "parent declaration",
+          "palak ghoshana"
+        ]
       },
       {
-        "code": "BNK",
         "name": "PASSBOOK BANK",
-        "required": true
+        "code": "BNK",
+        "keywords": [
+          "passbook bank",
+          "bank passbook"
+        ]
       },
       {
-        "code": "BNF",
         "name": "BONAFIDE CERTIFICATE",
-        "required": true
+        "code": "BNF",
+        "keywords": [
+          "bonafide certificate",
+          "bonafide"
+        ]
       }
     ]
-  },
-  "customSignatures": [
-    {
-      "canonical": "PARENT DECLARATION CERTIFICATE",
-      "code": "PAR",
-      "primaryKeywords": [
-        "parent declaration",
-        "guardian"
-      ],
-      "secondaryKeywords": [
-        "annual family"
-      ]
-    },
-    {
-      "canonical": "PARENT DECLARATION CERTIFICATE",
-      "code": "PAR",
-      "primaryKeywords": [
-        "parent declaration",
-        "guardian"
-      ],
-      "secondaryKeywords": [
-        "annual family"
-      ]
-    },
-    {
-      "canonical": "PARENT DECLARATION CERTIFICATE",
-      "code": "PAR",
-      "primaryKeywords": [
-        "parent declaration",
-        "guardian"
-      ],
-      "secondaryKeywords": [
-        "annual family"
-      ]
-    }
-  ]
+  }
 }
