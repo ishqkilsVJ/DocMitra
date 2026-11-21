@@ -261,8 +261,22 @@ export async function renameNativeFile(oldPath, newName) {
   const invoke = getTauriInvoke();
   if (invoke) {
     try {
-      const res = await invoke('rename_native_file', { oldPath, newName });
-      return res;
+      const res = await invoke('rename_native_file', {
+        oldPath,
+        old_path: oldPath,
+        newName,
+        new_name: newName
+      });
+      if (res) {
+        return {
+          success: !!res.success,
+          oldPath: res.oldPath || res.old_path || oldPath,
+          newPath: res.path || res.newPath || res.new_path,
+          path: res.path || res.newPath || res.new_path,
+          name: res.newName || res.new_name || newName,
+          error: res.error
+        };
+      }
     } catch (err) {
       console.warn('[NativeBridge] Tauri rename_native_file failed, trying backend:', err);
     }
@@ -274,7 +288,15 @@ export async function renameNativeFile(oldPath, newName) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ oldPath, newName })
     });
-    return await res.json();
+    const data = await res.json();
+    return {
+      success: !!data.success,
+      oldPath: data.oldPath || oldPath,
+      newPath: data.path || data.newPath,
+      path: data.path || data.newPath,
+      name: data.name || newName,
+      error: data.error
+    };
   } catch (err) {
     return { success: false, error: err.message };
   }

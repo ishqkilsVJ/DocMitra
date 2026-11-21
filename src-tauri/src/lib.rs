@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct FileEntry {
     pub name: String,
     pub path: String,
@@ -15,12 +16,14 @@ pub struct FileEntry {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct SubfolderEntry {
     pub name: String,
     pub path: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct DirectoryResult {
     pub success: bool,
     pub path: String,
@@ -32,6 +35,7 @@ pub struct DirectoryResult {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct RenameResult {
     pub success: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -39,12 +43,15 @@ pub struct RenameResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub new_path: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub new_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct FilesResult {
     pub success: bool,
     pub files: Vec<FileEntry>,
@@ -79,7 +86,7 @@ fn pick_native_files() -> Result<FilesResult, String> {
     let selected = rfd::FileDialog::new()
         .set_title("Select Documents - DocMitra")
         .add_filter(
-            "Supported Documents",
+            "Documents & Images",
             &["pdf", "jpg", "jpeg", "png", "webp", "docx", "xlsx", "csv", "txt"],
         )
         .add_filter("All Files", &["*"])
@@ -128,7 +135,8 @@ fn pick_native_files() -> Result<FilesResult, String> {
 
 #[tauri::command]
 fn list_native_directory(path: String) -> Result<DirectoryResult, String> {
-    let dir_path = PathBuf::from(&path);
+    let clean_path = path.replace('/', "\\");
+    let dir_path = PathBuf::from(&clean_path);
     if !dir_path.exists() || !dir_path.is_dir() {
         return Ok(DirectoryResult {
             success: false,
@@ -201,14 +209,16 @@ fn list_native_directory(path: String) -> Result<DirectoryResult, String> {
 
 #[tauri::command]
 fn rename_native_file(old_path: String, new_name: String) -> Result<RenameResult, String> {
-    let p = PathBuf::from(&old_path);
+    let clean_old = old_path.replace('/', "\\");
+    let p = PathBuf::from(&clean_old);
     if !p.exists() || !p.is_file() {
         return Ok(RenameResult {
             success: false,
             old_path: Some(old_path),
             new_path: None,
+            path: None,
             new_name: Some(new_name),
-            error: Some("Original file does not exist".to_string()),
+            error: Some("Original file does not exist on disk".to_string()),
         });
     }
 
@@ -218,6 +228,7 @@ fn rename_native_file(old_path: String, new_name: String) -> Result<RenameResult
             success: false,
             old_path: Some(old_path),
             new_path: None,
+            path: None,
             new_name: Some(trimmed),
             error: Some("Filename contains invalid Windows characters".to_string()),
         });
@@ -229,13 +240,14 @@ fn rename_native_file(old_path: String, new_name: String) -> Result<RenameResult
             success: false,
             old_path: Some(old_path),
             new_path: None,
+            path: None,
             new_name: Some(trimmed),
             error: Some("Invalid parent directory".to_string()),
         }),
     };
 
     let target_path = parent.join(&trimmed);
-    if old_path.to_lowercase() == target_path.to_string_lossy().to_lowercase() {
+    if clean_old.to_lowercase() == target_path.to_string_lossy().to_lowercase() {
         let temp_name = format!("{}.docmitra_tmp_{}", trimmed, std::time::SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos());
         let temp_path = parent.join(&temp_name);
         if let Err(e) = fs::rename(&p, &temp_path) {
@@ -243,6 +255,7 @@ fn rename_native_file(old_path: String, new_name: String) -> Result<RenameResult
                 success: false,
                 old_path: Some(old_path),
                 new_path: None,
+                path: None,
                 new_name: Some(trimmed),
                 error: Some(format!("Step 1 rename failed: {}", e)),
             });
@@ -253,6 +266,7 @@ fn rename_native_file(old_path: String, new_name: String) -> Result<RenameResult
                 success: false,
                 old_path: Some(old_path),
                 new_path: None,
+                path: None,
                 new_name: Some(trimmed),
                 error: Some(format!("Step 2 rename failed: {}", e)),
             });
@@ -263,6 +277,7 @@ fn rename_native_file(old_path: String, new_name: String) -> Result<RenameResult
                 success: false,
                 old_path: Some(old_path),
                 new_path: None,
+                path: None,
                 new_name: Some(trimmed.clone()),
                 error: Some(format!("A file named '{}' already exists in this folder", trimmed)),
             });
@@ -272,6 +287,7 @@ fn rename_native_file(old_path: String, new_name: String) -> Result<RenameResult
                 success: false,
                 old_path: Some(old_path),
                 new_path: None,
+                path: None,
                 new_name: Some(trimmed),
                 error: Some(format!("Rename failed: {}", e)),
             });
@@ -282,7 +298,8 @@ fn rename_native_file(old_path: String, new_name: String) -> Result<RenameResult
     Ok(RenameResult {
         success: true,
         old_path: Some(old_path),
-        new_path: Some(new_path_str),
+        new_path: Some(new_path_str.clone()),
+        path: Some(new_path_str),
         new_name: Some(trimmed),
         error: None,
     })

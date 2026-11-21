@@ -101,11 +101,23 @@ export async function executeRename(dir, plan, onProgress = null) {
     let completed = 0;
     for (const item of plan) {
       // 1. Native Desktop Rename (0 browser prompt, 1ms atomic rename)
-      if (dir && dir.nativePath) {
-        const oldPath = item.nativePath || (item.file && item.file.nativePath) || `${dir.nativePath}/${item.old}`;
+      const dirPath = dir ? (dir.nativePath || dir.path || '') : '';
+      const oldPath = item.nativePath || (item.file && (item.file.path || item.file.nativePath)) || (dirPath ? `${dirPath}/${item.old}` : null);
+      if (oldPath) {
         const res = await renameNativeFile(oldPath, item.next);
         if (!res.success) {
           throw new Error(res.error || `Failed to rename ${item.old}`);
+        }
+        if (item.file) {
+          const newPath = res.path || res.newPath;
+          if (newPath) {
+            item.file.path = newPath;
+            item.file.nativePath = newPath;
+          }
+          item.file.name = item.next;
+          item.file.targetName = item.next;
+          item.file.isRenamed = true;
+          item.file.status = 'renamed';
         }
         written.push(item);
         completed++;

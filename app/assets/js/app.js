@@ -420,15 +420,25 @@ async function u(e) {
 async function d(e, t) {
 	let n = s();
 	if (n) try {
-		return await n("rename_native_file", {
+		let r = await n("rename_native_file", {
 			oldPath: e,
-			newName: t
+			old_path: e,
+			newName: t,
+			new_name: t
 		});
+		if (r) return {
+			success: !!r.success,
+			oldPath: r.oldPath || r.old_path || e,
+			newPath: r.path || r.newPath || r.new_path,
+			path: r.path || r.newPath || r.new_path,
+			name: r.newName || r.new_name || t,
+			error: r.error
+		};
 	} catch (e) {
 		console.warn("[NativeBridge] Tauri rename_native_file failed, trying backend:", e);
 	}
 	try {
-		return await (await fetch(`${o}/api/native-rename`, {
+		let n = await (await fetch(`${o}/api/native-rename`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
@@ -436,6 +446,14 @@ async function d(e, t) {
 				newName: t
 			})
 		})).json();
+		return {
+			success: !!n.success,
+			oldPath: n.oldPath || e,
+			newPath: n.path || n.newPath,
+			path: n.path || n.newPath,
+			name: n.name || t,
+			error: n.error
+		};
 	} catch (e) {
 		return {
 			success: !1,
@@ -1339,14 +1357,19 @@ async function ee(e, t, n = null) {
 	try {
 		let i = 0;
 		for (let a of t) {
-			if (e && e.nativePath) {
-				let o = await d(a.nativePath || a.file && a.file.nativePath || `${e.nativePath}/${a.old}`, a.next);
-				if (!o.success) throw Error(o.error || `Failed to rename ${a.old}`);
+			let o = e && (e.nativePath || e.path) || "", s = a.nativePath || a.file && (a.file.path || a.file.nativePath) || (o ? `${o}/${a.old}` : null);
+			if (s) {
+				let e = await d(s, a.next);
+				if (!e.success) throw Error(e.error || `Failed to rename ${a.old}`);
+				if (a.file) {
+					let t = e.path || e.newPath;
+					t && (a.file.path = t, a.file.nativePath = t), a.file.name = a.next, a.file.targetName = a.next, a.file.isRenamed = !0, a.file.status = "renamed";
+				}
 				r.push(a), i++, n && n(Math.round(i / t.length * 100), `Renamed ${i} of ${t.length} files...`);
 				continue;
 			}
-			let o = a.old.toLowerCase() === a.next.toLowerCase() && a.old !== a.next;
-			if (!o) {
+			let c = a.old.toLowerCase() === a.next.toLowerCase() && a.old !== a.next;
+			if (!c) {
 				let t = a.next, n = await e.getFileHandle(t, { create: !1 }).catch(() => null);
 				if (n) {
 					let r = D(t), i = O(t).replace(/\s+\d+$/, ""), o = 1;
@@ -1354,21 +1377,21 @@ async function ee(e, t, n = null) {
 					a.next = t;
 				}
 			}
-			let s = a.handle;
-			s ||= await e.getFileHandle(a.old, { create: !1 }).catch(() => null);
-			let c = !1;
-			if (s && typeof s.move == "function") try {
-				if (o) {
+			let l = a.handle;
+			l ||= await e.getFileHandle(a.old, { create: !1 }).catch(() => null);
+			let u = !1;
+			if (l && typeof l.move == "function") try {
+				if (c) {
 					let e = `__tmp_${Date.now()}_${a.next}`;
-					await s.move(e), await s.move(a.next);
-				} else await s.move(a.next);
-				c = !0, r.push(a);
+					await l.move(e), await l.move(a.next);
+				} else await l.move(a.next);
+				u = !0, r.push(a);
 			} catch (e) {
-				console.warn("sourceHandle.move() not supported on this handle, falling back to stream copy:", e), c = !1;
+				console.warn("sourceHandle.move() not supported on this handle, falling back to stream copy:", e), u = !1;
 			}
-			if (!c) {
+			if (!u) {
 				let t = await a.file.arrayBuffer(), n;
-				if (o) {
+				if (c) {
 					let r = `__tmp_${Date.now()}_${a.next}`, i = await (await e.getFileHandle(r, { create: !0 })).createWritable();
 					await i.write(t), await i.close(), await e.removeEntry(a.old), n = await e.getFileHandle(a.next, { create: !0 });
 					let o = await n.createWritable();
@@ -2100,27 +2123,40 @@ var le = class {
 	async handleConfirmCurrentName(e) {
 		let t = this.state.files[this.state.currentIndex];
 		if (!t) return;
-		let n = M(e);
-		if (n) {
-			r.show("Invalid Filename", n, "error");
+		let n = (e || "").trim(), i = t.ext || ("." + t.name.split(".").pop()).toLowerCase(), a = g(n.endsWith(i) ? n.slice(0, -i.length).trim() : n, this.state.settings?.groups);
+		if (a) {
+			let e = y[a.toUpperCase()] || a, r = j(e, this.state.studentName, this.state.settings?.groups, this.state.style);
+			n = r.endsWith(i) ? r : `${r}${i}`, t.docType = e, t.isMatched = !0;
+		} else n.endsWith(i) || (n = `${n}${i}`);
+		let o = M(n);
+		if (o) {
+			r.show("Invalid Filename", o, "error");
 			return;
 		}
 		try {
-			if (this.state.folder?.nativePath || t.path) {
-				let n = t.path, i = await d(n, e);
-				i.success ? (N.pushBatch(this.state.folder, [{
-					old: t.name,
-					next: e,
-					file: t,
-					nativePath: t.path
-				}]), t.name = e, t.targetName = e, t.path = i.path || n.slice(0, n.lastIndexOf("/")) + "/" + e, t.isRenamed = !0, t.status = "renamed", r.show("Renamed", e, "success")) : r.show("Rename Error", i.error || "Failed to rename on disk", "error");
-			} else t.targetName = e, t.isRenamed = !0, t.status = "renamed";
+			let e = this.state.folder?.path || "", i = t.path || (e ? `${e}/${t.name}` : null);
+			if (i) {
+				let e = await d(i, n);
+				if (e.success) {
+					let a = e.path || i.replace(/\\/g, "/").replace(/\/[^\/]+$/, "") + "/" + n;
+					N.pushBatch(this.state.folder, [{
+						old: t.name,
+						next: n,
+						file: t,
+						nativePath: t.path
+					}]), t.name = n, t.targetName = n, t.path = a, t.nativePath = a, t.isRenamed = !0, t.status = "renamed", r.show("Renamed", n, "success");
+				} else {
+					r.show("Rename Error", e.error || "Failed to rename on disk", "error");
+					return;
+				}
+			} else t.name = n, t.targetName = n, t.isRenamed = !0, t.status = "renamed";
 		} catch (e) {
 			r.show("Rename Failed", e.message, "error");
+			return;
 		}
 		this.updateTelemetry();
-		let i = this.state.files.findIndex((e, t) => t > this.state.currentIndex && !e.isRenamed && !e.isKept);
-		if (i !== -1) this.state.currentIndex = i;
+		let s = this.state.files.findIndex((e, t) => t > this.state.currentIndex && !e.isRenamed && !e.isKept);
+		if (s !== -1) this.state.currentIndex = s;
 		else {
 			let e = this.state.files.findIndex((e) => !e.isRenamed && !e.isKept);
 			e !== -1 && (this.state.currentIndex = e);

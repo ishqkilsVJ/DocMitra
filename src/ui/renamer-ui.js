@@ -1030,11 +1030,30 @@ export class RenamerUIManager {
   /**
    * Tab & Enter Key Immediate Atomic Rename on Disk
    */
-  async handleConfirmCurrentName(newName) {
+  async handleConfirmCurrentName(rawInput) {
     const current = this.state.files[this.state.currentIndex];
     if (!current) return;
 
-    const error = validateFilename(newName);
+    let targetFilename = (rawInput || '').trim();
+    const currentExt = current.ext || ('.' + current.name.split('.').pop()).toLowerCase();
+
+    // 1. Check if user typed a short keyword e.g. "12m", "pan", "adr"
+    const baseTyped = targetFilename.endsWith(currentExt)
+      ? targetFilename.slice(0, -currentExt.length).trim()
+      : targetFilename;
+
+    const matchedDoc = matchDocument(baseTyped, this.state.settings?.groups);
+    if (matchedDoc) {
+      const canonical = CANONICAL_NAMES[matchedDoc.toUpperCase()] || matchedDoc;
+      const formatted = buildName(canonical, this.state.studentName, this.state.settings?.groups, this.state.style);
+      targetFilename = formatted.endsWith(currentExt) ? formatted : `${formatted}${currentExt}`;
+      current.docType = canonical;
+      current.isMatched = true;
+    } else if (!targetFilename.endsWith(currentExt)) {
+      targetFilename = `${targetFilename}${currentExt}`;
+    }
+
+    const error = validateFilename(targetFilename);
     if (error) {
       toast.show('Invalid Filename', error, 'error');
       return;
@@ -1042,34 +1061,41 @@ export class RenamerUIManager {
 
     // Perform atomic rename on disk immediately
     try {
-      if (this.state.folder?.nativePath || current.path) {
-        const oldPath = current.path;
-        const res = await renameNativeFile(oldPath, newName);
+      const dirPath = this.state.folder?.path || '';
+      const oldPath = current.path || (dirPath ? `${dirPath}/${current.name}` : null);
+
+      if (oldPath) {
+        const res = await renameNativeFile(oldPath, targetFilename);
         if (res.success) {
+          const updatedPath = res.path || (oldPath.replace(/\\/g, '/').replace(/\/[^\/]+$/, '') + '/' + targetFilename);
           // Push to undo stack
           undoManager.pushBatch(this.state.folder, [{
             old: current.name,
-            next: newName,
+            next: targetFilename,
             file: current,
             nativePath: current.path
           }]);
 
-          current.name = newName;
-          current.targetName = newName;
-          current.path = res.path || (oldPath.slice(0, oldPath.lastIndexOf('/')) + '/' + newName);
+          current.name = targetFilename;
+          current.targetName = targetFilename;
+          current.path = updatedPath;
+          current.nativePath = updatedPath;
           current.isRenamed = true;
           current.status = 'renamed';
-          toast.show('Renamed', newName, 'success');
+          toast.show('Renamed', targetFilename, 'success');
         } else {
           toast.show('Rename Error', res.error || 'Failed to rename on disk', 'error');
+          return;
         }
       } else {
-        current.targetName = newName;
+        current.name = targetFilename;
+        current.targetName = targetFilename;
         current.isRenamed = true;
         current.status = 'renamed';
       }
     } catch (err) {
       toast.show('Rename Failed', err.message, 'error');
+      return;
     }
 
     this.updateTelemetry();
