@@ -1,82 +1,41 @@
-# 🔒 DocMitra Architectural Rulebook & AI Agent Governance (`AGENTS.md`)
+# 🔒 DocMitra Architectural Rulebook (`AGENTS.md`)
 
 > **MANDATORY POLICY FOR ALL AI AGENTS & CONTRIBUTORS**  
-> This document sets forth permanent, non-negotiable architectural constraints for the DocMitra codebase. Every agent working in this repository MUST comply with these rules.
+> This document sets forth core architectural boundaries for the DocMitra repository. For dedicated Rename Tool work, agents MUST follow [`RENAME_TOOL_AGENT.md`](file:///e:/DocMitra/RENAME_TOOL_AGENT.md).
 
 ---
 
-## 🤖 Permanent Multi-Agent Isolation Rules
+## 🤖 Permanent Tool Isolation & Lifecycles
 
-### 🔒 Rule 1 — Rename Tool Lock (`tools/rename_tool/`)
-1. **Strictly Isolated and Locked:**  
-   `tools/rename_tool/` is **STRICTLY LOCKED**. 100% of the Bulk Renamer (UI, Casing, Auto-increment Duplicates, 21 Shortcuts, Preview, Checklist, and Scoped CSS) is fully verified, operational, and locked.
-2. **Zero Modification During Other Work:**  
-   When working on ANY other tool (PDF Studio, Image Studio, Print Studio, Follow-up Desk, settings modal, or app shell), AI agents are strictly forbidden from modifying, refactoring, reformatting, or deleting any file inside `tools/rename_tool/`.
-3. **Explicit Unlock Protocol:**  
-   Only a dedicated Rename Tool session with explicit user confirmation may modify it. The agent MUST ask for explicit confirmation:
-   > *"Confirm tool unlock: Type `UNLOCK RENAME TOOL` to modify files inside `tools/rename_tool/`."*
-   Without this exact confirmation, the tool must remain untouched.
+### 🔒 1. Rename Tool (`tools/rename_tool/`)
+- **Dedicated Rulebook:** All work on Rename Tool is strictly governed by [`RENAME_TOOL_AGENT.md`](file:///e:/DocMitra/RENAME_TOOL_AGENT.md).
+- **Unlock -> Work -> Re-Lock:** Before making code changes to Rename Tool, always ask the user for explicit permission to unlock it first. Once approved, complete work, run `node build-ui.js`, and automatically re-lock `tools/rename_tool/README_LOCK.md`.
+- **Zero Cross-Tool Leakage:** Never touch files inside `tools/rename_tool/` when working on other modules.
 
----
-
-### 🔒 Rule 2 — PDF Studio Lock (`tools/pdf_studio/`)
-1. **Strictly Isolated and Locked:**  
-   `tools/pdf_studio/` is **STRICTLY LOCKED** after initial setup and migration. All PDF Studio modules (pure JS engine, scoped UI, scoped CSS, and backend Python module) are self-contained inside `tools/pdf_studio/`.
-2. **Zero Modification Without Explicit Approval:**  
-   When working on other tools or general features, agents must never modify `tools/pdf_studio/`. Any future modification to `tools/pdf_studio/` requires asking the user first and receiving explicit approval:
-   > *"Confirm tool unlock: Type `UNLOCK PDF STUDIO` to modify files inside `tools/pdf_studio/`."*
-   Without this exact confirmation, the tool must remain untouched.
+### 🔒 2. PDF Studio (`tools/pdf_studio/`)
+- **Strictly Isolated and Locked:** `tools/pdf_studio/` is self-contained.
+- **Zero Modification Without Explicit Approval:** When working on other tools or general features, agents must never touch `tools/pdf_studio/`. Modifying `tools/pdf_studio/` requires explicit user permission.
 
 ---
 
-### 🎯 Rule 3 — Strict Single-Tool Agent Scope
-1. **Single Tool Boundary:**  
-   Every Antigravity conversation or AI agent is permanently restricted to ONLY the single tool assigned to that conversation (e.g., Rename Tool Agent, PDF Studio Agent, Image Studio Agent, Print Studio Agent).
-2. **Never Cross Tool Boundaries:**  
-   An agent assigned to one tool must NEVER touch, edit, or refactor files belonging to other tools, the Dashboard, or unrelated tool folders — even if asked casually. If requested to edit another tool, the agent must refuse and redirect the user to a dedicated session for that tool.
-3. **App Shell & Shared Code Guard:**  
-   Shared files (`shared/`, `app/index.html`, `server.py`, `src/ui/index.js`) may only have forwarder shims or mounting links added; tool-specific business logic must NEVER be scattered into shared files.
+## 🎯 3. Strict Single-Tool Agent Scope
+1. **Single Tool Boundary:** Every agent session is restricted to ONLY the single tool assigned to that conversation.
+2. **Never Cross Tool Boundaries:** An agent assigned to one tool must NEVER touch, edit, or refactor files belonging to other tools, the Dashboard, or unrelated tool folders.
+3. **App Shell & Shared Code Guard:** Shared files (`shared/`, `app/index.html`, `src/ui/index.js`) may only have forwarder shims or mounting links added; tool-specific business logic must NEVER be scattered into shared files.
 
 ---
 
-## 🏛️ Rule 4: "One Folder Per Tool" Architecture
-
-1. **Self-Contained Tool Boundaries:**  
-   Every tool in DocMitra MUST live inside its own self-contained folder under `tools/<tool_name>/`.
-   ```
-   tools/<tool_name>/
-   ├── <tool_name>.py            # Dedicated Python backend/file-ops module
-   ├── <tool_name>.html          # Scoped component markup
-   ├── <tool_name>.css           # Scoped CSS (wrapped under .<tool_name>-scope)
-   ├── <tool_name>_ui.js         # UI bindings, interaction handlers, and renderers
-   ├── <tool_name>_logic.js      # Pure business logic and domain calculations
-   └── README_LOCK.md            # Tool boundary, status, and unlock protocol
-   ```
-2. **No Scattering:**  
-   Never scatter tool-specific logic, styles, or handlers into shared global files (`tokens.css`, `layout.css`, `server.py`, etc.).
-3. **Common Utilities Only in `shared/`:**  
-   Only truly generic, cross-tool utilities (e.g., toast notification system, native desktop bridge) may reside in `shared/`. Tool business rules belong exclusively inside their respective tool directories.
+## 🏛️ 4. "One Folder Per Tool" Architecture
+1. **Self-Contained Tool Folders:** Every tool MUST live inside its own self-contained folder under `tools/<tool_name>/` (`<tool_name>.py`, `<tool_name>.html`, `<tool_name>.css`, `<tool_name>_ui.js`, `<tool_name>_logic.js`, and `README_LOCK.md`).
+2. **Strict File Containment:** Any new file, helper script, or test created for a tool MUST be placed strictly inside that tool's folder (`tools/<tool_name>/`).
+3. **No Scattering:** Never scatter tool-specific logic or styles into shared global files.
 
 ---
 
-## 🛡️ Rule 5: The "100-Document Backup" (Shadow / Mirror) Safety Rule
-
-1. **Non-Destructive First:**  
-   Never delete, overwrite, or destructively move working files before creating a clean backup.
-2. **Shadow Implementation:**  
-   Build new or migrated tool implementations in shadow paths first.
-3. **Deep Verification Before Cutover:**  
-   Test functionality, edge cases, and visual layout (including screenshot and DOM geometry checks) before switching routing.
-4. **Quarantine to `_recycle_bin/`:**  
-   After full verification passes, move replaced or obsolete prototype files into `_recycle_bin/` rather than deleting them permanently.
-
----
-
-## 📐 Rule 6: Visual & Design Integrity
-
-1. **Zero Unapproved Visual Changes:**  
-   Keep 3-column Bento workstation grids, Hero Card styling, DPI indicators, and layout proportions consistent with the approved specification.
-2. **Zero Marathi Text in Production UI:**  
-   DocMitra UI must remain 100% clean English for administrative clarity.
-3. **Zero Dummy Student Data in Production HTML:**  
-   DOM templates must initialize cleanly with real empty states, not mock or hardcoded student records.
+## ⚡ 5. Execution & Quality Standards
+1. **Immediate Software Update:** After tool modifications are verified, immediately update the software by running `node build-ui.js` without extra permission.
+2. **Targeted Context Reading:** Avoid reading massive multi-thousand-line files in full for small changes. Inspect only the relevant functions/line ranges to minimize token consumption.
+3. **No Unnecessary Grilling:** If the user's instructions are clear, execute directly without stalling. Ask clarifying questions only if a requirement is genuinely ambiguous.
+4. **Zero Deletion Policy:** Never delete existing project or user files without explicit approval.
+5. **Zero Marathi Text in Production UI:** Production UI must remain 100% professional administrative English. Marathi is reserved for user chat and documentation.
+6. **Zero Dummy Student Data:** DOM templates must initialize cleanly with real empty states.
