@@ -4347,10 +4347,17 @@ export class RenamerUIManager {
       btnStudentToggle.addEventListener('click', () => {
         if (!this._crossCheckState) return;
         this._crossCheckState.includeStudent = !this._crossCheckState.includeStudent;
+        const isOn = this._crossCheckState.includeStudent;
         if (studentToggleLabel) {
-          studentToggleLabel.textContent = this._crossCheckState.includeStudent ? 'ON' : 'OFF';
+          studentToggleLabel.textContent = isOn ? 'ON' : 'OFF';
         }
-        btnStudentToggle.classList.toggle('opacity-50', !this._crossCheckState.includeStudent);
+        btnStudentToggle.classList.toggle('bg-primary/10', isOn);
+        btnStudentToggle.classList.toggle('text-primary', isOn);
+        btnStudentToggle.classList.toggle('border-primary/30', isOn);
+        btnStudentToggle.classList.toggle('bg-surface-container', !isOn);
+        btnStudentToggle.classList.toggle('text-secondary', !isOn);
+        btnStudentToggle.classList.toggle('border-outline-variant/40', !isOn);
+        btnStudentToggle.classList.toggle('opacity-60', !isOn);
         this._renderCrossCheckRows();
       });
     }
@@ -4643,7 +4650,10 @@ export class RenamerUIManager {
     const studentToggleLabel = document.getElementById('crossCheckStudentToggleLabel');
     if (studentToggleLabel) studentToggleLabel.textContent = 'ON';
     const btnStudentToggle = document.getElementById('btnToggleCrossCheckStudent');
-    if (btnStudentToggle) btnStudentToggle.classList.remove('opacity-50');
+    if (btnStudentToggle) {
+      btnStudentToggle.classList.add('bg-primary/10', 'text-primary', 'border-primary/30');
+      btnStudentToggle.classList.remove('bg-surface-container', 'text-secondary', 'border-outline-variant/40', 'opacity-60');
+    }
 
     this._renderCrossCheckRows();
     modal.classList.remove('hidden');
@@ -4757,18 +4767,26 @@ export class RenamerUIManager {
       tdConf.className = 'py-2 px-3 text-right flex items-center justify-end gap-1.5';
       const badge = document.createElement('span');
 
-      if (diff.changeType === 'casing') {
-        badge.className = 'px-2 py-0.5 rounded text-[10px] font-mono-code font-bold bg-primary/10 text-primary border border-primary/20';
-        badge.textContent = 'Case Change';
-      } else if (diff.changeType === 'student') {
-        badge.className = 'px-2 py-0.5 rounded text-[10px] font-mono-code font-bold bg-tertiary-fixed text-on-tertiary-fixed';
-        badge.textContent = '+ Student';
-      } else {
-        const conf = file.smartConfidence !== undefined ? file.smartConfidence : 90;
-        badge.className = 'confidence-badge confidence-badge-high';
-        badge.textContent = `🟢 ${conf}% Match`;
-      }
+      const conf = file.smartConfidence !== undefined ? file.smartConfidence : 90;
+      const confClass = conf >= 90 ? 'confidence-badge-high' : conf >= 80 ? 'confidence-badge-med' : 'confidence-badge-low';
+      const dot = conf >= 90 ? '🟢' : conf >= 80 ? '🟡' : '🔴';
+      badge.className = `confidence-badge ${confClass}`;
+      badge.textContent = `${dot} ${conf}% Match`;
       tdConf.appendChild(badge);
+
+      if (diff.changeType === 'student') {
+        const studentTag = document.createElement('span');
+        studentTag.className = 'px-1.5 py-0.5 rounded text-[9px] font-mono-code font-bold bg-primary/10 text-primary border border-primary/20 select-none';
+        studentTag.textContent = '+ Student';
+        studentTag.title = 'Student name appended';
+        tdConf.appendChild(studentTag);
+      } else if (diff.changeType === 'casing') {
+        const caseTag = document.createElement('span');
+        caseTag.className = 'px-1.5 py-0.5 rounded text-[9px] font-mono-code font-bold bg-surface-container text-secondary border border-outline-variant/40 select-none';
+        caseTag.textContent = 'Case';
+        caseTag.title = 'Casing changed';
+        tdConf.appendChild(caseTag);
+      }
       tr.appendChild(tdConf);
 
       if (tbodyActive) tbodyActive.appendChild(tr);

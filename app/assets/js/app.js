@@ -6998,7 +6998,10 @@ var Ke = b.map((e) => ({
 		});
 		let a = document.getElementById("btnToggleCrossCheckStudent"), o = document.getElementById("crossCheckStudentToggleLabel");
 		a && a.addEventListener("click", () => {
-			this._crossCheckState && (this._crossCheckState.includeStudent = !this._crossCheckState.includeStudent, o && (o.textContent = this._crossCheckState.includeStudent ? "ON" : "OFF"), a.classList.toggle("opacity-50", !this._crossCheckState.includeStudent), this._renderCrossCheckRows());
+			if (!this._crossCheckState) return;
+			this._crossCheckState.includeStudent = !this._crossCheckState.includeStudent;
+			let e = this._crossCheckState.includeStudent;
+			o && (o.textContent = e ? "ON" : "OFF"), a.classList.toggle("bg-primary/10", e), a.classList.toggle("text-primary", e), a.classList.toggle("border-primary/30", e), a.classList.toggle("bg-surface-container", !e), a.classList.toggle("text-secondary", !e), a.classList.toggle("border-outline-variant/40", !e), a.classList.toggle("opacity-60", !e), this._renderCrossCheckRows();
 		}), e.querySelectorAll("[data-pattern-case]").forEach((t) => {
 			t.addEventListener("click", () => {
 				this._crossCheckState && (this._crossCheckState.casing = t.dataset.patternCase, e.querySelectorAll("[data-pattern-case]").forEach((e) => e.classList.toggle("active", e === t)), this._renderCrossCheckRows());
@@ -7144,7 +7147,7 @@ var Ke = b.map((e) => ({
 		let t = document.getElementById("crossCheckStudentToggleLabel");
 		t && (t.textContent = "ON");
 		let n = document.getElementById("btnToggleCrossCheckStudent");
-		n && n.classList.remove("opacity-50"), this._renderCrossCheckRows(), e.classList.remove("hidden");
+		n && (n.classList.add("bg-primary/10", "text-primary", "border-primary/30"), n.classList.remove("bg-surface-container", "text-secondary", "border-outline-variant/40", "opacity-60")), this._renderCrossCheckRows(), e.classList.remove("hidden");
 	}
 	_renderCrossCheckRows() {
 		let e = document.getElementById("modalCrossCheck");
@@ -7193,14 +7196,15 @@ var Ke = b.map((e) => ({
 			f.className = "py-2 px-3 font-mono-code text-[12px] truncate max-w-[280px]", f.title = E(i), f.innerHTML = a.newHtml, o.appendChild(f);
 			let p = document.createElement("td");
 			p.className = "py-2 px-3 text-right flex items-center justify-end gap-1.5";
-			let m = document.createElement("span");
-			if (a.changeType === "casing") m.className = "px-2 py-0.5 rounded text-[10px] font-mono-code font-bold bg-primary/10 text-primary border border-primary/20", m.textContent = "Case Change";
-			else if (a.changeType === "student") m.className = "px-2 py-0.5 rounded text-[10px] font-mono-code font-bold bg-tertiary-fixed text-on-tertiary-fixed", m.textContent = "+ Student";
-			else {
-				let e = r.smartConfidence === void 0 ? 90 : r.smartConfidence;
-				m.className = "confidence-badge confidence-badge-high", m.textContent = `🟢 ${e}% Match`;
+			let m = document.createElement("span"), h = r.smartConfidence === void 0 ? 90 : r.smartConfidence, g = h >= 90 ? "confidence-badge-high" : h >= 80 ? "confidence-badge-med" : "confidence-badge-low", _ = h >= 90 ? "🟢" : h >= 80 ? "🟡" : "🔴";
+			if (m.className = `confidence-badge ${g}`, m.textContent = `${_} ${h}% Match`, p.appendChild(m), a.changeType === "student") {
+				let e = document.createElement("span");
+				e.className = "px-1.5 py-0.5 rounded text-[9px] font-mono-code font-bold bg-primary/10 text-primary border border-primary/20 select-none", e.textContent = "+ Student", e.title = "Student name appended", p.appendChild(e);
+			} else if (a.changeType === "casing") {
+				let e = document.createElement("span");
+				e.className = "px-1.5 py-0.5 rounded text-[9px] font-mono-code font-bold bg-surface-container text-secondary border border-outline-variant/40 select-none", e.textContent = "Case", e.title = "Casing changed", p.appendChild(e);
 			}
-			p.appendChild(m), o.appendChild(p), t && t.appendChild(o);
+			o.appendChild(p), t && t.appendChild(o);
 		}), m.forEach((e) => {
 			let { file: t, targetName: r, diff: i } = e, a = document.createElement("tr");
 			a.className = "hover:bg-surface-container-high/40 transition-colors", a.dataset.fileId = t.id;
