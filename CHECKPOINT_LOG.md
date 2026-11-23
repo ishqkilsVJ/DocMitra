@@ -12,7 +12,7 @@
 | :---: | :---: | :---: | :---: | :--- | :--- |
 | **`CP-001`** | 2026-11-23 07:33 AM | **Bulk Document Renamer** (`tools/rename_tool/`) | `2d396f0` | 100% Bug-free final release: Physical Windows folder rename, exact typing casing, circular queue loop (1..N..1), 2-row settings modal, live search, 24/24 PRD tests passed. | `git reset --hard CP-001` |
 | **`CP-002`** | 2026-11-23 08:00 AM | **Root Directory / Docs Cleanup** (`tools/rename_tool/docs/`) | `0970910` | Safely organized 9 Rename Tool .md reports into tools/rename_tool/docs/, updated references in AGENTS.md, SKILL.md, and TOOL_FREEZE_REGISTRY.md with 100% test integrity. | `git reset --hard CP-002` |
-| **`CP-003`** | 2026-11-23 08:25 AM | **Bulk Document Renamer** (`tools/rename_tool/`) | 7d651f9 | Fixed 4 UI bugs in Settings modal: Child modal z-index stacking (z-9999), Shortcuts table 5-column alignment with '#', locked table widths (48px, 24%, 11%, 48%, 90px) with clean downward text wrapping, and live search bars in both tabs. | `git reset --hard CP-003` |
+| **`CP-003`** | 2026-11-23 08:35 AM | **Bulk Document Renamer** (`tools/rename_tool/`) | `9ff25a1` | Fixed 4 UI bugs in Settings modal: Child modal z-index stacking (z-9999), Shortcuts table 5-column alignment with '#', locked table widths (48px, 24%, 11%, 48%, 90px) with clean downward text wrapping, and live search bars in both tabs. Built via cargo tauri build with embedded frontend dist. | `git reset --hard CP-003` |
 
 ---
 
