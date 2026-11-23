@@ -112,9 +112,568 @@
           "bank passbook",
           "bank account"
         ]
+      },
+      {
+        "name": "SIGNATURE",
+        "code": "SIG",
+        "keywords": [
+          "signature",
+          "sign",
+          "student sign"
+        ]
+      },
+      {
+        "name": "10TH MARKSHEET AND PASSING CERTIFICATE",
+        "code": "10MP",
+        "keywords": [
+          "10th marksheet and passing certificate",
+          "10th combined",
+          "ssc marksheet passing"
+        ]
+      },
+      {
+        "name": "12TH MARKSHEET AND PASSING CERTIFICATE",
+        "code": "12MP",
+        "keywords": [
+          "12th marksheet and passing certificate",
+          "12th combined",
+          "hsc marksheet passing"
+        ]
+      },
+      {
+        "name": "PREVIOUS YEAR MARKSHEET",
+        "code": "PYM",
+        "keywords": [
+          "previous year marksheet",
+          "last exam marksheet",
+          "prev marksheet"
+        ]
+      },
+      {
+        "name": "CASTE VALIDITY CERTIFICATE",
+        "code": "VAL",
+        "keywords": [
+          "caste validity certificate",
+          "validity",
+          "cvc",
+          "tribe validity"
+        ]
+      },
+      {
+        "name": "NON CREAMY LAYER CERTIFICATE",
+        "code": "NCL",
+        "keywords": [
+          "non creamy layer",
+          "ncl",
+          "non criminal",
+          "non-creamy"
+        ]
+      },
+      {
+        "name": "RATION CARD",
+        "code": "RAT",
+        "keywords": [
+          "ration card",
+          "shidha patrika"
+        ]
+      },
+      {
+        "name": "CAP ALLOTMENT LETTER",
+        "code": "CAP",
+        "keywords": [
+          "cap allotment letter",
+          "admission confirmation letter",
+          "allotment"
+        ]
+      },
+      {
+        "name": "BONAFIDE CERTIFICATE",
+        "code": "BON",
+        "keywords": [
+          "bonafide certificate",
+          "bonafide",
+          "college bonafide"
+        ]
+      },
+      {
+        "name": "FEE RECEIPT",
+        "code": "FEE",
+        "keywords": [
+          "fee receipt",
+          "admission fee receipt",
+          "tuition fee"
+        ]
+      },
+      {
+        "name": "ATTENDANCE CERTIFICATE",
+        "code": "ATT",
+        "keywords": [
+          "attendance certificate",
+          "college attendance"
+        ]
+      },
+      {
+        "name": "HOSTEL CERTIFICATE",
+        "code": "HST",
+        "keywords": [
+          "hostel certificate",
+          "rent agreement",
+          "private hostel proof"
+        ]
+      },
+      {
+        "name": "GAP CERTIFICATE",
+        "code": "GAP",
+        "keywords": [
+          "gap certificate",
+          "educational gap",
+          "gap affidavit"
+        ]
+      },
+      {
+        "name": "SELF DECLARATION",
+        "code": "SDC",
+        "keywords": [
+          "self declaration",
+          "swayam ghoshnapatra",
+          "declaration"
+        ]
+      },
+      {
+        "name": "PARENT DECLARATION",
+        "code": "PDC",
+        "keywords": [
+          "parent declaration",
+          "hamipatra",
+          "father declaration"
+        ]
+      },
+      {
+        "name": "DEATH CERTIFICATE",
+        "code": "DTH",
+        "keywords": [
+          "death certificate",
+          "father death certificate",
+          "mrutyu pramanpatra"
+        ]
       }
     ],
-    "SWAYAM": [
+    "VJ": [],
+    "MAHA DBT 2": [
+      {
+        "name": "AADHAAR CARD",
+        "code": "ADR",
+        "keywords": [
+          "aadhaar card",
+          "adhar",
+          "aadhar"
+        ]
+      },
+      {
+        "name": "PHOTO",
+        "code": "PIC",
+        "keywords": [
+          "photo",
+          "pic",
+          "photograph"
+        ]
+      },
+      {
+        "name": "10TH MARKSHEET",
+        "code": "10M",
+        "keywords": [
+          "10th marksheet",
+          "10th mark",
+          "ssc marksheet"
+        ]
+      },
+      {
+        "name": "10TH PASSING CERTIFICATE",
+        "code": "10P",
+        "keywords": [
+          "10th passing",
+          "ssc passing",
+          "10th sanad"
+        ]
+      },
+      {
+        "name": "12TH MARKSHEET",
+        "code": "12M",
+        "keywords": [
+          "12th marksheet",
+          "12th mark",
+          "hsc marksheet"
+        ]
+      },
+      {
+        "name": "12TH PASSING CERTIFICATE",
+        "code": "12P",
+        "keywords": [
+          "12th passing",
+          "hsc passing",
+          "12th sanad"
+        ]
+      },
+      {
+        "name": "12TH LC",
+        "code": "12LC",
+        "keywords": [
+          "12th lc",
+          "12th tc",
+          "leaving certificate"
+        ]
+      },
+      {
+        "name": "CASTE CERTIFICATE",
+        "code": "CST",
+        "keywords": [
+          "caste certificate",
+          "jati dakhla"
+        ]
+      },
+      {
+        "name": "VALIDITY CERTIFICATE",
+        "code": "VLD",
+        "keywords": [
+          "validity certificate",
+          "caste validity"
+        ]
+      },
+      {
+        "name": "INCOME CERTIFICATE",
+        "code": "INC",
+        "keywords": [
+          "income certificate",
+          "utpanna"
+        ]
+      },
+      {
+        "name": "NATIONALITY CERTIFICATE",
+        "code": "NAT",
+        "keywords": [
+          "nationality certificate"
+        ]
+      },
+      {
+        "name": "DOMICILE CERTIFICATE",
+        "code": "DOM",
+        "keywords": [
+          "domicile certificate",
+          "adivasi dakhla",
+          "rahavasi"
+        ]
+      },
+      {
+        "name": "PASSBOOK BANK",
+        "code": "BNK",
+        "keywords": [
+          "passbook bank",
+          "bank passbook",
+          "bank account"
+        ]
+      }
+    ],
+    "CET CELL": [
+      {
+        "name": "CET Scorecard",
+        "code": "CET",
+        "keywords": [
+          "cet scorecard",
+          "cet score",
+          "cet result",
+          "mht cet",
+          "cet"
+        ]
+      },
+      {
+        "name": "CET Application Confirmation",
+        "code": "APP",
+        "keywords": [
+          "cet application confirmation",
+          "application form",
+          "confirmation receipt",
+          "cet form"
+        ]
+      },
+      {
+        "name": "Aadhaar Card",
+        "code": "ADR",
+        "keywords": [
+          "aadhaar card",
+          "aadhar",
+          "adhar",
+          "uidai",
+          "uid"
+        ]
+      },
+      {
+        "name": "APAAR ID",
+        "code": "APR",
+        "keywords": [
+          "apaar id",
+          "apaar",
+          "abc id",
+          "academic bank of credits"
+        ]
+      },
+      {
+        "name": "10th Marksheet",
+        "code": "10M",
+        "keywords": [
+          "10th marksheet",
+          "10 marksheet",
+          "10th mark",
+          "ssc marksheet",
+          "ssc mark"
+        ]
+      },
+      {
+        "name": "10th Passing Certificate",
+        "code": "10P",
+        "keywords": [
+          "10th passing certificate",
+          "10th passing",
+          "10 passing",
+          "ssc passing",
+          "10th board cert"
+        ]
+      },
+      {
+        "name": "12th Marksheet",
+        "code": "12M",
+        "keywords": [
+          "12th marksheet",
+          "12 marksheet",
+          "12th mark",
+          "hsc marksheet",
+          "hsc mark"
+        ]
+      },
+      {
+        "name": "12th Passing Certificate",
+        "code": "12P",
+        "keywords": [
+          "12th passing certificate",
+          "12th passing",
+          "12 passing",
+          "hsc passing",
+          "12th board cert"
+        ]
+      },
+      {
+        "name": "Leaving Certificate",
+        "code": "LC",
+        "keywords": [
+          "leaving certificate",
+          "lc",
+          "school leaving",
+          "college leaving",
+          "tc"
+        ]
+      },
+      {
+        "name": "Domicile Certificate",
+        "code": "DOM",
+        "keywords": [
+          "domicile certificate",
+          "domicile",
+          "adhiwas"
+        ]
+      },
+      {
+        "name": "Nationality Certificate",
+        "code": "NAT",
+        "keywords": [
+          "nationality certificate",
+          "nationality",
+          "indian nationality"
+        ]
+      },
+      {
+        "name": "Caste Certificate",
+        "code": "CST",
+        "keywords": [
+          "caste certificate",
+          "caste",
+          "jati",
+          "category cert"
+        ]
+      },
+      {
+        "name": "Caste Validity Certificate",
+        "code": "VLD",
+        "keywords": [
+          "caste validity certificate",
+          "validity",
+          "caste validity",
+          "padtalni"
+        ]
+      },
+      {
+        "name": "Non Creamy Layer Certificate",
+        "code": "NCL",
+        "keywords": [
+          "non creamy layer certificate",
+          "non creamy layer",
+          "ncl"
+        ]
+      },
+      {
+        "name": "EWS Certificate",
+        "code": "EWS",
+        "keywords": [
+          "ews certificate",
+          "ews",
+          "economically weaker section"
+        ]
+      },
+      {
+        "name": "Disability Certificate",
+        "code": "PWD",
+        "keywords": [
+          "disability certificate",
+          "pwd",
+          "handicap",
+          "divyang"
+        ]
+      },
+      {
+        "name": "Minority Declaration",
+        "code": "MIN",
+        "keywords": [
+          "minority declaration",
+          "minority",
+          "religious minority",
+          "linguistic minority"
+        ]
+      },
+      {
+        "name": "Photo",
+        "code": "PIC",
+        "keywords": [
+          "photo",
+          "pic",
+          "photograph",
+          "passport photo",
+          "student photo"
+        ]
+      },
+      {
+        "name": "SIGNATURE",
+        "code": "SIG",
+        "keywords": [
+          "signature",
+          "sign",
+          "student sign"
+        ]
+      },
+      {
+        "name": "CET APPLICATION FORM",
+        "code": "CETAF",
+        "keywords": [
+          "cet application form",
+          "cet application confirmation",
+          "cap registration form"
+        ]
+      },
+      {
+        "name": "CET SCORE CARD",
+        "code": "CETSC",
+        "keywords": [
+          "cet score card",
+          "cet result",
+          "scorecard",
+          "neet score card"
+        ]
+      },
+      {
+        "name": "CAP ALLOTMENT LETTER",
+        "code": "CAP",
+        "keywords": [
+          "cap allotment letter",
+          "admission confirmation letter",
+          "allotment"
+        ]
+      },
+      {
+        "name": "STATUS RETENTION FORM",
+        "code": "SRF",
+        "keywords": [
+          "status retention form",
+          "retention form",
+          "cet retention"
+        ]
+      },
+      {
+        "name": "10TH MARKSHEET AND PASSING CERTIFICATE",
+        "code": "10MP",
+        "keywords": [
+          "10th marksheet and passing certificate",
+          "10th combined",
+          "ssc marksheet passing"
+        ]
+      },
+      {
+        "name": "12TH MARKSHEET AND PASSING CERTIFICATE",
+        "code": "12MP",
+        "keywords": [
+          "12th marksheet and passing certificate",
+          "12th combined",
+          "hsc marksheet passing"
+        ]
+      },
+      {
+        "name": "12TH LC",
+        "code": "12LC",
+        "keywords": [
+          "12th lc",
+          "12 lc",
+          "12 l",
+          "leaving certificate",
+          "school leaving",
+          "tc",
+          "transfer certificate"
+        ]
+      },
+      {
+        "name": "CASTE VALIDITY CERTIFICATE",
+        "code": "VAL",
+        "keywords": [
+          "caste validity certificate",
+          "validity",
+          "cvc",
+          "tribe validity"
+        ]
+      },
+      {
+        "name": "INCOME CERTIFICATE",
+        "code": "INC",
+        "keywords": [
+          "income certificate",
+          "utpanna dakhla",
+          "tahsildar income",
+          "form 16"
+        ]
+      },
+      {
+        "name": "MIGRATION CERTIFICATE",
+        "code": "MIG",
+        "keywords": [
+          "migration certificate",
+          "migration"
+        ]
+      },
+      {
+        "name": "MEDICAL FITNESS CERTIFICATE",
+        "code": "MED",
+        "keywords": [
+          "medical fitness certificate",
+          "fitness certificate",
+          "health certificate"
+        ]
+      }
+    ],
+    "SWAYAM DEENDAYAL YOJANA": [
       {
         "name": "PHOTO",
         "code": "PIC",
@@ -201,6 +760,680 @@
         "keywords": [
           "bonafide certificate",
           "bonafide"
+        ]
+      },
+      {
+        "name": "SIGNATURE",
+        "code": "SIG",
+        "keywords": [
+          "signature",
+          "sign",
+          "student sign"
+        ]
+      },
+      {
+        "name": "10TH MARKSHEET AND PASSING CERTIFICATE",
+        "code": "10MP",
+        "keywords": [
+          "10th marksheet and passing certificate",
+          "10th combined",
+          "ssc marksheet passing"
+        ]
+      },
+      {
+        "name": "12TH MARKSHEET AND PASSING CERTIFICATE",
+        "code": "12MP",
+        "keywords": [
+          "12th marksheet and passing certificate",
+          "12th combined",
+          "hsc marksheet passing"
+        ]
+      },
+      {
+        "name": "PREVIOUS YEAR MARKSHEET",
+        "code": "PYM",
+        "keywords": [
+          "previous year marksheet",
+          "last exam marksheet",
+          "prev marksheet"
+        ]
+      },
+      {
+        "name": "CASTE VALIDITY CERTIFICATE",
+        "code": "VAL",
+        "keywords": [
+          "caste validity certificate",
+          "validity",
+          "cvc",
+          "tribe validity"
+        ]
+      },
+      {
+        "name": "INCOME CERTIFICATE",
+        "code": "INC",
+        "keywords": [
+          "income certificate",
+          "utpanna dakhla",
+          "tahsildar income",
+          "form 16"
+        ]
+      },
+      {
+        "name": "BONAFIDE CERTIFICATE",
+        "code": "BON",
+        "keywords": [
+          "bonafide certificate",
+          "bonafide",
+          "college bonafide"
+        ]
+      },
+      {
+        "name": "CAP ALLOTMENT LETTER",
+        "code": "CAP",
+        "keywords": [
+          "cap allotment letter",
+          "admission confirmation letter",
+          "allotment"
+        ]
+      },
+      {
+        "name": "ATTENDANCE CERTIFICATE",
+        "code": "ATT",
+        "keywords": [
+          "attendance certificate",
+          "college attendance"
+        ]
+      },
+      {
+        "name": "HOSTEL CERTIFICATE",
+        "code": "HST",
+        "keywords": [
+          "hostel certificate",
+          "rent agreement",
+          "private hostel proof"
+        ]
+      },
+      {
+        "name": "NON HOSTEL DECLARATION",
+        "code": "NHC",
+        "keywords": [
+          "non hostel declaration",
+          "government hostel non allotment",
+          "warden letter"
+        ]
+      },
+      {
+        "name": "SELF DECLARATION",
+        "code": "SDC",
+        "keywords": [
+          "self declaration",
+          "swayam ghoshnapatra",
+          "declaration"
+        ]
+      },
+      {
+        "name": "PARENT DECLARATION",
+        "code": "PDC",
+        "keywords": [
+          "parent declaration",
+          "hamipatra",
+          "father declaration"
+        ]
+      },
+      {
+        "name": "DISABILITY CERTIFICATE",
+        "code": "DIS",
+        "keywords": [
+          "disability certificate",
+          "divyang",
+          "pwd certificate",
+          "udid"
+        ]
+      }
+    ],
+    "EDUCATIONAL DOCUMENTS": [
+      {
+        "name": "Aadhaar Card",
+        "code": "ADR",
+        "keywords": [
+          "aadhaar card",
+          "aadhar",
+          "adhar",
+          "uidai",
+          "uid"
+        ]
+      },
+      {
+        "name": "Photo",
+        "code": "PIC",
+        "keywords": [
+          "photo",
+          "pic",
+          "photograph",
+          "passport photo",
+          "student photo"
+        ]
+      },
+      {
+        "name": "10th Marksheet",
+        "code": "10M",
+        "keywords": [
+          "10th marksheet",
+          "10 marksheet",
+          "10th mark",
+          "ssc marksheet",
+          "ssc mark"
+        ]
+      },
+      {
+        "name": "10th Passing Certificate",
+        "code": "10P",
+        "keywords": [
+          "10th passing certificate",
+          "10th passing",
+          "10 passing",
+          "ssc passing"
+        ]
+      },
+      {
+        "name": "10th Marksheet and Passing Certificate",
+        "code": "10MP",
+        "keywords": [
+          "10th marksheet and passing certificate",
+          "10th marksheet passing",
+          "10 mp",
+          "cbse 10th marksheet passing"
+        ]
+      },
+      {
+        "name": "11th Marksheet",
+        "code": "11M",
+        "keywords": [
+          "11th marksheet",
+          "11 marksheet",
+          "11th mark",
+          "fyjc marksheet"
+        ]
+      },
+      {
+        "name": "12th Marksheet",
+        "code": "12M",
+        "keywords": [
+          "12th marksheet",
+          "12 marksheet",
+          "12th mark",
+          "hsc marksheet",
+          "hsc mark"
+        ]
+      },
+      {
+        "name": "12th Passing Certificate",
+        "code": "12P",
+        "keywords": [
+          "12th passing certificate",
+          "12th passing",
+          "12 passing",
+          "hsc passing"
+        ]
+      },
+      {
+        "name": "12th Marksheet and Passing Certificate",
+        "code": "12MP",
+        "keywords": [
+          "12th marksheet and passing certificate",
+          "12th marksheet passing",
+          "12 mp",
+          "cbse 12th marksheet passing"
+        ]
+      },
+      {
+        "name": "Leaving Certificate",
+        "code": "LC",
+        "keywords": [
+          "leaving certificate",
+          "lc",
+          "12lc",
+          "12l",
+          "school leaving",
+          "college leaving",
+          "tc"
+        ]
+      },
+      {
+        "name": "Caste Certificate",
+        "code": "CST",
+        "keywords": [
+          "caste certificate",
+          "caste",
+          "cas",
+          "jati"
+        ]
+      },
+      {
+        "name": "Caste Validity Certificate",
+        "code": "VLD",
+        "keywords": [
+          "caste validity certificate",
+          "validity",
+          "caste validity",
+          "padtalni"
+        ]
+      },
+      {
+        "name": "Non Creamy Layer Certificate",
+        "code": "NCL",
+        "keywords": [
+          "non creamy layer certificate",
+          "non creamy layer",
+          "ncl"
+        ]
+      },
+      {
+        "name": "Domicile Certificate",
+        "code": "DOM",
+        "keywords": [
+          "domicile certificate",
+          "domicile",
+          "domi",
+          "adhiwas"
+        ]
+      },
+      {
+        "name": "Nationality Certificate",
+        "code": "NAT",
+        "keywords": [
+          "nationality certificate",
+          "nationality",
+          "nat",
+          "indian nationality"
+        ]
+      },
+      {
+        "name": "Income Certificate",
+        "code": "INC",
+        "keywords": [
+          "income certificate",
+          "income",
+          "inc",
+          "utpann"
+        ]
+      },
+      {
+        "name": "Self Declaration",
+        "code": "SDC",
+        "keywords": [
+          "self declaration",
+          "self decl",
+          "declaration",
+          "hamipatra"
+        ]
+      },
+      {
+        "name": "Parent Declaration",
+        "code": "PDC",
+        "keywords": [
+          "parent declaration",
+          "parent decl",
+          "parents declaration"
+        ]
+      },
+      {
+        "name": "Residential Document",
+        "code": "RES",
+        "keywords": [
+          "residential document",
+          "residential",
+          "residence proof"
+        ]
+      },
+      {
+        "name": "Ration Card",
+        "code": "RAT",
+        "keywords": [
+          "ration card",
+          "ration",
+          "rat"
+        ]
+      },
+      {
+        "name": "PAN Card",
+        "code": "PAN",
+        "keywords": [
+          "pan card",
+          "pan",
+          "permanent account number"
+        ]
+      },
+      {
+        "name": "Birth Certificate",
+        "code": "BRT",
+        "keywords": [
+          "birth certificate",
+          "birth",
+          "brt",
+          "janma dakhla"
+        ]
+      },
+      {
+        "name": "Bank Passbook",
+        "code": "BNK",
+        "keywords": [
+          "bank passbook",
+          "passbook",
+          "bank",
+          "bnk",
+          "ifsc"
+        ]
+      },
+      {
+        "name": "SIGNATURE",
+        "code": "SIG",
+        "keywords": [
+          "signature",
+          "sign",
+          "student sign"
+        ]
+      },
+      {
+        "name": "12TH LC",
+        "code": "12LC",
+        "keywords": [
+          "12th lc",
+          "12 lc",
+          "12 l",
+          "leaving certificate",
+          "school leaving",
+          "tc",
+          "transfer certificate"
+        ]
+      },
+      {
+        "name": "PREVIOUS YEAR MARKSHEET",
+        "code": "PYM",
+        "keywords": [
+          "previous year marksheet",
+          "last exam marksheet",
+          "prev marksheet"
+        ]
+      },
+      {
+        "name": "CASTE VALIDITY CERTIFICATE",
+        "code": "VAL",
+        "keywords": [
+          "caste validity certificate",
+          "validity",
+          "cvc",
+          "tribe validity"
+        ]
+      },
+      {
+        "name": "CAP ALLOTMENT LETTER",
+        "code": "CAP",
+        "keywords": [
+          "cap allotment letter",
+          "admission confirmation letter",
+          "allotment"
+        ]
+      },
+      {
+        "name": "BONAFIDE CERTIFICATE",
+        "code": "BON",
+        "keywords": [
+          "bonafide certificate",
+          "bonafide",
+          "college bonafide"
+        ]
+      },
+      {
+        "name": "FEE RECEIPT",
+        "code": "FEE",
+        "keywords": [
+          "fee receipt",
+          "admission fee receipt",
+          "tuition fee"
+        ]
+      },
+      {
+        "name": "ATTENDANCE CERTIFICATE",
+        "code": "ATT",
+        "keywords": [
+          "attendance certificate",
+          "college attendance"
+        ]
+      },
+      {
+        "name": "HOSTEL CERTIFICATE",
+        "code": "HST",
+        "keywords": [
+          "hostel certificate",
+          "rent agreement",
+          "private hostel proof"
+        ]
+      },
+      {
+        "name": "GAP CERTIFICATE",
+        "code": "GAP",
+        "keywords": [
+          "gap certificate",
+          "educational gap",
+          "gap affidavit"
+        ]
+      },
+      {
+        "name": "DEATH CERTIFICATE",
+        "code": "DTH",
+        "keywords": [
+          "death certificate",
+          "father death certificate",
+          "mrutyu pramanpatra"
+        ]
+      },
+      {
+        "name": "NON HOSTEL DECLARATION",
+        "code": "NHC",
+        "keywords": [
+          "non hostel declaration",
+          "government hostel non allotment",
+          "warden letter"
+        ]
+      },
+      {
+        "name": "DISABILITY CERTIFICATE",
+        "code": "DIS",
+        "keywords": [
+          "disability certificate",
+          "divyang",
+          "pwd certificate",
+          "udid"
+        ]
+      },
+      {
+        "name": "APAAR ID",
+        "code": "APR",
+        "keywords": [
+          "apaar id",
+          "abc id",
+          "academic bank of credits"
+        ]
+      },
+      {
+        "name": "CET APPLICATION FORM",
+        "code": "CETAF",
+        "keywords": [
+          "cet application form",
+          "cet application confirmation",
+          "cap registration form"
+        ]
+      },
+      {
+        "name": "CET SCORE CARD",
+        "code": "CETSC",
+        "keywords": [
+          "cet score card",
+          "cet result",
+          "scorecard",
+          "neet score card"
+        ]
+      },
+      {
+        "name": "STATUS RETENTION FORM",
+        "code": "SRF",
+        "keywords": [
+          "status retention form",
+          "retention form",
+          "cet retention"
+        ]
+      },
+      {
+        "name": "EWS CERTIFICATE",
+        "code": "EWS",
+        "keywords": [
+          "ews certificate",
+          "economically weaker section"
+        ]
+      },
+      {
+        "name": "MIGRATION CERTIFICATE",
+        "code": "MIG",
+        "keywords": [
+          "migration certificate",
+          "migration"
+        ]
+      },
+      {
+        "name": "MEDICAL FITNESS CERTIFICATE",
+        "code": "MED",
+        "keywords": [
+          "medical fitness certificate",
+          "fitness certificate",
+          "health certificate"
+        ]
+      },
+      {
+        "name": "VOTER ID",
+        "code": "VOT",
+        "keywords": [
+          "voter id",
+          "election card",
+          "epic"
+        ]
+      },
+      {
+        "name": "DRIVING LICENSE",
+        "code": "DL",
+        "keywords": [
+          "driving license",
+          "dl",
+          "licence"
+        ]
+      },
+      {
+        "name": "1ST YEAR MARKSHEET",
+        "code": "1YM",
+        "keywords": [
+          "1st year marksheet",
+          "first year marksheet",
+          "fy marksheet",
+          "sem 1",
+          "sem 2"
+        ]
+      },
+      {
+        "name": "2ND YEAR MARKSHEET",
+        "code": "2YM",
+        "keywords": [
+          "2nd year marksheet",
+          "second year marksheet",
+          "sy marksheet",
+          "sem 3",
+          "sem 4"
+        ]
+      },
+      {
+        "name": "3RD YEAR MARKSHEET",
+        "code": "3YM",
+        "keywords": [
+          "3rd year marksheet",
+          "third year marksheet",
+          "ty marksheet",
+          "sem 5",
+          "sem 6"
+        ]
+      },
+      {
+        "name": "4TH YEAR MARKSHEET",
+        "code": "4YM",
+        "keywords": [
+          "4th year marksheet",
+          "fourth year marksheet",
+          "final year marksheet"
+        ]
+      },
+      {
+        "name": "PASSING CERTIFICATE",
+        "code": "DPC",
+        "keywords": [
+          "passing certificate",
+          "degree passing",
+          "diploma passing",
+          "provisional certificate"
+        ]
+      },
+      {
+        "name": "DEGREE CERTIFICATE",
+        "code": "DEG",
+        "keywords": [
+          "degree certificate",
+          "convocation certificate",
+          "diploma certificate"
+        ]
+      },
+      {
+        "name": "REGISTRATION CERTIFICATE",
+        "code": "REG",
+        "keywords": [
+          "registration certificate",
+          "council registration",
+          "mnc registration",
+          "nursing registration"
+        ]
+      },
+      {
+        "name": "INTERNSHIP CERTIFICATE",
+        "code": "INT",
+        "keywords": [
+          "internship certificate",
+          "internship completion",
+          "clinical experience"
+        ]
+      },
+      {
+        "name": "CHARACTER CERTIFICATE",
+        "code": "CHR",
+        "keywords": [
+          "character certificate",
+          "conduct certificate",
+          "charitra dakhla"
+        ]
+      },
+      {
+        "name": "GAZETTE CERTIFICATE",
+        "code": "GAZ",
+        "keywords": [
+          "gazette certificate",
+          "name change gazette",
+          "rajpatra",
+          "marriage certificate"
+        ]
+      },
+      {
+        "name": "MINORITY CERTIFICATE",
+        "code": "MIN",
+        "keywords": [
+          "minority certificate",
+          "minority declaration",
+          "alpsankhyank pramanpatra",
+          "minority proof"
         ]
       }
     ]

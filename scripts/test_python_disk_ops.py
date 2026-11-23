@@ -15,6 +15,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from tools.rename_tool.rename_tool import rotate_file_on_disk, import_file_to_folder
 
 test_dir = os.path.join('_test_tmp', 'disk_ops_test')
+if os.path.exists(test_dir):
+    shutil.rmtree(test_dir)
 os.makedirs(test_dir, exist_ok=True)
 
 # 1. Test PDF rotation
@@ -58,7 +60,7 @@ assert os.path.basename(res_import.get('path')) == 'AADHAAR CARD RAHUL PATIL.pdf
 # Duplicate import test (should auto-increment)
 res_import2 = import_file_to_folder(src_file, student_folder, 'AADHAAR CARD RAHUL PATIL.pdf', 'RAHUL PATIL')
 assert res_import2.get('success') is True
-assert 'AADHAAR CARD 1 RAHUL PATIL.pdf' in res_import2.get('name'), f"Unexpected duplicate name: {res_import2.get('name')}"
+assert 'AADHAAR CARD RAHUL PATIL 2.pdf' in res_import2.get('name'), f"Unexpected duplicate name: {res_import2.get('name')}"
 print("✓ Python File Import and duplicate sequential auto-numbering verified successfully.")
 
 # 4. Test Numbered Document Duplicate (FORM 16)
@@ -66,9 +68,9 @@ from tools.rename_tool.rename_tool import unique_destination, safe_rename_file
 import stat
 
 form16_dup = unique_destination('FORM 16 RAHUL PATIL.pdf', '', {'form 16 rahul patil.pdf'}, 'RAHUL PATIL')
-assert form16_dup == 'FORM 16 1 RAHUL PATIL.pdf', f"Expected 'FORM 16 1 RAHUL PATIL.pdf', got '{form16_dup}'"
+assert form16_dup == 'FORM 16 RAHUL PATIL 2.pdf', f"Expected 'FORM 16 RAHUL PATIL 2.pdf', got '{form16_dup}'"
 form16_dup2 = unique_destination('FORM 16.pdf', '', {'form 16.pdf'}, '')
-assert form16_dup2 == 'FORM 16 1.pdf', f"Expected 'FORM 16 1.pdf', got '{form16_dup2}'"
+assert form16_dup2 == 'FORM 16 2.pdf', f"Expected 'FORM 16 2.pdf', got '{form16_dup2}'"
 print("✓ Document names ending in digits (FORM 16) preserved during duplicate resolution.")
 
 # 5. Test Read-Only PDF and Image Rotation and Renaming on Windows

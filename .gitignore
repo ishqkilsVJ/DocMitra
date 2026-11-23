@@ -28,3 +28,5 @@ Thumbs.db
 .vscode/
 .idea/
 __pycache__/
+testsprite_tests/tmp/
+testsprite_tests/tmp/config.json

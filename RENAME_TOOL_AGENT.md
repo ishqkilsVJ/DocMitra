@@ -18,6 +18,24 @@
 
 ---
 
+### 🛑 Strict Mandatory `/grill-me` Protocol (Before Every Task)
+1. **Zero-Exception Questioning Gate:**
+   - No matter how large, detailed, or clear the user's prompt is, **NEVER jump straight into coding or execution**.
+   - You MUST ALWAYS process every request through a **`/grill-me` questioning phase** first so the user can personally review and approve every single detail before you proceed.
+2. **Explain Every Question with an Example:**
+   - For every question you ask, include a **clear, simple real-world example** explaining what it means and how it will affect the Rename Tool.
+3. **Mandatory Color-Coded Options:**
+   - Every single question MUST provide color-coded choices in this exact format:
+     - 🟢 **Green (शिफारस केलेले / Recommended):** The safest, best-practice option.
+     - 🟠 **Orange (पर्यायी / Alternative):** An alternative approach with trade-offs.
+     - 🔵 **Custom (स्वतःचा पर्याय):** Allows the user to specify their own custom behavior.
+4. **100% Marathi Language Requirement:**
+   - Every question, explanation, example, and color-coded option MUST be written strictly in **clear, simple Marathi (मराठी)**.
+5. **Strict Hold Until User Approves:**
+   - Do NOT write or modify a single line of code until the user has reviewed and answered your `/grill-me` questions and explicitly told you to proceed.
+
+---
+
 ## 🎯 2. Strict Scope Isolation
 
 1. **Dedicated Scope Boundary:**
@@ -44,16 +62,17 @@
 
 ---
 
-## ⚡ 4. Immediate Software Update & Final Confirmation
+## ⚡ 4. Immediate Software Update & Live Deployment
 
-1. **Instant UI Bundle Compilation:**
-   - Once the Rename Tool changes are finalized and verified, **IMMEDIATELY update the software by running `node build-ui.js` without asking for extra permission**.
-   - This takes only ~100ms and immediately updates `app/assets/js/app.js`.
-2. **Native Rust Build Condition:**
-   - **DO NOT** run `cargo build --release` for standard frontend/logic updates.
-   - Run `cargo build --release` ONLY if files inside `src-tauri/src/` (Rust backend) change or if the user explicitly requests a full native `.exe` release build.
+1. **Mandatory Live App Target:**
+   - The user ALWAYS launches and inspects DocMitra directly from **`C:\Users\USER\AppData\Local\DocMitra\app.exe`**.
+2. **Automated Build & Deployment Pipeline:**
+   - Once any Rename Tool changes are finalized and verified, you MUST **IMMEDIATELY without asking for extra permission**:
+     1. Run `node build-ui.js` to compile the frontend assets.
+     2. Rebuild the native desktop binary (`cargo build --release`) and **deploy/copy the updated `app.exe` (and any updated runtime assets) directly into `C:\Users\USER\AppData\Local\DocMitra\`**.
+     3. If `app.exe` is currently running and locking the file, safely terminate/close the process first, replace `C:\Users\USER\AppData\Local\DocMitra\app.exe`, and verify the updated timestamp.
 3. **Final Status Confirmation:**
-   - At the conclusion of every task, clearly report to the user (in Marathi) that the software has been updated (`node build-ui.js` completed) and the tool is safely re-locked in `README_LOCK.md`.
+   - At the conclusion of every task, clearly confirm to the user (in Marathi) that `C:\Users\USER\AppData\Local\DocMitra\app.exe` has been successfully updated/deployed and the tool is safely re-locked in `README_LOCK.md`.
 
 ---
 
@@ -62,13 +81,28 @@
 1. **Targeted Context Reading (Save Tokens & Time):**
    - **NEVER** read massive files (such as the 4,200-line `rename_tool_ui.js`) in their entirety for small edits.
    - Use targeted search (`Select-String` / line range reads) to inspect only the specific function or block being updated.
-2. **No Unnecessary Grilling:**
-   - If the user's prompt or instruction is clear and specific, **DO NOT stall with mandatory 4-option questionnaires**. Proceed directly with execution.
-   - Ask concise clarifying questions **ONLY** if a requirement is genuinely ambiguous or carries architectural risk.
-3. **Automated Verification Gate:**
+2. **Automated Verification Gate:**
    - Before compiling the final build, always run relevant quick tests (`node scripts/test_*.js` or targeted unit checks) to guarantee zero regressions, zero false matches, and 100% stability.
-4. **Zero Deletion Policy:**
+3. **Zero Deletion Policy:**
    - **NEVER** permanently delete any existing project or user files without explicit approval. Obsolete files must be quarantined to `_recycle_bin/` only when confirmed.
-5. **Communication Language:**
+4. **Communication Language:**
    - User-facing responses, explanations, and questions must be written in **clear, professional Marathi (मराठी)**.
    - All code, variable names, function names, filenames, and production UI text must remain **100% clean English** (zero Marathi in production HTML/DOM).
+
+---
+
+## 🖥️ 6. Real Desktop App Only (No External Browser)
+
+1. **Strict Prohibition of External Browsers:**
+   - **NEVER** open an external web browser (Chrome/Edge) for testing or verification.
+2. **Direct Desktop App Testing & Verification:**
+   - **ALWAYS** launch and test directly from **`C:\Users\USER\AppData\Local\DocMitra\app.exe`** (in Full Screen mode with WebView2 remote debugging enabled when attaching Playwright/DevTools MCP) *after* deploying your latest update there.
+
+---
+
+## 🧹 7. Automatic Post-Implementation Cleanup (Move to Recycle Bin)
+
+1. **Immediate Workspace Hygiene:**
+   - Once any task, bug fix, or feature is fully implemented and verified, **IMMEDIATELY** move all temporary test scripts, scratch files, and finished/unnecessary audit reports to the Recycle Bin (or the project's `recycle_bin/` folder) so they do not clutter the workspace, while remaining recoverable if ever needed.
+2. **Core Source Protection:**
+   - Core application source code must remain strictly safe; **never permanently delete files**.

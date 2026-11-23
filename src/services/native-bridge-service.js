@@ -306,6 +306,37 @@ export async function renameNativeFile(oldPath, newName, studentName = '', rotat
 }
 
 /**
+ * Renames a directory / folder on disk atomically
+ */
+export async function renameNativeFolder(oldPath, newName) {
+  const invoke = getTauriInvoke();
+  if (invoke) {
+    try {
+      const res = await invoke('rename_native_folder', {
+        oldPath,
+        old_path: oldPath,
+        newName,
+        new_name: newName
+      });
+      if (res) {
+        return {
+          success: !!res.success,
+          oldPath: res.oldPath || res.old_path || oldPath,
+          newPath: res.path || res.newPath || res.new_path,
+          path: res.path || res.newPath || res.new_path,
+          name: res.newName || res.new_name || newName,
+          error: res.error
+        };
+      }
+    } catch (err) {
+      console.warn('[NativeBridge] Tauri rename_native_folder failed, trying fallback:', err);
+    }
+  }
+
+  return renameNativeFile(oldPath, newName);
+}
+
+/**
  * Batch renames multiple files on disk atomically
  */
 export async function batchRenameNativeFiles(renames) {

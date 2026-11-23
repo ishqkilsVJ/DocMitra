@@ -6,56 +6,40 @@
   <!-- Ribbon: Working Folder Context & Batch Telemetry -->
   <section
     class="bg-surface-container-low px-gutter py-space-sm flex flex-nowrap items-center justify-between gap-space-sm shadow-sm shrink-0 w-full overflow-hidden">
-    <!-- Left: Folder Navigation & Single-Line Breadcrumb with Middle Truncation -->
-    <div class="flex items-center gap-space-xs min-w-0 flex-1 overflow-hidden mr-2">
-      <div
-        class="w-7 h-7 rounded-lg bg-primary-container text-on-primary flex items-center justify-center shrink-0 shadow-sm">
-        <span class="material-symbols-outlined text-[17px]">drive_file_rename_outline</span>
+    <!-- Left: Selected Folder Name & Include in Filename Checkbox (Variant 3: Dark Slate Minimalist) -->
+    <div class="flex items-center gap-2.5 min-w-0 flex-1 overflow-hidden mr-2">
+      <!-- Dark Slate Folder Name Pill -->
+      <div id="containerFolderBadge"
+        class="flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-xl shadow-md border border-slate-700/80 shrink-0 max-w-[340px]">
+        <span class="material-symbols-outlined text-[17px] text-amber-400 shrink-0">folder_open</span>
+        <span id="displayFolderName"
+          class="font-mono-code font-bold text-[13px] text-white tracking-wide truncate max-w-[200px]"
+          title="Current folder / student name">No Folder Selected</span>
+        <input id="inputEditFolderName" type="text" maxlength="30"
+          class="hidden font-mono-code font-bold text-[13px] text-white bg-slate-800 border border-slate-600 rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-amber-400 w-44"
+          placeholder="Folder / Student Name">
+        <button id="btnEditFolderName" type="button"
+          class="w-6 h-6 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer border border-slate-600 shrink-0"
+          title="Edit Folder / Student Name">
+          <span class="material-symbols-outlined text-[13px]">edit</span>
+        </button>
+        <button id="btnApplyFolderName" type="button"
+          class="hidden w-6 h-6 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center transition-all cursor-pointer border border-emerald-400 shrink-0"
+          title="Apply Name to All Files (Enter)">
+          <span class="material-symbols-outlined text-[14px]">check</span>
+        </button>
       </div>
-      <button
-        class="w-6 h-6 rounded flex items-center justify-center bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors cursor-pointer shrink-0"
-        id="btnPrevFolder" title="Previous Student Folder (Ctrl+Left)" type="button">
-        <span class="material-symbols-outlined text-[16px]">chevron_left</span>
-      </button>
-      <span
-        class="font-mono-code text-[11px] px-2 py-0.5 rounded bg-surface-container text-secondary font-semibold select-none shrink-0"
-        id="folderCounterPill">Folder 0 of 0</span>
-      <button
-        class="w-6 h-6 rounded flex items-center justify-center bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors cursor-pointer shrink-0"
-        id="btnNextFolder" title="Next Student Folder (Ctrl+Right)" type="button">
-        <span class="material-symbols-outlined text-[16px]">chevron_right</span>
-      </button>
-      <span class="material-symbols-outlined text-[16px] text-primary shrink-0 ml-1">folder</span>
-      <div
-        class="font-mono-code text-label-md text-on-surface truncate font-semibold cursor-pointer hover:bg-surface-container-high/50 hover:text-primary px-1.5 py-0.5 rounded transition-colors flex items-center gap-1 min-w-0"
-        id="activeFolderPath" title="Click to open in Windows Explorer">No folder selected</div>
-      <button class="text-secondary hover:text-primary transition-colors ml-0.5 p-0.5 cursor-pointer shrink-0"
-        id="btnOpenInExplorer" title="Open Folder in Windows Explorer" type="button">
-        <span class="material-symbols-outlined text-[16px]">open_in_new</span>
-      </button>
+
+      <!-- Memory Persistent Checkbox -->
+      <label id="lblIncludeFolderName"
+        class="flex items-center gap-2 px-2.5 py-1.5 bg-surface-container rounded-xl border border-outline-variant/40 cursor-pointer select-none text-[11px] font-bold text-on-surface hover:bg-surface-container-high hover:border-outline-variant/60 transition-all shadow-2xs shrink-0">
+        <input id="chkIncludeFolderName" type="checkbox" checked
+          class="w-4 h-4 rounded text-slate-900 focus:ring-slate-800 cursor-pointer accent-slate-900">
+        <span>Add folder name in file</span>
+      </label>
     </div>
 
-    <!-- Quick Stats Telemetry Strip -->
-    <div
-      class="hidden lg:flex items-center gap-space-sm bg-surface-container-lowest px-space-md py-1 rounded-lg shadow-xs shrink-0">
-      <div class="flex items-center gap-1.5 font-label-sm">
-        <span class="w-2 h-2 rounded-full bg-primary-container"></span>
-        <span class="text-on-surface-variant text-[11px]">Files:</span>
-        <span class="font-mono-code text-on-surface font-bold text-[12px]" id="telemetryTotalFiles">0</span>
-      </div>
-      <span class="text-outline-variant">|</span>
-      <div class="flex items-center gap-1.5 font-label-sm">
-        <span class="w-2 h-2 rounded-full bg-tertiary"></span>
-        <span class="text-on-surface-variant text-[11px]">Ready:</span>
-        <span class="font-mono-code text-tertiary font-bold text-[12px]" id="telemetryReadyFiles">0 (0%)</span>
-      </div>
-      <span class="text-outline-variant">|</span>
-      <div class="flex items-center gap-1.5 font-label-sm">
-        <span class="w-2 h-2 rounded-full bg-error"></span>
-        <span class="text-on-surface-variant text-[11px]">Unmatched:</span>
-        <span class="font-mono-code text-error font-bold text-[12px]" id="telemetryUnmatchedFiles">0</span>
-      </div>
-    </div>
+
 
     <!-- Center/Right: Ultra-Compact Segmented Casing Switcher (28px height, Zero Wasted Space) -->
     <div
@@ -100,12 +84,6 @@
         <span>Clear</span>
       </button>
       <button
-        class="px-space-md py-1.5 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-md font-medium border border-outline-variant/40 hover:border-outline-variant/60 transition-all flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
-        id="btnAddFiles" type="button">
-        <span class="material-symbols-outlined text-[16px] text-primary">note_add</span>
-        <span>Add Files</span>
-      </button>
-      <button
         class="px-space-md py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-on-primary font-label-md font-semibold transition-all flex items-center gap-1.5 shadow-sm active:scale-98 cursor-pointer shrink-0"
         id="btnSelectFolder" type="button">
         <span class="material-symbols-outlined text-[16px]">folder_open</span>
@@ -131,7 +109,7 @@
             class="p-6 text-center text-secondary bg-surface-container-lowest rounded-xl border border-outline-variant/30 flex flex-col items-center gap-2">
             <span class="material-symbols-outlined text-[36px] text-primary opacity-60">folder_open</span>
             <div class="font-headline-sm font-bold text-on-surface">No Intake Folder Selected</div>
-            <div class="text-body-sm text-secondary">Click "Select Folder" (F2) or "Add Files" to start renaming student
+            <div class="text-body-sm text-secondary">Click "Select Folder" (F2) to start renaming student
               admission documents.</div>
           </div>
         </div>
@@ -245,12 +223,6 @@
     </div>
     <div class="flex items-center gap-space-sm shrink-0">
       <button
-        class="px-space-md py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-label-md font-bold transition-all flex items-center gap-1.5 border border-amber-500 shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-        id="btnReviewUnmatched" title="Review files with low confidence (<80%)" type="button" disabled>
-        <span class="material-symbols-outlined text-[16px]">visibility</span>
-        <span>Review Unmatched (0)</span>
-      </button>
-      <button
         class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-label-md transition-all flex items-center gap-1.5 border border-slate-700 shadow-sm cursor-pointer"
         id="btnExportAudit" title="Generate and export full audit log (F9)" type="button">
         <span class="material-symbols-outlined text-[15px] text-purple-400">summarize</span>
@@ -355,7 +327,7 @@
   <div id="modalRenameSettings"
     class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
     <div
-      class="w-full max-w-3xl max-h-[90vh] bg-surface-container-lowest rounded-2xl border border-outline-variant/40 shadow-2xl flex flex-col overflow-hidden">
+      class="w-[92vw] max-w-6xl h-[86vh] max-h-[86vh] bg-surface-container-lowest rounded-2xl border border-outline-variant/40 shadow-2xl flex flex-col overflow-hidden">
       <!-- Modal Header -->
       <div
         class="px-5 py-3.5 bg-surface-container-low flex items-center justify-between border-b border-outline-variant/30 shrink-0">
@@ -389,18 +361,18 @@
       </div>
 
       <!-- Tab Content Area -->
-      <div class="p-5 flex-1 overflow-y-auto min-h-0 flex flex-col gap-4">
+      <div class="p-5 flex-1 overflow-hidden min-h-0 flex flex-col gap-4">
         <!-- Tab 1: Document Presets -->
-        <div id="tabContentPresets" class="flex flex-col gap-4">
+        <div id="tabContentPresets" class="flex flex-col gap-3 flex-1 min-h-0">
           <!-- Active Preset Selector & Management Bar -->
-          <div class="p-3.5 bg-surface-container-low rounded-xl border border-outline-variant/30 flex flex-wrap items-center justify-between gap-3">
-            <div class="flex items-center gap-2 flex-1 min-w-[240px]">
+          <div class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/30 flex flex-wrap items-center justify-between gap-3 shrink-0">
+            <div class="flex items-center gap-2 max-w-sm flex-1 min-w-[200px]">
               <label for="selectActivePreset" class="text-[12px] font-bold text-on-surface shrink-0">Active Preset:</label>
-              <select id="selectActivePreset" class="h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 font-label-md font-semibold text-primary outline-none focus:ring-1 focus:ring-primary flex-1">
-                <!-- Dynamically populated: MAHA DBT, SWAYAM, custom presets -->
+              <select id="selectActivePreset" class="h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 font-label-md font-semibold text-primary outline-none focus:ring-1 focus:ring-primary w-full truncate text-ellipsis">
+                <!-- Dynamically populated: MAHA DBT, SWAYAM DEENDAYAL YOJANA, custom presets -->
               </select>
             </div>
-            <div class="flex items-center gap-1.5 shrink-0">
+            <div class="flex items-center gap-1.5 shrink-0 flex-wrap">
               <button id="btnNewPreset" type="button" class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface text-[12px] font-semibold border border-outline-variant/40 flex items-center gap-1 cursor-pointer transition-colors">
                 <span class="material-symbols-outlined text-[15px] text-primary">add</span>
                 <span>New Preset</span>
@@ -421,28 +393,34 @@
           </div>
 
           <!-- Document List Inside Active Preset -->
-          <div class="flex flex-col gap-2">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-1.5">
+          <div class="flex flex-col gap-2 flex-1 min-h-0">
+            <div class="flex flex-wrap items-center justify-between gap-2 shrink-0">
+              <div class="flex items-center gap-2">
                 <span class="text-label-md font-bold text-on-surface">Required Documents in Preset</span>
                 <span id="presetDocCountBadge" class="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono-code text-[11px] font-bold">0</span>
               </div>
-              <button id="btnAddDocToPreset" type="button" class="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-[12px] font-bold shadow-xs flex items-center gap-1.5 cursor-pointer transition-all">
-                <span class="material-symbols-outlined text-[16px]">add_circle</span>
-                <span>Add Document to Preset</span>
-              </button>
+              <div class="flex items-center gap-2 flex-1 max-w-md justify-end">
+                <div class="relative w-full max-w-xs">
+                  <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[16px] text-secondary pointer-events-none">search</span>
+                  <input id="inputSearchPresetDocs" type="text" placeholder="Search document, code, keyword..." class="w-full h-8 pl-8 pr-3 rounded-lg bg-surface border border-outline-variant/40 text-[12px] text-on-surface placeholder:text-secondary outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
+                </div>
+                <button id="btnAddDocToPreset" type="button" class="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-[12px] font-bold shadow-xs flex items-center gap-1.5 cursor-pointer transition-all shrink-0">
+                  <span class="material-symbols-outlined text-[16px]">add_circle</span>
+                  <span>Add Document</span>
+                </button>
+              </div>
             </div>
 
             <!-- Table of Documents in Active Preset -->
-            <div class="border border-outline-variant/30 rounded-xl overflow-hidden bg-surface max-h-[320px] overflow-y-auto custom-pan-scroll">
+            <div class="border border-outline-variant/30 rounded-xl overflow-hidden bg-surface flex-1 min-h-[300px] overflow-y-auto custom-pan-scroll">
               <table class="w-full border-collapse text-left text-[12px]">
-                <thead class="bg-surface-container-low border-b border-outline-variant/30 text-secondary uppercase text-[10px] font-bold font-mono-code tracking-wider sticky top-0">
+                <thead class="bg-surface-container-low border-b border-outline-variant/30 text-secondary uppercase text-[10px] font-bold font-mono-code tracking-wider sticky top-0 z-10">
                   <tr>
-                    <th class="py-2 px-3 w-10 text-center">#</th>
-                    <th class="py-2 px-3">Document Name</th>
-                    <th class="py-2 px-3 w-28 font-mono-code">Short Code</th>
-                    <th class="py-2 px-3">Keywords / Tokens</th>
-                    <th class="py-2 px-3 w-24 text-center">Actions</th>
+                    <th class="py-2.5 px-3 w-12 text-center">#</th>
+                    <th class="py-2.5 px-3 w-56">Document Name</th>
+                    <th class="py-2.5 px-3 w-28 font-mono-code">Short Code</th>
+                    <th class="py-2.5 px-3">Keywords / Tokens</th>
+                    <th class="py-2.5 px-3 w-24 text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody id="presetDocsTableBody" class="divide-y divide-outline-variant/20 font-label-sm">
@@ -454,26 +432,32 @@
         </div>
 
         <!-- Tab 2: Shortcuts & Rules -->
-        <div id="tabContentShortcuts" class="flex flex-col gap-4 hidden">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-1.5">
+        <div id="tabContentShortcuts" class="flex flex-col gap-3 flex-1 min-h-0 hidden">
+          <div class="flex flex-wrap items-center justify-between gap-2 shrink-0">
+            <div class="flex items-center gap-2">
               <span class="text-label-md font-bold text-on-surface">Shortcuts &amp; Rename Rules</span>
-              <span id="shortcutsCountBadge" class="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono-code text-[11px] font-bold">21</span>
+              <span id="shortcutsCountBadge" class="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono-code text-[11px] font-bold">53</span>
             </div>
-            <button id="btnAddNewShortcut" type="button" class="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-[12px] font-bold shadow-xs flex items-center gap-1.5 cursor-pointer transition-all">
-              <span class="material-symbols-outlined text-[16px]">add_circle</span>
-              <span>Add Shortcut</span>
-            </button>
+            <div class="flex items-center gap-2 flex-1 max-w-md justify-end">
+              <div class="relative w-full max-w-xs">
+                <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[16px] text-secondary pointer-events-none">search</span>
+                <input id="inputSearchShortcuts" type="text" placeholder="Search shortcut, canonical, keyword..." class="w-full h-8 pl-8 pr-3 rounded-lg bg-surface border border-outline-variant/40 text-[12px] text-on-surface placeholder:text-secondary outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
+              </div>
+              <button id="btnAddNewShortcut" type="button" class="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-[12px] font-bold shadow-xs flex items-center gap-1.5 cursor-pointer transition-all shrink-0">
+                <span class="material-symbols-outlined text-[16px]">add_circle</span>
+                <span>Add Shortcut</span>
+              </button>
+            </div>
           </div>
 
-          <div class="border border-outline-variant/30 rounded-xl overflow-hidden bg-surface max-h-[350px] overflow-y-auto custom-pan-scroll">
+          <div class="border border-outline-variant/30 rounded-xl overflow-hidden bg-surface flex-1 min-h-[300px] overflow-y-auto custom-pan-scroll">
             <table class="w-full border-collapse text-left text-[12px]">
-              <thead class="bg-surface-container-low border-b border-outline-variant/30 text-secondary uppercase text-[10px] font-bold font-mono-code tracking-wider sticky top-0">
+              <thead class="bg-surface-container-low border-b border-outline-variant/30 text-secondary uppercase text-[10px] font-bold font-mono-code tracking-wider sticky top-0 z-10">
                 <tr>
-                  <th class="py-2 px-3 w-24 font-mono-code">Short Code</th>
-                  <th class="py-2 px-3">Canonical Document Name</th>
-                  <th class="py-2 px-3">Alternate Keywords</th>
-                  <th class="py-2 px-3 w-24 text-center">Actions</th>
+                  <th class="py-2.5 px-3 w-28 font-mono-code">Short Code</th>
+                  <th class="py-2.5 px-3 w-64">Canonical Document Name</th>
+                  <th class="py-2.5 px-3">Alternate Keywords</th>
+                  <th class="py-2.5 px-3 w-24 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody id="shortcutsTableBody" class="divide-y divide-outline-variant/20 font-label-sm">
@@ -498,29 +482,118 @@
   <div id="modalCrossCheck"
     class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
     <div
-      class="w-full max-w-4xl max-h-[85vh] bg-surface-container-lowest rounded-2xl border border-outline-variant/40 shadow-2xl flex flex-col overflow-hidden">
+      class="w-full max-w-5xl max-h-[90vh] bg-surface-container-lowest rounded-2xl border border-outline-variant/40 shadow-2xl flex flex-col overflow-hidden">
       <!-- Modal Header -->
       <div
-        class="px-5 py-3.5 bg-surface-container-low flex items-center justify-between border-b border-outline-variant/30 shrink-0">
+        class="px-5 py-3 bg-surface-container-low flex items-center justify-between border-b border-outline-variant/30 shrink-0">
         <div class="flex items-center gap-3">
           <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold">
             <span class="material-symbols-outlined text-[20px]">fact_check</span>
           </div>
           <div>
             <h3 class="font-headline-sm text-[16px] font-bold text-on-surface">Cross-Check Matched Documents</h3>
-            <p class="text-secondary text-[11px]">Verify old and suggested new filenames before executing atomic batch
-              rename</p>
+            <p class="text-secondary text-[11px]">Verify old and suggested new filenames before executing atomic batch rename</p>
           </div>
         </div>
         <button id="btnCloseCrossCheckModal" type="button"
-          class="w-7 h-7 rounded-lg hover:bg-surface-container text-secondary hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer">
+          class="w-7 h-7 rounded-lg hover:bg-surface-container text-secondary hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer" title="Close (Esc)">
           <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+      </div>
+
+      <!-- Top Pattern Bar (PowerRename Style) -->
+      <div class="px-5 py-2.5 bg-surface-container border-b border-outline-variant/30 flex flex-wrap items-center justify-between gap-2 shrink-0 text-[11px]">
+        <div class="flex flex-wrap items-center gap-2.5">
+          <!-- Order Pills -->
+          <div class="flex items-center gap-1 bg-surface-container-low px-2 py-1 rounded-lg border border-outline-variant/30">
+            <span class="text-secondary font-bold mr-1">Order:</span>
+            <button type="button" class="pattern-pill active" data-pattern-order="doc_student">[ Doc + Student ]</button>
+            <button type="button" class="pattern-pill" data-pattern-order="student_doc">[ Student + Doc ]</button>
+          </div>
+
+          <!-- Separator Pills -->
+          <div class="flex items-center gap-1 bg-surface-container-low px-2 py-1 rounded-lg border border-outline-variant/30">
+            <span class="text-secondary font-bold mr-1">Sep:</span>
+            <button type="button" class="pattern-pill active" data-pattern-sep=" ">Space</button>
+            <button type="button" class="pattern-pill" data-pattern-sep="_">_</button>
+            <button type="button" class="pattern-pill" data-pattern-sep="-">-</button>
+          </div>
+
+          <!-- Student Name Toggle -->
+          <button id="btnToggleCrossCheckStudent" type="button"
+            class="px-2.5 py-1 rounded-lg border border-purple-500/30 bg-purple-500/10 text-purple-700 font-bold hover:bg-purple-500/20 transition-all flex items-center gap-1 cursor-pointer">
+            <span class="material-symbols-outlined text-[14px]">person</span>
+            <span>Student: <strong id="crossCheckStudentToggleLabel">ON</strong></span>
+          </button>
+
+          <!-- Casing Pills -->
+          <div class="flex items-center gap-1 bg-surface-container-low px-2 py-1 rounded-lg border border-outline-variant/30">
+            <span class="text-secondary font-bold mr-1">Case:</span>
+            <button type="button" class="pattern-pill active" data-pattern-case="upper">UPPER</button>
+            <button type="button" class="pattern-pill" data-pattern-case="title">Title</button>
+            <button type="button" class="pattern-pill" data-pattern-case="lower">lower</button>
+          </div>
+
+          <!-- Filter Pills -->
+          <div class="flex items-center gap-1 bg-surface-container-low px-2 py-1 rounded-lg border border-outline-variant/30">
+            <span class="text-secondary font-bold mr-1">Filter:</span>
+            <button type="button" class="pattern-pill active" data-pattern-filter="all">All</button>
+            <button type="button" class="pattern-pill" data-pattern-filter="pdf">PDF</button>
+            <button type="button" class="pattern-pill" data-pattern-filter="images">Images</button>
+          </div>
+        </div>
+
+        <!-- Power Utilities Toggle Button -->
+        <button id="btnTogglePowerUtilities" type="button"
+          class="px-2.5 py-1 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-semibold flex items-center gap-1 transition-all cursor-pointer border border-outline-variant/40 shadow-xs">
+          <span class="material-symbols-outlined text-[15px] text-amber-500">bolt</span>
+          <span>Power Utilities</span>
+          <span id="powerUtilitiesArrow" class="material-symbols-outlined text-[14px] transition-transform">expand_more</span>
+        </button>
+      </div>
+
+      <!-- Expandable Power Utilities Strip (Hidden by default) -->
+      <div id="stripPowerUtilities" class="px-5 py-2 bg-surface-container-low border-b border-outline-variant/30 hidden flex flex-wrap items-center justify-between gap-2 shrink-0 text-[11px]">
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Bulk Find & Replace -->
+          <div class="flex items-center gap-1 bg-surface px-2 py-1 rounded-lg border border-outline-variant/40">
+            <span class="material-symbols-outlined text-[14px] text-secondary">find_replace</span>
+            <input id="inputCrossCheckFind" type="text" placeholder="Find text..."
+              class="w-28 h-6 px-1.5 text-[11px] font-mono-code bg-transparent outline-none text-on-surface placeholder:text-secondary/60">
+            <span class="text-outline-variant">→</span>
+            <input id="inputCrossCheckReplace" type="text" placeholder="Replace with..."
+              class="w-28 h-6 px-1.5 text-[11px] font-mono-code bg-transparent outline-none text-on-surface placeholder:text-secondary/60">
+            <button id="btnCrossCheckApplyReplace" type="button"
+              class="px-2 py-0.5 rounded bg-primary text-white font-bold hover:bg-primary/90 transition-all cursor-pointer">
+              Apply
+            </button>
+          </div>
+
+          <!-- Scanner Junk Cleaner -->
+          <button id="btnCrossCheckCleanJunk" type="button"
+            class="px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-container-high border border-outline-variant/40 text-on-surface font-semibold transition-all flex items-center gap-1 cursor-pointer"
+            title="Clean SCAN(1), IMG_xxx, WhatsApp Image prefixes">
+            <span>🧹 Clean Scanner Junk</span>
+          </button>
+
+          <!-- Portal-Safe Cleaner -->
+          <button id="btnCrossCheckPortalSafe" type="button"
+            class="px-2.5 py-1 rounded-lg bg-surface hover:bg-surface-container-high border border-outline-variant/40 text-on-surface font-semibold transition-all flex items-center gap-1 cursor-pointer"
+            title="Keep only MahaDBT/CET safe characters (A-Z, 0-9, -)">
+            <span>🛡️ Portal-Safe Clean</span>
+          </button>
+        </div>
+
+        <button id="btnCrossCheckResetPatterns" type="button"
+          class="text-secondary hover:text-rose-500 font-semibold transition-colors flex items-center gap-1 cursor-pointer">
+          <span class="material-symbols-outlined text-[13px]">refresh</span>
+          <span>Reset Rules</span>
         </button>
       </div>
 
       <!-- Action Sub-bar -->
       <div
-        class="px-5 py-2 bg-surface-container flex items-center justify-between border-b border-outline-variant/30 text-[12px] shrink-0">
+        class="px-5 py-2 bg-surface-container-low flex items-center justify-between border-b border-outline-variant/30 text-[12px] shrink-0">
         <label class="flex items-center gap-2 cursor-pointer font-semibold text-on-surface select-none">
           <input id="chkCrossCheckSelectAll" type="checkbox" checked
             class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer">
@@ -534,8 +607,16 @@
         </div>
       </div>
 
-      <!-- Scrollable Table -->
+      <!-- Scrollable Main Content -->
       <div class="flex-1 overflow-y-auto min-h-0 custom-pan-scroll p-4">
+        <!-- Section: To Be Renamed -->
+        <div class="mb-2 flex items-center justify-between">
+          <span class="text-[11px] font-bold text-secondary uppercase tracking-wider font-mono-code">
+            To Be Renamed (<span id="crossCheckActiveCount">0</span>)
+          </span>
+          <span class="text-[10px] text-secondary font-mono-code">Use ↑ / ↓ to navigate, Space to toggle, Enter to confirm</span>
+        </div>
+
         <table class="w-full border-collapse text-left text-[12px] font-mono-code">
           <thead>
             <tr
@@ -548,9 +629,32 @@
             </tr>
           </thead>
           <tbody id="crossCheckTableBody" class="divide-y divide-outline-variant/20">
-            <!-- Dynamically populated rows -->
+            <!-- Dynamically populated active rows -->
           </tbody>
         </table>
+
+        <!-- Empty State for Active Table if all files are identical -->
+        <div id="crossCheckActiveEmpty" class="py-6 text-center text-secondary text-[12px] hidden font-mono-code">
+          ✓ All matched files are already identical to their target names.
+        </div>
+
+        <!-- Section: Identical Collapsible Drawer (Bottom) -->
+        <details id="drawerIdenticalFiles" class="mt-4 rounded-xl border border-outline-variant/30 bg-surface-container-low overflow-hidden group">
+          <summary class="px-4 py-2.5 text-[11px] font-bold text-secondary hover:text-on-surface cursor-pointer select-none flex items-center justify-between transition-colors bg-surface-container/60">
+            <span class="flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px] group-open:rotate-90 transition-transform text-outline-variant">chevron_right</span>
+              <span><strong id="crossCheckIdenticalCount">0</strong> Files Already Perfect (Identical)</span>
+            </span>
+            <span class="text-[10px] font-normal text-secondary">Click to view • Unchecked by default</span>
+          </summary>
+          <div class="p-3 border-t border-outline-variant/20 bg-surface">
+            <table class="w-full border-collapse text-left text-[11px] font-mono-code opacity-80">
+              <tbody id="crossCheckIdenticalTableBody" class="divide-y divide-outline-variant/15">
+                <!-- Dynamically populated identical rows -->
+              </tbody>
+            </table>
+          </div>
+        </details>
       </div>
 
       <!-- Modal Footer -->
@@ -558,7 +662,7 @@
         class="px-5 py-3.5 bg-surface-container-low border-t border-outline-variant/30 flex items-center justify-between shrink-0">
         <button id="btnCancelCrossCheck" type="button"
           class="px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface text-[12px] font-semibold transition-colors cursor-pointer">
-          Cancel
+          Cancel (Esc)
         </button>
         <button id="btnConfirmBatchRename" type="button"
           class="h-10 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white font-bold text-[13px] shadow-lg flex items-center gap-2 cursor-pointer transition-all disabled:opacity-40 disabled:cursor-not-allowed">
@@ -567,5 +671,23 @@
         </button>
       </div>
     </div>
+  </div>
+
+  <!-- Floating 1-Click Undo Toast Banner (Appears post-rename) -->
+  <div id="toastFloatingUndo"
+    class="fixed bottom-6 left-1/2 -translate-x-1/2 z-60 bg-emerald-800 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-4 border border-emerald-500/50 hidden">
+    <div class="flex items-center gap-2 text-[13px] font-semibold">
+      <span class="material-symbols-outlined text-[20px] text-emerald-300">check_circle</span>
+      <span id="floatingUndoMessage">Successfully renamed documents in 0.1s</span>
+    </div>
+    <button id="btnFloatingUndo" type="button"
+      class="px-3.5 py-1.5 rounded-xl bg-white text-emerald-900 font-bold text-[12px] hover:bg-emerald-50 active:scale-95 shadow-md flex items-center gap-1.5 cursor-pointer transition-all">
+      <span class="material-symbols-outlined text-[16px]">undo</span>
+      <span id="floatingUndoBtnLabel">Undo All</span>
+    </button>
+    <button id="btnDismissFloatingUndo" type="button"
+      class="w-6 h-6 rounded-lg text-emerald-200 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
+      <span class="material-symbols-outlined text-[16px]">close</span>
+    </button>
   </div>
 </div>

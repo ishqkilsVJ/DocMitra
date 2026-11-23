@@ -208,21 +208,26 @@ fn list_native_directory(path: String) -> Result<DirectoryResult, String> {
 }
 
 #[tauri::command]
+fn rename_native_folder(old_path: String, new_name: String) -> Result<RenameResult, String> {
+    rename_native_file(old_path, new_name)
+}
+
+#[tauri::command]
 fn rename_native_file(old_path: String, new_name: String) -> Result<RenameResult, String> {
     let clean_old = old_path.replace('/', "\\");
     let p = PathBuf::from(&clean_old);
-    if !p.exists() || !p.is_file() {
+    if !p.exists() || (!p.is_file() && !p.is_dir()) {
         return Ok(RenameResult {
             success: false,
             old_path: Some(old_path),
             new_path: None,
             path: None,
             new_name: Some(new_name),
-            error: Some("Original file does not exist on disk".to_string()),
+            error: Some("Original file or folder does not exist on disk".to_string()),
         });
     }
 
-    let trimmed = new_name.trim().to_string();
+    let mut trimmed = new_name.trim().to_string();
     if trimmed.is_empty() || trimmed.contains(&['<', '>', ':', '"', '/', '\\', '|', '?', '*']) {
         return Ok(RenameResult {
             success: false,
@@ -246,7 +251,7 @@ fn rename_native_file(old_path: String, new_name: String) -> Result<RenameResult
         }),
     };
 
-    let target_path = parent.join(&trimmed);
+    let mut target_path = parent.join(&trimmed);
     if clean_old.to_lowercase() == target_path.to_string_lossy().to_lowercase() {
         let temp_name = format!("{}.docmitra_tmp_{}", trimmed, std::time::SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos());
         let temp_path = parent.join(&temp_name);
@@ -272,26 +277,43 @@ fn rename_native_file(old_path: String, new_name: String) -> Result<RenameResult
             });
         }
     } else {
-        if target_path.exists() {
-            return Ok(RenameResult {
-                success: false,
-                old_path: Some(old_path),
-                new_path: None,
-                path: None,
-                new_name: Some(trimmed.clone()),
-                error: Some(format!("A file named '{}' already exists in this folder", trimmed)),
-            });
+        let mut final_target_path = target_path.clone();
+        let mut final_name = trimmed.clone();
+        if final_target_path.exists() {
+            let path_obj = Path::new(&trimmed);
+            let stem = match path_obj.file_stem() {
+                Some(s) => s.to_string_lossy().to_string(),
+                None => trimmed.clone(),
+            };
+            let ext = match path_obj.extension() {
+                Some(e) => format!(".{}", e.to_string_lossy()),
+                None => String::new(),
+            };
+
+            let mut counter = 2;
+            let mut candidate_name = format!("{} {}{}", stem, counter, ext);
+            let mut candidate_path = parent.join(&candidate_name);
+            while candidate_path.exists() && clean_old.to_lowercase() != candidate_path.to_string_lossy().to_lowercase() {
+                counter += 1;
+                candidate_name = format!("{} {}{}", stem, counter, ext);
+                candidate_path = parent.join(&candidate_name);
+            }
+            final_target_path = candidate_path;
+            final_name = candidate_name;
         }
-        if let Err(e) = fs::rename(&p, &target_path) {
+
+        if let Err(e) = fs::rename(&p, &final_target_path) {
             return Ok(RenameResult {
                 success: false,
                 old_path: Some(old_path),
                 new_path: None,
                 path: None,
-                new_name: Some(trimmed),
+                new_name: Some(final_name),
                 error: Some(format!("Rename failed: {}", e)),
             });
         }
+        target_path = final_target_path;
+        trimmed = final_name;
     }
 
     let new_path_str = target_path.to_string_lossy().replace('\\', "/");
@@ -353,6 +375,7 @@ pub fn run() {
       pick_native_files,
       list_native_directory,
       rename_native_file,
+      rename_native_folder,
       open_in_explorer,
       read_binary_file
     ])

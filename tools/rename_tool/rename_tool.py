@@ -74,10 +74,9 @@ def split_ext(name: str) -> Tuple[str, str]:
 
 def unique_destination(desired_name: str, current_name: str, existing_names: Set[str], student_name: str = '') -> str:
     """
-    Generate a non-colliding filename with sequential suffixes (' 1', ' 2', etc.)
+    Generate a non-colliding filename with sequential suffixes (' 2', ' 3', etc.)
     Case-insensitive check against existing_names in the target directory.
-    If student_name is attached, number is inserted sequentially before the student name.
-    Preserves document numbers (e.g. FORM 16 -> FORM 16 1).
+    First copy remains unnumbered. Second copy gets ' 2', third gets ' 3'.
     """
     lower_map = {n.lower(): n for n in existing_names if n}
 
@@ -86,46 +85,22 @@ def unique_destination(desired_name: str, current_name: str, existing_names: Set
 
     stem, ext = split_ext(desired_name)
     import re
-    s_clean = student_name.strip() if student_name else ''
-    if s_clean and stem.lower().endswith(s_clean.lower()):
-        doc_part = stem[:-len(s_clean)].strip()
-        match = re.match(r'^(.*?)\s+(\d+)$', doc_part)
-        if match:
-            prefix = match.group(1).strip()
-            num = int(match.group(2))
-            base_check = f"{prefix} {s_clean}{ext}".lower()
-            if base_check in lower_map:
-                doc_part = prefix
-                counter = num + 1
-            else:
-                counter = 1
-        else:
-            counter = 1
 
-        candidate = f"{doc_part} {counter} {s_clean}{ext}"
-        while candidate.lower() in lower_map and candidate.lower() != (current_name or '').lower():
-            counter += 1
-            candidate = f"{doc_part} {counter} {s_clean}{ext}"
-        return candidate
-    else:
-        match = re.match(r'^(.*?)\s+(\d+)$', stem)
-        if match:
-            prefix = match.group(1).strip()
-            num = int(match.group(2))
-            base_check = f"{prefix}{ext}".lower()
-            if base_check in lower_map:
-                stem = prefix
-                counter = num + 1
-            else:
-                counter = 1
-        else:
-            counter = 1
+    counter = 2
+    match = re.match(r'^(.*?)\s+(\d+)$', stem)
+    if match:
+        prefix = match.group(1).strip()
+        num = int(match.group(2))
+        base_check = f"{prefix}{ext}".lower()
+        if base_check in lower_map:
+            stem = prefix
+            counter = num + 1
 
+    candidate = f"{stem} {counter}{ext}"
+    while candidate.lower() in lower_map and candidate.lower() != (current_name or '').lower():
+        counter += 1
         candidate = f"{stem} {counter}{ext}"
-        while candidate.lower() in lower_map and candidate.lower() != (current_name or '').lower():
-            counter += 1
-            candidate = f"{stem} {counter}{ext}"
-        return candidate
+    return candidate
 
 
 import stat

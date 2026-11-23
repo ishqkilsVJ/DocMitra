@@ -28,6 +28,7 @@ import {
   selectNativeFiles,
   listNativeDirectory,
   renameNativeFile,
+  renameNativeFolder,
   rotateNativeFile,
   importNativeFile,
   openFolderInExplorer,
@@ -54,12 +55,19 @@ import {
   DEFAULT_SPELLING_RULES,
   DEFAULT_LINKED_RULES,
   DEFAULT_CHECKLISTS_DATA,
+  DEFAULT_SHORTCUT_DICTIONARY,
   evaluateSmartOcrDocument,
   matchFilenameSmart,
   SMART_DOC_SIGNATURES,
   registerDocumentSignature,
   extractSignatureKeywords,
-  extractCleanTokens
+  extractCleanTokens,
+  stringSimilarity,
+  applyCase,
+  computeWordDiff,
+  formatPatternName,
+  cleanScannerJunk,
+  cleanPortalSafe
 } from './rename_tool_logic.js';
 import { recordRenameEvent } from '../../src/services/analytics-service.js';
 import { loadSettings, saveSettings, loadDocumentPresets, saveDocumentPresets } from '../../src/services/storage-service.js';
@@ -143,129 +151,62 @@ export function isJunkFile(filename) {
  */
 export function getShortcutBadgeColor(code) {
   const c = (code || '').toUpperCase().trim();
-  if (['ADR', 'PAN', 'PIC', 'UID'].includes(c)) return 'bg-blue-600 text-white font-extrabold';
-  if (['10M', '10P', '12M', '12P', '12LC', '12MP', 'ATM', 'BNF', 'BRT'].includes(c)) return 'bg-emerald-700 text-white font-extrabold';
-  if (['CST', 'VLD'].includes(c)) return 'bg-purple-700 text-white font-extrabold';
-  if (['INC', 'DOM', 'NAT', 'BNK'].includes(c)) return 'bg-amber-600 text-white font-extrabold';
-  if (['SLF', 'PAR', 'GAP'].includes(c)) return 'bg-slate-700 text-white font-extrabold';
+  if (['ADR', 'PAN', 'PIC', 'SIG', 'VOT', 'DL', 'UID', 'APR'].includes(c)) return 'bg-blue-600 text-white font-extrabold';
+  if (['10M', '10P', '10MP', '11M', '12M', '12P', '12LC', '12MP', '1YM', '2YM', '3YM', '4YM', 'PYM', 'DPC', 'DEG', 'REG', 'INT', 'CHR', 'ATM', 'BNF', 'BRT'].includes(c)) return 'bg-emerald-700 text-white font-extrabold';
+  if (['CST', 'VAL', 'NCL', 'VLD'].includes(c)) return 'bg-purple-700 text-white font-extrabold';
+  if (['INC', 'DOM', 'NAT', 'BNK', 'RAT', 'EWS'].includes(c)) return 'bg-amber-600 text-white font-extrabold';
+  if (['SDC', 'PDC', 'GAP', 'SLF', 'PAR', 'NHC', 'DIS', 'PWD', 'MED', 'GAZ', 'MIN', 'DTH', 'CETAF', 'CETSC', 'SRF', 'CAP', 'BON', 'FEE', 'ATT', 'HST'].includes(c)) return 'bg-slate-700 text-white font-extrabold';
   return 'bg-primary text-on-primary font-extrabold';
 }
 
+export const DEFAULT_SHORTCUTS = DEFAULT_SHORTCUT_DICTIONARY.map(item => ({
+  code: item.primaryShortcut,
+  label: item.displayName,
+  canonical: item.outputName,
+  keywords: Array.isArray(item.alternateKeywords) ? [...item.alternateKeywords] : []
+}));
+
+export const MASTER_DOCUMENTS_MAP = new Map(
+  DEFAULT_SHORTCUTS.map(d => [d.code, d])
+);
 
 export const BUILTIN_PRESETS = {
   "MAHA DBT": [
-    { name: "Aadhaar Card", code: "ADR", keywords: ["aadhaar card", "aadhar", "adhar", "uidai", "uid"] },
-    { name: "Income Certificate", code: "INC", keywords: ["income certificate", "income", "tahsildar income", "utpann"] },
-    { name: "Domicile Certificate", code: "DOM", keywords: ["domicile certificate", "domicile", "adhiwas"] },
-    { name: "Nationality Certificate", code: "NAT", keywords: ["nationality certificate", "nationality", "indian nationality"] },
-    { name: "Caste Certificate", code: "CST", keywords: ["caste certificate", "caste", "jati", "category cert"] },
-    { name: "Caste Validity Certificate", code: "VLD", keywords: ["caste validity certificate", "validity", "caste validity", "padtalni"] },
-    { name: "Non Creamy Layer Certificate", code: "NCL", keywords: ["non creamy layer certificate", "non creamy layer", "ncl", "creamy layer"] },
-    { name: "10th Marksheet", code: "10M", keywords: ["10th marksheet", "10 marksheet", "10th mark", "ssc marksheet", "ssc mark"] },
-    { name: "12th Marksheet", code: "12M", keywords: ["12th marksheet", "12 marksheet", "12th mark", "hsc marksheet", "hsc mark"] },
-    { name: "Leaving Certificate", code: "LC", keywords: ["leaving certificate", "lc", "school leaving", "college leaving", "tc", "transfer certificate"] },
-    { name: "Bonafide Certificate", code: "BON", keywords: ["bonafide certificate", "bonafide", "bonafied", "college bonafide"] },
-    { name: "Admission Fee Receipt", code: "FEE", keywords: ["admission fee receipt", "fee receipt", "admission fee", "fees paid", "fee challan"] },
-    { name: "Bank Passbook", code: "BNK", keywords: ["bank passbook", "passbook", "bank account", "bank front page", "ifsc"] },
-    { name: "Ration Card", code: "RAT", keywords: ["ration card", "ration", "shidori patrika"] },
-    { name: "Declaration Certificate", code: "DEC", keywords: ["declaration certificate", "declaration", "self declaration", "hamipatra"] }
-  ],
+    "PIC", "SIG", "ADR", "10M", "10P", "10MP", "12M", "12P", "12MP", "12LC",
+    "PYM", "CST", "VAL", "NCL", "INC", "DOM", "NAT", "RAT", "BNK", "CAP",
+    "BON", "FEE", "ATT", "HST", "GAP", "SDC", "PDC", "DTH"
+  ].map(code => {
+    const doc = MASTER_DOCUMENTS_MAP.get(code);
+    return { name: doc.canonical, code: doc.code, keywords: [...doc.keywords] };
+  }),
+  "SWAYAM DEENDAYAL YOJANA": [
+    "PIC", "SIG", "ADR", "10M", "10MP", "12M", "12MP", "12LC", "PYM", "CST",
+    "VAL", "DOM", "INC", "BNK", "BON", "CAP", "ATT", "HST", "NHC", "SDC",
+    "PDC", "DIS"
+  ].map(code => {
+    const doc = MASTER_DOCUMENTS_MAP.get(code);
+    return { name: doc.canonical, code: doc.code, keywords: [...doc.keywords] };
+  }),
   "CET CELL": [
-    { name: "CET Scorecard", code: "CET", keywords: ["cet scorecard", "cet score", "cet result", "mht cet", "cet"] },
-    { name: "CET Application Confirmation", code: "APP", keywords: ["cet application confirmation", "application form", "confirmation receipt", "cet form"] },
-    { name: "Aadhaar Card", code: "ADR", keywords: ["aadhaar card", "aadhar", "adhar", "uidai", "uid"] },
-    { name: "APAAR ID", code: "APR", keywords: ["apaar id", "apaar", "abc id", "academic bank of credits"] },
-    { name: "10th Marksheet", code: "10M", keywords: ["10th marksheet", "10 marksheet", "10th mark", "ssc marksheet", "ssc mark"] },
-    { name: "10th Passing Certificate", code: "10P", keywords: ["10th passing certificate", "10th passing", "10 passing", "ssc passing", "10th board cert"] },
-    { name: "12th Marksheet", code: "12M", keywords: ["12th marksheet", "12 marksheet", "12th mark", "hsc marksheet", "hsc mark"] },
-    { name: "12th Passing Certificate", code: "12P", keywords: ["12th passing certificate", "12th passing", "12 passing", "hsc passing", "12th board cert"] },
-    { name: "Leaving Certificate", code: "LC", keywords: ["leaving certificate", "lc", "school leaving", "college leaving", "tc"] },
-    { name: "Domicile Certificate", code: "DOM", keywords: ["domicile certificate", "domicile", "adhiwas"] },
-    { name: "Nationality Certificate", code: "NAT", keywords: ["nationality certificate", "nationality", "indian nationality"] },
-    { name: "Caste Certificate", code: "CST", keywords: ["caste certificate", "caste", "jati", "category cert"] },
-    { name: "Caste Validity Certificate", code: "VLD", keywords: ["caste validity certificate", "validity", "caste validity", "padtalni"] },
-    { name: "Non Creamy Layer Certificate", code: "NCL", keywords: ["non creamy layer certificate", "non creamy layer", "ncl"] },
-    { name: "EWS Certificate", code: "EWS", keywords: ["ews certificate", "ews", "economically weaker section"] },
-    { name: "Disability Certificate", code: "PWD", keywords: ["disability certificate", "pwd", "handicap", "divyang"] },
-    { name: "Minority Declaration", code: "MIN", keywords: ["minority declaration", "minority", "religious minority", "linguistic minority"] },
-    { name: "Photo", code: "PIC", keywords: ["photo", "pic", "photograph", "passport photo", "student photo"] }
-  ],
-  "SWAYAM": [
-    { name: "Aadhaar Card", code: "ADR", keywords: ["aadhaar card", "aadhar", "adhar", "uidai"] },
-    { name: "Income Certificate", code: "INC", keywords: ["income certificate", "income", "utpann"] },
-    { name: "Domicile Certificate", code: "DOM", keywords: ["domicile certificate", "domicile", "adhiwas"] },
-    { name: "Caste Certificate", code: "CST", keywords: ["caste certificate", "caste", "jati"] },
-    { name: "Caste Validity Certificate", code: "VLD", keywords: ["caste validity certificate", "validity", "caste validity"] },
-    { name: "Bonafide Certificate", code: "BON", keywords: ["bonafide certificate", "bonafide", "bonafied"] },
-    { name: "Admission Fee Receipt", code: "FEE", keywords: ["admission fee receipt", "fee receipt", "admission fee", "fee paid"] },
-    { name: "Hostel Receipt / Bonafide", code: "HST", keywords: ["hostel receipt", "hostel bonafide", "hostel", "vasatigruh"] },
-    { name: "Bank Passbook", code: "BNK", keywords: ["bank passbook", "passbook", "bank", "ifsc"] },
-    { name: "Ration Card", code: "RAT", keywords: ["ration card", "ration"] },
-    { name: "Self Declaration", code: "DEC", keywords: ["self declaration", "declaration", "hamipatra"] },
-    { name: "Photo", code: "PIC", keywords: ["photo", "pic", "photograph", "passport photo"] }
-  ],
-  "EDUCATIONAL": [
-    { name: "Aadhaar Card", code: "ADR", keywords: ["aadhaar card", "aadhar", "adhar", "uidai", "uid"] },
-    { name: "Photo", code: "PIC", keywords: ["photo", "pic", "photograph", "passport photo", "student photo"] },
-    { name: "10th Marksheet", code: "10M", keywords: ["10th marksheet", "10 marksheet", "10th mark", "ssc marksheet", "ssc mark"] },
-    { name: "10th Passing Certificate", code: "10P", keywords: ["10th passing certificate", "10th passing", "10 passing", "ssc passing"] },
-    { name: "10th Marksheet and Passing Certificate", code: "10MP", keywords: ["10th marksheet and passing certificate", "10th marksheet passing", "10 mp", "cbse 10th marksheet passing"] },
-    { name: "11th Marksheet", code: "11M", keywords: ["11th marksheet", "11 marksheet", "11th mark", "fyjc marksheet"] },
-    { name: "12th Marksheet", code: "12M", keywords: ["12th marksheet", "12 marksheet", "12th mark", "hsc marksheet", "hsc mark"] },
-    { name: "12th Passing Certificate", code: "12P", keywords: ["12th passing certificate", "12th passing", "12 passing", "hsc passing"] },
-    { name: "12th Marksheet and Passing Certificate", code: "12MP", keywords: ["12th marksheet and passing certificate", "12th marksheet passing", "12 mp", "cbse 12th marksheet passing"] },
-    { name: "Leaving Certificate", code: "LC", keywords: ["leaving certificate", "lc", "12lc", "12l", "school leaving", "college leaving", "tc"] },
-    { name: "Caste Certificate", code: "CST", keywords: ["caste certificate", "caste", "cas", "jati"] },
-    { name: "Caste Validity Certificate", code: "VLD", keywords: ["caste validity certificate", "validity", "caste validity", "padtalni"] },
-    { name: "Non Creamy Layer Certificate", code: "NCL", keywords: ["non creamy layer certificate", "non creamy layer", "ncl"] },
-    { name: "Domicile Certificate", code: "DOM", keywords: ["domicile certificate", "domicile", "domi", "adhiwas"] },
-    { name: "Nationality Certificate", code: "NAT", keywords: ["nationality certificate", "nationality", "nat", "indian nationality"] },
-    { name: "Income Certificate", code: "INC", keywords: ["income certificate", "income", "inc", "utpann"] },
-    { name: "Self Declaration", code: "SDC", keywords: ["self declaration", "self decl", "declaration", "hamipatra"] },
-    { name: "Parent Declaration", code: "PDC", keywords: ["parent declaration", "parent decl", "parents declaration"] },
-    { name: "Residential Document", code: "RES", keywords: ["residential document", "residential", "residence proof"] },
-    { name: "Ration Card", code: "RAT", keywords: ["ration card", "ration", "rat"] },
-    { name: "PAN Card", code: "PAN", keywords: ["pan card", "pan", "permanent account number"] },
-    { name: "Birth Certificate", code: "BRT", keywords: ["birth certificate", "birth", "brt", "janma dakhla"] },
-    { name: "Bank Passbook", code: "BNK", keywords: ["bank passbook", "passbook", "bank", "bnk", "ifsc"] }
-  ]
+    "PIC", "SIG", "ADR", "APR", "CETAF", "CETSC", "CAP", "SRF", "10M", "10P",
+    "10MP", "12M", "12P", "12MP", "12LC", "DOM", "NAT", "CST", "VAL", "NCL",
+    "EWS", "INC", "GAP", "MIG", "MED", "BRT"
+  ].map(code => {
+    const doc = MASTER_DOCUMENTS_MAP.get(code);
+    return { name: doc.canonical, code: doc.code, keywords: [...doc.keywords] };
+  }),
+  "EDUCATIONAL DOCUMENTS": [
+    "PIC", "SIG", "ADR", "10M", "10P", "10MP", "12M", "12P", "12MP", "12LC",
+    "PYM", "CST", "VAL", "NCL", "INC", "DOM", "NAT", "RAT", "BNK", "CAP",
+    "BON", "FEE", "ATT", "HST", "GAP", "SDC", "PDC", "DTH", "NHC", "DIS",
+    "APR", "CETAF", "CETSC", "SRF", "EWS", "MIG", "MED", "BRT", "PAN", "VOT",
+    "DL", "11M", "1YM", "2YM", "3YM", "4YM", "DPC", "DEG", "REG", "INT",
+    "CHR", "GAZ", "MIN"
+  ].map(code => {
+    const doc = MASTER_DOCUMENTS_MAP.get(code);
+    return { name: doc.canonical, code: doc.code, keywords: [...doc.keywords] };
+  })
 };
-
-export const DEFAULT_SHORTCUTS = [
-  { code: 'ADR', label: 'Aadhaar Card', canonical: 'AADHAAR CARD', keywords: ['aadhaar', 'aadhar', 'adhar', 'uidai', 'uid'] },
-  { code: 'PIC', label: 'Photo', canonical: 'PHOTO', keywords: ['photo', 'pic', 'photograph', 'passport photo', 'student photo'] },
-  { code: '10M', label: '10th Marksheet', canonical: '10TH MARKSHEET', keywords: ['10th marksheet', '10 marksheet', '10th mark', 'ssc marksheet', 'ssc'] },
-  { code: '10P', label: '10th Passing Certificate', canonical: '10TH PASSING CERTIFICATE', keywords: ['10th passing', '10 passing', 'ssc passing', '10th pass cert'] },
-  { code: '10MP', label: '10th Marksheet and Passing Certificate', canonical: '10TH MARKSHEET AND PASSING CERTIFICATE', keywords: ['10th marksheet passing', '10th combined', 'cbse 10th marksheet passing'] },
-  { code: '11M', label: '11th Marksheet', canonical: '11TH MARKSHEET', keywords: ['11th marksheet', '11 marksheet', '11th mark', 'fyjc marksheet'] },
-  { code: '12M', label: '12th Marksheet', canonical: '12TH MARKSHEET', keywords: ['12th marksheet', '12 marksheet', '12th mark', 'hsc marksheet', 'hsc'] },
-  { code: '12P', label: '12th Passing Certificate', canonical: '12TH PASSING CERTIFICATE', keywords: ['12th passing', '12 passing', 'hsc passing', '12th pass cert'] },
-  { code: '12MP', label: '12th Marksheet and Passing Certificate', canonical: '12TH MARKSHEET AND PASSING CERTIFICATE', keywords: ['12th marksheet passing', '12th combined', 'cbse 12th marksheet passing'] },
-  { code: 'LC', label: 'Leaving Certificate', canonical: 'LEAVING CERTIFICATE', keywords: ['leaving certificate', 'lc', '12lc', '12l', 'tc', 'transfer certificate'] },
-  { code: 'CST', label: 'Caste Certificate', canonical: 'CASTE CERTIFICATE', keywords: ['caste certificate', 'caste', 'cas', 'jati', 'category'] },
-  { code: 'VLD', label: 'Caste Validity Certificate', canonical: 'CASTE VALIDITY CERTIFICATE', keywords: ['caste validity', 'validity', 'vld', 'padtalni'] },
-  { code: 'NCL', label: 'Non Creamy Layer Certificate', canonical: 'NON CREAMY LAYER CERTIFICATE', keywords: ['non creamy layer', 'ncl', 'creamy layer'] },
-  { code: 'DOM', label: 'Domicile Certificate', canonical: 'DOMICILE CERTIFICATE', keywords: ['domicile', 'domi', 'adhiwas'] },
-  { code: 'NAT', label: 'Nationality Certificate', canonical: 'NATIONALITY CERTIFICATE', keywords: ['nationality', 'nat', 'indian nationality'] },
-  { code: 'INC', label: 'Income Certificate', canonical: 'INCOME CERTIFICATE', keywords: ['income certificate', 'income', 'inc', 'utpann'] },
-  { code: 'SDC', label: 'Self Declaration', canonical: 'SELF DECLARATION', keywords: ['self declaration', 'self decl', 'declaration', 'hamipatra'] },
-  { code: 'PDC', label: 'Parent Declaration', canonical: 'PARENT DECLARATION', keywords: ['parent declaration', 'parent decl', 'parents declaration'] },
-  { code: 'RES', label: 'Residential Document', canonical: 'RESIDENTIAL DOCUMENT', keywords: ['residential document', 'residential', 'residence proof'] },
-  { code: 'RAT', label: 'Ration Card', canonical: 'RATION CARD', keywords: ['ration card', 'ration', 'rat'] },
-  { code: 'PAN', label: 'PAN Card', canonical: 'PAN CARD', keywords: ['pan card', 'pan'] },
-  { code: 'BRT', label: 'Birth Certificate', canonical: 'BIRTH CERTIFICATE', keywords: ['birth certificate', 'birth', 'brt', 'janma dakhla'] },
-  { code: 'BNK', label: 'Bank Passbook', canonical: 'BANK PASSBOOK', keywords: ['bank passbook', 'passbook', 'bank', 'bnk'] },
-  { code: 'CET', label: 'CET Scorecard', canonical: 'CET SCORECARD', keywords: ['cet scorecard', 'cet score', 'cet result', 'mht cet'] },
-  { code: 'APP', label: 'CET Application Confirmation', canonical: 'CET APPLICATION CONFIRMATION', keywords: ['cet application', 'application confirmation', 'cet form', 'confirmation receipt'] },
-  { code: 'APR', label: 'APAAR ID', canonical: 'APAAR ID', keywords: ['apaar id', 'apaar', 'abc id'] },
-  { code: 'EWS', label: 'EWS Certificate', canonical: 'EWS CERTIFICATE', keywords: ['ews certificate', 'ews', 'economically weaker'] },
-  { code: 'PWD', label: 'Disability Certificate', canonical: 'DISABILITY CERTIFICATE', keywords: ['disability certificate', 'pwd', 'divyang', 'handicap'] },
-  { code: 'MIN', label: 'Minority Declaration', canonical: 'MINORITY DECLARATION', keywords: ['minority declaration', 'minority'] },
-  { code: 'BON', label: 'Bonafide Certificate', canonical: 'BONAFIDE CERTIFICATE', keywords: ['bonafide certificate', 'bonafide', 'bonafied'] },
-  { code: 'FEE', label: 'Admission Fee Receipt', canonical: 'ADMISSION FEE RECEIPT', keywords: ['admission fee receipt', 'fee receipt', 'admission fee', 'fees'] },
-  { code: 'HST', label: 'Hostel Receipt / Bonafide', canonical: 'HOSTEL RECEIPT / BONAFIDE', keywords: ['hostel receipt', 'hostel bonafide', 'hostel', 'vasatigruh'] },
-  { code: 'DEC', label: 'Declaration Certificate', canonical: 'DECLARATION CERTIFICATE', keywords: ['declaration certificate', 'declaration', 'hamipatra'] }
-];
 
 export class RenamerUIManager {
   constructor() {
@@ -297,8 +238,10 @@ export class RenamerUIManager {
     };
     this._scanAbortController = null;
 
-    // Master Shortcuts & Rules List (33 Rules)
+    // Master Shortcuts & Rules List
     this.shortcuts21 = JSON.parse(JSON.stringify(DEFAULT_SHORTCUTS));
+    this._presetDocsSearchQuery = '';
+    this._shortcutsSearchQuery = '';
   }
 
   init() {
@@ -327,6 +270,27 @@ export class RenamerUIManager {
     });
 
     console.info('[DocMitra Renamer] Renamer UI manager initialized.');
+
+    if (typeof window !== 'undefined' && (window.location.search.includes('test_mode=1') || window.__DOCMITRA_TEST_MODE__)) {
+      this._initTestModeData();
+    }
+  }
+
+  _initTestModeData() {
+    console.info('[DocMitra Renamer] Test mode active (?test_mode=1). Loading mock dataset...');
+    this.loadFolderData({
+      name: 'Vijay_Ramesh_Yadav',
+      path: 'E:/College/Admission_2026/FYJC/Vijay_Ramesh_Yadav',
+      files: [
+        { name: '10th_marksheet.pdf', path: 'E:/College/Admission_2026/FYJC/Vijay_Ramesh_Yadav/10th_marksheet.pdf', size: 154200, ext: '.pdf' },
+        { name: 'aadhaar_card_front.jpg', path: 'E:/College/Admission_2026/FYJC/Vijay_Ramesh_Yadav/aadhaar_card_front.jpg', size: 210000, ext: '.jpg' },
+        { name: 'caste_certificate.pdf', path: 'E:/College/Admission_2026/FYJC/Vijay_Ramesh_Yadav/caste_certificate.pdf', size: 180000, ext: '.pdf' },
+        { name: '12th_hsc_marksheet.pdf', path: 'E:/College/Admission_2026/FYJC/Vijay_Ramesh_Yadav/12th_hsc_marksheet.pdf', size: 165000, ext: '.pdf' },
+        { name: 'domicile_certificate.pdf', path: 'E:/College/Admission_2026/FYJC/Vijay_Ramesh_Yadav/domicile_certificate.pdf', size: 195000, ext: '.pdf' },
+        { name: 'leaving_certificate_tc.pdf', path: 'E:/College/Admission_2026/FYJC/Vijay_Ramesh_Yadav/leaving_certificate_tc.pdf', size: 140000, ext: '.pdf' },
+        { name: 'unrecognized_scan_img_0099.pdf', path: 'E:/College/Admission_2026/FYJC/Vijay_Ramesh_Yadav/unrecognized_scan_img_0099.pdf', size: 98000, ext: '.pdf' }
+      ]
+    });
   }
 
   _bindDOM() {
@@ -336,32 +300,126 @@ export class RenamerUIManager {
       btnSelect.addEventListener('click', () => this.handleSelectFolder());
     }
 
-    // 2. Add Files button
-    const btnAdd = document.getElementById('btnAddFiles');
-    if (btnAdd) {
-      btnAdd.addEventListener('click', () => this.handleAddFiles());
+    // 2. Memory Persistent Checkbox for Folder/Student Name Inclusion
+    const chkInclude = document.getElementById('chkIncludeFolderName');
+    if (chkInclude) {
+      const saved = localStorage.getItem('docmitra_include_folder_name');
+      if (saved !== null) {
+        chkInclude.checked = (saved === 'true');
+      }
+      chkInclude.addEventListener('change', () => {
+        localStorage.setItem('docmitra_include_folder_name', String(chkInclude.checked));
+        this._recalculateTargetNames(true);
+        this.renderQueue();
+        this.renderCurrentPreview();
+        this.updateTelemetry();
+        const statusMsg = chkInclude.checked ? 'Folder name included in files' : 'Folder name removed from files';
+        toast.show('Filename Setting', statusMsg, 'info');
+      });
     }
 
-    // 3. In-Ribbon Folder Switcher (< Prev and > Next)
-    const btnPrev = document.getElementById('btnPrevFolder');
-    if (btnPrev) {
-      btnPrev.addEventListener('click', () => this.handlePrevFolder());
-    }
+    // 3. In-Ribbon Folder Name Edit & Apply (Variant 3 Dark Slate)
+    const btnEditFolder = document.getElementById('btnEditFolderName');
+    const btnApplyFolder = document.getElementById('btnApplyFolderName');
+    const displayFolder = document.getElementById('displayFolderName');
+    const inputEditFolder = document.getElementById('inputEditFolderName');
 
-    const btnNext = document.getElementById('btnNextFolder');
-    if (btnNext) {
-      btnNext.addEventListener('click', () => this.handleNextFolder());
-    }
+    if (btnEditFolder && inputEditFolder && displayFolder) {
+      btnEditFolder.addEventListener('click', () => {
+        inputEditFolder.value = this.state.studentName || (this.state.folder?.name || '');
+        displayFolder.classList.add('hidden');
+        btnEditFolder.classList.add('hidden');
+        inputEditFolder.classList.remove('hidden');
+        if (btnApplyFolder) btnApplyFolder.classList.remove('hidden');
+        inputEditFolder.focus();
+        inputEditFolder.select();
+      });
 
-    // 4. Open in Windows Explorer (Path text click + icon button)
-    const pathText = document.getElementById('activeFolderPath');
-    if (pathText) {
-      pathText.addEventListener('click', () => this.handleOpenInExplorer());
-    }
+      const applyFolderEdit = async () => {
+        const newName = inputEditFolder.value.trim();
+        const oldFolderName = this.state.studentName || (this.state.folder?.name || '');
+        const oldFolderPath = this.state.folder ? (this.state.folder.nativePath || this.state.folder.path || '') : '';
 
-    const btnOpenExplorer = document.getElementById('btnOpenInExplorer');
-    if (btnOpenExplorer) {
-      btnOpenExplorer.addEventListener('click', () => this.handleOpenInExplorer());
+        inputEditFolder.classList.add('hidden');
+        if (btnApplyFolder) btnApplyFolder.classList.add('hidden');
+        displayFolder.classList.remove('hidden');
+        btnEditFolder.classList.remove('hidden');
+
+        if (!newName || newName === oldFolderName) {
+          return;
+        }
+
+        // 1. Exact Typing Casing: Use user's exact typing (Caps Lock On/Off fidelity)
+        this.state.studentName = newName;
+        displayFolder.textContent = newName;
+        displayFolder.title = newName;
+
+        // 2. Physical Disk Folder Rename
+        if (oldFolderPath) {
+          try {
+            const renameRes = await renameNativeFolder(oldFolderPath, newName);
+            if (renameRes && renameRes.success) {
+              const updatedPath = renameRes.newPath || renameRes.path;
+              if (updatedPath) {
+                const oldNormalized = oldFolderPath.replace(/\\/g, '/').toLowerCase();
+                const newNormalized = updatedPath.replace(/\\/g, '/');
+
+                if (this.state.folder) {
+                  this.state.folder.name = newName;
+                  this.state.folder.path = updatedPath;
+                  this.state.folder.nativePath = updatedPath;
+                }
+
+                // Update in-memory paths of all loaded queue files so subsequent renames succeed
+                for (const f of this.state.files) {
+                  if (f.path) {
+                    const fNorm = f.path.replace(/\\/g, '/');
+                    if (fNorm.toLowerCase().startsWith(oldNormalized)) {
+                      f.path = newNormalized + fNorm.slice(oldNormalized.length);
+                      if (f.nativePath) {
+                        f.nativePath = f.path;
+                      }
+                    }
+                  }
+                }
+              }
+            } else if (renameRes && renameRes.error) {
+              console.warn('[DocMitra] Physical folder rename notice:', renameRes.error);
+            }
+          } catch (err) {
+            console.warn('[DocMitra] Physical folder rename error:', err);
+          }
+        }
+
+        // 3. 'Add folder name in file' Checkbox Guard (Zero Recalculation if unchecked)
+        const chkInclude = document.getElementById('chkIncludeFolderName');
+        const shouldIncludeInFiles = chkInclude ? chkInclude.checked : true;
+
+        if (shouldIncludeInFiles) {
+          this._recalculateTargetNames(true);
+          this.renderQueue();
+          this.renderCurrentPreview();
+        }
+
+        this.updateTelemetry();
+        toast.show('Folder Renamed', `Folder name updated to: ${newName}`, 'success');
+      };
+
+      if (btnApplyFolder) {
+        btnApplyFolder.addEventListener('click', applyFolderEdit);
+      }
+
+      inputEditFolder.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          applyFolderEdit();
+        } else if (e.key === 'Escape') {
+          inputEditFolder.classList.add('hidden');
+          if (btnApplyFolder) btnApplyFolder.classList.add('hidden');
+          displayFolder.classList.remove('hidden');
+          btnEditFolder.classList.remove('hidden');
+        }
+      });
     }
 
     // Rename All Button (F8)
@@ -403,11 +461,6 @@ export class RenamerUIManager {
     const btnRenameMatched = document.getElementById('btnRenameMatched');
     if (btnRenameMatched) {
       btnRenameMatched.addEventListener('click', () => this.openCrossCheckModal());
-    }
-
-    const btnReviewUnmatched = document.getElementById('btnReviewUnmatched');
-    if (btnReviewUnmatched) {
-      btnReviewUnmatched.addEventListener('click', () => this.handleReviewUnmatched());
     }
 
     // Modal: Add Document to Preset Flow
@@ -478,19 +531,24 @@ export class RenamerUIManager {
       btnAddNewShortcut.addEventListener('click', () => this.openAddDocumentModal(null, true));
     }
 
-    // Modal: Cross-Check Preview
-    const btnCloseCrossCheck = document.getElementById('btnCloseCrossCheckModal');
-    if (btnCloseCrossCheck) {
-      btnCloseCrossCheck.addEventListener('click', () => this.closeCrossCheckModal());
+    const inputSearchPresetDocs = document.getElementById('inputSearchPresetDocs');
+    if (inputSearchPresetDocs) {
+      inputSearchPresetDocs.addEventListener('input', (e) => {
+        this._presetDocsSearchQuery = e.target.value.trim().toLowerCase();
+        this.renderPresetDocsTable();
+      });
     }
-    const btnCancelCrossCheck = document.getElementById('btnCancelCrossCheck');
-    if (btnCancelCrossCheck) {
-      btnCancelCrossCheck.addEventListener('click', () => this.closeCrossCheckModal());
+
+    const inputSearchShortcuts = document.getElementById('inputSearchShortcuts');
+    if (inputSearchShortcuts) {
+      inputSearchShortcuts.addEventListener('input', (e) => {
+        this._shortcutsSearchQuery = e.target.value.trim().toLowerCase();
+        this.renderShortcutsTable();
+      });
     }
-    const btnConfirmRename = document.getElementById('btnConfirmBatchRename');
-    if (btnConfirmRename) {
-      btnConfirmRename.addEventListener('click', () => this.handleConfirmCrossCheckRename());
-    }
+
+    // Modal: Cross-Check Preview & Power Utilities Events
+    this._initCrossCheckEvents();
 
     // Casing Style Radios (UPPER, Title, lower, As Is)
     const updateCasingPillStyles = () => {
@@ -511,13 +569,23 @@ export class RenamerUIManager {
       }
       radio.addEventListener('change', (e) => {
         if (e.target.checked) {
-          this.state.style = e.target.value;
-          localStorage.setItem('docmitra_casing_style', e.target.value);
+          const newStyle = e.target.value;
+          this.state.style = newStyle;
+          localStorage.setItem('docmitra_casing_style', newStyle);
           updateCasingPillStyles();
+          for (const f of this.state.files) {
+            if (!f.isRenamed && !f.isKept) {
+              f.userEditedName = applyCase(f.userEditedName || cleanName(f.name), newStyle);
+            }
+          }
           this._recalculateTargetNames();
           this.renderQueue();
           this.renderCurrentPreview();
-          toast.show('Case Style Changed', `Applied ${e.target.value.toUpperCase()} casing to pending files`, 'info');
+          const pendingCount = this.state.files.filter(f => !f.isRenamed && !f.isKept).length;
+          const styleName = newStyle.toUpperCase() === 'UPPER'
+            ? 'UPPERCASE'
+            : (newStyle.toUpperCase() === 'LOWER' ? 'LOWERCASE' : 'TITLE CASE');
+          toast.show('Case Style Changed', `Applied ${styleName} to ${pendingCount} pending files`, 'info');
         }
       });
     });
@@ -1052,6 +1120,12 @@ export class RenamerUIManager {
         const uniqueName = uniqueDestination(desiredWithExt, f.name, usedDestinations, this.state.studentName);
         usedDestinations.add(uniqueName);
 
+        // Check for exact match -> 100% confidence
+        let effectiveConfidence = matchSmart.confidence;
+        if (baseName.toUpperCase() === cleanName(suggested).toUpperCase()) {
+          effectiveConfidence = 100;
+        }
+
         return {
           id: `file_append_${Date.now()}_${i}`,
           name: f.name,
@@ -1062,11 +1136,11 @@ export class RenamerUIManager {
           url: resolveFilePreviewUrl(f),
           docType: docType,
           smartDocType: docType,
-          smartConfidence: matchSmart.confidence,
+          smartConfidence: effectiveConfidence,
           isMatched: isMatched,
           suggestedName: uniqueName,
           targetName: uniqueName,
-          status: isMatched ? (matchSmart.confidence >= 80 ? 'matched' : 'needs_review') : 'unmatched',
+          status: isMatched ? (effectiveConfidence >= 80 ? 'matched' : 'needs_review') : 'unmatched',
           isRenamed: false,
           isKept: false,
           rotation: 0,
@@ -1098,12 +1172,33 @@ export class RenamerUIManager {
     }
   }
 
+  getEffectiveStudentName() {
+    const chk = document.getElementById('chkIncludeFolderName');
+    if (chk && !chk.checked) {
+      return '';
+    }
+    return this.state.studentName || '';
+  }
+
   loadFolderData(data, preservedEdits = null) {
     const folderPath = data.path || '';
     const folderName = data.name || (folderPath ? folderPath.split(/[\\/]/).pop() : 'Selected Folder');
 
-    const cleanFolderName = folderName.replace(/^[0-9]+[_\.\s-]+/, '').trim();
-    const guessedStudent = cleanFolderName.replace(/_/g, ' ').trim();
+    let cleanFolderName = folderName
+      .replace(/\.[a-zA-Z0-9]+$/i, '')
+      .replace(/^(?:roll\s*no\.?|student|candidate|sr\.?\s*no\.?)\s*[\d\w]*[\s_\.\-]+/i, '')
+      .replace(/^[0-9]+[_\.\s-]+/, '')
+      .replace(/\s*[\(\[][^\)\]]*(?:final|new|copy|admission|cet|dbt|\d{4})[^\)\]]*[\)\]]/gi, '')
+      .trim();
+
+    let guessedStudent = cleanFolderName
+      .replace(/\.[a-zA-Z0-9]+$/i, '')
+      .replace(/_/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (/^\d+$/.test(guessedStudent)) {
+      guessedStudent = '';
+    }
 
     this.state.folder = {
       name: folderName,
@@ -1112,8 +1207,19 @@ export class RenamerUIManager {
     };
     this.state.studentName = guessedStudent;
 
+    const displayFolder = document.getElementById('displayFolderName');
+    if (displayFolder) {
+      displayFolder.textContent = cleanFolderName || 'Selected Folder';
+      displayFolder.title = folderPath || cleanFolderName;
+    }
+    const inputEdit = document.getElementById('inputEditFolderName');
+    if (inputEdit) {
+      inputEdit.value = guessedStudent || cleanFolderName;
+    }
+
     const filesRaw = (data.files || []).filter(f => !isJunkFile(f.name));
     const usedDestinations = new Set();
+    const effStudent = this.getEffectiveStudentName();
 
     this.state.files = filesRaw.map((f, idx) => {
       const extension = f.ext || ext(f.name);
@@ -1142,20 +1248,26 @@ export class RenamerUIManager {
 
       // Batch spelling auto-correction: correct scanner typos before matching
       // Filename-based matching (30%+ threshold) & preview URL resolution
-      const matchSmart = matchFilenameSmart(f.name, this.state.studentName, this.state.settings?.groups, this.getAllPresetDocuments());
+      const matchSmart = matchFilenameSmart(f.name, effStudent, this.state.settings?.groups, this.getAllPresetDocuments());
       const docType = matchSmart.docType;
       const isMatched = matchSmart.confidence >= 30;
 
       let suggested = baseName;
       if (docType) {
-        suggested = buildName(docType, this.state.studentName, this.state.settings?.groups, this.state.style);
+        suggested = buildName(docType, effStudent, this.state.settings?.groups, this.state.style);
       } else {
-        suggested = buildName(baseName, this.state.studentName, null, this.state.style);
+        suggested = buildName(baseName, effStudent, null, this.state.style);
       }
 
       const desiredWithExt = (suggested.endsWith(extension) ? suggested : suggested + extension);
-      const uniqueName = uniqueDestination(desiredWithExt, f.name, usedDestinations, this.state.studentName);
+      const uniqueName = uniqueDestination(desiredWithExt, f.name, usedDestinations, effStudent);
       usedDestinations.add(uniqueName);
+
+      // Check for exact match -> 100% confidence
+      let effectiveConfidence = matchSmart.confidence;
+      if (baseName.toUpperCase() === cleanName(suggested).toUpperCase()) {
+        effectiveConfidence = 100;
+      }
 
       return {
         id: `file_${idx}_${Date.now()}`,
@@ -1167,11 +1279,11 @@ export class RenamerUIManager {
         url: resolveFilePreviewUrl(f),
         docType: docType,
         smartDocType: docType,
-        smartConfidence: matchSmart.confidence,
+        smartConfidence: effectiveConfidence,
         isMatched: isMatched,
         suggestedName: uniqueName,
         targetName: uniqueName,
-        status: isMatched ? (matchSmart.confidence >= 80 ? 'matched' : 'needs_review') : 'unmatched',
+        status: isMatched ? (effectiveConfidence >= 80 ? 'matched' : 'needs_review') : 'unmatched',
         isRenamed: false,
         isKept: false,
         rotation: 0,
@@ -1203,11 +1315,12 @@ export class RenamerUIManager {
         usedDestinations.add(f.targetName || f.name);
       }
     }
+    const effStudent = this.getEffectiveStudentName();
     const presetDocs = this.getAllPresetDocuments();
     for (const f of this.state.files) {
       if (!f.isRenamed && !f.isKept) {
         if (reMatch || !f.isMatched) {
-          const matchSmart = matchFilenameSmart(f.name, this.state.studentName, this.state.settings?.groups, presetDocs);
+          const matchSmart = matchFilenameSmart(f.name, effStudent, this.state.settings?.groups, presetDocs);
           if (matchSmart.confidence >= 30) {
             f.docType = matchSmart.docType;
             f.smartDocType = matchSmart.docType;
@@ -1216,13 +1329,25 @@ export class RenamerUIManager {
             f.status = matchSmart.confidence >= 80 ? 'matched' : 'needs_review';
           }
         }
+        if (f.docType) {
+          f.docType = applyCase(f.docType, this.state.style);
+          f.smartDocType = applyCase(f.smartDocType || f.docType, this.state.style);
+        }
+        if (f.hasUserEdited && f.userEditedName) {
+          f.userEditedName = applyCase(f.userEditedName, this.state.style);
+        }
         const docBase = f.docType || cleanName(f.name);
         const currentExt = f.ext || ('.' + f.name.split('.').pop()).toLowerCase();
-        const newBase = buildName(docBase, this.state.studentName, this.state.settings?.groups, this.state.style);
+        const newBase = f.hasUserEdited && f.userEditedName
+          ? f.userEditedName
+          : buildName(docBase, effStudent, this.state.settings?.groups, this.state.style);
         const desired = newBase.endsWith(currentExt) ? newBase : `${newBase}${currentExt}`;
-        const unique = uniqueDestination(desired, f.name, usedDestinations, this.state.studentName);
+        const unique = uniqueDestination(desired, f.name, usedDestinations, effStudent);
         usedDestinations.add(unique);
         f.targetName = unique;
+        if (cleanName(f.name).toUpperCase() === cleanName(newBase).toUpperCase()) {
+          f.smartConfidence = 100;
+        }
       }
     }
   }
@@ -1346,18 +1471,14 @@ export class RenamerUIManager {
     // Smart Auto-Rename Action Buttons Counter Sync
     const smartMatchedBtn = document.getElementById('btnRenameMatched');
     if (smartMatchedBtn) {
-      const matchedCount = this.state.files.filter(f => !f.isRenamed && f.status !== 'needs_review' && (f.smartConfidence >= 80 || (f.smartConfidence === undefined && f.isMatched))).length;
+      const matchedCount = this.state.files.filter(f => {
+        if (f.isRenamed || f.status === 'needs_review') return false;
+        const isAutoMatched = (f.smartConfidence >= 80 || (f.smartConfidence === undefined && f.isMatched));
+        return isAutoMatched;
+      }).length;
       const span = smartMatchedBtn.querySelector('span:not(.material-symbols-outlined)');
       if (span) span.textContent = `Rename Matched (${matchedCount})`;
       smartMatchedBtn.disabled = matchedCount === 0;
-    }
-
-    const reviewUnmatchedBtn = document.getElementById('btnReviewUnmatched');
-    if (reviewUnmatchedBtn) {
-      const unmatchedCount = this.state.files.filter(f => !f.isRenamed && (f.status === 'needs_review' || (f.smartConfidence !== undefined ? f.smartConfidence < 80 : !f.isMatched))).length;
-      const span = reviewUnmatchedBtn.querySelector('span:not(.material-symbols-outlined)');
-      if (span) span.textContent = `Review Unmatched (${unmatchedCount})`;
-      reviewUnmatchedBtn.disabled = unmatchedCount === 0;
     }
   }
 
@@ -1429,12 +1550,12 @@ export class RenamerUIManager {
       qHeader.className = 'flex items-center justify-between px-1 text-label-sm pb-1';
       const qTitle = document.createElement('span');
       qTitle.className = 'font-bold text-on-surface text-[12px]';
-      qTitle.textContent = 'UPCOMING QUEUE (0 Files)';
+      qTitle.textContent = 'ALL LOADED DOCUMENTS (0 / 0 Done)';
       qHeader.appendChild(qTitle);
 
       const qSlotCount = document.createElement('span');
       qSlotCount.className = 'text-secondary text-[11px] font-mono-code';
-      qSlotCount.textContent = '5 Slots Ready';
+      qSlotCount.textContent = 'Standby';
       qHeader.appendChild(qSlotCount);
       queueFrame.appendChild(qHeader);
 
@@ -1520,6 +1641,20 @@ export class RenamerUIManager {
       }
       rightBadgeGroup.appendChild(liveBadge);
 
+      // Check for fuzzy difference error %
+      const oldCleanActive = cleanName(currentFile.name);
+      const targetCleanActive = cleanName(currentFile.targetName || currentFile.suggestedName || '');
+      if (targetCleanActive && oldCleanActive.toLowerCase() !== targetCleanActive.toLowerCase()) {
+        const sim = stringSimilarity(oldCleanActive, targetCleanActive);
+        if (sim >= 0.40 && sim < 0.99) {
+          const errPct = Math.round((1 - sim) * 100);
+          const typoBadge = document.createElement('span');
+          typoBadge.className = 'px-1.5 py-0.5 rounded text-[10px] font-mono-code font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30';
+          typoBadge.textContent = `~${errPct}% Typo/Diff`;
+          rightBadgeGroup.appendChild(typoBadge);
+        }
+      }
+
       headerRow.appendChild(rightBadgeGroup);
 
       activeCardWrapper.appendChild(headerRow);
@@ -1577,7 +1712,7 @@ export class RenamerUIManager {
       kbdEnter.className = 'px-1.5 py-0.5 rounded bg-surface-container font-mono-code text-[10px] text-on-surface font-bold border border-outline-variant/40';
       kbdEnter.textContent = 'Enter';
       tipSpan.appendChild(kbdEnter);
-      tipSpan.appendChild(document.createTextNode(' to save'));
+      tipSpan.appendChild(document.createTextNode(' to save & next'));
       labelRow.appendChild(tipSpan);
       inputSection.appendChild(labelRow);
 
@@ -1595,28 +1730,28 @@ export class RenamerUIManager {
       targetInput.setAttribute('name', `docmitra_rename_${Date.now()}`);
       targetInput.className = 'w-full h-10 px-3 rounded-lg bg-surface-container-lowest font-mono-code text-[13px] text-on-surface font-semibold border-2 border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-xs';
 
-      // USER APPROVED SPEC: Show original filename without extension in edit field first
-      if (currentFile.userEditedName !== undefined) {
-        targetInput.value = currentFile.userEditedName;
-      } else {
-        targetInput.value = cleanName(currentFile.name);
-      }
+      // USER APPROVED SPEC: Show original or previously assigned filename in active casing
+      const rawBase = currentFile.userEditedName !== undefined
+        ? currentFile.userEditedName
+        : (currentFile.targetName ? cleanName(currentFile.targetName) : cleanName(currentFile.name));
+      const activeStyle = this.state.style || 'upper';
+      targetInput.value = applyCase(rawBase, activeStyle);
 
       // Live keystroke filtering for illegal characters
       targetInput.addEventListener('keydown', (e) => {
+        // Ctrl+Enter: Instant disk rename for this single file
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault();
+          this.handleRenameSingleFile(currentFile);
+          return;
+        }
+
         // Tab key: confirm and advance
         if (e.key === 'Tab' && !e.shiftKey) {
           e.preventDefault();
           const typedVal = targetInput.value.trim();
-          if (!currentFile.hasUserEdited && typedVal === cleanName(currentFile.name)) {
-            if (currentFile.isMatched && (currentFile.targetName || currentFile.suggestedName)) {
-              this.handleConfirmCurrentName(currentFile.targetName || currentFile.suggestedName);
-            } else {
-              this.handleKeepOriginal();
-            }
-          } else {
-            this.handleConfirmCurrentName(typedVal);
-          }
+          const targetToConfirm = typedVal || currentFile.targetName || currentFile.suggestedName || cleanName(currentFile.name);
+          this.handleConfirmCurrentName(targetToConfirm);
           return;
         }
 
@@ -1631,15 +1766,8 @@ export class RenamerUIManager {
         if (e.key === 'Enter') {
           e.preventDefault();
           const typedVal = targetInput.value.trim();
-          if (!currentFile.hasUserEdited && typedVal === cleanName(currentFile.name)) {
-            if (currentFile.isMatched && (currentFile.targetName || currentFile.suggestedName)) {
-              this.handleConfirmCurrentName(currentFile.targetName || currentFile.suggestedName);
-            } else {
-              this.handleKeepOriginal();
-            }
-          } else {
-            this.handleConfirmCurrentName(typedVal);
-          }
+          const targetToConfirm = typedVal || currentFile.targetName || currentFile.suggestedName || cleanName(currentFile.name);
+          this.handleConfirmCurrentName(targetToConfirm);
           return;
         }
 
@@ -1679,8 +1807,26 @@ export class RenamerUIManager {
           return;
         }
 
-        // Exact-Match Shortcut Rule
-        const exactShortcut = this.shortcuts21.find(s => s.code.toLowerCase() === trimmedVal.toLowerCase());
+        // Exact-Match or Compact Shortcut Rule (e.g. "PAN" or "P A N" or "CAS")
+        const compactVal = trimmedVal.replace(/\s+/g, '').toLowerCase();
+        let exactShortcut = this.shortcuts21.find(s =>
+          s.code.toLowerCase() === trimmedVal.toLowerCase() ||
+          s.code.toLowerCase() === compactVal ||
+          (Array.isArray(s.keywords) && (s.keywords.includes(trimmedVal.toLowerCase()) || s.keywords.includes(compactVal)))
+        );
+
+        // If not matched by short code, check preset documents by code or keywords (e.g. "CAS" -> Caste Cert "CST")
+        if (!exactShortcut) {
+          const allDocs = this.getAllPresetDocuments();
+          const docMatch = allDocs.find(d =>
+            (d.code && (d.code.toLowerCase() === trimmedVal.toLowerCase() || d.code.toLowerCase() === compactVal)) ||
+            (Array.isArray(d.keywords) && (d.keywords.includes(trimmedVal.toLowerCase()) || d.keywords.includes(compactVal)))
+          );
+          if (docMatch) {
+            exactShortcut = { code: docMatch.code, canonical: docMatch.name.toUpperCase(), label: docMatch.name };
+          }
+        }
+
         if (exactShortcut) {
           const canonical = exactShortcut.canonical;
           currentFile.docType = canonical;
@@ -1737,7 +1883,7 @@ export class RenamerUIManager {
       });
     }
 
-        // 2. UNIFIED FILES LIST (ONE list for all loaded files)
+    // 2. UNIFIED FILES LIST (ONE list for all loaded files)
     const listWrapper = document.createElement('div');
     listWrapper.className = 'flex flex-col gap-1.5 pt-1.5 flex-1 min-h-0 select-none';
 
@@ -1798,14 +1944,14 @@ export class RenamerUIManager {
       numBadge.textContent = isDone ? '✓' : String(fIdx + 1);
       leftCol.appendChild(numBadge);
 
-      // Clean original filename (single line, no extension in UI) - clean single-line display (zero triple repetition)
+      // Clean filename (single line, no extension in UI) - shows actual new renamed name or pending target name
       const origTitle = document.createElement('span');
       origTitle.className = isActive
         ? 'font-mono-code text-[11px] text-primary font-bold truncate flex-1 min-w-0'
         : (isDone
-          ? 'font-mono-code text-[11px] text-on-surface/80 line-through truncate flex-1 min-w-0'
+          ? 'font-mono-code text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold truncate flex-1 min-w-0'
           : 'font-mono-code text-[11px] text-on-surface font-medium truncate flex-1 min-w-0');
-      origTitle.textContent = cleanName(f.name);
+      origTitle.textContent = isDone ? cleanName(f.name) : (f.hasUserEdited && f.targetName ? cleanName(f.targetName) : applyCase(cleanName(f.name), this.state.style));
       leftCol.appendChild(origTitle);
 
       item.appendChild(leftCol);
@@ -1826,17 +1972,16 @@ export class RenamerUIManager {
       } else if (isDone) {
         const doneBadge = document.createElement('span');
         doneBadge.className = 'confidence-badge bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold shrink-0 text-[10px] px-1.5 py-0.5';
-        doneBadge.textContent = shortCode ? `✓ ${shortCode}` : '✓ DONE';
+        doneBadge.textContent = '✓';
         item.appendChild(doneBadge);
       } else if (conf >= 30) {
         const confBadge = document.createElement('span');
-        const label = shortCode || (f.smartDocType || f.docType || 'DOC').substring(0, 6).toUpperCase();
         if (conf >= 80) {
           confBadge.className = 'confidence-badge confidence-badge-high shrink-0 text-[10px] px-1.5 py-0.5';
-          confBadge.textContent = `🟢 ${conf}% ${label}`;
+          confBadge.textContent = `🟢 ${conf}%`;
         } else {
           confBadge.className = 'confidence-badge confidence-badge-med shrink-0 text-[10px] px-1.5 py-0.5';
-          confBadge.textContent = `🟡 ${conf}% ${label}`;
+          confBadge.textContent = `🟡 ${conf}%`;
         }
         item.appendChild(confBadge);
       } else {
@@ -2006,16 +2151,24 @@ export class RenamerUIManager {
           redDot.className = 'w-1.5 h-1.5 rounded-full bg-error shrink-0';
           leftCol.appendChild(redDot);
 
+          const style = this.state.style || 'upper';
+          const displayRuleCode = style === 'lower'
+            ? (ruleCode || '').toLowerCase()
+            : (style === 'title'
+              ? (ruleCode && ruleCode.length <= 4 && /\d/.test(ruleCode) ? ruleCode.toUpperCase() : applyCase(ruleCode || '', 'title'))
+              : (ruleCode || '').toUpperCase());
+          const displayRuleName = applyCase(ruleName, style);
+
           if (ruleCode) {
             const cBadge = document.createElement('span');
             cBadge.className = 'px-1 py-0.2 rounded bg-amber-500/20 text-amber-900 dark:text-amber-300 font-mono-code text-[9px] font-bold shrink-0';
-            cBadge.textContent = ruleCode;
+            cBadge.textContent = displayRuleCode;
             leftCol.appendChild(cBadge);
           }
 
           const titleSpan = document.createElement('span');
           titleSpan.className = 'font-mono-code text-[11px] font-bold text-on-surface truncate';
-          titleSpan.textContent = ruleName;
+          titleSpan.textContent = displayRuleName;
           leftCol.appendChild(titleSpan);
 
           const studentName = this.state.studentName || this.state.folder?.name || 'Student';
@@ -2172,84 +2325,84 @@ export class RenamerUIManager {
               let evalRes = null;
 
               try {
-                    evalRes = matchFilenameSmart(picked.name, studentName, this.state.settings?.groups);
-                    if (evalRes && evalRes.docType) {
-                      if (ruleName && evalRes.docType.toUpperCase() === ruleName.toUpperCase()) {
-                        detectedDocType = ruleName;
-                        isConfident = evalRes.confidence >= 50;
-                      } else if (!ruleName) {
-                        detectedDocType = evalRes.docType;
-                        isConfident = evalRes.confidence >= 70;
-                      } else {
-                        detectedDocType = ruleName;
-                        isConfident = evalRes.confidence >= 30;
-                      }
-                    } else {
-                      detectedDocType = ruleName;
-                      isConfident = false;
-                    }
-                  } catch (matchErr) {
-                    console.warn('[DocMitra Import] Filename matching warning:', matchErr);
-                    isConfident = false;
-                  }
-
-                  const targetBase = buildName(detectedDocType || ruleName || cleanName(picked.name), studentName, this.state.settings?.groups, this.state.style);
-                  const cleanBase = targetBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
-                  const targetFilename = `${cleanBase}${fileExt}`;
-
-                  let imported = null;
-                  if (folderPath && picked.path) {
-                    imported = await importNativeFile({
-                      sourcePath: picked.path,
-                      targetDir: folderPath,
-                      targetName: targetFilename,
-                      studentName: studentName
-                    });
-                  }
-
-                  const finalName = (imported && imported.name) ? imported.name : targetFilename;
-                  const finalPath = (imported && imported.path) ? imported.path : (folderPath ? `${folderPath}/${finalName}` : picked.path);
-                  const finalSize = (imported && imported.size) ? imported.size : (picked.size || 0);
-
-                  const newFileItem = {
-                    id: `imported_${Date.now()}`,
-                    name: finalName,
-                    targetName: finalName,
-                    suggestedName: finalName,
-                    path: finalPath,
-                    nativePath: finalPath,
-                    size: finalSize,
-                    ext: fileExt,
-                    url: (imported && imported.url) ? imported.url : picked.url,
-                    docType: detectedDocType || ruleName,
-                    isMatched: isConfident,
-                    isRenamed: false,
-                    isKept: false,
-                    rotation: 0,
-                    isScanning: false,
-                    smartConfidence: evalRes ? evalRes.confidence : (isConfident ? 90 : 40),
-                    smartDocType: evalRes ? evalRes.docType : detectedDocType,
-                    status: isConfident ? 'matched' : 'needs_review'
-                  };
-
-                  this.state.files.push(newFileItem);
-                  this.updateTelemetry();
-                  this.renderQueue();
-                  this.renderCurrentPreview();
-                  if (isConfident) {
-                    toast.show('Document Imported', `Imported ${cleanName(finalName)} as ${detectedDocType}`, 'success');
+                evalRes = matchFilenameSmart(picked.name, studentName, this.state.settings?.groups);
+                if (evalRes && evalRes.docType) {
+                  if (ruleName && evalRes.docType.toUpperCase() === ruleName.toUpperCase()) {
+                    detectedDocType = ruleName;
+                    isConfident = evalRes.confidence >= 50;
+                  } else if (!ruleName) {
+                    detectedDocType = evalRes.docType;
+                    isConfident = evalRes.confidence >= 70;
                   } else {
-                    toast.show('Imported — Needs Review', `Imported ${cleanName(finalName)}; please verify document type.`, 'warning');
+                    detectedDocType = ruleName;
+                    isConfident = evalRes.confidence >= 30;
                   }
-                } catch (err) {
-                  toast.show('Import Error', err.message, 'error');
+                } else {
+                  detectedDocType = ruleName;
+                  isConfident = false;
                 }
-              };
-              actionRow.appendChild(btnImport);
+              } catch (matchErr) {
+                console.warn('[DocMitra Import] Filename matching warning:', matchErr);
+                isConfident = false;
+              }
 
-              mItem.appendChild(actionRow);
-              missingList.appendChild(mItem);
-            });
+              const targetBase = buildName(detectedDocType || ruleName || cleanName(picked.name), studentName, this.state.settings?.groups, this.state.style);
+              const cleanBase = targetBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+              const targetFilename = `${cleanBase}${fileExt}`;
+
+              let imported = null;
+              if (folderPath && picked.path) {
+                imported = await importNativeFile({
+                  sourcePath: picked.path,
+                  targetDir: folderPath,
+                  targetName: targetFilename,
+                  studentName: studentName
+                });
+              }
+
+              const finalName = (imported && imported.name) ? imported.name : targetFilename;
+              const finalPath = (imported && imported.path) ? imported.path : (folderPath ? `${folderPath}/${finalName}` : picked.path);
+              const finalSize = (imported && imported.size) ? imported.size : (picked.size || 0);
+
+              const newFileItem = {
+                id: `imported_${Date.now()}`,
+                name: finalName,
+                targetName: finalName,
+                suggestedName: finalName,
+                path: finalPath,
+                nativePath: finalPath,
+                size: finalSize,
+                ext: fileExt,
+                url: (imported && imported.url) ? imported.url : picked.url,
+                docType: detectedDocType || ruleName,
+                isMatched: isConfident,
+                isRenamed: false,
+                isKept: false,
+                rotation: 0,
+                isScanning: false,
+                smartConfidence: evalRes ? evalRes.confidence : (isConfident ? 90 : 40),
+                smartDocType: evalRes ? evalRes.docType : detectedDocType,
+                status: isConfident ? 'matched' : 'needs_review'
+              };
+
+              this.state.files.push(newFileItem);
+              this.updateTelemetry();
+              this.renderQueue();
+              this.renderCurrentPreview();
+              if (isConfident) {
+                toast.show('Document Imported', `Imported ${cleanName(finalName)} as ${detectedDocType}`, 'success');
+              } else {
+                toast.show('Imported — Needs Review', `Imported ${cleanName(finalName)}; please verify document type.`, 'warning');
+              }
+            } catch (err) {
+              toast.show('Import Error', err.message, 'error');
+            }
+          };
+          actionRow.appendChild(btnImport);
+
+          mItem.appendChild(actionRow);
+          missingList.appendChild(mItem);
+        });
 
         missingSection.appendChild(missingList);
       }
@@ -2415,14 +2568,22 @@ export class RenamerUIManager {
       const left = document.createElement('div');
       left.className = 'flex items-center gap-2 min-w-0 flex-1';
 
+      const style = this.state.style || 'upper';
+      const displayCode = style === 'lower'
+        ? item.code.toLowerCase()
+        : (style === 'title'
+          ? (item.code.length <= 4 && /\d/.test(item.code) ? item.code.toUpperCase() : applyCase(item.code, 'title'))
+          : item.code.toUpperCase());
+      const displayLabel = applyCase(item.label || item.canonical, style);
+
       const codeBadge = document.createElement('span');
       codeBadge.className = `px-2 py-0.5 rounded font-mono-code font-bold text-[11px] shrink-0 ${getShortcutBadgeColor(item.code)}`;
-      codeBadge.textContent = item.code;
+      codeBadge.textContent = displayCode;
       left.appendChild(codeBadge);
 
       const labelSpan = document.createElement('span');
       labelSpan.className = 'text-[12px] font-semibold text-on-surface truncate flex-1';
-      labelSpan.textContent = item.label || item.canonical;
+      labelSpan.textContent = displayLabel;
       left.appendChild(labelSpan);
 
       chip.appendChild(left);
@@ -2448,13 +2609,48 @@ export class RenamerUIManager {
     }
   }
 
+  applyShortcutToCurrentFile(shortcutCode) {
+    const currentFile = this.state.files[this.state.currentIndex];
+    if (!currentFile) return;
+
+    const allDocs = this.getAllPresetDocuments();
+    const scDict = DEFAULT_SHORTCUT_DICTIONARY || [];
+    const match = allDocs.find(d => d.code && d.code.toUpperCase() === shortcutCode.toUpperCase())
+      || scDict.find(s => s.primaryShortcut && s.primaryShortcut.toUpperCase() === shortcutCode.toUpperCase());
+
+    const canonical = match ? (match.canonical || match.outputName || match.name).toUpperCase() : shortcutCode.toUpperCase();
+    const currentExt = currentFile.ext || ('.' + currentFile.name.split('.').pop()).toLowerCase();
+    const effStudent = this.getEffectiveStudentName();
+    const formulaBase = buildName(canonical, effStudent, this.state.settings?.groups, this.state.style);
+    const cleanBase = formulaBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+    const finalTarget = `${cleanBase}${currentExt}`;
+
+    currentFile.targetName = finalTarget;
+    currentFile.userEditedName = cleanBase;
+    currentFile.hasUserEdited = true;
+    currentFile.isMatched = true;
+    currentFile.docType = canonical;
+    currentFile.smartDocType = canonical;
+    currentFile.smartConfidence = 100;
+    currentFile.status = 'ready';
+
+    const input = document.getElementById('inputRenameTarget');
+    if (input) {
+      input.value = cleanBase;
+      input.focus();
+      input.select();
+    }
+
+    toast.show('Selected Document', `${shortcutCode} → ${cleanBase}`, 'info');
+    this.updateTelemetry();
+    this.renderQueue();
+  }
+
   handleNavigateBackward() {
-    if (this.state.currentIndex > 0) {
-      this.state.currentIndex--;
+    if (this.state.files.length > 0) {
+      this.state.currentIndex = (this.state.currentIndex - 1 + this.state.files.length) % this.state.files.length;
       this.renderQueue();
       this.renderCurrentPreview();
-    } else {
-      toast.show('First Document', 'Already on the first document in queue.', 'info');
     }
   }
 
@@ -2476,7 +2672,7 @@ export class RenamerUIManager {
             current.rotation = 0;
             current._pdfBytes = null;
             if (current._blobUrl && typeof URL !== 'undefined' && URL.revokeObjectURL) {
-              try { URL.revokeObjectURL(current._blobUrl); } catch (_) {}
+              try { URL.revokeObjectURL(current._blobUrl); } catch (_) { }
               current._blobUrl = null;
             }
           }
@@ -2488,20 +2684,242 @@ export class RenamerUIManager {
 
     toast.show('Kept Original', cleanName(current.name), 'info');
 
-    // Advance to next pending file
-    const nextPending = this.state.files.findIndex((f, idx) => idx > this.state.currentIndex && !f.isRenamed && !f.isKept);
-    if (nextPending !== -1) {
-      this.state.currentIndex = nextPending;
-    } else {
-      const firstPending = this.state.files.findIndex(f => !f.isRenamed);
-      if (firstPending !== -1) {
-        this.state.currentIndex = firstPending;
-      }
+    // Advance to next file (Circular wrap-around queue navigation: 1..N..1)
+    if (this.state.files.length > 0) {
+      this.state.currentIndex = (this.state.currentIndex + 1) % this.state.files.length;
     }
 
     this.updateTelemetry();
     this.renderQueue();
     this.renderCurrentPreview();
+  }
+
+  async handleConfirmCurrentName(targetName) {
+    const current = this.state.files[this.state.currentIndex];
+    if (!current) return;
+
+    const fileExt = current.ext || ext(current.name);
+    const cleanTarget = (targetName || '').trim();
+    if (!cleanTarget) {
+      toast.show('Document Name Required', 'Please provide a valid filename.', 'warning');
+      return;
+    }
+
+    const baseWithoutExt = cleanTarget.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+    let finalName = `${baseWithoutExt}${fileExt}`;
+
+    // Collect all existing/used destination names from queue and folder
+    const usedDestinations = new Set();
+    for (const f of this.state.files) {
+      if (f !== current) {
+        if (f.isRenamed || f.isKept) {
+          usedDestinations.add(f.targetName || f.name);
+        } else if (f.name) {
+          usedDestinations.add(f.name);
+        }
+      }
+    }
+
+    const effStudent = this.getEffectiveStudentName();
+    const uniqueCandidate = uniqueDestination(finalName, current.name, usedDestinations, effStudent);
+    const wasDuplicateAdjusted = (uniqueCandidate.toLowerCase() !== finalName.toLowerCase());
+    finalName = uniqueCandidate;
+    const finalBaseWithoutExt = cleanName(finalName);
+
+    const err = validateFilename(finalName);
+    if (err) {
+      toast.show('Validation Error', `${finalBaseWithoutExt}: ${err}`, 'error');
+      return;
+    }
+
+    const dirPath = this.state.folder ? (this.state.folder.nativePath || this.state.folder.path || '') : '';
+    const oldPath = current.nativePath || current.path || (dirPath ? `${dirPath}/${current.name}` : null);
+
+    const isNameChanged = (cleanName(current.name) !== finalBaseWithoutExt);
+    const hasRotation = (current.rotation && current.rotation % 360 !== 0);
+
+    const isTestMode = typeof window !== 'undefined' && (window.location?.search?.includes('test_mode=1') || window.__DOCMITRA_TEST_MODE__);
+
+    if (oldPath && (isNameChanged || hasRotation)) {
+      const studentName = effStudent || current.studentName || '';
+      const rotation = current.rotation || 0;
+
+      toast.show('Renaming Document', `Renaming to ${finalBaseWithoutExt}...`, 'info');
+
+      try {
+        let res;
+        if (isTestMode) {
+          res = { success: true, name: finalName, path: oldPath.replace(/[^\\\/]+$/, finalName) };
+        } else {
+          res = await renameNativeFile(oldPath, finalName, studentName, rotation);
+        }
+        if (!res.success) {
+          throw new Error(res.error || `Failed to rename ${current.name}`);
+        }
+
+        const actualName = res.name || finalName;
+        const newPath = res.path || res.newPath || oldPath.replace(/[^\\\/]+$/, actualName);
+
+        // Record in undo manager
+        const planItem = {
+          old: current.name,
+          next: actualName,
+          file: current,
+          nativePath: oldPath,
+          studentName,
+          rotation
+        };
+        undoManager.pushBatch(this.state.folder, [planItem]);
+
+        current.name = actualName;
+        current.targetName = actualName;
+        current.userEditedName = cleanName(actualName);
+        current.path = newPath;
+        current.nativePath = newPath;
+        current.isRenamed = true;
+        current.status = 'renamed';
+        current.smartConfidence = 100;
+        current.hasUserEdited = true;
+        current.rotation = 0;
+        current._pdfBytes = null;
+        if (current._blobUrl && typeof URL !== 'undefined' && URL.revokeObjectURL) {
+          try { URL.revokeObjectURL(current._blobUrl); } catch (_) { }
+          current._blobUrl = null;
+        }
+        const origin = (typeof window !== 'undefined' && window.location?.origin && !window.location.origin.startsWith('file:') && !window.location.origin.includes('tauri'))
+          ? window.location.origin : 'http://localhost:3000';
+        current.url = `${origin}/api/serve-file?path=${encodeURIComponent(newPath)}`;
+
+        if (wasDuplicateAdjusted || (actualName.toLowerCase() !== `${baseWithoutExt}${fileExt}`.toLowerCase())) {
+          toast.show('Duplicate Auto-Numbered', `Saved as: ${cleanName(actualName)}`, 'info');
+        } else {
+          toast.show('Renamed Successfully', cleanName(actualName), 'success');
+        }
+      } catch (e) {
+        toast.show('Rename Error', e.message, 'error');
+        return;
+      }
+    } else {
+      // Name was not changed or in mock mode, just mark confirmed
+      current.targetName = finalName;
+      current.userEditedName = finalBaseWithoutExt;
+      current.hasUserEdited = true;
+      current.isMatched = true;
+      current.status = 'ready';
+      current.smartConfidence = 100;
+      current.smartDocType = current.docType || current.smartDocType || finalBaseWithoutExt;
+      if (wasDuplicateAdjusted) {
+        toast.show('Duplicate Auto-Numbered', `Saved as: ${finalBaseWithoutExt}`, 'info');
+      } else {
+        toast.show('Name Confirmed', finalBaseWithoutExt, 'info');
+      }
+    }
+
+    // Advance to next file (Circular wrap-around queue navigation: 1..N..1)
+    if (this.state.files.length > 0) {
+      this.state.currentIndex = (this.state.currentIndex + 1) % this.state.files.length;
+    }
+
+    this.updateTelemetry();
+    this.renderQueue();
+    this.renderCurrentPreview();
+  }
+
+  async handleRenameSingleFile(file) {
+    const targetFile = file || this.state.files[this.state.currentIndex];
+    if (!targetFile) return;
+
+    if (!targetFile.targetName || targetFile.targetName === targetFile.name) {
+      const inputEl = document.getElementById('inputRenameTarget');
+      if (inputEl && inputEl.value.trim()) {
+        const fileExt = targetFile.ext || ext(targetFile.name);
+        const baseWithoutExt = inputEl.value.trim().replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+        targetFile.targetName = `${baseWithoutExt}${fileExt}`;
+        targetFile.userEditedName = baseWithoutExt;
+        targetFile.hasUserEdited = true;
+        targetFile.isMatched = true;
+        targetFile.status = 'ready';
+        targetFile.smartConfidence = 100;
+        targetFile.smartDocType = targetFile.docType || targetFile.smartDocType || baseWithoutExt;
+      }
+    }
+
+    if (!targetFile.targetName) {
+      toast.show('Document Name Required', 'Please enter a target name first.', 'warning');
+      return;
+    }
+
+    const err = validateFilename(targetFile.targetName);
+    if (err) {
+      toast.show('Validation Error', `${cleanName(targetFile.name)}: ${err}`, 'error');
+      return;
+    }
+
+    const dirPath = this.state.folder ? (this.state.folder.nativePath || this.state.folder.path || '') : '';
+    const oldPath = targetFile.nativePath || targetFile.path || (dirPath ? `${dirPath}/${targetFile.name}` : null);
+
+    if (!oldPath) {
+      toast.show('Path Error', 'Cannot determine file disk path.', 'error');
+      return;
+    }
+
+    const studentName = this.state.studentName || targetFile.studentName || '';
+    const rotation = targetFile.rotation || 0;
+
+    toast.show('Renaming File', `Renaming to ${cleanName(targetFile.targetName)}...`, 'info');
+
+    try {
+      const res = await renameNativeFile(oldPath, targetFile.targetName, studentName, rotation);
+      if (!res.success) {
+        throw new Error(res.error || `Failed to rename ${targetFile.name}`);
+      }
+
+      const actualName = res.name || targetFile.targetName;
+      const newPath = res.path || res.newPath || oldPath.replace(/[^\\\/]+$/, actualName);
+
+      const planItem = {
+        old: targetFile.name,
+        next: actualName,
+        file: targetFile,
+        nativePath: oldPath,
+        studentName,
+        rotation
+      };
+      undoManager.pushBatch(this.state.folder, [planItem]);
+
+      targetFile.name = actualName;
+      targetFile.targetName = actualName;
+      targetFile.userEditedName = cleanName(actualName);
+      targetFile.isRenamed = true;
+      targetFile.status = 'renamed';
+      targetFile.path = newPath;
+      targetFile.nativePath = newPath;
+      targetFile.rotation = 0;
+      targetFile._pdfBytes = null;
+      if (targetFile._blobUrl && typeof URL !== 'undefined' && URL.revokeObjectURL) {
+        try { URL.revokeObjectURL(targetFile._blobUrl); } catch (_) { }
+        targetFile._blobUrl = null;
+      }
+      const origin = (typeof window !== 'undefined' && window.location?.origin && !window.location.origin.startsWith('file:') && !window.location.origin.includes('tauri'))
+        ? window.location.origin : 'http://localhost:3000';
+      targetFile.url = `${origin}/api/serve-file?path=${encodeURIComponent(newPath)}`;
+
+      toast.show('Renamed Successfully', cleanName(actualName), 'success');
+
+      // Advance to next pending file
+      const nextPending = this.state.files.findIndex((f, idx) => idx > this.state.currentIndex && !f.isRenamed && !f.isKept);
+      if (nextPending !== -1) {
+        this.state.currentIndex = nextPending;
+      } else if (this.state.currentIndex < this.state.files.length - 1) {
+        this.state.currentIndex++;
+      }
+
+      this.updateTelemetry();
+      this.renderQueue();
+      this.renderCurrentPreview();
+    } catch (e) {
+      toast.show('Rename Error', e.message, 'error');
+    }
   }
 
   async handleRenameAll() {
@@ -2523,7 +2941,7 @@ export class RenamerUIManager {
       old: f.name,
       next: f.targetName,
       file: f,
-      nativePath: f.path,
+      nativePath: f.path || f.nativePath,
       studentName: this.state.studentName || '',
       rotation: f.rotation || 0
     }));
@@ -2544,8 +2962,19 @@ export class RenamerUIManager {
         f.rotation = 0;
         f._pdfBytes = null;
         if (f._blobUrl && typeof URL !== 'undefined' && URL.revokeObjectURL) {
-          try { URL.revokeObjectURL(f._blobUrl); } catch (_) {}
+          try { URL.revokeObjectURL(f._blobUrl); } catch (_) { }
           f._blobUrl = null;
+        }
+        if (f.path) {
+          f.path = f.path.replace(/[^\\\/]+$/, f.name);
+        }
+        if (f.nativePath) {
+          f.nativePath = f.nativePath.replace(/[^\\\/]+$/, f.name);
+        }
+        const origin = (typeof window !== 'undefined' && window.location?.origin && !window.location.origin.startsWith('file:') && !window.location.origin.includes('tauri'))
+          ? window.location.origin : 'http://localhost:3000';
+        if (f.path || f.nativePath) {
+          f.url = `${origin}/api/serve-file?path=${encodeURIComponent(f.path || f.nativePath)}`;
         }
       });
 
@@ -2683,11 +3112,10 @@ export class RenamerUIManager {
       btnSmart.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-primary">sync</span><span>Scanning (0/${pending.length})...</span>`;
     }
 
-    // Duplicate collision avoidance in Smart Scan: collect all used target names and existing names
+    // Duplicate collision avoidance in Smart Scan: collect already renamed/kept names
     const usedDestinations = new Set();
     for (const file of this.state.files) {
-      usedDestinations.add(file.name);
-      if (file.isRenamed || file.isKept || file.targetName) {
+      if (file.isRenamed || file.isKept) {
         usedDestinations.add(file.targetName || file.name);
       }
     }
@@ -2734,66 +3162,66 @@ export class RenamerUIManager {
           f.smartConfidence = evalRes.confidence;
           f.smartDocType = evalRes.docType;
 
-            if (evalRes.confidence >= 30 && evalRes.docType) {
-              f.docType = evalRes.docType;
-              f.isMatched = true;
-              if (evalRes.confidence >= 80) highConfCount++;
-              const formulaBase = buildName(evalRes.docType, this.state.studentName, this.state.settings?.groups, this.state.style);
-              const cleanBase = formulaBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
-              const currentExt = f.ext || ('.' + f.name.split('.').pop()).toLowerCase();
-              const desiredWithExt = `${cleanBase}${currentExt}`;
-              const uniqueTarget = uniqueDestination(desiredWithExt, f.name, usedDestinations, this.state.studentName);
-              usedDestinations.add(uniqueTarget);
-              f.targetName = uniqueTarget;
-              f.status = evalRes.confidence >= 80 ? 'matched' : 'needs_review';
-            } else {
-              f.isMatched = false;
-              f.docType = null;
-              f.status = 'unmatched';
-            }
-          } catch (err) {
-            console.error('[DocMitra Renamer] Filename match error on file:', f.name, err);
-            f.smartConfidence = 0;
+          if (evalRes.confidence >= 30 && evalRes.docType) {
+            f.docType = evalRes.docType;
+            f.isMatched = true;
+            if (evalRes.confidence >= 80) highConfCount++;
+            const formulaBase = buildName(evalRes.docType, this.state.studentName, this.state.settings?.groups, this.state.style);
+            const cleanBase = formulaBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+            const currentExt = f.ext || ('.' + f.name.split('.').pop()).toLowerCase();
+            const desiredWithExt = `${cleanBase}${currentExt}`;
+            const uniqueTarget = uniqueDestination(desiredWithExt, f.name, usedDestinations, this.state.studentName);
+            usedDestinations.add(uniqueTarget);
+            f.targetName = uniqueTarget;
+            f.status = evalRes.confidence >= 80 ? 'matched' : 'needs_review';
+          } else {
             f.isMatched = false;
             f.docType = null;
             f.status = 'unmatched';
-          } finally {
-            f.isScanning = false;
           }
-
-          // Live row-by-row update: telemetry, queue badges, and preview
-          this.updateTelemetry();
-          this.renderQueue();
-          if (this.state.files[this.state.currentIndex] === f) {
-            this.renderCurrentPreview();
-          }
-
-          // Yield to browser UI paint
-          await new Promise(r => setTimeout(r, 40));
+        } catch (err) {
+          console.error('[DocMitra Renamer] Filename match error on file:', f.name, err);
+          f.smartConfidence = 0;
+          f.isMatched = false;
+          f.docType = null;
+          f.status = 'unmatched';
+        } finally {
+          f.isScanning = false;
         }
-    } finally {
-        this.state.isSmartScanning = false;
-        this.state.files.forEach(f => { f.isScanning = false; });
-        if (btnSmart) {
-          btnSmart.classList.remove('smart-scan-pulse');
-          btnSmart.innerHTML = origHtml;
-        }
+
+        // Live row-by-row update: telemetry, queue badges, and preview
         this.updateTelemetry();
         this.renderQueue();
-      }
+        if (this.state.files[this.state.currentIndex] === f) {
+          this.renderCurrentPreview();
+        }
 
-      if (!signal.aborted) {
-        toast.show(
-          'Smart Scan Complete',
-          `${highConfCount} of ${pending.length} documents identified with high confidence (>=80%).`,
-          highConfCount > 0 ? 'success' : 'info'
-        );
+        // Yield to browser UI paint
+        await new Promise(r => setTimeout(r, 40));
       }
+    } finally {
+      this.state.isSmartScanning = false;
+      this.state.files.forEach(f => { f.isScanning = false; });
+      if (btnSmart) {
+        btnSmart.classList.remove('smart-scan-pulse');
+        btnSmart.innerHTML = origHtml;
+      }
+      this.updateTelemetry();
+      this.renderQueue();
     }
+
+    if (!signal.aborted) {
+      toast.show(
+        'Smart Scan Complete',
+        `${highConfCount} of ${pending.length} documents identified with high confidence (>=80%).`,
+        highConfCount > 0 ? 'success' : 'info'
+      );
+    }
+  }
 
   async handleRenameAllMatched() {
-      this.openCrossCheckModal();
-    }
+    this.openCrossCheckModal();
+  }
 
   /* ==========================================================================
      Dedicated Rename Tool Settings & Document Presets Management
@@ -2803,8 +3231,17 @@ export class RenamerUIManager {
     // 1. Load active preset
     const savedActive = localStorage.getItem('docmitra_active_preset');
     if (savedActive) {
-      this.state.activePreset = (savedActive === 'MAHA DBT FORM' || savedActive === 'MAHA DBT') ? 'MAHA DBT' :
-                                (savedActive === 'SWAYAM FORM' || savedActive === 'SWAYAM') ? 'SWAYAM' : savedActive;
+      if (savedActive === 'MAHA DBT FORM' || savedActive === 'MAHA DBT') {
+        this.state.activePreset = 'MAHA DBT';
+      } else if (savedActive === 'SWAYAM FORM' || savedActive === 'SWAYAM' || savedActive === 'SWAYAM DEENDAYAL YOJANA') {
+        this.state.activePreset = 'SWAYAM DEENDAYAL YOJANA';
+      } else if (savedActive === 'EDUCATIONAL' || savedActive === 'EDUCATIONAL DOCUMENTS') {
+        this.state.activePreset = 'EDUCATIONAL DOCUMENTS';
+      } else if (savedActive === 'CET CELL') {
+        this.state.activePreset = 'CET CELL';
+      } else {
+        this.state.activePreset = savedActive;
+      }
     } else {
       this.state.activePreset = 'MAHA DBT';
     }
@@ -2819,39 +3256,44 @@ export class RenamerUIManager {
       console.warn('[DocMitra Renamer] Failed to parse local presets:', e);
     }
 
+    if (this.state.documentPresets && typeof this.state.documentPresets === 'object') {
+      if (this.state.documentPresets['SWAYAM'] && !this.state.documentPresets['SWAYAM DEENDAYAL YOJANA']) {
+        this.state.documentPresets['SWAYAM DEENDAYAL YOJANA'] = this.state.documentPresets['SWAYAM'];
+        delete this.state.documentPresets['SWAYAM'];
+      }
+      if (this.state.documentPresets['EDUCATIONAL'] && !this.state.documentPresets['EDUCATIONAL DOCUMENTS']) {
+        this.state.documentPresets['EDUCATIONAL DOCUMENTS'] = this.state.documentPresets['EDUCATIONAL'];
+        delete this.state.documentPresets['EDUCATIONAL'];
+      }
+    }
+
     if (!this.state.documentPresets || Object.keys(this.state.documentPresets).length === 0) {
-      // Initialize with factory defaults: MAHA DBT and SWAYAM only
-      this.state.documentPresets = {
-        "MAHA DBT": [
-          { name: "AADHAAR CARD", code: "ADR", keywords: ["aadhaar card", "adhar", "aadhar"] },
-          { name: "PHOTO", code: "PIC", keywords: ["photo", "pic", "photograph"] },
-          { name: "10TH MARKSHEET", code: "10M", keywords: ["10th marksheet", "10th mark", "ssc marksheet"] },
-          { name: "10TH PASSING CERTIFICATE", code: "10P", keywords: ["10th passing", "ssc passing", "10th sanad"] },
-          { name: "12TH MARKSHEET", code: "12M", keywords: ["12th marksheet", "12th mark", "hsc marksheet"] },
-          { name: "12TH PASSING CERTIFICATE", code: "12P", keywords: ["12th passing", "hsc passing", "12th sanad"] },
-          { name: "12TH LC", code: "12LC", keywords: ["12th lc", "12th tc", "leaving certificate"] },
-          { name: "CASTE CERTIFICATE", code: "CST", keywords: ["caste certificate", "jati dakhla"] },
-          { name: "VALIDITY CERTIFICATE", code: "VLD", keywords: ["validity certificate", "caste validity"] },
-          { name: "INCOME CERTIFICATE", code: "INC", keywords: ["income certificate", "utpanna"] },
-          { name: "NATIONALITY CERTIFICATE", code: "NAT", keywords: ["nationality certificate"] },
-          { name: "DOMICILE CERTIFICATE", code: "DOM", keywords: ["domicile certificate", "adivasi dakhla", "rahavasi"] },
-          { name: "PASSBOOK BANK", code: "BNK", keywords: ["passbook bank", "bank passbook", "bank account"] }
-        ],
-        "SWAYAM": [
-          { name: "PHOTO", code: "PIC", keywords: ["photo", "pic", "photograph"] },
-          { name: "AADHAAR CARD", code: "ADR", keywords: ["aadhaar card", "adhar", "aadhar"] },
-          { name: "10TH MARKSHEET", code: "10M", keywords: ["10th marksheet", "10th mark"] },
-          { name: "12TH MARKSHEET", code: "12M", keywords: ["12th marksheet", "12th mark"] },
-          { name: "12TH LC", code: "12LC", keywords: ["12th lc", "leaving certificate"] },
-          { name: "CASTE CERTIFICATE", code: "CST", keywords: ["caste certificate"] },
-          { name: "DOMICILE CERTIFICATE", code: "DOM", keywords: ["domicile certificate"] },
-          { name: "SELF DECLARATION", code: "SLF", keywords: ["self declaration", "svayam ghoshana"] },
-          { name: "PARENT DECLARATION", code: "PAR", keywords: ["parent declaration", "palak ghoshana"] },
-          { name: "PASSBOOK BANK", code: "BNK", keywords: ["passbook bank", "bank passbook"] },
-          { name: "BONAFIDE CERTIFICATE", code: "BNF", keywords: ["bonafide certificate", "bonafide"] }
-        ]
-      };
+      // Initialize with factory defaults from BUILTIN_PRESETS (MAHA DBT, SWAYAM DEENDAYAL YOJANA, CET CELL, EDUCATIONAL DOCUMENTS)
+      this.state.documentPresets = JSON.parse(JSON.stringify(BUILTIN_PRESETS));
       this.savePresetsAndSettings();
+    } else {
+      // Ensure all 4 built-in presets exist and all factory documents are synchronized
+      let needsSave = false;
+      for (const [presetKey, presetDocs] of Object.entries(BUILTIN_PRESETS)) {
+        if (!this.state.documentPresets[presetKey]) {
+          this.state.documentPresets[presetKey] = JSON.parse(JSON.stringify(presetDocs));
+          needsSave = true;
+        } else {
+          const currentList = this.state.documentPresets[presetKey];
+          if (Array.isArray(currentList)) {
+            const currentCodes = new Set(currentList.map(d => (d.code || '').toUpperCase()));
+            for (const factoryDoc of presetDocs) {
+              if (!currentCodes.has(factoryDoc.code.toUpperCase())) {
+                currentList.push(JSON.parse(JSON.stringify(factoryDoc)));
+                needsSave = true;
+              }
+            }
+          }
+        }
+      }
+      if (needsSave) {
+        this.savePresetsAndSettings();
+      }
     }
 
     // 3. Load custom shortcuts
@@ -2874,6 +3316,9 @@ export class RenamerUIManager {
     } catch (e) {
       console.warn('[DocMitra Renamer] Failed to parse custom shortcuts:', e);
     }
+
+    // 4. Automatically sync all unique preset documents to Shortcuts & Rename Rules with ZERO duplicates
+    this.syncPresetsToShortcuts();
   }
 
   savePresetsAndSettings() {
@@ -2888,13 +3333,13 @@ export class RenamerUIManager {
       if (this.state.customShortcuts) {
         localStorage.setItem('docmitra_custom_shortcuts', JSON.stringify(this.state.customShortcuts));
       }
-      saveDocumentPresets({ forms: this.state.documentPresets }).catch(() => {});
+      saveDocumentPresets({ forms: this.state.documentPresets }).catch(() => { });
     } catch (e) {
       console.warn('[DocMitra Renamer] Failed to persist presets and settings:', e);
     }
   }
 
-    syncPresetsToShortcuts() {
+  syncPresetsToShortcuts() {
     if (!this.state.documentPresets) return;
     const existingMap = new Map();
     for (const sc of this.shortcuts21) {
@@ -2983,7 +3428,7 @@ export class RenamerUIManager {
     if (!docType) return null;
     const upper = docType.toUpperCase().trim();
     // 1. Check shortcuts
-    const foundSc = this.shortcuts21.find(s => 
+    const foundSc = this.shortcuts21.find(s =>
       s.code.toUpperCase() === upper ||
       (s.canonical && s.canonical.toUpperCase() === upper) ||
       (s.label && s.label.toUpperCase() === upper)
@@ -2992,7 +3437,7 @@ export class RenamerUIManager {
 
     // 2. Check all presets
     const allDocs = this.getAllPresetDocuments();
-    const foundDoc = allDocs.find(d => 
+    const foundDoc = allDocs.find(d =>
       d.code.toUpperCase() === upper ||
       d.name.toUpperCase() === upper
     );
@@ -3004,7 +3449,7 @@ export class RenamerUIManager {
   getActivePresetDocuments() {
     const presetKey = this.state.activePreset || 'MAHA DBT';
     const rawList = (this.state.documentPresets && this.state.documentPresets[presetKey]) ||
-                    (this.state.documentPresets && this.state.documentPresets['MAHA DBT']) || [];
+      (this.state.documentPresets && this.state.documentPresets['MAHA DBT']) || [];
 
     return rawList.map(item => {
       if (typeof item === 'string') {
@@ -3031,6 +3476,12 @@ export class RenamerUIManager {
   handleCloseSettingsModal() {
     const modal = document.getElementById('modalRenameSettings');
     if (modal) modal.classList.add('hidden');
+    this._presetDocsSearchQuery = '';
+    this._shortcutsSearchQuery = '';
+    const inputP = document.getElementById('inputSearchPresetDocs');
+    if (inputP) inputP.value = '';
+    const inputS = document.getElementById('inputSearchShortcuts');
+    if (inputS) inputS.value = '';
     this._recalculateTargetNames(true);
     this.updateTelemetry();
     this.renderQueue();
@@ -3076,93 +3527,137 @@ export class RenamerUIManager {
     }
 
     // 2. Populate Documents in Active Preset Table
-    const docs = this.getActivePresetDocuments();
-    const countBadge = document.getElementById('presetDocCountBadge');
-    if (countBadge) countBadge.textContent = String(docs.length);
-
-    const tbody = document.getElementById('presetDocsTableBody');
-    if (tbody) {
-      tbody.innerHTML = '';
-      if (docs.length === 0) {
-        const emptyRow = document.createElement('tr');
-        emptyRow.innerHTML = '<td colspan="5" class="py-4 text-center text-secondary italic">No documents in this preset. Click "Add Document to Preset" above.</td>';
-        tbody.appendChild(emptyRow);
-      } else {
-        docs.forEach((doc, idx) => {
-          const row = document.createElement('tr');
-          row.className = 'hover:bg-surface-container-low transition-colors';
-
-          const kwDisplay = Array.isArray(doc.keywords) ? doc.keywords.join(', ') : (doc.keywords || '');
-
-          row.innerHTML = `
-            <td class="py-2 px-3 text-center text-secondary font-mono-code">${idx + 1}</td>
-            <td class="py-2 px-3 font-semibold text-on-surface">${doc.name}</td>
-            <td class="py-2 px-3 font-mono-code font-bold text-primary">${doc.code || '-'}</td>
-            <td class="py-2 px-3 text-secondary text-[11px] truncate max-w-xs" title="${kwDisplay}">${kwDisplay}</td>
-            <td class="py-2 px-3 text-center">
-              <div class="flex items-center justify-center gap-1">
-                <button class="w-6 h-6 rounded hover:bg-primary/10 text-secondary hover:text-primary transition-colors flex items-center justify-center cursor-pointer btn-edit-doc" title="Edit document" type="button" data-doc-idx="${idx}">
-                  <span class="material-symbols-outlined text-[15px]">edit</span>
-                </button>
-                <button class="w-6 h-6 rounded hover:bg-error/10 text-secondary hover:text-error transition-colors flex items-center justify-center cursor-pointer btn-del-doc" title="Remove document from preset" type="button" data-doc-idx="${idx}">
-                  <span class="material-symbols-outlined text-[15px]">delete</span>
-                </button>
-              </div>
-            </td>
-          `;
-
-          const editBtn = row.querySelector('.btn-edit-doc');
-          if (editBtn) {
-            editBtn.addEventListener('click', () => this.openEditDocumentModal(doc, idx));
-          }
-          const delBtn = row.querySelector('.btn-del-doc');
-          if (delBtn) {
-            delBtn.addEventListener('click', () => this.handleRemoveDocFromPreset(idx));
-          }
-
-          tbody.appendChild(row);
-        });
-      }
-    }
+    this.renderPresetDocsTable();
 
     // 3. Populate Shortcuts Table
-    const sTbody = document.getElementById('shortcutsTableBody');
-    if (sTbody) {
-      sTbody.innerHTML = '';
-      const sCountBadge = document.getElementById('shortcutsCountBadge');
-      if (sCountBadge) sCountBadge.textContent = String(this.shortcuts21.length);
+    this.renderShortcutsTable();
+  }
 
-      this.shortcuts21.forEach((s) => {
-        const sRow = document.createElement('tr');
-        sRow.className = 'hover:bg-surface-container-low transition-colors';
-        const isCustom = (this.state.customShortcuts || []).some(cs => cs.code.toUpperCase() === s.code.toUpperCase());
-        sRow.innerHTML = `
-          <td class="py-2 px-3 font-mono-code font-bold text-primary">${s.code}</td>
-          <td class="py-2 px-3 font-semibold text-on-surface">${s.canonical || s.label}</td>
-          <td class="py-2 px-3 text-secondary text-[11px] font-mono-code">${s.label !== s.canonical ? s.label : '-'}</td>
-          <td class="py-2 px-3 text-center">
-            <div class="flex items-center justify-center gap-1">
-              <button class="w-6 h-6 rounded hover:bg-primary/10 text-secondary hover:text-primary transition-colors flex items-center justify-center cursor-pointer btn-edit-shortcut" title="Edit shortcut" type="button" data-code="${s.code}">
-                <span class="material-symbols-outlined text-[15px]">edit</span>
-              </button>
-              <button class="w-6 h-6 rounded hover:bg-error/10 text-secondary hover:text-error transition-colors flex items-center justify-center cursor-pointer btn-del-shortcut" title="Delete shortcut" type="button" data-code="${s.code}">
-                <span class="material-symbols-outlined text-[15px]">delete</span>
-              </button>
-            </div>
-          </td>
-        `;
+  renderPresetDocsTable() {
+    const docs = this.getActivePresetDocuments();
+    const countBadge = document.getElementById('presetDocCountBadge');
+    const tbody = document.getElementById('presetDocsTableBody');
+    if (!tbody) return;
 
-        const sEditBtn = sRow.querySelector('.btn-edit-shortcut');
-        if (sEditBtn) {
-          sEditBtn.addEventListener('click', () => this.handleEditShortcut(s.code));
-        }
-        const sDelBtn = sRow.querySelector('.btn-del-shortcut');
-        if (sDelBtn) {
-          sDelBtn.addEventListener('click', () => this.handleRemoveShortcut(s.code));
-        }
-        sTbody.appendChild(sRow);
-      });
+    tbody.innerHTML = '';
+    const q = (this._presetDocsSearchQuery || '').trim().toLowerCase();
+    const filteredDocs = q ? docs.filter(doc => {
+      const name = (doc.name || '').toLowerCase();
+      const code = (doc.code || '').toLowerCase();
+      const kw = (Array.isArray(doc.keywords) ? doc.keywords.join(' ') : (doc.keywords || '')).toLowerCase();
+      return name.includes(q) || code.includes(q) || kw.includes(q);
+    }) : docs;
+
+    if (countBadge) {
+      countBadge.textContent = q ? `${filteredDocs.length} / ${docs.length}` : String(docs.length);
     }
+
+    if (filteredDocs.length === 0) {
+      const emptyRow = document.createElement('tr');
+      if (q) {
+        emptyRow.innerHTML = `<td colspan="5" class="py-6 text-center text-secondary italic">No documents match "${this._presetDocsSearchQuery}".</td>`;
+      } else {
+        emptyRow.innerHTML = '<td colspan="5" class="py-6 text-center text-secondary italic">No documents in this preset. Click "Add Document" above.</td>';
+      }
+      tbody.appendChild(emptyRow);
+      return;
+    }
+
+    filteredDocs.forEach((doc, idx) => {
+      const row = document.createElement('tr');
+      row.className = 'hover:bg-surface-container-low transition-colors';
+
+      const kwDisplay = Array.isArray(doc.keywords) ? doc.keywords.join(', ') : (doc.keywords || '');
+      const origIdx = docs.indexOf(doc);
+
+      row.innerHTML = `
+        <td class="py-2.5 px-3 text-center text-secondary font-mono-code">${idx + 1}</td>
+        <td class="py-2.5 px-3 font-semibold text-on-surface">${doc.name}</td>
+        <td class="py-2.5 px-3 font-mono-code font-bold text-primary">${doc.code || '-'}</td>
+        <td class="py-2.5 px-3 text-secondary text-[11px] leading-relaxed break-words" title="${kwDisplay}">${kwDisplay || '<span class="italic opacity-50">-</span>'}</td>
+        <td class="py-2.5 px-3 text-center">
+          <div class="flex items-center justify-center gap-1">
+            <button class="w-6 h-6 rounded hover:bg-primary/10 text-secondary hover:text-primary transition-colors flex items-center justify-center cursor-pointer btn-edit-doc" title="Edit document" type="button" data-doc-idx="${origIdx}">
+              <span class="material-symbols-outlined text-[15px]">edit</span>
+            </button>
+            <button class="w-6 h-6 rounded hover:bg-error/10 text-secondary hover:text-error transition-colors flex items-center justify-center cursor-pointer btn-del-doc" title="Remove document from preset" type="button" data-doc-idx="${origIdx}">
+              <span class="material-symbols-outlined text-[15px]">delete</span>
+            </button>
+          </div>
+        </td>
+      `;
+
+      const editBtn = row.querySelector('.btn-edit-doc');
+      if (editBtn) {
+        editBtn.addEventListener('click', () => this.openEditDocumentModal(doc, origIdx));
+      }
+      const delBtn = row.querySelector('.btn-del-doc');
+      if (delBtn) {
+        delBtn.addEventListener('click', () => this.handleRemoveDocFromPreset(origIdx));
+      }
+
+      tbody.appendChild(row);
+    });
+  }
+
+  renderShortcutsTable() {
+    const sTbody = document.getElementById('shortcutsTableBody');
+    if (!sTbody) return;
+
+    sTbody.innerHTML = '';
+    const sCountBadge = document.getElementById('shortcutsCountBadge');
+    const totalCount = this.shortcuts21.length;
+    const sq = (this._shortcutsSearchQuery || '').trim().toLowerCase();
+
+    const filtered = sq ? this.shortcuts21.filter(s => {
+      const code = (s.code || '').toLowerCase();
+      const canonical = (s.canonical || s.label || '').toLowerCase();
+      const kw = (Array.isArray(s.keywords) ? s.keywords.join(' ') : (s.keywords || '')).toLowerCase();
+      return code.includes(sq) || canonical.includes(sq) || kw.includes(sq);
+    }) : this.shortcuts21;
+
+    if (sCountBadge) {
+      sCountBadge.textContent = sq ? `${filtered.length} / ${totalCount}` : String(totalCount);
+    }
+
+    if (filtered.length === 0) {
+      const emptyRow = document.createElement('tr');
+      emptyRow.innerHTML = `<td colspan="4" class="py-6 text-center text-secondary italic">No shortcuts match "${this._shortcutsSearchQuery}".</td>`;
+      sTbody.appendChild(emptyRow);
+      return;
+    }
+
+    filtered.forEach((s) => {
+      const sRow = document.createElement('tr');
+      sRow.className = 'hover:bg-surface-container-low transition-colors';
+      const kwDisplay = Array.isArray(s.keywords) ? s.keywords.join(', ') : (s.keywords || '');
+
+      sRow.innerHTML = `
+        <td class="py-2.5 px-3 font-mono-code font-bold text-primary">${s.code}</td>
+        <td class="py-2.5 px-3 font-semibold text-on-surface">${s.canonical || s.label}</td>
+        <td class="py-2.5 px-3 text-secondary text-[11px] leading-relaxed break-words" title="${kwDisplay}">${kwDisplay || '<span class="italic opacity-50">-</span>'}</td>
+        <td class="py-2.5 px-3 text-center">
+          <div class="flex items-center justify-center gap-1">
+            <button class="w-6 h-6 rounded hover:bg-primary/10 text-secondary hover:text-primary transition-colors flex items-center justify-center cursor-pointer btn-edit-shortcut" title="Edit shortcut" type="button" data-code="${s.code}">
+              <span class="material-symbols-outlined text-[15px]">edit</span>
+            </button>
+            <button class="w-6 h-6 rounded hover:bg-error/10 text-secondary hover:text-error transition-colors flex items-center justify-center cursor-pointer btn-del-shortcut" title="Delete shortcut" type="button" data-code="${s.code}">
+              <span class="material-symbols-outlined text-[15px]">delete</span>
+            </button>
+          </div>
+        </td>
+      `;
+
+      const sEditBtn = sRow.querySelector('.btn-edit-shortcut');
+      if (sEditBtn) {
+        sEditBtn.addEventListener('click', () => this.handleEditShortcut(s.code));
+      }
+      const sDelBtn = sRow.querySelector('.btn-del-shortcut');
+      if (sDelBtn) {
+        sDelBtn.addEventListener('click', () => this.handleRemoveShortcut(s.code));
+      }
+      sTbody.appendChild(sRow);
+    });
   }
 
   handleSwitchActivePreset(newPreset) {
@@ -3250,41 +3745,13 @@ export class RenamerUIManager {
   }
 
   handleResetPresetsDefault() {
-    const confirmReset = window.confirm('Reset document presets to factory defaults? All custom presets will be removed and default MahaDBT and Swayam restored.');
+    const confirmReset = window.confirm('Reset document presets to factory defaults? All custom presets will be removed and default 4 presets restored.');
     if (!confirmReset) return;
 
-    this.state.documentPresets = {
-      "MAHA DBT": [
-        { name: "AADHAAR CARD", code: "ADR", keywords: ["aadhaar card", "adhar", "aadhar"] },
-        { name: "PHOTO", code: "PIC", keywords: ["photo", "pic", "photograph"] },
-        { name: "10TH MARKSHEET", code: "10M", keywords: ["10th marksheet", "10th mark", "ssc marksheet"] },
-        { name: "10TH PASSING CERTIFICATE", code: "10P", keywords: ["10th passing", "ssc passing", "10th sanad"] },
-        { name: "12TH MARKSHEET", code: "12M", keywords: ["12th marksheet", "12th mark", "hsc marksheet"] },
-        { name: "12TH PASSING CERTIFICATE", code: "12P", keywords: ["12th passing", "hsc passing", "12th sanad"] },
-        { name: "12TH LC", code: "12LC", keywords: ["12th lc", "12th tc", "leaving certificate"] },
-        { name: "CASTE CERTIFICATE", code: "CST", keywords: ["caste certificate", "jati dakhla"] },
-        { name: "VALIDITY CERTIFICATE", code: "VLD", keywords: ["validity certificate", "caste validity"] },
-        { name: "INCOME CERTIFICATE", code: "INC", keywords: ["income certificate", "utpanna"] },
-        { name: "NATIONALITY CERTIFICATE", code: "NAT", keywords: ["nationality certificate"] },
-        { name: "DOMICILE CERTIFICATE", code: "DOM", keywords: ["domicile certificate", "adivasi dakhla", "rahavasi"] },
-        { name: "PASSBOOK BANK", code: "BNK", keywords: ["passbook bank", "bank passbook", "bank account"] }
-      ],
-      "SWAYAM": [
-        { name: "PHOTO", code: "PIC", keywords: ["photo", "pic", "photograph"] },
-        { name: "AADHAAR CARD", code: "ADR", keywords: ["aadhaar card", "adhar", "aadhar"] },
-        { name: "10TH MARKSHEET", code: "10M", keywords: ["10th marksheet", "10th mark"] },
-        { name: "12TH MARKSHEET", code: "12M", keywords: ["12th marksheet", "12th mark"] },
-        { name: "12TH LC", code: "12LC", keywords: ["12th lc", "leaving certificate"] },
-        { name: "CASTE CERTIFICATE", code: "CST", keywords: ["caste certificate"] },
-        { name: "DOMICILE CERTIFICATE", code: "DOM", keywords: ["domicile certificate"] },
-        { name: "SELF DECLARATION", code: "SLF", keywords: ["self declaration", "svayam ghoshana"] },
-        { name: "PARENT DECLARATION", code: "PAR", keywords: ["parent declaration", "palak ghoshana"] },
-        { name: "PASSBOOK BANK", code: "BNK", keywords: ["passbook bank", "bank passbook"] },
-        { name: "BONAFIDE CERTIFICATE", code: "BNF", keywords: ["bonafide certificate", "bonafide"] }
-      ]
-    };
+    this.state.documentPresets = JSON.parse(JSON.stringify(BUILTIN_PRESETS));
     this.state.activePreset = 'MAHA DBT';
     this.state.customShortcuts = [];
+    this.shortcuts21 = JSON.parse(JSON.stringify(DEFAULT_SHORTCUTS));
     this.savePresetsAndSettings();
     this._recalculateTargetNames(true);
     this.updateTelemetry();
@@ -3460,9 +3927,9 @@ export class RenamerUIManager {
 
       const existingShortcutIdx = this.shortcuts21.findIndex(s => s.code.toUpperCase() === docCode);
       if (existingShortcutIdx !== -1) {
-        this.shortcuts21[existingShortcutIdx] = { code: docCode, label: rawName, canonical: docName };
+        this.shortcuts21[existingShortcutIdx] = { code: docCode, label: rawName, canonical: docName, keywords };
       } else {
-        this.shortcuts21.push({ code: docCode, label: rawName, canonical: docName });
+        this.shortcuts21.push({ code: docCode, label: rawName, canonical: docName, keywords });
       }
 
       if (!this.state.customShortcuts) this.state.customShortcuts = [];
@@ -3496,725 +3963,1165 @@ export class RenamerUIManager {
     toast.show('Saved', `${docName} saved successfully.`, 'success');
   }
 
-    /* ==========================================================================
-       High-Speed Cross-Check Preview Modal & Batch Execution Handlers
-       ========================================================================== */
-    openCrossCheckModal() {
-      const matched = this.state.files.filter(f => !f.isRenamed && f.status !== 'needs_review' && (f.smartConfidence >= 80 || (f.smartConfidence === undefined && f.isMatched)));
-      if (matched.length === 0) {
-        toast.show('No Matched Files', 'No documents ready for batch rename.', 'info');
+  /* ==========================================================================
+     Cross-Check Powerhouse: Live Word Diff, Pattern Bar & Power Utilities
+     ========================================================================== */
+
+  _initCrossCheckEvents() {
+    const modal = document.getElementById('modalCrossCheck');
+    if (!modal) return;
+
+    // Close / Cancel buttons
+    const btnClose = document.getElementById('btnCloseCrossCheckModal');
+    if (btnClose) btnClose.addEventListener('click', () => this.closeCrossCheckModal());
+    const btnCancel = document.getElementById('btnCancelCrossCheck');
+    if (btnCancel) btnCancel.addEventListener('click', () => this.closeCrossCheckModal());
+
+    // Confirm button
+    const btnConfirm = document.getElementById('btnConfirmBatchRename');
+    if (btnConfirm) btnConfirm.addEventListener('click', () => this.handleConfirmCrossCheckRename());
+
+    // Pattern Bar: Order pills
+    modal.querySelectorAll('[data-pattern-order]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (!this._crossCheckState) return;
+        this._crossCheckState.order = btn.dataset.patternOrder;
+        modal.querySelectorAll('[data-pattern-order]').forEach(b => b.classList.toggle('active', b === btn));
+        this._renderCrossCheckRows();
+      });
+    });
+
+    // Pattern Bar: Separator pills
+    modal.querySelectorAll('[data-pattern-sep]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (!this._crossCheckState) return;
+        this._crossCheckState.separator = btn.dataset.patternSep;
+        modal.querySelectorAll('[data-pattern-sep]').forEach(b => b.classList.toggle('active', b === btn));
+        this._renderCrossCheckRows();
+      });
+    });
+
+    // Pattern Bar: Student Name Toggle
+    const btnStudentToggle = document.getElementById('btnToggleCrossCheckStudent');
+    const studentToggleLabel = document.getElementById('crossCheckStudentToggleLabel');
+    if (btnStudentToggle) {
+      btnStudentToggle.addEventListener('click', () => {
+        if (!this._crossCheckState) return;
+        this._crossCheckState.includeStudent = !this._crossCheckState.includeStudent;
+        if (studentToggleLabel) {
+          studentToggleLabel.textContent = this._crossCheckState.includeStudent ? 'ON' : 'OFF';
+        }
+        btnStudentToggle.classList.toggle('opacity-50', !this._crossCheckState.includeStudent);
+        this._renderCrossCheckRows();
+      });
+    }
+
+    // Pattern Bar: Casing pills
+    modal.querySelectorAll('[data-pattern-case]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (!this._crossCheckState) return;
+        this._crossCheckState.casing = btn.dataset.patternCase;
+        modal.querySelectorAll('[data-pattern-case]').forEach(b => b.classList.toggle('active', b === btn));
+        this._renderCrossCheckRows();
+      });
+    });
+
+    // Pattern Bar: Filter pills
+    modal.querySelectorAll('[data-pattern-filter]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (!this._crossCheckState) return;
+        this._crossCheckState.filter = btn.dataset.patternFilter;
+        modal.querySelectorAll('[data-pattern-filter]').forEach(b => b.classList.toggle('active', b === btn));
+        this._renderCrossCheckRows();
+      });
+    });
+
+    // Power Utilities Toggle Button
+    const btnToggleUtilities = document.getElementById('btnTogglePowerUtilities');
+    const stripUtilities = document.getElementById('stripPowerUtilities');
+    const arrowUtilities = document.getElementById('powerUtilitiesArrow');
+    if (btnToggleUtilities && stripUtilities) {
+      btnToggleUtilities.addEventListener('click', () => {
+        const isHidden = stripUtilities.classList.contains('hidden');
+        if (isHidden) {
+          stripUtilities.classList.remove('hidden');
+          if (arrowUtilities) arrowUtilities.style.transform = 'rotate(180deg)';
+        } else {
+          stripUtilities.classList.add('hidden');
+          if (arrowUtilities) arrowUtilities.style.transform = 'rotate(0deg)';
+        }
+      });
+    }
+
+    // Bulk Find & Replace
+    const btnApplyReplace = document.getElementById('btnCrossCheckApplyReplace');
+    const inputFind = document.getElementById('inputCrossCheckFind');
+    const inputReplace = document.getElementById('inputCrossCheckReplace');
+    if (btnApplyReplace && inputFind && inputReplace) {
+      btnApplyReplace.addEventListener('click', () => {
+        const findVal = inputFind.value;
+        const replaceVal = inputReplace.value;
+        if (!findVal) {
+          toast.show('Find Empty', 'Please enter text to find.', 'info');
+          return;
+        }
+        let count = 0;
+        this._getMatchedCrossCheckFiles().forEach(f => {
+          const currentTarget = this._getCrossCheckTargetBase(f);
+          if (currentTarget.toLowerCase().includes(findVal.toLowerCase())) {
+            const regex = new RegExp(findVal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+            const replaced = currentTarget.replace(regex, replaceVal);
+            this._crossCheckState.overrides.set(f.id, replaced);
+            count++;
+          }
+        });
+        toast.show('Find & Replace', `Replaced in ${count} document(s).`, 'success');
+        this._renderCrossCheckRows();
+      });
+    }
+
+    // One-Click Scanner Junk Cleaner
+    const btnCleanJunk = document.getElementById('btnCrossCheckCleanJunk');
+    if (btnCleanJunk) {
+      btnCleanJunk.addEventListener('click', () => {
+        let count = 0;
+        this._getMatchedCrossCheckFiles().forEach(f => {
+          const currentBase = this._getCrossCheckTargetBase(f);
+          const cleaned = cleanScannerJunk(currentBase);
+          if (cleaned !== currentBase) {
+            this._crossCheckState.overrides.set(f.id, cleaned);
+            count++;
+          }
+        });
+        toast.show('Junk Cleanup', `Cleaned scanner timestamps and prefixes in ${count} document(s).`, 'success');
+        this._renderCrossCheckRows();
+      });
+    }
+
+    // Portal-Safe Cleaner
+    const btnPortalSafe = document.getElementById('btnCrossCheckPortalSafe');
+    if (btnPortalSafe) {
+      btnPortalSafe.addEventListener('click', () => {
+        let count = 0;
+        this._getMatchedCrossCheckFiles().forEach(f => {
+          const currentBase = this._getCrossCheckTargetBase(f);
+          const cleaned = cleanPortalSafe(currentBase);
+          if (cleaned !== currentBase) {
+            this._crossCheckState.overrides.set(f.id, cleaned);
+            count++;
+          }
+        });
+        toast.show('Portal-Safe Cleaned', `Formatted ${count} document(s) for admission portals.`, 'success');
+        this._renderCrossCheckRows();
+      });
+    }
+
+    // Reset Rules Button
+    const btnResetRules = document.getElementById('btnCrossCheckResetPatterns');
+    if (btnResetRules) {
+      btnResetRules.addEventListener('click', () => {
+        this._crossCheckState.overrides.clear();
+        this._crossCheckState.order = 'doc_student';
+        this._crossCheckState.separator = ' ';
+        this._crossCheckState.includeStudent = true;
+        this._crossCheckState.casing = (this.state.style || 'upper');
+        this._crossCheckState.filter = 'all';
+
+        // Reset pill UI
+        modal.querySelectorAll('[data-pattern-order]').forEach(b => b.classList.toggle('active', b.dataset.patternOrder === 'doc_student'));
+        modal.querySelectorAll('[data-pattern-sep]').forEach(b => b.classList.toggle('active', b.dataset.patternSep === ' '));
+        modal.querySelectorAll('[data-pattern-case]').forEach(b => b.classList.toggle('active', b.dataset.patternCase === this._crossCheckState.casing));
+        modal.querySelectorAll('[data-pattern-filter]').forEach(b => b.classList.toggle('active', b.dataset.patternFilter === 'all'));
+        if (studentToggleLabel) studentToggleLabel.textContent = 'ON';
+        if (btnStudentToggle) btnStudentToggle.classList.remove('opacity-50');
+
+        toast.show('Rules Reset', 'Reset patterns to smart auto-match defaults.', 'info');
+        this._renderCrossCheckRows();
+      });
+    }
+
+    // Select All / Deselect All Checkbox
+    const selectAllCb = document.getElementById('chkCrossCheckSelectAll');
+    if (selectAllCb) {
+      selectAllCb.addEventListener('change', (e) => {
+        const checkboxes = modal.querySelectorAll('.crosscheck-row-cb');
+        checkboxes.forEach(cb => {
+          cb.checked = e.target.checked;
+          const tr = cb.closest('tr');
+          if (tr && tr.dataset.fileId) {
+            this._crossCheckState.userToggled.set(tr.dataset.fileId, e.target.checked);
+          }
+        });
+        this._updateCrossCheckSelectionCount();
+      });
+    }
+
+    // Keyboard Navigation within Modal
+    modal.addEventListener('keydown', (e) => {
+      if (modal.classList.contains('hidden')) return;
+
+      const isInput = (e.target.tagName === 'INPUT' && e.target.type === 'text');
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        this.closeCrossCheckModal();
         return;
       }
 
-      const modal = document.getElementById('modalCrossCheck');
-      if (!modal) return;
-
-      const tbody = document.getElementById('crossCheckTableBody');
-      const selectAllCb = document.getElementById('chkCrossCheckSelectAll');
-      const totalEl = document.getElementById('crossCheckTotalCount');
-      const selectedEl = document.getElementById('crossCheckSelectedCount');
-      const studentLabel = document.getElementById('crossCheckStudentLabel');
-      const confirmLabel = document.getElementById('confirmRenameLabel');
-
-      if (studentLabel) studentLabel.textContent = this.state.studentName || 'Not Set';
-      if (totalEl) totalEl.textContent = String(matched.length);
-      if (selectedEl) selectedEl.textContent = String(matched.length);
-      if (confirmLabel) confirmLabel.textContent = `Confirm & Rename (${matched.length})`;
-      if (selectAllCb) selectAllCb.checked = true;
-
-      if (tbody) {
-        tbody.innerHTML = '';
-        const sName = (this.state.studentName || '').trim();
-
-        matched.forEach(f => {
-          const tr = document.createElement('tr');
-          tr.className = 'hover:bg-surface-container-high/40 transition-colors';
-          tr.dataset.fileId = f.id;
-
-          const oldClean = cleanName(f.name);
-          const newClean = cleanName(f.targetName || f.name);
-
-          // Determine difference status
-          let changeStatus = 'rename'; // 'identical' | 'casing' | 'student' | 'rename'
-          if (oldClean === newClean) {
-            changeStatus = 'identical';
-          } else if (oldClean.toLowerCase() === newClean.toLowerCase()) {
-            changeStatus = 'casing';
-          } else if (sName && newClean.toLowerCase().includes(sName.toLowerCase()) && !oldClean.toLowerCase().includes(sName.toLowerCase())) {
-            changeStatus = 'student';
+      if (e.key === 'Enter') {
+        if (isInput) {
+          if (e.target.id === 'inputCrossCheckFind' || e.target.id === 'inputCrossCheckReplace') {
+            e.preventDefault();
+            const btnApply = document.getElementById('btnCrossCheckApplyReplace');
+            if (btnApply) btnApply.click();
           }
-
-          // Checkbox: Default unchecked for identical rows, checked for changes
-          const tdCb = document.createElement('td');
-          tdCb.className = 'py-2 px-3 text-center';
-          const cb = document.createElement('input');
-          cb.type = 'checkbox';
-          cb.checked = (changeStatus !== 'identical');
-          cb.className = 'w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer crosscheck-row-cb';
-          cb.addEventListener('change', () => this._updateCrossCheckSelectionCount());
-          tdCb.appendChild(cb);
-          tr.appendChild(tdCb);
-
-          // Old Name (clean basename, NO extension)
-          const tdOld = document.createElement('td');
-          tdOld.className = 'py-2 px-3 text-secondary truncate max-w-[220px] font-mono-code text-[12px]';
-          tdOld.title = oldClean;
-          tdOld.textContent = oldClean;
-          tr.appendChild(tdOld);
-
-          // Arrow
-          const tdArr = document.createElement('td');
-          tdArr.className = 'py-2 px-2 text-center text-outline-variant font-bold select-none';
-          tdArr.textContent = '→';
-          tr.appendChild(tdArr);
-
-          // Suggested New Name (clean basename, NO extension, student highlighted)
-          const tdNew = document.createElement('td');
-          tdNew.className = 'py-2 px-3 font-bold text-on-surface truncate max-w-[260px] font-mono-code text-[12px]';
-          tdNew.title = newClean;
-
-          if (sName && newClean.toLowerCase().includes(sName.toLowerCase())) {
-            const idx = newClean.toLowerCase().indexOf(sName.toLowerCase());
-            const before = newClean.slice(0, idx);
-            const matchStr = newClean.slice(idx, idx + sName.length);
-            const after = newClean.slice(idx + sName.length);
-            tdNew.appendChild(document.createTextNode(before));
-            const hl = document.createElement('span');
-            hl.className = 'text-primary bg-primary/10 px-1 rounded';
-            hl.textContent = matchStr;
-            tdNew.appendChild(hl);
-            tdNew.appendChild(document.createTextNode(after));
-          } else {
-            tdNew.textContent = newClean;
-          }
-          tr.appendChild(tdNew);
-
-          // Difference / Status badge
-          const tdConf = document.createElement('td');
-          tdConf.className = 'py-2 px-3 text-right';
-          const confBadge = document.createElement('span');
-
-          if (changeStatus === 'identical') {
-            confBadge.className = 'px-2 py-0.5 rounded text-[10px] font-mono-code font-bold bg-surface-container-high text-secondary';
-            confBadge.textContent = 'Identical';
-          } else if (changeStatus === 'casing') {
-            confBadge.className = 'px-2 py-0.5 rounded text-[10px] font-mono-code font-bold bg-primary/10 text-primary';
-            confBadge.textContent = 'Case Change';
-          } else if (changeStatus === 'student') {
-            confBadge.className = 'px-2 py-0.5 rounded text-[10px] font-mono-code font-bold bg-tertiary-fixed text-on-tertiary-fixed';
-            confBadge.textContent = '+ Student';
-          } else {
-            const conf = f.smartConfidence !== undefined ? f.smartConfidence : 90;
-            confBadge.className = 'confidence-badge confidence-badge-high';
-            confBadge.textContent = `🟢 ${conf}% Rename`;
-          }
-
-          tdConf.appendChild(confBadge);
-          tr.appendChild(tdConf);
-
-          tbody.appendChild(tr);
-        });
+          return;
+        }
+        e.preventDefault();
+        const confirmBtn = document.getElementById('btnConfirmBatchRename');
+        if (confirmBtn && !confirmBtn.disabled) {
+          this.handleConfirmCrossCheckRename();
+        }
+        return;
       }
 
-      this._updateCrossCheckSelectionCount();
+      if (isInput) return;
 
-      if (selectAllCb) {
-        selectAllCb.onchange = (e) => {
-          const checkboxes = modal.querySelectorAll('.crosscheck-row-cb');
-          checkboxes.forEach(cb => { cb.checked = e.target.checked; });
-          this._updateCrossCheckSelectionCount();
-        };
+      const activeRows = Array.from(modal.querySelectorAll('#crossCheckTableBody tr'));
+      if (activeRows.length === 0) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        this._crossCheckState.focusedIndex = Math.min(this._crossCheckState.focusedIndex + 1, activeRows.length - 1);
+        this._highlightFocusedCrossCheckRow(activeRows);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        this._crossCheckState.focusedIndex = Math.max(this._crossCheckState.focusedIndex - 1, 0);
+        this._highlightFocusedCrossCheckRow(activeRows);
+      } else if (e.key === ' ') {
+        e.preventDefault();
+        const curRow = activeRows[this._crossCheckState.focusedIndex];
+        if (curRow) {
+          const cb = curRow.querySelector('.crosscheck-row-cb');
+          if (cb) {
+            cb.checked = !cb.checked;
+            if (curRow.dataset.fileId) {
+              this._crossCheckState.userToggled.set(curRow.dataset.fileId, cb.checked);
+            }
+            this._updateCrossCheckSelectionCount();
+          }
+        }
       }
+    });
 
-      modal.classList.remove('hidden');
+    // Floating Undo Toast Buttons
+    const btnUndo = document.getElementById('btnFloatingUndo');
+    if (btnUndo) {
+      btnUndo.addEventListener('click', () => {
+        this.hideFloatingUndoToast();
+        this.handleUndo();
+      });
+    }
+    const btnDismiss = document.getElementById('btnDismissFloatingUndo');
+    if (btnDismiss) {
+      btnDismiss.addEventListener('click', () => {
+        this.hideFloatingUndoToast();
+      });
+    }
+  }
+
+  _highlightFocusedCrossCheckRow(rows) {
+    rows.forEach((r, idx) => {
+      const isFocused = (idx === this._crossCheckState.focusedIndex);
+      r.classList.toggle('keyboard-focused-row', isFocused);
+      if (isFocused) {
+        r.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    });
+  }
+
+  _getMatchedCrossCheckFiles() {
+    return this.state.files.filter(f => {
+      if (f.isRenamed || f.status === 'needs_review') return false;
+      return (f.smartConfidence >= 80 || (f.smartConfidence === undefined && f.isMatched));
+    });
+  }
+
+  _getCrossCheckTargetBase(f) {
+    if (this._crossCheckState && this._crossCheckState.overrides && this._crossCheckState.overrides.has(f.id)) {
+      return this._crossCheckState.overrides.get(f.id);
+    }
+    return f.docType || cleanName(f.name);
+  }
+
+  _getCrossCheckTargetName(f) {
+    const rawStudent = (this.state.studentName || '').replace(/\.[a-zA-Z0-9]+$/i, '').trim();
+    const extension = f.ext || ext(f.name) || '';
+    const baseDoc = this._getCrossCheckTargetBase(f);
+
+    let cleanTarget = '';
+    if (this._crossCheckState && this._crossCheckState.overrides && this._crossCheckState.overrides.has(f.id)) {
+      cleanTarget = applyCase(baseDoc, this._crossCheckState.casing);
+    } else {
+      cleanTarget = formatPatternName(baseDoc, rawStudent, {
+        order: this._crossCheckState ? this._crossCheckState.order : 'doc_student',
+        separator: this._crossCheckState ? this._crossCheckState.separator : ' ',
+        includeStudent: this._crossCheckState ? this._crossCheckState.includeStudent : true,
+        casing: this._crossCheckState ? this._crossCheckState.casing : (this.state.style || 'upper')
+      });
+    }
+    return `${cleanTarget}${extension}`;
+  }
+
+  openCrossCheckModal() {
+    const matched = this._getMatchedCrossCheckFiles();
+    if (matched.length === 0) {
+      toast.show('No Matched Documents', 'No auto-matched documents found with >=80% confidence.', 'info');
+      return;
     }
 
-    _updateCrossCheckSelectionCount() {
-      const modal = document.getElementById('modalCrossCheck');
-      if (!modal) return;
-      const checkboxes = modal.querySelectorAll('.crosscheck-row-cb');
-      const checked = Array.from(checkboxes).filter(cb => cb.checked);
-      const selectedEl = document.getElementById('crossCheckSelectedCount');
-      const confirmLabel = document.getElementById('confirmRenameLabel');
-      const confirmBtn = document.getElementById('btnConfirmBatchRename');
-      const selectAllCb = document.getElementById('chkCrossCheckSelectAll');
+    const modal = document.getElementById('modalCrossCheck');
+    if (!modal) return;
 
-      if (selectedEl) selectedEl.textContent = String(checked.length);
-      if (confirmLabel) confirmLabel.textContent = `Confirm & Rename (${checked.length})`;
-      if (confirmBtn) confirmBtn.disabled = checked.length === 0;
-      if (selectAllCb) selectAllCb.checked = (checkboxes.length > 0 && checked.length === checkboxes.length);
+    // Initialize Cross-Check session state
+    this._crossCheckState = {
+      order: 'doc_student',
+      separator: ' ',
+      includeStudent: true,
+      casing: (this.state.style || 'upper'),
+      filter: 'all',
+      overrides: new Map(),
+      userToggled: new Map(),
+      focusedIndex: 0
+    };
+
+    // Reset pattern pills UI to initial state
+    modal.querySelectorAll('[data-pattern-order]').forEach(b => b.classList.toggle('active', b.dataset.patternOrder === 'doc_student'));
+    modal.querySelectorAll('[data-pattern-sep]').forEach(b => b.classList.toggle('active', b.dataset.patternSep === ' '));
+    modal.querySelectorAll('[data-pattern-case]').forEach(b => b.classList.toggle('active', b.dataset.patternCase === this._crossCheckState.casing));
+    modal.querySelectorAll('[data-pattern-filter]').forEach(b => b.classList.toggle('active', b.dataset.patternFilter === 'all'));
+
+    const studentToggleLabel = document.getElementById('crossCheckStudentToggleLabel');
+    if (studentToggleLabel) studentToggleLabel.textContent = 'ON';
+    const btnStudentToggle = document.getElementById('btnToggleCrossCheckStudent');
+    if (btnStudentToggle) btnStudentToggle.classList.remove('opacity-50');
+
+    this._renderCrossCheckRows();
+    modal.classList.remove('hidden');
+  }
+
+  _renderCrossCheckRows() {
+    const modal = document.getElementById('modalCrossCheck');
+    if (!modal) return;
+
+    const tbodyActive = document.getElementById('crossCheckTableBody');
+    const tbodyIdentical = document.getElementById('crossCheckIdenticalTableBody');
+    const totalEl = document.getElementById('crossCheckTotalCount');
+    const activeCountEl = document.getElementById('crossCheckActiveCount');
+    const identicalCountEl = document.getElementById('crossCheckIdenticalCount');
+    const activeEmptyEl = document.getElementById('crossCheckActiveEmpty');
+    const drawerIdentical = document.getElementById('drawerIdenticalFiles');
+    const studentLabel = document.getElementById('crossCheckStudentLabel');
+
+    const rawStudent = (this.state.studentName || '').replace(/\.[a-zA-Z0-9]+$/i, '').trim();
+    if (studentLabel) studentLabel.textContent = rawStudent || 'Not Set';
+
+    const allMatched = this._getMatchedCrossCheckFiles();
+    if (totalEl) totalEl.textContent = String(allMatched.length);
+
+    const filter = this._crossCheckState ? this._crossCheckState.filter : 'all';
+    const filteredMatched = allMatched.filter(f => {
+      const extLower = (f.ext || ext(f.name) || '').toLowerCase();
+      if (filter === 'pdf') {
+        return extLower === '.pdf';
+      }
+      if (filter === 'images') {
+        return ['.jpg', '.jpeg', '.png', '.webp', '.bmp'].includes(extLower);
+      }
+      return true;
+    });
+
+    if (tbodyActive) tbodyActive.innerHTML = '';
+    if (tbodyIdentical) tbodyIdentical.innerHTML = '';
+
+    const activeList = [];
+    const identicalList = [];
+
+    filteredMatched.forEach(f => {
+      const targetName = this._getCrossCheckTargetName(f);
+      const diff = computeWordDiff(f.name, targetName, this.state.studentName);
+
+      if (diff.isIdentical) {
+        identicalList.push({ file: f, targetName, diff });
+      } else {
+        activeList.push({ file: f, targetName, diff });
+      }
+    });
+
+    if (activeCountEl) activeCountEl.textContent = String(activeList.length);
+    if (identicalCountEl) identicalCountEl.textContent = String(identicalList.length);
+
+    if (activeEmptyEl) {
+      activeEmptyEl.classList.toggle('hidden', activeList.length > 0);
     }
 
-    closeCrossCheckModal() {
-      const modal = document.getElementById('modalCrossCheck');
-      if (modal) modal.classList.add('hidden');
+    if (drawerIdentical) {
+      drawerIdentical.classList.toggle('hidden', identicalList.length === 0);
     }
+
+    // Render Active Rows (To Be Renamed)
+    activeList.forEach((item, index) => {
+      const { file, targetName, diff } = item;
+      const tr = document.createElement('tr');
+      tr.className = 'hover:bg-surface-container-high/40 transition-colors';
+      tr.dataset.fileId = file.id;
+
+      const isChecked = this._crossCheckState.userToggled.has(file.id)
+        ? this._crossCheckState.userToggled.get(file.id)
+        : true;
+
+      const tdCb = document.createElement('td');
+      tdCb.className = 'py-2 px-3 text-center';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = isChecked;
+      cb.className = 'w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer crosscheck-row-cb';
+      cb.addEventListener('change', () => {
+        this._crossCheckState.userToggled.set(file.id, cb.checked);
+        this._updateCrossCheckSelectionCount();
+      });
+      tdCb.appendChild(cb);
+      tr.appendChild(tdCb);
+
+      // Old Name (Live Word Diff HTML)
+      const tdOld = document.createElement('td');
+      tdOld.className = 'py-2 px-3 font-mono-code text-[12px] truncate max-w-[240px]';
+      tdOld.title = cleanName(file.name);
+      tdOld.innerHTML = diff.oldHtml;
+      tr.appendChild(tdOld);
+
+      // Arrow
+      const tdArr = document.createElement('td');
+      tdArr.className = 'py-2 px-2 text-center text-outline-variant font-bold select-none';
+      tdArr.textContent = '→';
+      tr.appendChild(tdArr);
+
+      // Suggested New Name (Live Word Diff HTML)
+      const tdNew = document.createElement('td');
+      tdNew.className = 'py-2 px-3 font-mono-code text-[12px] truncate max-w-[280px]';
+      tdNew.title = cleanName(targetName);
+      tdNew.innerHTML = diff.newHtml;
+      tr.appendChild(tdNew);
+
+      // Status Badge
+      const tdConf = document.createElement('td');
+      tdConf.className = 'py-2 px-3 text-right flex items-center justify-end gap-1.5';
+      const badge = document.createElement('span');
+
+      if (diff.changeType === 'casing') {
+        badge.className = 'px-2 py-0.5 rounded text-[10px] font-mono-code font-bold bg-primary/10 text-primary border border-primary/20';
+        badge.textContent = 'Case Change';
+      } else if (diff.changeType === 'student') {
+        badge.className = 'px-2 py-0.5 rounded text-[10px] font-mono-code font-bold bg-tertiary-fixed text-on-tertiary-fixed';
+        badge.textContent = '+ Student';
+      } else {
+        const conf = file.smartConfidence !== undefined ? file.smartConfidence : 90;
+        badge.className = 'confidence-badge confidence-badge-high';
+        badge.textContent = `🟢 ${conf}% Match`;
+      }
+      tdConf.appendChild(badge);
+      tr.appendChild(tdConf);
+
+      if (tbodyActive) tbodyActive.appendChild(tr);
+    });
+
+    // Render Identical Rows into Collapsible Drawer
+    identicalList.forEach(item => {
+      const { file, targetName, diff } = item;
+      const tr = document.createElement('tr');
+      tr.className = 'hover:bg-surface-container-high/40 transition-colors';
+      tr.dataset.fileId = file.id;
+
+      const isChecked = this._crossCheckState.userToggled.has(file.id)
+        ? this._crossCheckState.userToggled.get(file.id)
+        : false;
+
+      const tdCb = document.createElement('td');
+      tdCb.className = 'py-2 px-3 text-center w-10';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = isChecked;
+      cb.className = 'w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer crosscheck-row-cb';
+      cb.addEventListener('change', () => {
+        this._crossCheckState.userToggled.set(file.id, cb.checked);
+        this._updateCrossCheckSelectionCount();
+      });
+      tdCb.appendChild(cb);
+      tr.appendChild(tdCb);
+
+      const tdOld = document.createElement('td');
+      tdOld.className = 'py-2 px-3 font-mono-code text-[11px] text-secondary truncate max-w-[240px]';
+      tdOld.title = cleanName(file.name);
+      tdOld.textContent = cleanName(file.name);
+      tr.appendChild(tdOld);
+
+      const tdArr = document.createElement('td');
+      tdArr.className = 'py-2 px-2 text-center text-outline-variant select-none w-8';
+      tdArr.textContent = '→';
+      tr.appendChild(tdArr);
+
+      const tdNew = document.createElement('td');
+      tdNew.className = 'py-2 px-3 font-mono-code text-[11px] text-secondary truncate max-w-[280px]';
+      tdNew.title = cleanName(targetName);
+      tdNew.textContent = cleanName(targetName);
+      tr.appendChild(tdNew);
+
+      const tdConf = document.createElement('td');
+      tdConf.className = 'py-2 px-3 text-right';
+      const badge = document.createElement('span');
+      badge.className = 'px-2 py-0.5 rounded text-[10px] font-mono-code font-bold bg-surface-container text-secondary border border-outline-variant/30';
+      badge.textContent = 'Identical';
+      tdConf.appendChild(badge);
+      tr.appendChild(tdConf);
+
+      if (tbodyIdentical) tbodyIdentical.appendChild(tr);
+    });
+
+    const activeRows = Array.from(modal.querySelectorAll('#crossCheckTableBody tr'));
+    if (activeRows.length > 0) {
+      this._crossCheckState.focusedIndex = Math.min(this._crossCheckState.focusedIndex, activeRows.length - 1);
+      this._highlightFocusedCrossCheckRow(activeRows);
+    }
+
+    this._updateCrossCheckSelectionCount();
+  }
+
+  _updateCrossCheckSelectionCount() {
+    const modal = document.getElementById('modalCrossCheck');
+    if (!modal) return;
+    const checkboxes = modal.querySelectorAll('.crosscheck-row-cb');
+    const checked = Array.from(checkboxes).filter(cb => cb.checked);
+    const selectedEl = document.getElementById('crossCheckSelectedCount');
+    const confirmLabel = document.getElementById('confirmRenameLabel');
+    const confirmBtn = document.getElementById('btnConfirmBatchRename');
+    const selectAllCb = document.getElementById('chkCrossCheckSelectAll');
+
+    if (selectedEl) selectedEl.textContent = String(checked.length);
+    if (confirmLabel) confirmLabel.textContent = `Confirm & Rename (${checked.length})`;
+    if (confirmBtn) confirmBtn.disabled = checked.length === 0;
+    if (selectAllCb) selectAllCb.checked = (checkboxes.length > 0 && checked.length === checkboxes.length);
+  }
+
+  closeCrossCheckModal() {
+    const modal = document.getElementById('modalCrossCheck');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  showFloatingUndoToast(count) {
+    const toastEl = document.getElementById('toastFloatingUndo');
+    if (!toastEl) return;
+
+    const msgEl = document.getElementById('floatingUndoMessage');
+    const btnLabelEl = document.getElementById('floatingUndoBtnLabel');
+
+    if (msgEl) msgEl.innerHTML = `Successfully renamed <strong>${count}</strong> documents in 0.1s`;
+    if (btnLabelEl) btnLabelEl.textContent = `Undo All (${count})`;
+
+    toastEl.classList.remove('hidden');
+
+    if (this._floatingUndoTimer) {
+      clearTimeout(this._floatingUndoTimer);
+    }
+    this._floatingUndoTimer = setTimeout(() => {
+      this.hideFloatingUndoToast();
+    }, 7000);
+  }
+
+  hideFloatingUndoToast() {
+    const toastEl = document.getElementById('toastFloatingUndo');
+    if (toastEl) toastEl.classList.add('hidden');
+    if (this._floatingUndoTimer) {
+      clearTimeout(this._floatingUndoTimer);
+      this._floatingUndoTimer = null;
+    }
+  }
 
   async handleConfirmCrossCheckRename() {
-      const modal = document.getElementById('modalCrossCheck');
-      if (!modal) return;
+    const modal = document.getElementById('modalCrossCheck');
+    if (!modal) return;
 
-      const rows = modal.querySelectorAll('#crossCheckTableBody tr');
-      const selectedFiles = [];
-      rows.forEach(tr => {
-        const cb = tr.querySelector('.crosscheck-row-cb');
-        if (cb && cb.checked) {
-          const f = this.state.files.find(x => x.id === tr.dataset.fileId);
-          if (f) selectedFiles.push(f);
+    const checkedBoxes = modal.querySelectorAll('.crosscheck-row-cb:checked');
+    const selectedFiles = [];
+    checkedBoxes.forEach(cb => {
+      const tr = cb.closest('tr');
+      if (tr && tr.dataset.fileId) {
+        const f = this.state.files.find(x => x.id === tr.dataset.fileId);
+        if (f) selectedFiles.push(f);
+      }
+    });
+
+    if (selectedFiles.length === 0) {
+      toast.show('No Files Selected', 'Please select at least one document to rename.', 'warning');
+      return;
+    }
+
+    const plan = [];
+    for (const f of selectedFiles) {
+      const targetFilename = this._getCrossCheckTargetName(f);
+      const err = validateFilename(targetFilename);
+      if (err) {
+        toast.show('Validation Error', `${cleanName(f.name)}: ${err}`, 'error');
+        return;
+      }
+      plan.push({
+        old: f.name,
+        next: targetFilename,
+        file: f,
+        nativePath: f.path || f.nativePath,
+        studentName: this.state.studentName || '',
+        rotation: f.rotation || 0
+      });
+    }
+
+    try {
+      const result = await executeRename(this.state.folder, plan, (pct, status) => {
+        console.log(`[Batch Rename Progress] ${pct}%: ${status}`);
+      });
+
+      undoManager.pushBatch(this.state.folder, plan);
+
+      plan.forEach(item => {
+        const f = item.file;
+        f.name = item.next;
+        f.targetName = item.next;
+        f.isRenamed = true;
+        f.status = 'renamed';
+        f.rotation = 0;
+        f._pdfBytes = null;
+        if (f._blobUrl && typeof URL !== 'undefined' && URL.revokeObjectURL) {
+          try { URL.revokeObjectURL(f._blobUrl); } catch (_) { }
+          f._blobUrl = null;
+        }
+        if (f.path) {
+          f.path = f.path.replace(/[^\\\/]+$/, f.name);
+        }
+        if (f.nativePath) {
+          f.nativePath = f.nativePath.replace(/[^\\\/]+$/, f.name);
+        }
+        const origin = (typeof window !== 'undefined' && window.location?.origin && !window.location.origin.startsWith('file:') && !window.location.origin.includes('tauri'))
+          ? window.location.origin : 'http://localhost:3000';
+        if (f.path || f.nativePath) {
+          f.url = `${origin}/api/serve-file?path=${encodeURIComponent(f.path || f.nativePath)}`;
         }
       });
 
-      if (selectedFiles.length === 0) {
-        toast.show('No Files Selected', 'Please select at least one document to rename.', 'warning');
-        return;
+      this.closeCrossCheckModal();
+      this.showFloatingUndoToast(plan.length);
+
+      // Auto-jump to first remaining unrenamed (unmatched) file for seamless operator workflow
+      const firstUnrenamed = this.state.files.findIndex(f => !f.isRenamed);
+      if (firstUnrenamed !== -1) {
+        this.state.currentIndex = firstUnrenamed;
       }
 
-      for (const f of selectedFiles) {
-        const err = validateFilename(f.targetName);
-        if (err) {
-          toast.show('Validation Error', `${cleanName(f.name)}: ${err}`, 'error');
-          return;
-        }
-      }
-
-      const plan = selectedFiles.map(f => ({
-        old: f.name,
-        next: f.targetName,
-        file: f,
-        nativePath: f.path,
-        studentName: this.state.studentName || '',
-        rotation: f.rotation || 0
-      }));
-
-      toast.show('Executing Batch Rename', `Processing ${plan.length} matched documents...`, 'info');
-
-      try {
-        const result = await executeRename(this.state.folder, plan, (pct, status) => {
-          console.log(`[Batch Rename Progress] ${pct}%: ${status}`);
-        });
-
-        undoManager.pushBatch(this.state.folder, plan);
-
-        selectedFiles.forEach(f => {
-          f.name = f.targetName;
-          f.isRenamed = true;
-          f.status = 'renamed';
-          f.rotation = 0;
-          f._pdfBytes = null;
-          if (f._blobUrl && typeof URL !== 'undefined' && URL.revokeObjectURL) {
-            try { URL.revokeObjectURL(f._blobUrl); } catch (_) {}
-            f._blobUrl = null;
-          }
-        });
-
-        this.closeCrossCheckModal();
-        toast.show('Batch Complete!', `Successfully renamed ${plan.length} documents.`, 'success');
-        this.updateTelemetry();
-        this.renderQueue();
-        this.renderCurrentPreview();
-      } catch (err) {
-        toast.show('Rename Failed', err.message, 'error');
-      }
-    }
-
-    handleReviewUnmatched() {
-      const unmatchedIdx = this.state.files.findIndex(f => !f.isRenamed && (f.status === 'needs_review' || (f.smartConfidence !== undefined ? f.smartConfidence < 80 : !f.isMatched)));
-      if (unmatchedIdx === -1) {
-        toast.show('Queue Clear', 'All pending files have high confidence or are already resolved.', 'info');
-        return;
-      }
-
-      this.state.currentIndex = unmatchedIdx;
+      this.updateTelemetry();
       this.renderQueue();
       this.renderCurrentPreview();
-      const targetFile = this.state.files[unmatchedIdx];
-      toast.show(
-        'Reviewing File',
-        `Jumped to file #${unmatchedIdx + 1} (${cleanName(targetFile.name)}) for manual inspection.`,
-        'info'
-      );
+    } catch (err) {
+      toast.show('Rename Failed', err.message, 'error');
+    }
+  }
+
+  handleSaveBatch() {
+    if (!this.state.folder) {
+      toast.show('No Active Batch', 'Please load a folder first.', 'warning');
+      return;
     }
 
-    handleSaveBatch() {
-      if (!this.state.folder) {
-        toast.show('No Active Batch', 'Please load a folder first.', 'warning');
-        return;
-      }
+    const snapshot = {
+      folder: this.state.folder,
+      files: this.state.files.map(f => ({
+        name: f.name,
+        targetName: f.targetName,
+        docType: f.docType,
+        isMatched: f.isMatched,
+        isRenamed: f.isRenamed,
+        isKept: f.isKept
+      })),
+      timestamp: new Date().toISOString()
+    };
 
-      const snapshot = {
-        folder: this.state.folder,
-        files: this.state.files.map(f => ({
-          name: f.name,
-          targetName: f.targetName,
-          docType: f.docType,
-          isMatched: f.isMatched,
-          isRenamed: f.isRenamed,
-          isKept: f.isKept
-        })),
-        timestamp: new Date().toISOString()
-      };
+    localStorage.setItem('docmitra_last_batch', JSON.stringify(snapshot));
+    toast.show('Batch State Saved', 'Current progress saved locally.', 'success');
+  }
 
-      localStorage.setItem('docmitra_last_batch', JSON.stringify(snapshot));
-      toast.show('Batch State Saved', 'Current progress saved locally.', 'success');
+  handleExportAudit() {
+    if (this.state.files.length === 0) {
+      toast.show('Nothing to Export', 'Queue is empty.', 'info');
+      return;
     }
 
-    handleExportAudit() {
-      if (this.state.files.length === 0) {
-        toast.show('Nothing to Export', 'Queue is empty.', 'info');
-        return;
-      }
-
-      const checklistName = this.state.settings?.activeChecklist || 'MAHA DBT FORM';
+    const activePresetName = this.state.activePreset || this.state.settings?.activeChecklist || 'MAHA DBT';
+    let rules = [];
+    if (this.state.documentPresets && this.state.documentPresets[activePresetName]) {
+      rules = this.state.documentPresets[activePresetName].map(d => ({
+        name: d.name,
+        keywords: Array.isArray(d.keywords) ? d.keywords : [d.name.toLowerCase()]
+      }));
+    } else {
       const checklistsData = this.state.settings?.checklists || DEFAULT_CHECKLISTS_DATA;
-      const rawRules = checklistsData[checklistName] || DEFAULT_CHECKLISTS_DATA['MAHA DBT FORM'] || [];
-
-      const rules = rawRules.map(r => {
+      const rawRules = checklistsData[activePresetName] || DEFAULT_CHECKLISTS_DATA['MAHA DBT FORM'] || [];
+      rules = rawRules.map(r => {
         if (Array.isArray(r)) {
           return { name: r[0], keywords: r[1] || [r[0].toLowerCase()] };
         }
         return r;
       });
-
-      const fileNames = this.state.files.map(f => f.targetName || f.name);
-      const activeLinks = this.state.settings?.linkedRules || DEFAULT_LINKED_RULES;
-      const evaluations = rules.map(rule => evaluateChecklistRule(fileNames, rule, activeLinks));
-
-      const foundCount = evaluations.filter(e => e.status === 'green').length;
-      const missingCount = evaluations.length - foundCount;
-      const percentComplete = rules.length > 0 ? Math.round((foundCount / rules.length) * 100) : 0;
-      const missingList = evaluations
-        .map((e, idx) => (e.status !== 'green' ? rules[idx].name : null))
-        .filter(Boolean);
-
-      const batchResults = [{
-        studentName: this.state.studentName || 'Student',
-        folderName: this.state.folder?.name || 'Folder',
-        summary: {
-          evaluations: evaluations.map((ev, idx) => ({
-            rule: rules[idx],
-            status: ev.status,
-            isLinked: ev.isLinked
-          })),
-          foundCount,
-          missingCount,
-          totalRequired: rules.length,
-          percentComplete,
-          isReady: missingCount === 0,
-          missingList
-        }
-      }];
-
-      const csvContent = generateBatchAuditCSV(batchResults, rules, checklistName);
-      const filename = `DocMitra_Audit_${(this.state.studentName || 'Batch').replace(/\s+/g, '_')}.csv`;
-      downloadCSV(filename, csvContent);
-      toast.show('Audit Exported', `CSV report for ${rules.length} admission rules downloaded.`, 'success');
     }
 
-    handleClearQueue(silent = false) {
-      if (this.state.files && typeof URL !== 'undefined' && URL.revokeObjectURL) {
-        for (const f of this.state.files) {
-          if (f && f._blobUrl) {
-            try { URL.revokeObjectURL(f._blobUrl); } catch (_) {}
-            f._blobUrl = null;
-          }
-          f._pdfBytes = null;
-        }
+    const fileNames = this.state.files.map(f => f.targetName || f.name);
+    const activeLinks = this.state.settings?.linkedRules || DEFAULT_LINKED_RULES;
+    const evaluations = rules.map(rule => evaluateChecklistRule(fileNames, rule, activeLinks));
+
+    const foundCount = evaluations.filter(e => e.status === 'green').length;
+    const missingCount = evaluations.length - foundCount;
+    const percentComplete = rules.length > 0 ? Math.round((foundCount / rules.length) * 100) : 0;
+    const missingList = evaluations
+      .map((e, idx) => (e.status !== 'green' ? rules[idx].name : null))
+      .filter(Boolean);
+
+    const batchResults = [{
+      studentName: this.state.studentName || 'Student',
+      folderName: this.state.folder?.name || 'Folder',
+      summary: {
+        evaluations: evaluations.map((ev, idx) => ({
+          rule: rules[idx],
+          status: ev.status,
+          isLinked: ev.isLinked
+        })),
+        foundCount,
+        missingCount,
+        totalRequired: rules.length,
+        percentComplete,
+        isReady: missingCount === 0,
+        missingList
       }
-      this.state.files = [];
-      this.state.folder = null;
-      this.state.subfolders = [];
-      this.state.currentSubfolderIndex = 0;
-      this.state.studentName = '';
-      this.state.currentIndex = 0;
+    }];
+
+    const csvContent = generateBatchAuditCSV(batchResults, rules, activePresetName);
+    const filename = `DocMitra_Audit_${(this.state.studentName || 'Batch').replace(/\s+/g, '_')}.csv`;
+    downloadCSV(filename, csvContent);
+    toast.show('Audit Exported', `CSV report for ${rules.length} admission rules downloaded.`, 'success');
+  }
+
+  handleClearQueue(silent = false) {
+    if (this.state.files && typeof URL !== 'undefined' && URL.revokeObjectURL) {
+      for (const f of this.state.files) {
+        if (f && f._blobUrl) {
+          try { URL.revokeObjectURL(f._blobUrl); } catch (_) { }
+          f._blobUrl = null;
+        }
+        f._pdfBytes = null;
+      }
+    }
+    this.state.files = [];
+    this.state.folder = null;
+    this.state.subfolders = [];
+    this.state.currentSubfolderIndex = 0;
+    this.state.studentName = '';
+    this.state.currentIndex = 0;
+    this.state.activePdfDoc = null;
+    this.state.activePdfUrl = null;
+    this.updateTelemetry();
+    this.renderQueue();
+    this.renderCurrentPreview();
+    if (!silent) {
+      toast.show('Workspace Cleared', 'Intake queue and preview have been reset.', 'info');
+    }
+  }
+
+  renderCurrentPreview() {
+    const previewCol = document.getElementById('col-preview');
+    if (!previewCol) return;
+
+    const currentFile = this.state.files[this.state.currentIndex];
+    this.state.rotation = currentFile ? (currentFile.rotation || 0) : 0;
+
+    const previewStageWrapper = previewCol.querySelector('.overflow-auto');
+    if (!previewStageWrapper) return;
+
+    while (previewStageWrapper.firstChild) {
+      previewStageWrapper.removeChild(previewStageWrapper.firstChild);
+    }
+
+    if (!currentFile) {
+      const emptyStage = document.createElement('div');
+      emptyStage.id = 'previewContainerStage';
+      emptyStage.className = 'h-full max-h-[calc(100vh-175px)] aspect-[1/1.414] bg-surface-container-lowest rounded-xl shadow-md p-space-lg flex flex-col items-center justify-center text-center gap-4 relative select-none border border-outline-variant/30 shrink-0';
+
+      const iconBox = document.createElement('div');
+      iconBox.className = 'w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shadow-inner';
+      const icon = document.createElement('span');
+      icon.className = 'material-symbols-outlined text-[36px]';
+      icon.textContent = 'drive_file_rename_outline';
+      iconBox.appendChild(icon);
+      emptyStage.appendChild(iconBox);
+
+      const textGroup = document.createElement('div');
+      textGroup.className = 'flex flex-col gap-1 max-w-xs';
+      const h3 = document.createElement('h3');
+      h3.className = 'font-headline-sm text-[17px] font-bold text-on-surface';
+      h3.textContent = 'No Document Loaded for Preview';
+      textGroup.appendChild(h3);
+      const p = document.createElement('p');
+      p.className = 'text-body-sm text-secondary text-[12px] leading-relaxed';
+      p.textContent = 'Select a student folder (F2) from the top-right toolbar to begin admission document renaming.';
+      textGroup.appendChild(p);
+      emptyStage.appendChild(textGroup);
+
+      // Status telemetry strip (Minimalist blueprint status — NO duplicate buttons)
+      const statusStrip = document.createElement('div');
+      statusStrip.className = 'flex items-center gap-2 font-mono-code text-[11px] text-secondary opacity-60 mt-1 select-none';
+      statusStrip.innerHTML = '<span>DPI: Standby</span><span>•</span><span>Buffer: Empty</span><span>•</span><span>Zero Zoom</span>';
+      emptyStage.appendChild(statusStrip);
+
+      previewStageWrapper.appendChild(emptyStage);
+      return;
+    }
+
+    // Update target buffer telemetry
+    const bufferEl = previewCol.querySelector('strong.text-tertiary, strong.text-error');
+    if (bufferEl) {
+      const sizeKb = (currentFile.size / 1024).toFixed(0);
+      if (currentFile.size <= 256 * 1024) {
+        bufferEl.className = 'text-tertiary font-bold';
+        bufferEl.textContent = `${sizeKb} KB / 256 KB Safe`;
+      } else {
+        bufferEl.className = 'text-error font-bold';
+        bufferEl.textContent = `${sizeKb} KB (>256 KB Safe Buffer)`;
+      }
+    }
+
+    const isCurrentPdf = /\.pdf$/i.test(currentFile.name);
+    if (!isCurrentPdf) {
       this.state.activePdfDoc = null;
       this.state.activePdfUrl = null;
-      this.updateTelemetry();
-      this.renderQueue();
-      this.renderCurrentPreview();
-      if (!silent) {
-        toast.show('Workspace Cleared', 'Intake queue and preview have been reset.', 'info');
-      }
+      this.state.currentPdfPage = 1;
+      this.state.totalPdfPages = 1;
+      this._updatePdfPageIndicator();
     }
 
-    renderCurrentPreview() {
-      const previewCol = document.getElementById('col-preview');
-      if (!previewCol) return;
+    if (this.state.splitCompare && this.state.files.length > 1) {
+      const cmpIndex = this.state.currentIndex > 0 ? this.state.currentIndex - 1 : 1;
+      const cmpFile = this.state.files[cmpIndex];
 
-      const currentFile = this.state.files[this.state.currentIndex];
-      this.state.rotation = currentFile ? (currentFile.rotation || 0) : 0;
+      const splitGrid = document.createElement('div');
+      splitGrid.id = 'previewContainerStage';
+      splitGrid.className = 'flex flex-row gap-space-md items-center justify-center h-full max-h-[calc(100vh-175px)]';
 
-      const previewStageWrapper = previewCol.querySelector('.overflow-auto');
-      if (!previewStageWrapper) return;
+      const leftStage = this._createStageElement(cmpFile, `Compare: ${cmpFile.name}`);
+      const rightStage = this._createStageElement(currentFile, `Active: ${currentFile.targetName || currentFile.name}`);
 
-      while (previewStageWrapper.firstChild) {
-        previewStageWrapper.removeChild(previewStageWrapper.firstChild);
-      }
-
-      if (!currentFile) {
-        const emptyStage = document.createElement('div');
-        emptyStage.id = 'previewContainerStage';
-        emptyStage.className = 'h-full max-h-[calc(100vh-175px)] aspect-[1/1.414] bg-surface-container-lowest rounded-xl shadow-md p-space-lg flex flex-col items-center justify-center text-center gap-4 relative select-none border border-outline-variant/30 shrink-0';
-
-        const iconBox = document.createElement('div');
-        iconBox.className = 'w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shadow-inner';
-        const icon = document.createElement('span');
-        icon.className = 'material-symbols-outlined text-[36px]';
-        icon.textContent = 'drive_file_rename_outline';
-        iconBox.appendChild(icon);
-        emptyStage.appendChild(iconBox);
-
-        const textGroup = document.createElement('div');
-        textGroup.className = 'flex flex-col gap-1 max-w-xs';
-        const h3 = document.createElement('h3');
-        h3.className = 'font-headline-sm text-[17px] font-bold text-on-surface';
-        h3.textContent = 'No Document Loaded for Preview';
-        textGroup.appendChild(h3);
-        const p = document.createElement('p');
-        p.className = 'text-body-sm text-secondary text-[12px] leading-relaxed';
-        p.textContent = 'Select a student folder (F2) from the top-right toolbar to begin admission document renaming.';
-        textGroup.appendChild(p);
-        emptyStage.appendChild(textGroup);
-
-        // Status telemetry strip (Minimalist blueprint status — NO duplicate buttons)
-        const statusStrip = document.createElement('div');
-        statusStrip.className = 'flex items-center gap-2 font-mono-code text-[11px] text-secondary opacity-60 mt-1 select-none';
-        statusStrip.innerHTML = '<span>DPI: Standby</span><span>•</span><span>Buffer: Empty</span><span>•</span><span>Zero Zoom</span>';
-        emptyStage.appendChild(statusStrip);
-
-        previewStageWrapper.appendChild(emptyStage);
-        return;
-      }
-
-      // Update target buffer telemetry
-      const bufferEl = previewCol.querySelector('strong.text-tertiary, strong.text-error');
-      if (bufferEl) {
-        const sizeKb = (currentFile.size / 1024).toFixed(0);
-        if (currentFile.size <= 256 * 1024) {
-          bufferEl.className = 'text-tertiary font-bold';
-          bufferEl.textContent = `${sizeKb} KB / 256 KB Safe`;
-        } else {
-          bufferEl.className = 'text-error font-bold';
-          bufferEl.textContent = `${sizeKb} KB (>256 KB Safe Buffer)`;
-        }
-      }
-
-      const isCurrentPdf = /\.pdf$/i.test(currentFile.name);
-      if (!isCurrentPdf) {
-        this.state.activePdfDoc = null;
-        this.state.activePdfUrl = null;
-        this.state.currentPdfPage = 1;
-        this.state.totalPdfPages = 1;
-        this._updatePdfPageIndicator();
-      }
-
-      if (this.state.splitCompare && this.state.files.length > 1) {
-        const cmpIndex = this.state.currentIndex > 0 ? this.state.currentIndex - 1 : 1;
-        const cmpFile = this.state.files[cmpIndex];
-
-        const splitGrid = document.createElement('div');
-        splitGrid.id = 'previewContainerStage';
-        splitGrid.className = 'flex flex-row gap-space-md items-center justify-center h-full max-h-[calc(100vh-175px)]';
-
-        const leftStage = this._createStageElement(cmpFile, `Compare: ${cmpFile.name}`);
-        const rightStage = this._createStageElement(currentFile, `Active: ${currentFile.targetName || currentFile.name}`);
-
-        splitGrid.appendChild(leftStage);
-        splitGrid.appendChild(rightStage);
-        previewStageWrapper.appendChild(splitGrid);
-        this._applyPreviewTransform();
-        return;
-      }
-
-      const stage = this._createStageElement(currentFile);
-      previewStageWrapper.appendChild(stage);
+      splitGrid.appendChild(leftStage);
+      splitGrid.appendChild(rightStage);
+      previewStageWrapper.appendChild(splitGrid);
       this._applyPreviewTransform();
+      return;
     }
 
-    _createStageElement(file, compareLabel = null) {
-      const stage = document.createElement('div');
-      if (!compareLabel) stage.id = 'previewContainerStage';
-      stage.className = 'h-full max-h-[calc(100vh-175px)] aspect-[1/1.414] bg-surface-container-lowest rounded shadow-2xl p-space-md flex flex-col justify-between relative overflow-hidden select-text border border-outline-variant/40 shrink-0';
+    const stage = this._createStageElement(currentFile);
+    previewStageWrapper.appendChild(stage);
+    this._applyPreviewTransform();
+  }
 
-      if (compareLabel) {
-        const topBadge = document.createElement('div');
-        topBadge.className = 'absolute top-2 left-2 z-10 px-2 py-0.5 rounded bg-surface-container-highest text-on-surface font-mono-code text-[10px] font-bold shadow-xs';
-        topBadge.textContent = compareLabel;
-        stage.appendChild(topBadge);
-      }
+  _createStageElement(file, compareLabel = null) {
+    const stage = document.createElement('div');
+    if (!compareLabel) stage.id = 'previewContainerStage';
+    stage.className = 'h-full max-h-[calc(100vh-175px)] aspect-[1/1.414] bg-surface-container-lowest rounded shadow-2xl p-space-md flex flex-col justify-between relative overflow-hidden select-text border border-outline-variant/40 shrink-0';
 
-      const isImage = /\.(jpe?g|png|webp|bmp|gif)$/i.test(file.name);
-      const isPdf = /\.pdf$/i.test(file.name);
+    if (compareLabel) {
+      const topBadge = document.createElement('div');
+      topBadge.className = 'absolute top-2 left-2 z-10 px-2 py-0.5 rounded bg-surface-container-highest text-on-surface font-mono-code text-[10px] font-bold shadow-xs';
+      topBadge.textContent = compareLabel;
+      stage.appendChild(topBadge);
+    }
 
-      if (isImage) {
-        const img = document.createElement('img');
-        img.alt = file.name;
-        img.className = 'w-full h-full object-contain';
+    const isImage = /\.(jpe?g|png|webp|bmp|gif)$/i.test(file.name);
+    const isPdf = /\.pdf$/i.test(file.name);
 
-        const applyBlob = (blobUrl) => {
-          file._blobUrl = blobUrl;
-          img.src = blobUrl;
-          if (!stage.contains(img)) {
-            stage.innerHTML = '';
-            stage.appendChild(img);
-          }
-        };
+    if (isImage) {
+      const img = document.createElement('img');
+      img.alt = file.name;
+      img.className = 'w-full h-full object-contain';
 
-        if (file._blobUrl) {
-          applyBlob(file._blobUrl);
-        } else if (file.fileObj) {
-          try {
-            applyBlob(URL.createObjectURL(file.fileObj));
-          } catch (_) {
-            this._renderDocumentInfoFallback(stage, file);
-          }
-        } else {
-          const tauriInvoke = getTauriInvoke();
-          if (file.path && tauriInvoke) {
-            stage.innerHTML = '<div class="flex items-center justify-center w-full h-full text-secondary text-[12px]"><span class="material-symbols-outlined text-[20px] animate-spin text-primary mr-2">sync</span><span>Loading document preview...</span></div>';
-            tauriInvoke('read_binary_file', { path: file.path })
-              .then(bytes => {
-                const mime = file.name.toLowerCase().endsWith('.png') ? 'image/png' : (file.name.toLowerCase().endsWith('.webp') ? 'image/webp' : 'image/jpeg');
-                const blob = new Blob([new Uint8Array(bytes)], { type: mime });
-                applyBlob(URL.createObjectURL(blob));
-              })
-              .catch(err => {
-                console.warn('Native read_binary_file error, falling back:', err);
-                const previewUrl = resolveFilePreviewUrl(file);
-                if (previewUrl) {
-                  img.src = previewUrl;
-                  img.onload = () => { stage.innerHTML = ''; stage.appendChild(img); };
-                  img.onerror = () => this._renderDocumentInfoFallback(stage, file);
-                } else {
-                  this._renderDocumentInfoFallback(stage, file);
-                }
-              });
-          } else {
-            const previewUrl = resolveFilePreviewUrl(file);
-            if (previewUrl) {
-              img.src = previewUrl;
-              img.onload = () => { stage.innerHTML = ''; stage.appendChild(img); };
-              img.onerror = () => this._renderDocumentInfoFallback(stage, file);
-            } else {
-              this._renderDocumentInfoFallback(stage, file);
-            }
-          }
+      const applyBlob = (blobUrl) => {
+        file._blobUrl = blobUrl;
+        img.src = blobUrl;
+        if (!stage.contains(img)) {
+          stage.innerHTML = '';
+          stage.appendChild(img);
         }
-      } else if (isPdf) {
-        const canvas = document.createElement('canvas');
-        canvas.id = 'previewPdfCanvas';
-        canvas.className = 'w-full h-full object-contain';
+      };
 
-        const renderFromBytes = async (bytes) => {
-          if (!window.pdfjsLib) {
-            this._loadPdfJs(() => renderFromBytes(bytes));
-            return;
-          }
-          try {
-            stage.innerHTML = '';
-            stage.appendChild(canvas);
-            this.state.activePdfDoc = await window.pdfjsLib.getDocument({ data: bytes }).promise;
-            this.state.activePdfUrl = file.path || file.name;
-            this.state.totalPdfPages = this.state.activePdfDoc.numPages || 1;
-            this.state.currentPdfPage = 1;
-            await this._renderPdfPage(1, canvas);
-          } catch (pdfErr) {
-            console.warn('PDF render error:', pdfErr);
-            this._renderDocumentInfoFallback(stage, file);
-          }
-        };
-
-        if (file._pdfBytes) {
-          renderFromBytes(file._pdfBytes);
-        } else if (file.fileObj) {
-          file.fileObj.arrayBuffer()
-            .then(buf => {
-              file._pdfBytes = new Uint8Array(buf);
-              renderFromBytes(file._pdfBytes);
-            })
-            .catch(() => this._renderDocumentInfoFallback(stage, file));
-        } else {
-          const tauriInvoke = getTauriInvoke();
-          if (file.path && tauriInvoke) {
-            stage.innerHTML = '<div class="flex items-center justify-center w-full h-full text-secondary text-[12px]"><span class="material-symbols-outlined text-[20px] animate-spin text-primary mr-2">sync</span><span>Loading PDF preview...</span></div>';
-            tauriInvoke('read_binary_file', { path: file.path })
-              .then(bytes => {
-                file._pdfBytes = new Uint8Array(bytes);
-                renderFromBytes(file._pdfBytes);
-              })
-              .catch(err => {
-                console.warn('Native PDF read error, falling back to fetch:', err);
-                const previewUrl = resolveFilePreviewUrl(file);
-                if (previewUrl) {
-                  fetch(previewUrl)
-                    .then(r => r.arrayBuffer())
-                    .then(buf => {
-                      file._pdfBytes = new Uint8Array(buf);
-                      renderFromBytes(file._pdfBytes);
-                    })
-                    .catch(() => this._renderDocumentInfoFallback(stage, file));
-                } else {
-                  this._renderDocumentInfoFallback(stage, file);
-                }
-              });
-          } else {
-            const previewUrl = resolveFilePreviewUrl(file);
-            if (previewUrl) {
-              fetch(previewUrl)
-                .then(r => r.arrayBuffer())
-                .then(buf => {
-                  file._pdfBytes = new Uint8Array(buf);
-                  renderFromBytes(file._pdfBytes);
-                })
-                .catch(() => this._renderDocumentInfoFallback(stage, file));
-            } else {
-              this._renderDocumentInfoFallback(stage, file);
-            }
-          }
+      if (file._blobUrl) {
+        applyBlob(file._blobUrl);
+      } else if (file.fileObj) {
+        try {
+          applyBlob(URL.createObjectURL(file.fileObj));
+        } catch (_) {
+          this._renderDocumentInfoFallback(stage, file);
         }
       } else {
-        this._renderDocumentInfoFallback(stage, file);
-      }
-
-      return stage;
-      }
-
-  async _renderPdfPage(pageNumber, canvasEl = null) {
-        if (!this.state.activePdfDoc) return;
-        const canvas = canvasEl || document.getElementById('previewPdfCanvas');
-        if (!canvas) return;
-
-        try {
-          const page = await this.state.activePdfDoc.getPage(pageNumber);
-          const viewport = page.getViewport({ scale: 2.0 });
-          canvas.height = viewport.height;
-          canvas.width = viewport.width;
-          const ctx = canvas.getContext('2d');
-          await page.render({
-            canvasContext: ctx,
-            viewport: viewport
-          }).promise;
-
-          this.state.currentPdfPage = pageNumber;
-          this._updatePdfPageIndicator();
-        } catch (err) {
-          console.warn(`Error rendering PDF page ${pageNumber}:`, err);
+        const tauriInvoke = getTauriInvoke();
+        if (file.path && tauriInvoke) {
+          stage.innerHTML = '<div class="flex items-center justify-center w-full h-full text-secondary text-[12px]"><span class="material-symbols-outlined text-[20px] animate-spin text-primary mr-2">sync</span><span>Loading document preview...</span></div>';
+          tauriInvoke('read_binary_file', { path: file.path })
+            .then(bytes => {
+              const mime = file.name.toLowerCase().endsWith('.png') ? 'image/png' : (file.name.toLowerCase().endsWith('.webp') ? 'image/webp' : 'image/jpeg');
+              const blob = new Blob([new Uint8Array(bytes)], { type: mime });
+              applyBlob(URL.createObjectURL(blob));
+            })
+            .catch(err => {
+              console.warn('Native read_binary_file error, falling back:', err);
+              const previewUrl = resolveFilePreviewUrl(file);
+              if (previewUrl) {
+                img.src = previewUrl;
+                img.onload = () => { stage.innerHTML = ''; stage.appendChild(img); };
+                img.onerror = () => this._renderDocumentInfoFallback(stage, file);
+              } else {
+                this._renderDocumentInfoFallback(stage, file);
+              }
+            });
+        } else {
+          const previewUrl = resolveFilePreviewUrl(file);
+          if (previewUrl) {
+            img.src = previewUrl;
+            img.onload = () => { stage.innerHTML = ''; stage.appendChild(img); };
+            img.onerror = () => this._renderDocumentInfoFallback(stage, file);
+          } else {
+            this._renderDocumentInfoFallback(stage, file);
+          }
         }
       }
+    } else if (isPdf) {
+      const canvas = document.createElement('canvas');
+      canvas.id = 'previewPdfCanvas';
+      canvas.className = 'w-full h-full object-contain';
 
-      _updatePdfPageIndicator() {
-        const colPreview = document.getElementById('col-preview');
-        if (!colPreview) return;
-        const badge = colPreview.querySelector('#renamerPdfPageBadge');
-        const btnPrev = colPreview.querySelector('#btnPdfPrevPage');
-        const btnNext = colPreview.querySelector('#btnPdfNextPage');
-
-        if (badge) {
-          badge.textContent = this.state.totalPdfPages > 1
-            ? `Page ${this.state.currentPdfPage} of ${this.state.totalPdfPages}`
-            : 'Page 1 of 1';
-          badge.style.cursor = this.state.totalPdfPages > 1 ? 'pointer' : 'default';
-          badge.title = this.state.totalPdfPages > 1 ? 'Click to jump to page' : 'Single page document';
-        }
-        if (btnPrev) {
-          btnPrev.disabled = (this.state.currentPdfPage <= 1);
-        }
-        if (btnNext) {
-          btnNext.disabled = (this.state.currentPdfPage >= this.state.totalPdfPages || this.state.totalPdfPages <= 1);
-        }
-      }
-
-      _loadPdfJs(callback) {
-        if (window.pdfjsLib) {
-          if (callback) callback();
+      const renderFromBytes = async (bytes) => {
+        if (!window.pdfjsLib) {
+          this._loadPdfJs(() => renderFromBytes(bytes));
           return;
         }
-        if (this._pdfLoading) return;
-        this._pdfLoading = true;
+        try {
+          stage.innerHTML = '';
+          stage.appendChild(canvas);
+          const bufferCopy = (bytes instanceof Uint8Array) ? bytes.slice(0) : new Uint8Array(bytes);
+          this.state.activePdfDoc = await window.pdfjsLib.getDocument({ data: bufferCopy }).promise;
+          this.state.activePdfUrl = file.path || file.name;
+          this.state.totalPdfPages = this.state.activePdfDoc.numPages || 1;
+          this.state.currentPdfPage = 1;
+          await this._renderPdfPage(1, canvas);
+        } catch (pdfErr) {
+          console.warn('PDF render error:', pdfErr);
+          this._renderDocumentInfoFallback(stage, file);
+        }
+      };
 
-            const candidateSources = [
-              'assets/js/libs/pdf.min.js',
-              '/app/assets/js/libs/pdf.min.js',
-              'app/assets/js/libs/pdf.min.js',
-              'src/js/pdf.min.js',
-              'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'
-            ];
-
-            let tryIdx = 0;
-            const tryNext = () => {
-              if (tryIdx >= candidateSources.length) {
-                this._pdfLoading = false;
-                console.warn('[DocMitra Renamer] Could not load pdf.js from any candidate source.');
-                return;
+      if (file._pdfBytes) {
+        renderFromBytes(file._pdfBytes);
+      } else if (file.fileObj) {
+        file.fileObj.arrayBuffer()
+          .then(buf => {
+            file._pdfBytes = new Uint8Array(buf);
+            renderFromBytes(file._pdfBytes);
+          })
+          .catch(() => this._renderDocumentInfoFallback(stage, file));
+      } else {
+        const tauriInvoke = getTauriInvoke();
+        if (file.path && tauriInvoke) {
+          stage.innerHTML = '<div class="flex items-center justify-center w-full h-full text-secondary text-[12px]"><span class="material-symbols-outlined text-[20px] animate-spin text-primary mr-2">sync</span><span>Loading PDF preview...</span></div>';
+          tauriInvoke('read_binary_file', { path: file.path })
+            .then(bytes => {
+              file._pdfBytes = new Uint8Array(bytes);
+              renderFromBytes(file._pdfBytes);
+            })
+            .catch(err => {
+              console.warn('Native PDF read error, falling back to fetch:', err);
+              const previewUrl = resolveFilePreviewUrl(file);
+              if (previewUrl) {
+                fetch(previewUrl)
+                  .then(r => r.arrayBuffer())
+                  .then(buf => {
+                    file._pdfBytes = new Uint8Array(buf);
+                    renderFromBytes(file._pdfBytes);
+                  })
+                  .catch(() => this._renderDocumentInfoFallback(stage, file));
+              } else {
+                this._renderDocumentInfoFallback(stage, file);
               }
-              const src = candidateSources[tryIdx++];
-              const s = document.createElement('script');
-              s.src = src;
-              s.onload = () => {
-                if (window.pdfjsLib) {
-                  const workerPath = src.includes('cdnjs')
-                    ? 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
-                    : src.replace('pdf.min.js', 'pdf.worker.min.js');
-                  window.pdfjsLib.GlobalWorkerOptions.workerSrc = workerPath;
-                  this._pdfLoading = false;
-                  if (callback) callback();
-                } else {
-                  tryNext();
-                }
-              };
-              s.onerror = () => tryNext();
-              document.head.appendChild(s);
-            };
-
-            tryNext();
-          }
-
-          _renderDocumentInfoFallback(stage, file) {
-            while (stage.firstChild) {
-              stage.removeChild(stage.firstChild);
-            }
-
-            const header = document.createElement('div');
-            header.className = 'flex flex-col items-center text-center gap-1 border-b pb-2 border-outline-variant/50';
-            const govTitle = document.createElement('span');
-            govTitle.className = 'font-mono-code text-[10px] tracking-widest text-secondary uppercase font-bold';
-            govTitle.textContent = 'DocMitra Offline Document Inspector';
-            header.appendChild(govTitle);
-
-            const docTitle = document.createElement('span');
-            docTitle.className = 'font-headline-sm text-[15px] font-bold text-on-surface uppercase';
-            docTitle.textContent = file.targetName || file.name;
-            header.appendChild(docTitle);
-            stage.appendChild(header);
-
-            const body = document.createElement('div');
-            body.className = 'flex-1 flex flex-col items-center justify-center gap-2 text-center p-4';
-            const icon = document.createElement('span');
-            icon.className = 'material-symbols-outlined text-[64px] text-primary opacity-40';
-            icon.textContent = 'description';
-            body.appendChild(icon);
-
-            const info = document.createElement('div');
-            info.className = 'font-mono-code text-[12px] text-secondary';
-            info.textContent = `Size: ${(file.size / 1024).toFixed(1)} KB • Type: ${file.ext.toUpperCase()}`;
-            body.appendChild(info);
-
-            const matchBadge = document.createElement('div');
-            matchBadge.className = file.isMatched
-              ? 'px-3 py-1 rounded bg-tertiary-fixed text-on-tertiary-fixed font-bold font-mono-code text-[11px]'
-              : 'px-3 py-1 rounded bg-surface-variant text-on-surface-variant font-bold font-mono-code text-[11px]';
-            matchBadge.textContent = file.isMatched ? `Matched: ${file.docType}` : 'Unmatched File';
-            body.appendChild(matchBadge);
-            stage.appendChild(body);
-
-            const footer = document.createElement('div');
-            footer.className = 'text-center border-t pt-2 border-outline-variant/30 text-[10px] font-mono-code text-secondary';
-            footer.textContent = 'Air-Gapped High-Precision Preview Stage';
-            stage.appendChild(footer);
+            });
+        } else {
+          const previewUrl = resolveFilePreviewUrl(file);
+          if (previewUrl) {
+            fetch(previewUrl)
+              .then(r => r.arrayBuffer())
+              .then(buf => {
+                file._pdfBytes = new Uint8Array(buf);
+                renderFromBytes(file._pdfBytes);
+              })
+              .catch(() => this._renderDocumentInfoFallback(stage, file));
+          } else {
+            this._renderDocumentInfoFallback(stage, file);
           }
         }
+      }
+    } else {
+      this._renderDocumentInfoFallback(stage, file);
+    }
 
-        export function initRenamerUI() {
-          const manager = new RenamerUIManager();
-          manager.init();
-          return manager;
+    return stage;
+  }
+
+  async _renderPdfPage(pageNumber, canvasEl = null) {
+    if (!this.state.activePdfDoc) return;
+    const canvas = canvasEl || document.getElementById('previewPdfCanvas');
+    if (!canvas) return;
+
+    try {
+      const page = await this.state.activePdfDoc.getPage(pageNumber);
+      const viewport = page.getViewport({ scale: 2.0 });
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+      const ctx = canvas.getContext('2d');
+      await page.render({
+        canvasContext: ctx,
+        viewport: viewport
+      }).promise;
+
+      this.state.currentPdfPage = pageNumber;
+      this._updatePdfPageIndicator();
+    } catch (err) {
+      console.warn(`Error rendering PDF page ${pageNumber}:`, err);
+    }
+  }
+
+  _updatePdfPageIndicator() {
+    const colPreview = document.getElementById('col-preview');
+    if (!colPreview) return;
+    const badge = colPreview.querySelector('#renamerPdfPageBadge');
+    const btnPrev = colPreview.querySelector('#btnPdfPrevPage');
+    const btnNext = colPreview.querySelector('#btnPdfNextPage');
+
+    if (badge) {
+      badge.textContent = this.state.totalPdfPages > 1
+        ? `Page ${this.state.currentPdfPage} of ${this.state.totalPdfPages}`
+        : 'Page 1 of 1';
+      badge.style.cursor = this.state.totalPdfPages > 1 ? 'pointer' : 'default';
+      badge.title = this.state.totalPdfPages > 1 ? 'Click to jump to page' : 'Single page document';
+    }
+    if (btnPrev) {
+      btnPrev.disabled = (this.state.currentPdfPage <= 1);
+    }
+    if (btnNext) {
+      btnNext.disabled = (this.state.currentPdfPage >= this.state.totalPdfPages || this.state.totalPdfPages <= 1);
+    }
+  }
+
+  _loadPdfJs(callback) {
+    if (window.pdfjsLib) {
+      if (callback) callback();
+      return;
+    }
+    if (this._pdfLoading) return;
+    this._pdfLoading = true;
+
+    const candidateSources = [
+      'assets/js/libs/pdf.min.js',
+      '/app/assets/js/libs/pdf.min.js',
+      'app/assets/js/libs/pdf.min.js',
+      'src/js/pdf.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'
+    ];
+
+    let tryIdx = 0;
+    const tryNext = () => {
+      if (tryIdx >= candidateSources.length) {
+        this._pdfLoading = false;
+        console.warn('[DocMitra Renamer] Could not load pdf.js from any candidate source.');
+        return;
+      }
+      const src = candidateSources[tryIdx++];
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = () => {
+        if (window.pdfjsLib) {
+          const workerPath = src.includes('cdnjs')
+            ? 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
+            : src.replace('pdf.min.js', 'pdf.worker.min.js');
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = workerPath;
+          this._pdfLoading = false;
+          if (callback) callback();
+        } else {
+          tryNext();
         }
+      };
+      s.onerror = () => tryNext();
+      document.head.appendChild(s);
+    };
+
+    tryNext();
+  }
+
+  _renderDocumentInfoFallback(stage, file) {
+    while (stage.firstChild) {
+      stage.removeChild(stage.firstChild);
+    }
+
+    const header = document.createElement('div');
+    header.className = 'flex flex-col items-center text-center gap-1 border-b pb-2 border-outline-variant/50';
+    const govTitle = document.createElement('span');
+    govTitle.className = 'font-mono-code text-[10px] tracking-widest text-secondary uppercase font-bold';
+    govTitle.textContent = 'DocMitra Offline Document Inspector';
+    header.appendChild(govTitle);
+
+    const docTitle = document.createElement('span');
+    docTitle.className = 'font-headline-sm text-[15px] font-bold text-on-surface uppercase';
+    docTitle.textContent = file.targetName || file.name;
+    header.appendChild(docTitle);
+    stage.appendChild(header);
+
+    const body = document.createElement('div');
+    body.className = 'flex-1 flex flex-col items-center justify-center gap-2 text-center p-4';
+    const icon = document.createElement('span');
+    icon.className = 'material-symbols-outlined text-[64px] text-primary opacity-40';
+    icon.textContent = 'description';
+    body.appendChild(icon);
+
+    const info = document.createElement('div');
+    info.className = 'font-mono-code text-[12px] text-secondary';
+    const fileExt = file.ext || ext(file.name) || 'DOC';
+    const fileSizeKb = file.size ? (file.size / 1024).toFixed(1) : '0.0';
+    info.textContent = `Size: ${fileSizeKb} KB • Type: ${fileExt.toUpperCase().replace(/^\./, '')}`;
+    body.appendChild(info);
+
+    const matchBadge = document.createElement('div');
+    matchBadge.className = file.isMatched
+      ? 'px-3 py-1 rounded bg-tertiary-fixed text-on-tertiary-fixed font-bold font-mono-code text-[11px]'
+      : 'px-3 py-1 rounded bg-surface-variant text-on-surface-variant font-bold font-mono-code text-[11px]';
+    matchBadge.textContent = file.isMatched ? `Matched: ${file.docType}` : 'Unmatched File';
+    body.appendChild(matchBadge);
+    stage.appendChild(body);
+
+    const footer = document.createElement('div');
+    footer.className = 'text-center border-t pt-2 border-outline-variant/30 text-[10px] font-mono-code text-secondary';
+    footer.textContent = 'Air-Gapped High-Precision Preview Stage';
+    stage.appendChild(footer);
+  }
+}
+
+export function initRenamerUI() {
+  const manager = new RenamerUIManager();
+  manager.init();
+  return manager;
+}
