@@ -334,6 +334,19 @@
   transform: translateY(0);
 }
 
+/* Stacking Context Isolation for Settings & Child Modals */
+.rename-tool-scope #modalRenameSettings {
+  z-index: 1000 !important;
+}
+
+.rename-tool-scope #modalAddDocument {
+  z-index: 9999 !important;
+}
+
+.rename-tool-scope #modalCrossCheck {
+  z-index: 9990 !important;
+}
+
 
 
 

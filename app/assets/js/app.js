@@ -6645,12 +6645,12 @@ var Ke = b.map((e) => ({
 			i.className = "hover:bg-surface-container-low transition-colors";
 			let a = Array.isArray(t.keywords) ? t.keywords.join(", ") : t.keywords || "", o = e.indexOf(t);
 			i.innerHTML = `
-        <td class="py-2.5 px-3 text-center text-secondary font-mono-code">${r + 1}</td>
-        <td class="py-2.5 px-3 font-semibold text-on-surface">${t.name}</td>
-        <td class="py-2.5 px-3 font-mono-code font-bold text-primary">${t.code || "-"}</td>
-        <td class="py-2.5 px-3 text-secondary text-[11px] leading-relaxed break-words" title="${a}">${a || "<span class=\"italic opacity-50\">-</span>"}</td>
-        <td class="py-2.5 px-3 text-center">
-          <div class="flex items-center justify-center gap-1">
+        <td class="py-2.5 px-3 text-center text-secondary font-mono-code" style="width: 48px;">${r + 1}</td>
+        <td class="py-2.5 px-3 font-semibold text-on-surface truncate" style="width: 24%;" title="${t.name}">${t.name}</td>
+        <td class="py-2.5 px-3 font-mono-code font-bold text-primary whitespace-nowrap" style="width: 11%;">${t.code || "-"}</td>
+        <td class="py-2.5 px-3 text-secondary text-[11px] leading-relaxed whitespace-normal break-words" style="width: 48%;" title="${a}">${a || "<span class=\"italic opacity-50\">-</span>"}</td>
+        <td class="py-2.5 px-3 text-right whitespace-nowrap pr-4" style="width: 90px;">
+          <div class="flex items-center justify-end gap-1">
             <button class="w-6 h-6 rounded hover:bg-primary/10 text-secondary hover:text-primary transition-colors flex items-center justify-center cursor-pointer btn-edit-doc" title="Edit document" type="button" data-doc-idx="${o}">
               <span class="material-symbols-outlined text-[15px]">edit</span>
             </button>
@@ -6682,12 +6682,12 @@ var Ke = b.map((e) => ({
 			r.className = "hover:bg-surface-container-low transition-colors";
 			let i = Array.isArray(t.keywords) ? t.keywords.join(", ") : t.keywords || "";
 			r.innerHTML = `
-        <td class="py-2.5 px-3 text-center text-secondary font-mono-code">${n + 1}</td>
-        <td class="py-2.5 px-3 font-mono-code font-bold text-primary">${t.code}</td>
-        <td class="py-2.5 px-3 font-semibold text-on-surface">${t.canonical || t.label}</td>
-        <td class="py-2.5 px-3 text-secondary text-[11px] leading-relaxed break-words" title="${i}">${i || "<span class=\"italic opacity-50\">-</span>"}</td>
-        <td class="py-2.5 px-3 text-center">
-          <div class="flex items-center justify-center gap-1">
+        <td class="py-2.5 px-3 text-center text-secondary font-mono-code" style="width: 48px;">${n + 1}</td>
+        <td class="py-2.5 px-3 font-mono-code font-bold text-primary whitespace-nowrap" style="width: 11%;">${t.code}</td>
+        <td class="py-2.5 px-3 font-semibold text-on-surface truncate" style="width: 24%;" title="${t.canonical || t.label}">${t.canonical || t.label}</td>
+        <td class="py-2.5 px-3 text-secondary text-[11px] leading-relaxed whitespace-normal break-words" style="width: 48%;" title="${i}">${i || "<span class=\"italic opacity-50\">-</span>"}</td>
+        <td class="py-2.5 px-3 text-right whitespace-nowrap pr-4" style="width: 90px;">
+          <div class="flex items-center justify-end gap-1">
             <button class="w-6 h-6 rounded hover:bg-primary/10 text-secondary hover:text-primary transition-colors flex items-center justify-center cursor-pointer btn-edit-shortcut" title="Edit shortcut" type="button" data-code="${t.code}">
               <span class="material-symbols-outlined text-[15px]">edit</span>
             </button>

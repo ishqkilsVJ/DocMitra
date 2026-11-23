@@ -482,94 +482,11 @@
             <button id="btnRenameAll" type="button"></button>
           </div>
 
-          <!-- Modal: Add New Document Type to Preset Flow -->
-          <div id="modalAddDocument"
-            class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
-            <div
-              class="w-full max-w-lg bg-surface-container-lowest rounded-2xl border border-outline-variant/40 shadow-2xl flex flex-col overflow-hidden">
-              <!-- Modal Header -->
-              <div
-                class="px-5 py-4 bg-surface-container-low flex items-center justify-between border-b border-outline-variant/30">
-                <div class="flex items-center gap-2.5">
-                  <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold">
-                    <span class="material-symbols-outlined text-[20px]">note_add</span>
-                  </div>
-                  <div>
-                    <h3 class="font-headline-sm text-[16px] font-bold text-on-surface">Add Document Type to Preset</h3>
-                    <p class="text-secondary text-[11px]">Define document name, short code, and keywords for
-                      auto-matching</p>
-                  </div>
-                </div>
-                <button id="btnCloseAddDocModal" type="button"
-                  class="w-7 h-7 rounded-lg hover:bg-surface-container text-secondary hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer">
-                  <span class="material-symbols-outlined text-[18px]">close</span>
-                </button>
-              </div>
-
-              <!-- Modal Body -->
-              <div class="p-5 flex flex-col gap-4 text-label-md">
-                <!-- Input: Short Code -->
-                <div class="flex flex-col gap-1.5">
-                  <label class="font-semibold text-on-surface text-[12px] flex items-center justify-between">
-                    <span>Short Code (Abbreviation)</span>
-                    <span class="text-secondary font-mono-code text-[11px]">2-8 letters</span>
-                  </label>
-                  <input id="inputAddDocCode" type="text" maxlength="8" placeholder="e.g. BNF"
-                    class="w-full h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary font-mono-code text-[13px] uppercase font-bold text-on-surface outline-none">
-                </div>
-
-                <!-- Input: Full Document Name -->
-                <div class="flex flex-col gap-1.5">
-                  <label class="font-semibold text-on-surface text-[12px] flex items-center justify-between">
-                    <span>Full Document Name</span>
-                    <span class="text-secondary font-mono-code text-[11px]">Canonical title</span>
-                  </label>
-                  <input id="inputAddDocName" type="text" placeholder="e.g. Bonafide Certificate"
-                    class="w-full h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary font-mono-code text-[13px] font-bold text-on-surface outline-none">
-                </div>
-
-                <!-- Input: Keywords / Aliases (Optional) -->
-                <div class="flex flex-col gap-1.5">
-                  <label class="font-semibold text-on-surface text-[12px] flex items-center justify-between">
-                    <span>Keywords / Aliases (Optional)</span>
-                    <span class="text-secondary font-mono-code text-[11px]">Comma-separated</span>
-                  </label>
-                  <input id="inputAddDocAliases" type="text" placeholder="e.g. bonafide, bonafied, cert"
-                    class="w-full h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary font-mono-code text-[12px] text-on-surface outline-none">
-                  <span class="text-secondary text-[10px]">Leave blank to automatically derive tokens from Full Document
-                    Name.</span>
-                </div>
-
-                <!-- Live Target Preview -->
-                <div
-                  class="p-3 rounded-xl bg-surface-container-low border border-outline-variant/30 flex flex-col gap-1">
-                  <span class="text-[10px] font-mono-code uppercase font-bold text-secondary">Target Name Preview</span>
-                  <div id="addDocTargetPreview" class="font-mono-code text-[12px] font-bold text-primary break-all">
-                    BONAFIDE CERTIFICATE.pdf</div>
-                </div>
-              </div>
-
-              <!-- Modal Footer -->
-              <div
-                class="px-5 py-3 bg-surface-container-low border-t border-outline-variant/30 flex items-center justify-end gap-2">
-                <button id="btnCancelAddDoc" type="button"
-                  class="px-4 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface text-[12px] font-semibold transition-colors cursor-pointer">
-                  Cancel
-                </button>
-                <button id="btnSaveAddDoc" type="button"
-                  class="px-5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-[12px] font-bold shadow-sm flex items-center gap-1.5 transition-all cursor-pointer">
-                  <span class="material-symbols-outlined text-[16px]">save</span>
-                  <span>Save Document Type</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
           <!-- Modal: Dedicated Rename Tool Settings (Presets & Shortcuts) -->
           <div id="modalRenameSettings"
-            class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+            class="fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
             <div
-              class="w-full max-w-3xl max-h-[90vh] bg-surface-container-lowest rounded-2xl border border-outline-variant/40 shadow-2xl flex flex-col overflow-hidden">
+              class="w-[92vw] max-w-6xl h-[86vh] max-h-[86vh] bg-surface-container-lowest rounded-2xl border border-outline-variant/40 shadow-2xl flex flex-col overflow-hidden">
               <!-- Modal Header -->
               <div
                 class="px-5 py-3.5 bg-surface-container-low flex items-center justify-between border-b border-outline-variant/30 shrink-0">
@@ -605,21 +522,21 @@
               </div>
 
               <!-- Tab Content Area -->
-              <div class="p-5 flex-1 overflow-y-auto min-h-0 flex flex-col gap-4">
+              <div class="p-5 flex-1 overflow-hidden min-h-0 flex flex-col gap-4">
                 <!-- Tab 1: Document Presets -->
-                <div id="tabContentPresets" class="flex flex-col gap-4">
+                <div id="tabContentPresets" class="flex flex-col gap-3 flex-1 min-h-0">
                   <!-- Active Preset Selector & Management Bar -->
                   <div
-                    class="p-3.5 bg-surface-container-low rounded-xl border border-outline-variant/30 flex flex-wrap items-center justify-between gap-3">
-                    <div class="flex items-center gap-2 flex-1 min-w-[240px]">
+                    class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/30 flex flex-wrap items-center justify-between gap-3 shrink-0">
+                    <div class="flex items-center gap-2 max-w-sm flex-1 min-w-[200px]">
                       <label for="selectActivePreset" class="text-[12px] font-bold text-on-surface shrink-0">Active
                         Preset:</label>
                       <select id="selectActivePreset"
-                        class="h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 font-label-md font-semibold text-primary outline-none focus:ring-1 focus:ring-primary flex-1">
-                        <!-- Dynamically populated: MAHA DBT, SWAYAM, custom presets -->
+                        class="h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 font-label-md font-semibold text-primary outline-none focus:ring-1 focus:ring-primary w-full truncate text-ellipsis">
+                        <!-- Dynamically populated: MAHA DBT, SWAYAM DEENDAYAL YOJANA, custom presets -->
                       </select>
                     </div>
-                    <div class="flex items-center gap-1.5 shrink-0">
+                    <div class="flex items-center gap-1.5 shrink-0 flex-wrap">
                       <button id="btnNewPreset" type="button"
                         class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface text-[12px] font-semibold border border-outline-variant/40 flex items-center gap-1 cursor-pointer transition-colors">
                         <span class="material-symbols-outlined text-[15px] text-primary">add</span>
@@ -645,32 +562,42 @@
                   </div>
 
                   <!-- Document List Inside Active Preset -->
-                  <div class="flex flex-col gap-2">
-                    <div class="flex items-center justify-between">
-                      <div class="flex items-center gap-1.5">
+                  <div class="flex flex-col gap-2 flex-1 min-h-0">
+                    <div class="flex flex-wrap items-center justify-between gap-2 shrink-0">
+                      <div class="flex items-center gap-2">
                         <span class="text-label-md font-bold text-on-surface">Required Documents in Preset</span>
                         <span id="presetDocCountBadge"
                           class="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono-code text-[11px] font-bold">0</span>
                       </div>
-                      <button id="btnAddDocToPreset" type="button"
-                        class="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-[12px] font-bold shadow-xs flex items-center gap-1.5 cursor-pointer transition-all">
-                        <span class="material-symbols-outlined text-[16px]">add_circle</span>
-                        <span>Add Document to Preset</span>
-                      </button>
+                      <div class="flex items-center gap-2 flex-1 max-w-md justify-end">
+                        <div class="relative w-full max-w-xs">
+                          <span
+                            class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[16px] text-secondary pointer-events-none">search</span>
+                          <input id="inputSearchPresetDocs" type="text" placeholder="Search document, code, keyword..."
+                            autocomplete="off" spellcheck="false"
+                            class="w-full h-8 pl-8 pr-3 rounded-lg bg-surface border border-outline-variant/40 text-[12px] text-on-surface placeholder:text-secondary outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
+                        </div>
+                        <button id="btnAddDocToPreset" type="button"
+                          class="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-[12px] font-bold shadow-xs flex items-center gap-1.5 cursor-pointer transition-all shrink-0">
+                          <span class="material-symbols-outlined text-[16px]">add_circle</span>
+                          <span>Add Document</span>
+                        </button>
+                      </div>
                     </div>
 
                     <!-- Table of Documents in Active Preset -->
                     <div
-                      class="border border-outline-variant/30 rounded-xl overflow-hidden bg-surface max-h-[320px] overflow-y-auto custom-pan-scroll">
-                      <table class="w-full border-collapse text-left text-[12px]">
+                      class="border border-outline-variant/30 rounded-xl overflow-hidden bg-surface flex-1 min-h-[300px] overflow-y-auto custom-pan-scroll">
+                      <table class="w-full border-collapse text-left text-[12px]"
+                        style="table-layout: fixed; width: 100%;">
                         <thead
-                          class="bg-surface-container-low border-b border-outline-variant/30 text-secondary uppercase text-[10px] font-bold font-mono-code tracking-wider sticky top-0">
+                          class="bg-surface-container-low border-b border-outline-variant/30 text-secondary uppercase text-[10px] font-bold font-mono-code tracking-wider sticky top-0 z-10">
                           <tr>
-                            <th class="py-2 px-3 w-10 text-center">#</th>
-                            <th class="py-2 px-3">Document Name</th>
-                            <th class="py-2 px-3 w-28 font-mono-code">Short Code</th>
-                            <th class="py-2 px-3">Keywords / Tokens</th>
-                            <th class="py-2 px-3 w-24 text-center">Actions</th>
+                            <th class="py-2.5 px-3 text-center" style="width: 48px;">#</th>
+                            <th class="py-2.5 px-3 truncate" style="width: 24%;">Document Name</th>
+                            <th class="py-2.5 px-3 font-mono-code whitespace-nowrap" style="width: 11%;">Short Code</th>
+                            <th class="py-2.5 px-3" style="width: 48%;">Keywords / Tokens</th>
+                            <th class="py-2.5 px-3 text-right whitespace-nowrap pr-4" style="width: 90px;">Actions</th>
                           </tr>
                         </thead>
                         <tbody id="presetDocsTableBody" class="divide-y divide-outline-variant/20 font-label-sm">
@@ -682,30 +609,41 @@
                 </div>
 
                 <!-- Tab 2: Shortcuts & Rules -->
-                <div id="tabContentShortcuts" class="flex flex-col gap-4 hidden">
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-1.5">
+                <div id="tabContentShortcuts" class="flex flex-col gap-3 flex-1 min-h-0 hidden">
+                  <div class="flex flex-wrap items-center justify-between gap-2 shrink-0">
+                    <div class="flex items-center gap-2">
                       <span class="text-label-md font-bold text-on-surface">Shortcuts &amp; Rename Rules</span>
                       <span id="shortcutsCountBadge"
-                        class="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono-code text-[11px] font-bold">21</span>
+                        class="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono-code text-[11px] font-bold">53</span>
                     </div>
-                    <button id="btnAddNewShortcut" type="button"
-                      class="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-[12px] font-bold shadow-xs flex items-center gap-1.5 cursor-pointer transition-all">
-                      <span class="material-symbols-outlined text-[16px]">add_circle</span>
-                      <span>Add Shortcut</span>
-                    </button>
+                    <div class="flex items-center gap-2 flex-1 max-w-md justify-end">
+                      <div class="relative w-full max-w-xs">
+                        <span
+                          class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[16px] text-secondary pointer-events-none">search</span>
+                        <input id="inputSearchShortcuts" type="text"
+                          placeholder="Search shortcut, canonical, keyword..." autocomplete="off" spellcheck="false"
+                          class="w-full h-8 pl-8 pr-3 rounded-lg bg-surface border border-outline-variant/40 text-[12px] text-on-surface placeholder:text-secondary outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
+                      </div>
+                      <button id="btnAddNewShortcut" type="button"
+                        class="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-[12px] font-bold shadow-xs flex items-center gap-1.5 cursor-pointer transition-all shrink-0">
+                        <span class="material-symbols-outlined text-[16px]">add_circle</span>
+                        <span>Add Shortcut</span>
+                      </button>
+                    </div>
                   </div>
 
                   <div
-                    class="border border-outline-variant/30 rounded-xl overflow-hidden bg-surface max-h-[350px] overflow-y-auto custom-pan-scroll">
-                    <table class="w-full border-collapse text-left text-[12px]">
+                    class="border border-outline-variant/30 rounded-xl overflow-hidden bg-surface flex-1 min-h-[300px] overflow-y-auto custom-pan-scroll">
+                    <table class="w-full border-collapse text-left text-[12px]"
+                      style="table-layout: fixed; width: 100%;">
                       <thead
-                        class="bg-surface-container-low border-b border-outline-variant/30 text-secondary uppercase text-[10px] font-bold font-mono-code tracking-wider sticky top-0">
+                        class="bg-surface-container-low border-b border-outline-variant/30 text-secondary uppercase text-[10px] font-bold font-mono-code tracking-wider sticky top-0 z-10">
                         <tr>
-                          <th class="py-2 px-3 w-24 font-mono-code">Short Code</th>
-                          <th class="py-2 px-3">Canonical Document Name</th>
-                          <th class="py-2 px-3">Alternate Keywords</th>
-                          <th class="py-2 px-3 w-24 text-center">Actions</th>
+                          <th class="py-2.5 px-3 text-center" style="width: 48px;">#</th>
+                          <th class="py-2.5 px-3 font-mono-code whitespace-nowrap" style="width: 11%;">Short Code</th>
+                          <th class="py-2.5 px-3 truncate" style="width: 24%;">Canonical Document Name</th>
+                          <th class="py-2.5 px-3" style="width: 48%;">Alternate Keywords</th>
+                          <th class="py-2.5 px-3 text-right whitespace-nowrap pr-4" style="width: 90px;">Actions</th>
                         </tr>
                       </thead>
                       <tbody id="shortcutsTableBody" class="divide-y divide-outline-variant/20 font-label-sm">
@@ -723,6 +661,96 @@
                   class="px-5 py-2 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface text-[12px] font-bold border border-outline-variant/40 shadow-xs flex items-center gap-1.5 cursor-pointer transition-all">
                   <span class="material-symbols-outlined text-[16px] text-primary">arrow_back</span>
                   <span>Back to Rename Tool</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal: Add New Document Type to Preset Flow -->
+          <div id="modalAddDocument"
+            class="fixed inset-0 z-[9999] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+            <div
+              class="w-full max-w-lg bg-surface-container-lowest rounded-2xl border border-outline-variant/40 shadow-2xl flex flex-col overflow-hidden">
+              <!-- Modal Header -->
+              <div
+                class="px-5 py-4 bg-surface-container-low flex items-center justify-between border-b border-outline-variant/30">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold">
+                    <span class="material-symbols-outlined text-[20px]">note_add</span>
+                  </div>
+                  <div>
+                    <h3 class="font-headline-sm text-[16px] font-bold text-on-surface">Add Document Type to Preset</h3>
+                    <p class="text-secondary text-[11px]">Define document name, short code, and keywords for
+                      auto-matching</p>
+                  </div>
+                </div>
+                <button id="btnCloseAddDocModal" type="button"
+                  class="w-7 h-7 rounded-lg hover:bg-surface-container text-secondary hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer">
+                  <span class="material-symbols-outlined text-[18px]">close</span>
+                </button>
+              </div>
+
+              <!-- Modal Body (Browser Autofill Completely Disabled) -->
+              <form autocomplete="off" onsubmit="return false;" class="p-5 flex flex-col gap-4 text-label-md m-0">
+                <!-- Input: Short Code -->
+                <div class="flex flex-col gap-1.5">
+                  <label class="font-semibold text-on-surface text-[12px] flex items-center justify-between">
+                    <span>Short Code (Abbreviation)</span>
+                    <span class="text-secondary font-mono-code text-[11px]">2-8 letters</span>
+                  </label>
+                  <input id="inputAddDocCode" type="text" maxlength="8" placeholder="e.g. BNF" autocomplete="off"
+                    autocomplete="one-time-code" aria-autocomplete="none" autocorrect="off" autocapitalize="off"
+                    spellcheck="false" data-lpignore="true" data-form-type="other"
+                    class="w-full h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary font-mono-code text-[13px] uppercase font-bold text-on-surface outline-none">
+                </div>
+
+                <!-- Input: Full Document Name -->
+                <div class="flex flex-col gap-1.5">
+                  <label class="font-semibold text-on-surface text-[12px] flex items-center justify-between">
+                    <span>Full Document Name</span>
+                    <span class="text-secondary font-mono-code text-[11px]">Canonical title</span>
+                  </label>
+                  <input id="inputAddDocName" type="text" placeholder="e.g. Bonafide Certificate" autocomplete="off"
+                    autocomplete="one-time-code" aria-autocomplete="none" autocorrect="off" autocapitalize="off"
+                    spellcheck="false" data-lpignore="true" data-form-type="other"
+                    class="w-full h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary font-mono-code text-[13px] font-bold text-on-surface outline-none">
+                </div>
+
+                <!-- Input: Keywords / Aliases (Optional) -->
+                <div class="flex flex-col gap-1.5">
+                  <label class="font-semibold text-on-surface text-[12px] flex items-center justify-between">
+                    <span>Keywords / Aliases (Optional)</span>
+                    <span class="text-secondary font-mono-code text-[11px]">Comma-separated</span>
+                  </label>
+                  <input id="inputAddDocAliases" type="text" placeholder="e.g. bonafide, bonafied, cert"
+                    autocomplete="off" autocomplete="one-time-code" aria-autocomplete="none" autocorrect="off"
+                    autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other"
+                    class="w-full h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary font-mono-code text-[12px] text-on-surface outline-none">
+                  <span class="text-secondary text-[10px]">Leave blank to automatically derive tokens from Full Document
+                    Name.</span>
+                </div>
+
+                <!-- Live Target Preview -->
+                <div
+                  class="p-3 rounded-xl bg-surface-container-low border border-outline-variant/30 flex flex-col gap-1">
+                  <span class="text-[10px] font-mono-code uppercase font-bold text-secondary">Target Name Preview</span>
+                  <div id="addDocTargetPreview" class="font-mono-code text-[12px] font-bold text-primary break-all">
+                    BONAFIDE
+                    CERTIFICATE.pdf</div>
+                </div>
+              </form>
+
+              <!-- Modal Footer -->
+              <div
+                class="px-5 py-3 bg-surface-container-low border-t border-outline-variant/30 flex items-center justify-end gap-2">
+                <button id="btnCancelAddDoc" type="button"
+                  class="px-4 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface text-[12px] font-semibold transition-colors cursor-pointer">
+                  Cancel
+                </button>
+                <button id="btnSaveAddDoc" type="button"
+                  class="px-5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-[12px] font-bold shadow-sm flex items-center gap-1.5 transition-all cursor-pointer">
+                  <span class="material-symbols-outlined text-[16px]">save</span>
+                  <span>Save Document Type</span>
                 </button>
               </div>
             </div>

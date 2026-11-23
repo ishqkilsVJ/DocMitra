@@ -3574,12 +3574,12 @@ export class RenamerUIManager {
       const origIdx = docs.indexOf(doc);
 
       row.innerHTML = `
-        <td class="py-2.5 px-3 text-center text-secondary font-mono-code">${idx + 1}</td>
-        <td class="py-2.5 px-3 font-semibold text-on-surface">${doc.name}</td>
-        <td class="py-2.5 px-3 font-mono-code font-bold text-primary">${doc.code || '-'}</td>
-        <td class="py-2.5 px-3 text-secondary text-[11px] leading-relaxed break-words" title="${kwDisplay}">${kwDisplay || '<span class="italic opacity-50">-</span>'}</td>
-        <td class="py-2.5 px-3 text-center">
-          <div class="flex items-center justify-center gap-1">
+        <td class="py-2.5 px-3 text-center text-secondary font-mono-code" style="width: 48px;">${idx + 1}</td>
+        <td class="py-2.5 px-3 font-semibold text-on-surface truncate" style="width: 24%;" title="${doc.name}">${doc.name}</td>
+        <td class="py-2.5 px-3 font-mono-code font-bold text-primary whitespace-nowrap" style="width: 11%;">${doc.code || '-'}</td>
+        <td class="py-2.5 px-3 text-secondary text-[11px] leading-relaxed whitespace-normal break-words" style="width: 48%;" title="${kwDisplay}">${kwDisplay || '<span class="italic opacity-50">-</span>'}</td>
+        <td class="py-2.5 px-3 text-right whitespace-nowrap pr-4" style="width: 90px;">
+          <div class="flex items-center justify-end gap-1">
             <button class="w-6 h-6 rounded hover:bg-primary/10 text-secondary hover:text-primary transition-colors flex items-center justify-center cursor-pointer btn-edit-doc" title="Edit document" type="button" data-doc-idx="${origIdx}">
               <span class="material-symbols-outlined text-[15px]">edit</span>
             </button>
@@ -3636,12 +3636,12 @@ export class RenamerUIManager {
       const kwDisplay = Array.isArray(s.keywords) ? s.keywords.join(', ') : (s.keywords || '');
 
       sRow.innerHTML = `
-        <td class="py-2.5 px-3 text-center text-secondary font-mono-code">${idx + 1}</td>
-        <td class="py-2.5 px-3 font-mono-code font-bold text-primary">${s.code}</td>
-        <td class="py-2.5 px-3 font-semibold text-on-surface">${s.canonical || s.label}</td>
-        <td class="py-2.5 px-3 text-secondary text-[11px] leading-relaxed break-words" title="${kwDisplay}">${kwDisplay || '<span class="italic opacity-50">-</span>'}</td>
-        <td class="py-2.5 px-3 text-center">
-          <div class="flex items-center justify-center gap-1">
+        <td class="py-2.5 px-3 text-center text-secondary font-mono-code" style="width: 48px;">${idx + 1}</td>
+        <td class="py-2.5 px-3 font-mono-code font-bold text-primary whitespace-nowrap" style="width: 11%;">${s.code}</td>
+        <td class="py-2.5 px-3 font-semibold text-on-surface truncate" style="width: 24%;" title="${s.canonical || s.label}">${s.canonical || s.label}</td>
+        <td class="py-2.5 px-3 text-secondary text-[11px] leading-relaxed whitespace-normal break-words" style="width: 48%;" title="${kwDisplay}">${kwDisplay || '<span class="italic opacity-50">-</span>'}</td>
+        <td class="py-2.5 px-3 text-right whitespace-nowrap pr-4" style="width: 90px;">
+          <div class="flex items-center justify-end gap-1">
             <button class="w-6 h-6 rounded hover:bg-primary/10 text-secondary hover:text-primary transition-colors flex items-center justify-center cursor-pointer btn-edit-shortcut" title="Edit shortcut" type="button" data-code="${s.code}">
               <span class="material-symbols-outlined text-[15px]">edit</span>
             </button>

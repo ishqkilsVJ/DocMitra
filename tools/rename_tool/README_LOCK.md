@@ -1,7 +1,9 @@
-# 🧊 FROZEN & PROTECTED TOOL: Bulk Document Renamer (`tools/rename_tool/`)
+# 🔒 LOCKED TOOL: Bulk Document Renamer (`tools/rename_tool/`)
 
 > [!IMPORTANT]
-> **PERMANENT PRODUCTION FREEZE & PROTECTION POLICY**
+> **PERMANENT PRODUCTION LOCK POLICY**
+> This tool is strictly locked and feature-complete. Do NOT modify any file inside `tools/rename_tool/` without explicit user permission and unlocking this file first.
+> **Last QA Stabilization & Verification:** 2026-11-23 (Settings Modal 4 UI Bugfixes Verified 100%: Child modal z-index stacking [z-9999 over z-1000 Settings] preventing modals from opening behind Settings; Shortcuts table 5-column alignment [# header added matching 5 tbody cells]; locked table layout [table-layout: fixed; width: 100%] with 48px #, 24% document name with ellipsis tooltip, 11% short code, 48% clean downward text wrapping for keywords, and 90px fixed right-aligned actions; live search bars connected in both Presets and Shortcuts tabs; full parity in app/index.html; 100% test pass on 4 suites; compiled UI bundle and deployed release app.exe directly to C:\Users\USER\AppData\Local\DocMitra\app.exe).
 > This tool is **OFFICIALLY DECLARED COMPLETE, AUDITED, POLISHED, AND FROZEN**.
 > - **Release Tag:** `rename-tool-final-release`
 > - **Release Branch:** `rename-tool-final-release`
