@@ -25,7 +25,8 @@
   - `tools/rename_tool/rename_tool_logic.js` (Pure naming logic, dictionaries, fuzzy match, undo)
   - `tools/rename_tool/rename_tool.py` (Python atomic disk operations, rotation, collision)
   - `tools/rename_tool/README_LOCK.md` (Tool governance & lock declaration)
-  - `tools/rename_tool/RENAME_TOOL_AGENT.md` (Dedicated tool agent rules)
+  - `tools/rename_tool/docs/` (Dedicated tool reports & documentation)
+  - `tools/rename_tool/docs/RENAME_TOOL_AGENT.md` (Dedicated tool agent rules)
   - `tools/rename_tool/tests/*` (Verified test suite scripts)
   - `app/assets/css/rename_tool.css` (Scoped compiled stylesheet)
 - **Shared Mount / Link Files (Protected from Breaking Changes):**

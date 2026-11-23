@@ -2,7 +2,7 @@
 
 > **MANDATORY POLICY FOR ALL AI AGENTS & CONTRIBUTORS**  
 > Applies to all modules (`rename_tool`, `pdf_studio`, `image_studio`, `print_studio`, `followup_desk`).  
-> For dedicated Rename Tool work, agents MUST ALSO follow [`RENAME_TOOL_AGENT.md`](file:///e:/DocMitra/RENAME_TOOL_AGENT.md).  
+> For dedicated Rename Tool work, agents MUST ALSO follow [`RENAME_TOOL_AGENT.md`](file:///e:/DocMitra/tools/rename_tool/docs/RENAME_TOOL_AGENT.md).  
 > Governed by the DocMitra Master Tool Workflow: [`docmitra-tool-workflow`](file:///e:/DocMitra/.agents/skills/docmitra-tool-workflow/SKILL.md).
 
 ---

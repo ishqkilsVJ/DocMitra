@@ -11,6 +11,7 @@
 | Checkpoint ID | Date & Time (IST) | Module / Tool | Git Commit Hash | 1-Line Clean Working Summary | Rollback Command |
 | :---: | :---: | :---: | :---: | :--- | :--- |
 | **`CP-001`** | 2026-11-23 07:33 AM | **Bulk Document Renamer** (`tools/rename_tool/`) | `2d396f0` | 100% Bug-free final release: Physical Windows folder rename, exact typing casing, circular queue loop (1..N..1), 2-row settings modal, live search, 24/24 PRD tests passed. | `git reset --hard CP-001` |
+| **`CP-002`** | 2026-11-23 08:00 AM | **Root Directory / Docs Cleanup** (`tools/rename_tool/docs/`) | `0970910` | Safely organized 9 Rename Tool .md reports into tools/rename_tool/docs/, updated references in AGENTS.md, SKILL.md, and TOOL_FREEZE_REGISTRY.md with 100% test integrity. | `git reset --hard CP-002` |
 
 ---
 
