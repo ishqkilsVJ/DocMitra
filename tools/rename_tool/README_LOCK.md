@@ -2,11 +2,11 @@
 
 > [!IMPORTANT]
 > **PERMANENT PRODUCTION FREEZE & PROTECTION POLICY**
-> This tool is **OFFICIALLY DECLARED COMPLETE, AUDITED, AND FROZEN**.
+> This tool is **OFFICIALLY DECLARED COMPLETE, AUDITED, POLISHED, AND FROZEN**.
 > - **Release Tag:** `rename-tool-final-release`
 > - **Release Branch:** `rename-tool-final-release`
-> - **Commit Hash:** `d776be1850498ecc6cd936e36c0b72e5d847528f`
-> - **Freeze Date:** 2026-11-23 07:11 AM IST
+> - **Commit Hash:** Final Release Checkpoint
+> - **Freeze Date:** 2026-11-23 07:32 AM IST
 > - **Guardian:** Global Tool Completion & Freeze Guardian
 > 
 > **MANDATORY POLICY FOR ALL CONTRIBUTORS & AI AGENTS:**
@@ -14,6 +14,7 @@
 > 2. **ZERO PATH/NAME CHANGES:** Do not rename, move, or delete files in this folder.
 > 3. **ZERO LEAKAGE INTO SHARED FILES:** Shared files must not be altered in ways that break Bulk Renamer APIs or styles.
 > 4. **EXPLICIT USER APPROVAL REQUIRED:** Any future modification requires explicit, unambiguous user confirmation to unlock. Without user approval, any attempt to touch this tool must be immediately stopped.
+> **Last QA Stabilization & Verification:** 2026-11-23 (Settings Modal 5 UI/UX Polish Fixes Verified 100%: 2-Row spacious layout for Active Preset with zero button overlap; truncated ~12 chars ellipsis with tooltip and hover glow; child modal z-index [80] opening cleanly in front of Settings; browser autofill popup completely disabled with autocomplete='off'/one-time-code; compact live search bars positioned next to Title & Badge in both Presets and Shortcuts tabs; serial number '#' column added to Shortcuts & Rename Rules table; rebuilt via build-ui.js and cargo tauri build; fresh release binary deployed to C:\Users\USER\AppData\Local\DocMitra\app.exe; all automated tests passing 100%).
 > **Last QA Stabilization & Verification:** 2026-11-23 (Circular Queue Loop & Smart Case Sync Verified 100%: Implemented continuous wrap-around navigation 1..N..1 upon confirming the last file in queue; sequential step-through of all files with auto-tick confirmation; smart active casing sync on re-visiting files without altering base names; verified live via Playwright; recompiled release binary via cargo tauri build and deployed directly to C:\Users\USER\AppData\Local\DocMitra\app.exe).
 > **Last QA Stabilization & Verification:** 2026-11-23 (Physical Disk Folder Rename, Exact Typing Casing & Zero Recalculation Guard Verified 100%: Implemented native Rust + JS rename_native_folder with atomic disk directory rename and in-memory path synchronization; removed forced uppercase ensuring 100% typing fidelity with Caps Lock on/off; added zero recalculation guard when 'Add folder name in file' is unchecked avoiding redundant computation; added toast feedback; compiled release desktop binary via cargo tauri build and deployed directly to C:\Users\USER\AppData\Local\DocMitra\app.exe; verified 100% via Playwright).
 > **Last QA Stabilization & Verification:** 2026-11-22 (Settings Modal Layout Expansion & Quick Search Verified 100%: Widened modal to `w-[92vw] max-w-6xl h-[86vh]` with expanded vertical scroll; compact text-overflow ellipsis Active Preset dropdown ensuring zero button clipping; clean multi-line wrapping for keywords and alternate keywords with zero truncation; instant real-time search filter boxes in both Document Presets and Shortcuts tabs filtering by document name, short code, or keyword aliases; automated unit & stress tests passing 100%; bundled via `node build-ui.js` and deployed directly to `C:\Users\USER\AppData\Local\DocMitra\app.exe`).

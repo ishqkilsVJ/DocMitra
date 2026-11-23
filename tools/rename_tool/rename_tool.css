@@ -290,5 +290,50 @@
   }
 }
 
+/* ==========================================================================
+   Rename Tool Settings Modal: Sleek Active Preset Dropdown & Action Buttons
+   ========================================================================== */
+
+.rename-tool-scope .preset-dropdown-sleek {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23059669'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1.25rem;
+  padding-right: 1.85rem !important;
+  max-width: 190px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.rename-tool-scope .preset-dropdown-sleek:hover {
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15), 0 2px 8px rgba(5, 150, 105, 0.12);
+}
+
+.rename-tool-scope .preset-dropdown-sleek:focus {
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.25);
+  outline: none;
+}
+
+.rename-tool-scope .preset-action-btn {
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.rename-tool-scope .preset-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.rename-tool-scope .preset-action-btn:active {
+  transform: translateY(0);
+}
+
+
 
 

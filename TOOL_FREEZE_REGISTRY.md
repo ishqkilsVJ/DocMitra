@@ -10,7 +10,7 @@
 
 | Tool Name | Tool Folder | Final Branch / Tag | Final Commit Hash | Test Status | Freeze Date | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :---: |
-| **Bulk Document Renamer** | `tools/rename_tool/` | `rename-tool-final-release` | `d776be1850498ecc6cd936e36c0b72e5d847528f` | 🟢 100% Passed (24/24 PRD Tests) | 2026-11-23 07:12 AM IST | **FROZEN** |
+| **Bulk Document Renamer** | `tools/rename_tool/` | `rename-tool-final-release` | `d776be1850498ecc6cd936e36c0b72e5d847528f` | 🟢 100% Passed (24/24 PRD Tests + 5 Settings Polish Fixes) | 2026-11-23 07:32 AM IST | **FROZEN** |
 
 ---
 

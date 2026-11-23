@@ -6626,8 +6626,8 @@ var Ke = b.map((e) => ({
 		let a = document.getElementById("selectActivePreset");
 		a && this.state.documentPresets && (a.innerHTML = "", Object.keys(this.state.documentPresets).forEach((e) => {
 			let t = document.createElement("option");
-			t.value = e, t.textContent = e, e === this.state.activePreset && (t.selected = !0), a.appendChild(t);
-		})), this.renderPresetDocsTable(), this.renderShortcutsTable();
+			t.value = e, t.textContent = e.length > 14 ? e.slice(0, 12) + "..." : e, t.title = e, e === this.state.activePreset && (t.selected = !0), a.appendChild(t);
+		}), a.title = `Active Preset: ${this.state.activePreset}`), this.renderPresetDocsTable(), this.renderShortcutsTable();
 	}
 	renderPresetDocsTable() {
 		let e = this.getActivePresetDocuments(), t = document.getElementById("presetDocCountBadge"), n = document.getElementById("presetDocsTableBody");
@@ -6676,15 +6676,16 @@ var Ke = b.map((e) => ({
 		}) : this.shortcuts21;
 		if (t && (t.textContent = r ? `${i.length} / ${n}` : String(n)), i.length === 0) {
 			let t = document.createElement("tr");
-			t.innerHTML = `<td colspan="4" class="py-6 text-center text-secondary italic">No shortcuts match "${this._shortcutsSearchQuery}".</td>`, e.appendChild(t);
-		} else i.forEach((t) => {
-			let n = document.createElement("tr");
-			n.className = "hover:bg-surface-container-low transition-colors";
-			let r = Array.isArray(t.keywords) ? t.keywords.join(", ") : t.keywords || "";
-			n.innerHTML = `
+			t.innerHTML = `<td colspan="5" class="py-6 text-center text-secondary italic">No shortcuts match "${this._shortcutsSearchQuery}".</td>`, e.appendChild(t);
+		} else i.forEach((t, n) => {
+			let r = document.createElement("tr");
+			r.className = "hover:bg-surface-container-low transition-colors";
+			let i = Array.isArray(t.keywords) ? t.keywords.join(", ") : t.keywords || "";
+			r.innerHTML = `
+        <td class="py-2.5 px-3 text-center text-secondary font-mono-code">${n + 1}</td>
         <td class="py-2.5 px-3 font-mono-code font-bold text-primary">${t.code}</td>
         <td class="py-2.5 px-3 font-semibold text-on-surface">${t.canonical || t.label}</td>
-        <td class="py-2.5 px-3 text-secondary text-[11px] leading-relaxed break-words" title="${r}">${r || "<span class=\"italic opacity-50\">-</span>"}</td>
+        <td class="py-2.5 px-3 text-secondary text-[11px] leading-relaxed break-words" title="${i}">${i || "<span class=\"italic opacity-50\">-</span>"}</td>
         <td class="py-2.5 px-3 text-center">
           <div class="flex items-center justify-center gap-1">
             <button class="w-6 h-6 rounded hover:bg-primary/10 text-secondary hover:text-primary transition-colors flex items-center justify-center cursor-pointer btn-edit-shortcut" title="Edit shortcut" type="button" data-code="${t.code}">
@@ -6696,10 +6697,10 @@ var Ke = b.map((e) => ({
           </div>
         </td>
       `;
-			let i = n.querySelector(".btn-edit-shortcut");
-			i && i.addEventListener("click", () => this.handleEditShortcut(t.code));
-			let a = n.querySelector(".btn-del-shortcut");
-			a && a.addEventListener("click", () => this.handleRemoveShortcut(t.code)), e.appendChild(n);
+			let a = r.querySelector(".btn-edit-shortcut");
+			a && a.addEventListener("click", () => this.handleEditShortcut(t.code));
+			let o = r.querySelector(".btn-del-shortcut");
+			o && o.addEventListener("click", () => this.handleRemoveShortcut(t.code)), e.appendChild(r);
 		});
 	}
 	handleSwitchActivePreset(e) {

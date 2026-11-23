@@ -3518,12 +3518,15 @@ export class RenamerUIManager {
       presetKeys.forEach(key => {
         const opt = document.createElement('option');
         opt.value = key;
-        opt.textContent = key;
+        // Truncate long preset names in the closed dropdown (max ~10-12 chars + ellipsis)
+        opt.textContent = key.length > 14 ? key.slice(0, 12) + '...' : key;
+        opt.title = key;
         if (key === this.state.activePreset) {
           opt.selected = true;
         }
         select.appendChild(opt);
       });
+      select.title = `Active Preset: ${this.state.activePreset}`;
     }
 
     // 2. Populate Documents in Active Preset Table
@@ -3622,17 +3625,18 @@ export class RenamerUIManager {
 
     if (filtered.length === 0) {
       const emptyRow = document.createElement('tr');
-      emptyRow.innerHTML = `<td colspan="4" class="py-6 text-center text-secondary italic">No shortcuts match "${this._shortcutsSearchQuery}".</td>`;
+      emptyRow.innerHTML = `<td colspan="5" class="py-6 text-center text-secondary italic">No shortcuts match "${this._shortcutsSearchQuery}".</td>`;
       sTbody.appendChild(emptyRow);
       return;
     }
 
-    filtered.forEach((s) => {
+    filtered.forEach((s, idx) => {
       const sRow = document.createElement('tr');
       sRow.className = 'hover:bg-surface-container-low transition-colors';
       const kwDisplay = Array.isArray(s.keywords) ? s.keywords.join(', ') : (s.keywords || '');
 
       sRow.innerHTML = `
+        <td class="py-2.5 px-3 text-center text-secondary font-mono-code">${idx + 1}</td>
         <td class="py-2.5 px-3 font-mono-code font-bold text-primary">${s.code}</td>
         <td class="py-2.5 px-3 font-semibold text-on-surface">${s.canonical || s.label}</td>
         <td class="py-2.5 px-3 text-secondary text-[11px] leading-relaxed break-words" title="${kwDisplay}">${kwDisplay || '<span class="italic opacity-50">-</span>'}</td>
