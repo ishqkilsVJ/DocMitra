@@ -35,7 +35,8 @@ console.log('  ✓ app/index.html: Exact parity with rename_tool.html verified')
 
 // 4. Check rename_tool_ui.js status badge rendering
 const uiJsContent = readFileSync(resolve(rootDir, 'tools/rename_tool/rename_tool_ui.js'), 'utf8');
-assert.ok(uiJsContent.includes('+ Student') && uiJsContent.includes('confidence-badge'), 'rename_tool_ui.js must preserve confidence-badge when + Student is added');
-console.log('  ✓ rename_tool_ui.js: Uniform confidence badge and subtle tag alignment verified');
+assert.ok(!uiJsContent.includes("textContent = '+ Student'"), 'rename_tool_ui.js must not contain redundant + Student box in confidence column');
+assert.ok(uiJsContent.includes('confidence-badge') && uiJsContent.includes('whitespace-nowrap'), 'rename_tool_ui.js must render single-line confidence badge with whitespace-nowrap');
+console.log('  ✓ rename_tool_ui.js: Clean single-line confidence badge without redundant + Student box verified');
 
 console.log('🎉 ALL CROSS-CHECK MODAL UI THEME & BUTTON VERIFICATION CHECKS PASSED 100%!');

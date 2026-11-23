@@ -4744,7 +4744,7 @@ export class RenamerUIManager {
 
       // Old Name (Live Word Diff HTML)
       const tdOld = document.createElement('td');
-      tdOld.className = 'py-2 px-3 font-mono-code text-[12px] truncate max-w-[240px]';
+      tdOld.className = 'py-2 px-3 font-mono-code text-[12px] truncate';
       tdOld.title = cleanName(file.name);
       tdOld.innerHTML = diff.oldHtml;
       tr.appendChild(tdOld);
@@ -4757,36 +4757,22 @@ export class RenamerUIManager {
 
       // Suggested New Name (Live Word Diff HTML)
       const tdNew = document.createElement('td');
-      tdNew.className = 'py-2 px-3 font-mono-code text-[12px] truncate max-w-[280px]';
+      tdNew.className = 'py-2 px-3 font-mono-code text-[12px] truncate';
       tdNew.title = cleanName(targetName);
       tdNew.innerHTML = diff.newHtml;
       tr.appendChild(tdNew);
 
-      // Status Badge
+      // Status Badge (Clean, single-line, zero redundant + Student box)
       const tdConf = document.createElement('td');
-      tdConf.className = 'py-2 px-3 text-right flex items-center justify-end gap-1.5';
+      tdConf.className = 'py-2 px-3 text-right flex items-center justify-end';
       const badge = document.createElement('span');
 
       const conf = file.smartConfidence !== undefined ? file.smartConfidence : 90;
       const confClass = conf >= 90 ? 'confidence-badge-high' : conf >= 80 ? 'confidence-badge-med' : 'confidence-badge-low';
       const dot = conf >= 90 ? '🟢' : conf >= 80 ? '🟡' : '🔴';
-      badge.className = `confidence-badge ${confClass}`;
+      badge.className = `confidence-badge ${confClass} whitespace-nowrap`;
       badge.textContent = `${dot} ${conf}% Match`;
       tdConf.appendChild(badge);
-
-      if (diff.changeType === 'student') {
-        const studentTag = document.createElement('span');
-        studentTag.className = 'px-1.5 py-0.5 rounded text-[9px] font-mono-code font-bold bg-primary/10 text-primary border border-primary/20 select-none';
-        studentTag.textContent = '+ Student';
-        studentTag.title = 'Student name appended';
-        tdConf.appendChild(studentTag);
-      } else if (diff.changeType === 'casing') {
-        const caseTag = document.createElement('span');
-        caseTag.className = 'px-1.5 py-0.5 rounded text-[9px] font-mono-code font-bold bg-surface-container text-secondary border border-outline-variant/40 select-none';
-        caseTag.textContent = 'Case';
-        caseTag.title = 'Casing changed';
-        tdConf.appendChild(caseTag);
-      }
       tr.appendChild(tdConf);
 
       if (tbodyActive) tbodyActive.appendChild(tr);
@@ -4817,26 +4803,26 @@ export class RenamerUIManager {
       tr.appendChild(tdCb);
 
       const tdOld = document.createElement('td');
-      tdOld.className = 'py-2 px-3 font-mono-code text-[11px] text-secondary truncate max-w-[240px]';
+      tdOld.className = 'py-2 px-3 font-mono-code text-[11px] text-secondary truncate';
       tdOld.title = cleanName(file.name);
       tdOld.textContent = cleanName(file.name);
       tr.appendChild(tdOld);
 
       const tdArr = document.createElement('td');
-      tdArr.className = 'py-2 px-2 text-center text-outline-variant select-none w-8';
+      tdArr.className = 'py-2 px-2 text-center text-outline-variant select-none';
       tdArr.textContent = '→';
       tr.appendChild(tdArr);
 
       const tdNew = document.createElement('td');
-      tdNew.className = 'py-2 px-3 font-mono-code text-[11px] text-secondary truncate max-w-[280px]';
+      tdNew.className = 'py-2 px-3 font-mono-code text-[11px] text-secondary truncate';
       tdNew.title = cleanName(targetName);
       tdNew.textContent = cleanName(targetName);
       tr.appendChild(tdNew);
 
       const tdConf = document.createElement('td');
-      tdConf.className = 'py-2 px-3 text-right';
+      tdConf.className = 'py-2 px-3 text-right flex items-center justify-end';
       const badge = document.createElement('span');
-      badge.className = 'px-2 py-0.5 rounded text-[10px] font-mono-code font-bold bg-surface-container text-secondary border border-outline-variant/30';
+      badge.className = 'px-2 py-0.5 rounded text-[10px] font-mono-code font-bold bg-surface-container text-secondary border border-outline-variant/30 whitespace-nowrap';
       badge.textContent = 'Identical';
       tdConf.appendChild(badge);
       tr.appendChild(tdConf);

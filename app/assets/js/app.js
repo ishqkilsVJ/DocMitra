@@ -7189,22 +7189,15 @@ var Ke = b.map((e) => ({
 				this._crossCheckState.userToggled.set(r.id, l.checked), this._updateCrossCheckSelectionCount();
 			}), c.appendChild(l), o.appendChild(c);
 			let u = document.createElement("td");
-			u.className = "py-2 px-3 font-mono-code text-[12px] truncate max-w-[240px]", u.title = E(r.name), u.innerHTML = a.oldHtml, o.appendChild(u);
+			u.className = "py-2 px-3 font-mono-code text-[12px] truncate", u.title = E(r.name), u.innerHTML = a.oldHtml, o.appendChild(u);
 			let d = document.createElement("td");
 			d.className = "py-2 px-2 text-center text-outline-variant font-bold select-none", d.textContent = "→", o.appendChild(d);
 			let f = document.createElement("td");
-			f.className = "py-2 px-3 font-mono-code text-[12px] truncate max-w-[280px]", f.title = E(i), f.innerHTML = a.newHtml, o.appendChild(f);
+			f.className = "py-2 px-3 font-mono-code text-[12px] truncate", f.title = E(i), f.innerHTML = a.newHtml, o.appendChild(f);
 			let p = document.createElement("td");
-			p.className = "py-2 px-3 text-right flex items-center justify-end gap-1.5";
+			p.className = "py-2 px-3 text-right flex items-center justify-end";
 			let m = document.createElement("span"), h = r.smartConfidence === void 0 ? 90 : r.smartConfidence, g = h >= 90 ? "confidence-badge-high" : h >= 80 ? "confidence-badge-med" : "confidence-badge-low", _ = h >= 90 ? "🟢" : h >= 80 ? "🟡" : "🔴";
-			if (m.className = `confidence-badge ${g}`, m.textContent = `${_} ${h}% Match`, p.appendChild(m), a.changeType === "student") {
-				let e = document.createElement("span");
-				e.className = "px-1.5 py-0.5 rounded text-[9px] font-mono-code font-bold bg-primary/10 text-primary border border-primary/20 select-none", e.textContent = "+ Student", e.title = "Student name appended", p.appendChild(e);
-			} else if (a.changeType === "casing") {
-				let e = document.createElement("span");
-				e.className = "px-1.5 py-0.5 rounded text-[9px] font-mono-code font-bold bg-surface-container text-secondary border border-outline-variant/40 select-none", e.textContent = "Case", e.title = "Casing changed", p.appendChild(e);
-			}
-			o.appendChild(p), t && t.appendChild(o);
+			m.className = `confidence-badge ${g} whitespace-nowrap`, m.textContent = `${_} ${h}% Match`, p.appendChild(m), o.appendChild(p), t && t.appendChild(o);
 		}), m.forEach((e) => {
 			let { file: t, targetName: r, diff: i } = e, a = document.createElement("tr");
 			a.className = "hover:bg-surface-container-high/40 transition-colors", a.dataset.fileId = t.id;
@@ -7215,15 +7208,15 @@ var Ke = b.map((e) => ({
 				this._crossCheckState.userToggled.set(t.id, c.checked), this._updateCrossCheckSelectionCount();
 			}), s.appendChild(c), a.appendChild(s);
 			let l = document.createElement("td");
-			l.className = "py-2 px-3 font-mono-code text-[11px] text-secondary truncate max-w-[240px]", l.title = E(t.name), l.textContent = E(t.name), a.appendChild(l);
+			l.className = "py-2 px-3 font-mono-code text-[11px] text-secondary truncate", l.title = E(t.name), l.textContent = E(t.name), a.appendChild(l);
 			let u = document.createElement("td");
-			u.className = "py-2 px-2 text-center text-outline-variant select-none w-8", u.textContent = "→", a.appendChild(u);
+			u.className = "py-2 px-2 text-center text-outline-variant select-none", u.textContent = "→", a.appendChild(u);
 			let d = document.createElement("td");
-			d.className = "py-2 px-3 font-mono-code text-[11px] text-secondary truncate max-w-[280px]", d.title = E(r), d.textContent = E(r), a.appendChild(d);
+			d.className = "py-2 px-3 font-mono-code text-[11px] text-secondary truncate", d.title = E(r), d.textContent = E(r), a.appendChild(d);
 			let f = document.createElement("td");
-			f.className = "py-2 px-3 text-right";
+			f.className = "py-2 px-3 text-right flex items-center justify-end";
 			let p = document.createElement("span");
-			p.className = "px-2 py-0.5 rounded text-[10px] font-mono-code font-bold bg-surface-container text-secondary border border-outline-variant/30", p.textContent = "Identical", f.appendChild(p), a.appendChild(f), n && n.appendChild(a);
+			p.className = "px-2 py-0.5 rounded text-[10px] font-mono-code font-bold bg-surface-container text-secondary border border-outline-variant/30 whitespace-nowrap", p.textContent = "Identical", f.appendChild(p), a.appendChild(f), n && n.appendChild(a);
 		});
 		let h = Array.from(e.querySelectorAll("#crossCheckTableBody tr"));
 		h.length > 0 && (this._crossCheckState.focusedIndex = Math.min(this._crossCheckState.focusedIndex, h.length - 1), this._highlightFocusedCrossCheckRow(h)), this._updateCrossCheckSelectionCount();
