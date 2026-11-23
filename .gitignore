@@ -2,6 +2,7 @@
 _design_ref/
 _backup_archive/
 _recycle_bin/
+recycle_bin/
 
 # Build artifacts & releases
 releases/*.exe
