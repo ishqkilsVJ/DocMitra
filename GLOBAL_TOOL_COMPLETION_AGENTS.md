@@ -41,6 +41,7 @@ Upon invocation, the Guardian performs an exhaustive audit and generates the fol
 - Enforces prompt interception if future tasks target a frozen tool without explicit user approval.
 - Protects shared files via mandatory impact analysis.
 - Maintains Git release tags (`<tool-name>-final-release`) and release branches.
+- **Enforces Permanent Numbered Checkpoints (`CP-001`, `CP-002`, ...):** Automatically logs all verified milestones into `CHECKPOINT_LOG.md` and guarantees 1-command safe rollback.
 
 ### 🧊 Current Frozen Tools
 | Tool Name | Directory | Release Tag / Commit | Freeze Date | Status |
