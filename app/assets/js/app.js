@@ -6802,7 +6802,13 @@ var Ke = b.map((e) => ({
 		}
 	}
 	handleRemoveShortcut(e) {
-		e && (this.state.customShortcuts = (this.state.customShortcuts || []).filter((t) => t.code.toUpperCase() !== e.toUpperCase()), this.shortcuts21 = this.shortcuts21.filter((t) => t.code.toUpperCase() !== e.toUpperCase()), this.savePresetsAndSettings(), this.renderSettingsModal("shortcuts"), r.show("Shortcut Removed", `Shortcut ${e} removed.`, "info"));
+		if (!e) return;
+		let t = String(e).trim().toUpperCase(), n = this.shortcuts21.find((e) => e.code && e.code.toUpperCase() === t || Array.isArray(e.codes) && e.codes.some((e) => e && e.toUpperCase() === t));
+		n ? (this.shortcuts21 = this.shortcuts21.filter((e) => e !== n), this.state.customShortcuts && (this.state.customShortcuts = this.state.customShortcuts.filter((e) => {
+			if (e === n || e.code && e.code.toUpperCase() === t || Array.isArray(e.codes) && e.codes.some((e) => e && e.toUpperCase() === t)) return !1;
+			let r = (e.canonical || e.label || "").toUpperCase(), i = (n.canonical || n.label || "").toUpperCase();
+			return !(r && r === i);
+		}))) : (this.state.customShortcuts = (this.state.customShortcuts || []).filter((e) => e.code.toUpperCase() !== t), this.shortcuts21 = this.shortcuts21.filter((e) => e.code.toUpperCase() !== t)), this.savePresetsAndSettings(), this.renderSettingsModal("shortcuts"), r.show("Shortcut Removed", `Shortcut rules for "${n?.canonical || t}" removed.`, "info");
 	}
 	openEditDocumentModal(e, t) {
 		this._editingDocIdx = t, this.openAddDocumentModal(e, !1);
@@ -6820,50 +6826,87 @@ var Ke = b.map((e) => ({
 			keywords: r ? r.keywords : n.keywords || []
 		}, !0);
 	}
-	renderShortcutChips() {
-		let e = document.getElementById("containerShortcutChips");
-		if (e) {
-			if (e.innerHTML = "", !this._currentShortcutCodes || this._currentShortcutCodes.length === 0) {
-				let t = document.createElement("span");
-				t.className = "text-secondary text-[11px] italic select-none", t.textContent = "No short codes added. Type code above and click Add or press Enter.", e.appendChild(t);
-			} else this._currentShortcutCodes.forEach((t) => {
-				let n = document.createElement("span");
-				n.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-primary text-white font-mono-code font-bold text-[11px] shadow-xs select-none";
-				let r = document.createElement("span");
-				r.textContent = t, n.appendChild(r);
-				let i = document.createElement("button");
-				i.type = "button", i.className = "hover:bg-white/20 rounded p-0.5 inline-flex items-center justify-center cursor-pointer text-white/80 hover:text-white transition-colors", i.title = `Remove ${t}`, i.innerHTML = "<span class=\"material-symbols-outlined text-[13px]\">close</span>", i.addEventListener("click", (e) => {
-					e.preventDefault(), e.stopPropagation(), this._currentShortcutCodes = this._currentShortcutCodes.filter((e) => e !== t), this.renderShortcutChips();
-				}), n.appendChild(i), e.appendChild(n);
+	findAvailableShortcutCode(e, t = "") {
+		if (!e) return "";
+		let n = String(e).trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "");
+		if (!n) return "";
+		let r = (t || "").trim().toUpperCase(), i = (e) => {
+			if (this._currentShortcutCodes && this._currentShortcutCodes.some((t) => t && t.toUpperCase() === e)) return !0;
+			let t = [...this.shortcuts21 || [], ...this.state.customShortcuts || []];
+			for (let n of t) {
+				let t = (n.canonical || n.label || n.name || "").trim().toUpperCase();
+				if (!(r && t === r) && (n.code && n.code.toUpperCase() === e || Array.isArray(n.codes) && n.codes.some((t) => t && t.toUpperCase() === e))) return !0;
+			}
+			let n = this.getAllPresetDocuments();
+			for (let t of n) {
+				let n = (t.name || "").trim().toUpperCase();
+				if (!(r && n === r) && t.code && t.code.toUpperCase() === e) return !0;
+			}
+			return !1;
+		};
+		if (!i(n)) return n;
+		let a = 2, o = `${n}_${a}`;
+		for (; i(o);) a++, o = `${n}_${a}`;
+		return o;
+	}
+	renderShortcutChips(e = null) {
+		let t = document.getElementById("containerShortcutChips");
+		if (t) {
+			if (t.innerHTML = "", !this._currentShortcutCodes || this._currentShortcutCodes.length === 0) {
+				let e = document.createElement("span");
+				e.className = "text-secondary text-[11px] italic select-none", e.textContent = "No short codes added. Type code above and click Add or press Enter.", t.appendChild(e);
+			} else this._currentShortcutCodes.forEach((n) => {
+				let r = e && e.toUpperCase() === n.toUpperCase(), i = document.createElement("span");
+				i.className = `inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-primary text-white font-mono-code font-bold text-[11px] shadow-xs select-none transition-all duration-300 ${r ? "chip-glow-anim ring-2 ring-primary ring-offset-2" : ""}`, i.dataset.code = n;
+				let a = document.createElement("span");
+				a.textContent = n, i.appendChild(a);
+				let o = document.createElement("button");
+				o.type = "button", o.className = "hover:bg-white/20 rounded p-0.5 inline-flex items-center justify-center cursor-pointer text-white/80 hover:text-white transition-colors", o.title = `Remove ${n}`, o.innerHTML = "<span class=\"material-symbols-outlined text-[13px]\">close</span>", o.addEventListener("click", (e) => {
+					e.preventDefault(), e.stopPropagation(), this._currentShortcutCodes = this._currentShortcutCodes.filter((e) => e !== n), this.renderShortcutChips();
+				}), i.appendChild(o), t.appendChild(i);
 			});
 		}
 	}
 	openAddDocumentModal(e = null, t = !1) {
 		let n = document.getElementById("modalAddDocument");
 		if (!n) return;
-		let r = document.getElementById("containerAddDocCode"), i = document.getElementById("inputAddDocCode"), a = document.getElementById("inputAddDocName"), o = document.getElementById("inputAddDocAliases"), s = document.getElementById("addDocTargetPreview"), c = n.querySelector("h3"), l = n.querySelector("p");
-		this._isShortcutOnly = !!t, this._isShortcutOnly ? (r && r.classList.remove("hidden"), l && (l.textContent = "Assign short code(s) and keywords to a canonical document name"), this._currentShortcutCodes = e ? Array.isArray(e.codes) && e.codes.length > 0 ? [...e.codes] : e.code ? [e.code] : [] : [], this.renderShortcutChips()) : (r && r.classList.add("hidden"), l && (l.textContent = "Define document name and keywords for auto-matching in preset"), this._currentShortcutCodes = []), e ? (c && (c.textContent = t ? "Edit Shortcut" : "Edit Document in Preset"), i && (i.value = ""), a && (a.value = e.name || e.canonical || ""), o && (o.value = Array.isArray(e.keywords) ? e.keywords.join(", ") : e.keywords || "")) : (this._editingDocIdx = null, this._editingShortcutCode = null, c && (c.textContent = t ? "Add Shortcut" : "Add Document to Preset"), i && (i.value = ""), a && (a.value = ""), o && (o.value = ""));
-		let u = () => {
-			let e = k(a?.value.trim() || "DOCUMENT", this.getEffectiveStudentName(), null, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
-			s && (s.textContent = e);
+		let i = document.getElementById("containerAddDocCode"), a = document.getElementById("inputAddDocCode"), o = document.getElementById("inputAddDocName"), s = document.getElementById("inputAddDocAliases"), c = document.getElementById("addDocTargetPreview"), l = n.querySelector("h3"), u = n.querySelector("p");
+		this._isShortcutOnly = !!t, this._isShortcutOnly ? (i && i.classList.remove("hidden"), u && (u.textContent = "Assign short code(s) and keywords to a canonical document name"), this._currentShortcutCodes = e ? Array.isArray(e.codes) && e.codes.length > 0 ? [...e.codes] : e.code ? [e.code] : [] : [], this.renderShortcutChips()) : (i && i.classList.add("hidden"), u && (u.textContent = "Define document name and keywords for auto-matching in preset"), this._currentShortcutCodes = []), e ? (l && (l.textContent = t ? "Edit Shortcut" : "Edit Document in Preset"), a && (a.value = ""), o && (o.value = e.name || e.canonical || ""), s && (s.value = Array.isArray(e.keywords) ? e.keywords.join(", ") : e.keywords || "")) : (this._editingDocIdx = null, this._editingShortcutCode = null, l && (l.textContent = t ? "Add Shortcut" : "Add Document to Preset"), a && (a.value = ""), o && (o.value = ""), s && (s.value = ""));
+		let d = () => {
+			let e = k(o?.value.trim() || "DOCUMENT", this.getEffectiveStudentName(), null, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
+			c && (c.textContent = e);
 		};
-		a && (a.oninput = u, a.onkeydown = (e) => {
+		o && (o.oninput = d, o.onkeydown = (e) => {
 			e.key === "Enter" && (e.preventDefault(), this.handleSaveDocumentType());
 		});
-		let d = document.getElementById("btnAddShortcutChip");
-		d && (d.onclick = (e) => {
-			e.preventDefault();
-			let t = (i?.value || "").trim().toUpperCase();
-			t && (this._currentShortcutCodes ||= [], this._currentShortcutCodes.includes(t) || (this._currentShortcutCodes.push(t), this.renderShortcutChips()), i && (i.value = ""), i?.focus());
-		}), i && (i.oninput = () => {
-			i.value = i.value.toUpperCase();
-		}, i.onkeydown = (e) => {
-			if (e.key === "Enter") {
-				e.preventDefault();
-				let t = (i.value || "").trim().toUpperCase();
-				t ? (this._currentShortcutCodes ||= [], this._currentShortcutCodes.includes(t) || (this._currentShortcutCodes.push(t), this.renderShortcutChips()), i.value = "") : a?.focus();
+		let f = () => {
+			let e = (a?.value || "").trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "");
+			if (!e) return;
+			if (this._currentShortcutCodes && this._currentShortcutCodes.includes(e)) {
+				a && (a.classList.add("shake-anim", "border-primary"), setTimeout(() => a.classList.remove("shake-anim", "border-primary"), 600)), this.renderShortcutChips(e), r.show("Code Already Added", `Code "${e}" is already added as a chip.`, "info"), a && (a.value = "");
+				return;
 			}
-		}), u(), n.classList.remove("hidden"), this._isShortcutOnly && i ? i.focus() : a && a.focus();
+			let t = (o?.value || "").trim().toUpperCase(), n = null, i = [...this.shortcuts21 || [], ...this.state.customShortcuts || []];
+			for (let r of i) {
+				let i = (r.canonical || r.label || r.name || "").trim().toUpperCase();
+				if (!(t && i === t) && (r.code && r.code.toUpperCase() === e || Array.isArray(r.codes) && r.codes.some((t) => t && t.toUpperCase() === e))) {
+					n = i;
+					break;
+				}
+			}
+			if (this._currentShortcutCodes ||= [], n) {
+				let i = this.findAvailableShortcutCode(e, t);
+				this._currentShortcutCodes.push(i), this.renderShortcutChips(i), r.show("Auto-Numbered Code", `Code "${e}" is assigned to "${n}". Auto-assigned "${i}".`, "info");
+			} else this._currentShortcutCodes.push(e), this.renderShortcutChips();
+			a && (a.value = ""), a?.focus();
+		}, p = document.getElementById("btnAddShortcutChip");
+		p && (p.onclick = (e) => {
+			e.preventDefault(), f();
+		}), a && (a.oninput = () => {
+			a.value = a.value.toUpperCase();
+		}, a.onkeydown = (e) => {
+			e.key === "Enter" && (e.preventDefault(), (a.value || "").trim() ? f() : o?.focus());
+		}), d(), n.classList.remove("hidden"), this._isShortcutOnly && a ? a.focus() : o && o.focus();
 	}
 	closeAddDocumentModal() {
 		let e = document.getElementById("modalAddDocument");
@@ -6875,19 +6918,37 @@ var Ke = b.map((e) => ({
 			r.show("Document Name Required", "Please enter a Full Document Name.", "warning");
 			return;
 		}
-		let a = i.toUpperCase(), o = (n?.value || "").trim(), s = [];
-		s = o ? o.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean) : [a.toLowerCase(), ...I(a)];
-		let c = this._isShortcutOnly;
-		if (c) {
+		let a = i.toUpperCase(), o = (n?.value || "").trim(), s = [], c = !1;
+		if (o) {
+			let e = o.split(",").map((e) => e.trim().toLowerCase().replace(/[^a-z0-9\s_-]/g, "")).filter((e) => e.length >= 2), t = new Set(e);
+			e.length > t.size && (c = !0), s = Array.from(t);
+		} else {
+			let e = [a.toLowerCase(), ...I(a)].map((e) => e.trim().toLowerCase().replace(/[^a-z0-9\s_-]/g, "")).filter((e) => e.length >= 2);
+			s = Array.from(new Set(e));
+		}
+		c && r.show("Keywords Cleaned", "Duplicate keywords automatically cleaned.", "success");
+		let l = this._isShortcutOnly;
+		if (l) {
 			let t = (e?.value || "").trim().toUpperCase();
-			if (!t || this._currentShortcutCodes && this._currentShortcutCodes.includes(t) || (this._currentShortcutCodes ||= [], this._currentShortcutCodes.push(t)), !this._currentShortcutCodes || this._currentShortcutCodes.length === 0) {
+			if (t) {
+				let e = t.replace(/[^A-Z0-9_-]/g, "");
+				if (e && (this._currentShortcutCodes ||= [], !this._currentShortcutCodes.includes(e))) {
+					let t = this.findAvailableShortcutCode(e, a);
+					this._currentShortcutCodes.push(t), t !== e && r.show("Auto-Numbered Code", `Code "${e}" is assigned to another document. Auto-assigned "${t}".`, "info");
+				}
+			}
+			if (!this._currentShortcutCodes || this._currentShortcutCodes.length === 0) {
 				r.show("Short Code Required", "Please add at least one short code chip.", "warning");
 				return;
 			}
 			let n = [...this._currentShortcutCodes], i = n[0];
 			if (this._editingShortcutCode) {
-				let e = this._editingShortcutCode.toUpperCase();
-				this.shortcuts21 = this.shortcuts21.filter((t) => !(t.code && t.code.toUpperCase() === e || Array.isArray(t.codes) && t.codes.some((t) => t && t.toUpperCase() === e))), this.state.customShortcuts && (this.state.customShortcuts = this.state.customShortcuts.filter((t) => !(t.code && t.code.toUpperCase() === e || Array.isArray(t.codes) && t.codes.some((t) => t && t.toUpperCase() === e))));
+				let e = this._editingShortcutCode.toUpperCase(), t = this.shortcuts21.find((t) => t.code && t.code.toUpperCase() === e || Array.isArray(t.codes) && t.codes.some((t) => t && t.toUpperCase() === e));
+				this.shortcuts21 = t ? this.shortcuts21.filter((e) => e !== t) : this.shortcuts21.filter((t) => !(t.code && t.code.toUpperCase() === e || Array.isArray(t.codes) && t.codes.some((t) => t && t.toUpperCase() === e))), this.state.customShortcuts && (this.state.customShortcuts = this.state.customShortcuts.filter((n) => {
+					if (n === t || n.code && n.code.toUpperCase() === e || Array.isArray(n.codes) && n.codes.some((t) => t && t.toUpperCase() === e)) return !1;
+					let r = (n.canonical || n.label || "").toUpperCase();
+					return !(t && r === (t.canonical || t.label || "").toUpperCase());
+				}));
 			}
 			let o = {
 				code: i,
@@ -6910,13 +6971,13 @@ var Ke = b.map((e) => ({
 				name: a,
 				keywords: s
 			};
-			if (this._editingDocIdx !== null && this._editingDocIdx !== void 0 && e[this._editingDocIdx]) e[this._editingDocIdx] = t;
-			else {
-				let n = e.findIndex((e) => (typeof e == "string" ? e : e.name || "").toUpperCase() === a);
-				n === -1 ? e.push(t) : e[n] = t;
+			if (e.findIndex((e, t) => this._editingDocIdx !== null && this._editingDocIdx !== void 0 && t === this._editingDocIdx ? !1 : (typeof e == "string" ? e : e.name || "").toUpperCase() === a) !== -1) {
+				r.show("Document Exists", `Document "${a}" is already present in "${this.state.activePreset}".`, "warning");
+				return;
 			}
+			this._editingDocIdx !== null && this._editingDocIdx !== void 0 && e[this._editingDocIdx] ? e[this._editingDocIdx] = t : e.push(t);
 		}
-		this._editingDocIdx = null, this._editingShortcutCode = null, this._isShortcutOnly = !1, this._currentShortcutCodes = [], this.closeAddDocumentModal(), this.savePresetsAndSettings(), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal(c ? "shortcuts" : "presets"), r.show("Saved", `${a} saved successfully.`, "success");
+		this._editingDocIdx = null, this._editingShortcutCode = null, this._isShortcutOnly = !1, this._currentShortcutCodes = [], this.closeAddDocumentModal(), this.savePresetsAndSettings(), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal(l ? "shortcuts" : "presets"), r.show("Saved", `${a} saved successfully.`, "success");
 	}
 	_initCrossCheckEvents() {
 		let e = document.getElementById("modalCrossCheck");

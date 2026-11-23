@@ -3869,11 +3869,31 @@ export class RenamerUIManager {
 
   handleRemoveShortcut(code) {
     if (!code) return;
-    this.state.customShortcuts = (this.state.customShortcuts || []).filter(s => s.code.toUpperCase() !== code.toUpperCase());
-    this.shortcuts21 = this.shortcuts21.filter(s => s.code.toUpperCase() !== code.toUpperCase());
+    const cleanCode = String(code).trim().toUpperCase();
+    const targetShortcut = this.shortcuts21.find(s =>
+      (s.code && s.code.toUpperCase() === cleanCode) ||
+      (Array.isArray(s.codes) && s.codes.some(c => c && c.toUpperCase() === cleanCode))
+    );
+    if (targetShortcut) {
+      this.shortcuts21 = this.shortcuts21.filter(s => s !== targetShortcut);
+      if (this.state.customShortcuts) {
+        this.state.customShortcuts = this.state.customShortcuts.filter(s => {
+          if (s === targetShortcut) return false;
+          if (s.code && s.code.toUpperCase() === cleanCode) return false;
+          if (Array.isArray(s.codes) && s.codes.some(c => c && c.toUpperCase() === cleanCode)) return false;
+          const sCanon = (s.canonical || s.label || '').toUpperCase();
+          const tCanon = (targetShortcut.canonical || targetShortcut.label || '').toUpperCase();
+          if (sCanon && sCanon === tCanon) return false;
+          return true;
+        });
+      }
+    } else {
+      this.state.customShortcuts = (this.state.customShortcuts || []).filter(s => s.code.toUpperCase() !== cleanCode);
+      this.shortcuts21 = this.shortcuts21.filter(s => s.code.toUpperCase() !== cleanCode);
+    }
     this.savePresetsAndSettings();
     this.renderSettingsModal('shortcuts');
-    toast.show('Shortcut Removed', `Shortcut ${code} removed.`, 'info');
+    toast.show('Shortcut Removed', `Shortcut rules for "${targetShortcut?.canonical || cleanCode}" removed.`, 'info');
   }
 
   openEditDocumentModal(doc, idx) {
@@ -3902,7 +3922,49 @@ export class RenamerUIManager {
     }, true);
   }
 
-  renderShortcutChips() {
+  findAvailableShortcutCode(baseCode, targetCanonical = '') {
+    if (!baseCode) return '';
+    const cleanBase = String(baseCode).trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+    if (!cleanBase) return '';
+    const targetCanon = (targetCanonical || '').trim().toUpperCase();
+
+    const isCodeTaken = (codeToCheck) => {
+      // 1. Check active modal chips
+      if (this._currentShortcutCodes && this._currentShortcutCodes.some(c => c && c.toUpperCase() === codeToCheck)) {
+        return true;
+      }
+      // 2. Check master & custom shortcuts
+      const allShortcuts = [...(this.shortcuts21 || []), ...(this.state.customShortcuts || [])];
+      for (const s of allShortcuts) {
+        const sCanon = (s.canonical || s.label || s.name || '').trim().toUpperCase();
+        if (targetCanon && sCanon === targetCanon) continue;
+        if (s.code && s.code.toUpperCase() === codeToCheck) return true;
+        if (Array.isArray(s.codes) && s.codes.some(c => c && c.toUpperCase() === codeToCheck)) return true;
+      }
+      // 3. Check preset documents
+      const allDocs = this.getAllPresetDocuments();
+      for (const d of allDocs) {
+        const dCanon = (d.name || '').trim().toUpperCase();
+        if (targetCanon && dCanon === targetCanon) continue;
+        if (d.code && d.code.toUpperCase() === codeToCheck) return true;
+      }
+      return false;
+    };
+
+    if (!isCodeTaken(cleanBase)) {
+      return cleanBase;
+    }
+
+    let suffix = 2;
+    let candidate = `${cleanBase}_${suffix}`;
+    while (isCodeTaken(candidate)) {
+      suffix++;
+      candidate = `${cleanBase}_${suffix}`;
+    }
+    return candidate;
+  }
+
+  renderShortcutChips(highlightCode = null) {
     const container = document.getElementById('containerShortcutChips');
     if (!container) return;
     container.innerHTML = '';
@@ -3914,8 +3976,10 @@ export class RenamerUIManager {
       return;
     }
     this._currentShortcutCodes.forEach(code => {
+      const isHighlighted = highlightCode && highlightCode.toUpperCase() === code.toUpperCase();
       const chip = document.createElement('span');
-      chip.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-primary text-white font-mono-code font-bold text-[11px] shadow-xs select-none';
+      chip.className = `inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-primary text-white font-mono-code font-bold text-[11px] shadow-xs select-none transition-all duration-300 ${isHighlighted ? 'chip-glow-anim ring-2 ring-primary ring-offset-2' : ''}`;
+      chip.dataset.code = code;
 
       const textSpan = document.createElement('span');
       textSpan.textContent = code;
@@ -3997,20 +4061,55 @@ export class RenamerUIManager {
       };
     }
 
+    const addShortcutChip = () => {
+      const rawVal = (inputCode?.value || '').trim().toUpperCase();
+      const val = rawVal.replace(/[^A-Z0-9_-]/g, '');
+      if (!val) return;
+
+      // 1. Self-duplicate check within current document chips
+      if (this._currentShortcutCodes && this._currentShortcutCodes.includes(val)) {
+        if (inputCode) {
+          inputCode.classList.add('shake-anim', 'border-primary');
+          setTimeout(() => inputCode.classList.remove('shake-anim', 'border-primary'), 600);
+        }
+        this.renderShortcutChips(val);
+        toast.show('Code Already Added', `Code "${val}" is already added as a chip.`, 'info');
+        if (inputCode) inputCode.value = '';
+        return;
+      }
+
+      // 2. Cross-document collision check with auto-suffixing
+      const currentCanon = (inputName?.value || '').trim().toUpperCase();
+      let assignedDoc = null;
+      const allShortcuts = [...(this.shortcuts21 || []), ...(this.state.customShortcuts || [])];
+      for (const s of allShortcuts) {
+        const sCanon = (s.canonical || s.label || s.name || '').trim().toUpperCase();
+        if (currentCanon && sCanon === currentCanon) continue;
+        if (s.code && s.code.toUpperCase() === val) { assignedDoc = sCanon; break; }
+        if (Array.isArray(s.codes) && s.codes.some(c => c && c.toUpperCase() === val)) { assignedDoc = sCanon; break; }
+      }
+
+      if (!this._currentShortcutCodes) this._currentShortcutCodes = [];
+
+      if (assignedDoc) {
+        const suffixedCode = this.findAvailableShortcutCode(val, currentCanon);
+        this._currentShortcutCodes.push(suffixedCode);
+        this.renderShortcutChips(suffixedCode);
+        toast.show('Auto-Numbered Code', `Code "${val}" is assigned to "${assignedDoc}". Auto-assigned "${suffixedCode}".`, 'info');
+      } else {
+        this._currentShortcutCodes.push(val);
+        this.renderShortcutChips();
+      }
+
+      if (inputCode) inputCode.value = '';
+      inputCode?.focus();
+    };
+
     const btnAddChip = document.getElementById('btnAddShortcutChip');
     if (btnAddChip) {
       btnAddChip.onclick = (e) => {
         e.preventDefault();
-        const val = (inputCode?.value || '').trim().toUpperCase();
-        if (val) {
-          if (!this._currentShortcutCodes) this._currentShortcutCodes = [];
-          if (!this._currentShortcutCodes.includes(val)) {
-            this._currentShortcutCodes.push(val);
-            this.renderShortcutChips();
-          }
-          if (inputCode) inputCode.value = '';
-          inputCode?.focus();
-        }
+        addShortcutChip();
       };
     }
 
@@ -4021,14 +4120,8 @@ export class RenamerUIManager {
       inputCode.onkeydown = (e) => {
         if (e.key === 'Enter') {
           e.preventDefault();
-          const val = (inputCode.value || '').trim().toUpperCase();
-          if (val) {
-            if (!this._currentShortcutCodes) this._currentShortcutCodes = [];
-            if (!this._currentShortcutCodes.includes(val)) {
-              this._currentShortcutCodes.push(val);
-              this.renderShortcutChips();
-            }
-            inputCode.value = '';
+          if ((inputCode.value || '').trim()) {
+            addShortcutChip();
           } else {
             inputName?.focus();
           }
@@ -4068,10 +4161,25 @@ export class RenamerUIManager {
     const docName = rawName.toUpperCase();
     const rawAliases = (inputAliases?.value || '').trim();
     let keywords = [];
+    let hadDuplicateKeywords = false;
     if (rawAliases) {
-      keywords = rawAliases.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+      const rawTokens = rawAliases.split(',')
+        .map(s => s.trim().toLowerCase().replace(/[^a-z0-9\s_-]/g, ''))
+        .filter(s => s.length >= 2);
+      const uniqueSet = new Set(rawTokens);
+      if (rawTokens.length > uniqueSet.size) {
+        hadDuplicateKeywords = true;
+      }
+      keywords = Array.from(uniqueSet);
     } else {
-      keywords = [docName.toLowerCase(), ...extractCleanTokens(docName)];
+      const autoTokens = [docName.toLowerCase(), ...extractCleanTokens(docName)]
+        .map(s => s.trim().toLowerCase().replace(/[^a-z0-9\s_-]/g, ''))
+        .filter(s => s.length >= 2);
+      keywords = Array.from(new Set(autoTokens));
+    }
+
+    if (hadDuplicateKeywords) {
+      toast.show('Keywords Cleaned', 'Duplicate keywords automatically cleaned.', 'success');
     }
 
     const wasShortcutOnly = this._isShortcutOnly;
@@ -4084,25 +4192,40 @@ export class RenamerUIManager {
       const currentList = this.state.documentPresets[this.state.activePreset];
       const docEntry = { name: docName, keywords };
 
+      // Strict Uniqueness Guard: Check if docName already exists in this preset at a different index
+      const conflictIdx = currentList.findIndex((item, idx) => {
+        if (this._editingDocIdx !== null && this._editingDocIdx !== undefined && idx === this._editingDocIdx) {
+          return false;
+        }
+        const n = (typeof item === 'string' ? item : item.name || '').toUpperCase();
+        return n === docName;
+      });
+
+      if (conflictIdx !== -1) {
+        toast.show('Document Exists', `Document "${docName}" is already present in "${this.state.activePreset}".`, 'warning');
+        return;
+      }
+
       if (this._editingDocIdx !== null && this._editingDocIdx !== undefined && currentList[this._editingDocIdx]) {
         currentList[this._editingDocIdx] = docEntry;
       } else {
-        const existingIdx = currentList.findIndex(item => {
-          const n = (typeof item === 'string' ? item : item.name || '').toUpperCase();
-          return n === docName;
-        });
-        if (existingIdx !== -1) {
-          currentList[existingIdx] = docEntry;
-        } else {
-          currentList.push(docEntry);
-        }
+        currentList.push(docEntry);
       }
     } else {
       // 2. Shortcut mode: Multi-short-code support
-      const pendingCode = (inputCode?.value || '').trim().toUpperCase();
-      if (pendingCode && (!this._currentShortcutCodes || !this._currentShortcutCodes.includes(pendingCode))) {
-        if (!this._currentShortcutCodes) this._currentShortcutCodes = [];
-        this._currentShortcutCodes.push(pendingCode);
+      const pendingRaw = (inputCode?.value || '').trim().toUpperCase();
+      if (pendingRaw) {
+        const cleanCode = pendingRaw.replace(/[^A-Z0-9_-]/g, '');
+        if (cleanCode) {
+          if (!this._currentShortcutCodes) this._currentShortcutCodes = [];
+          if (!this._currentShortcutCodes.includes(cleanCode)) {
+            const finalCode = this.findAvailableShortcutCode(cleanCode, docName);
+            this._currentShortcutCodes.push(finalCode);
+            if (finalCode !== cleanCode) {
+              toast.show('Auto-Numbered Code', `Code "${cleanCode}" is assigned to another document. Auto-assigned "${finalCode}".`, 'info');
+            }
+          }
+        }
       }
 
       if (!this._currentShortcutCodes || this._currentShortcutCodes.length === 0) {
@@ -4116,15 +4239,26 @@ export class RenamerUIManager {
       // Clean existing shortcut if editing
       if (this._editingShortcutCode) {
         const oldCode = this._editingShortcutCode.toUpperCase();
-        this.shortcuts21 = this.shortcuts21.filter(s => {
-          if (s.code && s.code.toUpperCase() === oldCode) return false;
-          if (Array.isArray(s.codes) && s.codes.some(c => c && c.toUpperCase() === oldCode)) return false;
-          return true;
-        });
-        if (this.state.customShortcuts) {
-          this.state.customShortcuts = this.state.customShortcuts.filter(s => {
+        const oldShortcut = this.shortcuts21.find(s =>
+          (s.code && s.code.toUpperCase() === oldCode) ||
+          (Array.isArray(s.codes) && s.codes.some(c => c && c.toUpperCase() === oldCode))
+        );
+        if (oldShortcut) {
+          this.shortcuts21 = this.shortcuts21.filter(s => s !== oldShortcut);
+        } else {
+          this.shortcuts21 = this.shortcuts21.filter(s => {
             if (s.code && s.code.toUpperCase() === oldCode) return false;
             if (Array.isArray(s.codes) && s.codes.some(c => c && c.toUpperCase() === oldCode)) return false;
+            return true;
+          });
+        }
+        if (this.state.customShortcuts) {
+          this.state.customShortcuts = this.state.customShortcuts.filter(s => {
+            if (s === oldShortcut) return false;
+            if (s.code && s.code.toUpperCase() === oldCode) return false;
+            if (Array.isArray(s.codes) && s.codes.some(c => c && c.toUpperCase() === oldCode)) return false;
+            const sCanon = (s.canonical || s.label || '').toUpperCase();
+            if (oldShortcut && sCanon === (oldShortcut.canonical || oldShortcut.label || '').toUpperCase()) return false;
             return true;
           });
         }
