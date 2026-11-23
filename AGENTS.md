@@ -41,3 +41,17 @@
 2. **Clean Workspace:** Move any temporary or junk files to Recycle Bin (never leave clutter). Never delete existing project or user files without explicit approval.
 3. **Auto-Checkpoint Rule:** Record a sequential Git Checkpoint (`CP-001`, `CP-002`, ...) in [`CHECKPOINT_LOG.md`](file:///e:/DocMitra/CHECKPOINT_LOG.md) with Checkpoint ID, Date/Time, Module Name, Git Commit Hash, and a 1-line clean working summary so any future issue can be rolled back in 1 command.
 4. **1-Command Rollback Rule:** If any future change introduces bugs or regressions, upon user request, the agent MUST safely archive broken commits into a backup branch (`rollback-archive/<commit>`), reset `master` to the target checkpoint tag (`git reset --hard CP-XXX`), and verify the restored build.
+
+---
+
+## 🧪 RULE 6 — Mandatory Dual-MCP Automated QA Gate (ALWAYS ON)
+After EVERY code change, UI tweak, feature addition, or bug fix across ANY DocMitra module (before building `app.exe`, re-locking, or presenting a completion report):
+1. **Run Playwright MCP (Functional & UI E2E Test):**
+   - Automatically test all modified user flows, clicks, inputs, modals, and edge cases using **Playwright MCP**.
+2. **Run Chrome DevTools MCP (Console, Network & Layout Inspection):**
+   - Automatically inspect the live app using **Chrome DevTools MCP** to guarantee **0 console errors**, **0 uncaught runtime exceptions**, **0 broken network/IPC calls**, and clean DOM/layout rendering.
+3. **Strict Pass-Only Approval Gate:**
+   - NEVER present a task as "Done", NEVER deploy `app.exe`, and NEVER re-lock a tool until **BOTH Playwright MCP and Chrome DevTools MCP pass 100%**.
+   - Always include a short **Dual-MCP Verification Report** (Playwright: PASS/FAIL + Chrome DevTools: 0 Console Errors) in the final Marathi summary.
+   - This is a permanent global rule—execute it automatically every time without asking the user.
+

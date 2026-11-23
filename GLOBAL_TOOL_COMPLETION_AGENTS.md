@@ -42,6 +42,7 @@ Upon invocation, the Guardian performs an exhaustive audit and generates the fol
 - Protects shared files via mandatory impact analysis.
 - Maintains Git release tags (`<tool-name>-final-release`) and release branches.
 - **Enforces Permanent Numbered Checkpoints (`CP-001`, `CP-002`, ...):** Automatically logs all verified milestones into `CHECKPOINT_LOG.md` and guarantees 1-command safe rollback.
+- **Enforces RULE 6 Dual-MCP Automated QA Gate (Playwright + Chrome DevTools):** Certifies that 100% of flows pass Playwright E2E and Chrome DevTools logs 0 console errors, 0 runtime exceptions, and 0 broken network calls before any release or lock.
 
 ### 🧊 Current Frozen Tools
 | Tool Name | Directory | Release Tag / Commit | Freeze Date | Status |
