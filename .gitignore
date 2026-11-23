@@ -32,3 +32,4 @@ Thumbs.db
 __pycache__/
 testsprite_tests/tmp/
 testsprite_tests/tmp/config.json
+.playwright-mcp/

@@ -302,7 +302,7 @@ DEFAULT_CHECKLISTS_DATA["EDUCATIONAL"] = DEFAULT_CHECKLISTS_DATA["EDUCATIONAL DO
    ========================================================================== */
 
 export const DEFAULT_SHORTCUT_DICTIONARY = [
-  { id: "photo", displayName: "Student Photo", primaryShortcut: "PIC", alternateKeywords: ["photo", "pic", "passport photo", "photograph"], outputName: "PHOTO" },
+  { id: "photo", displayName: "PHOTO", primaryShortcut: "PIC", alternateKeywords: ["photo", "pic", "passport photo", "photograph"], outputName: "PHOTO" },
   { id: "signature", displayName: "Signature", primaryShortcut: "SIG", alternateKeywords: ["signature", "sign", "student sign"], outputName: "SIGNATURE" },
   { id: "aadhaar-card", displayName: "Aadhaar Card", primaryShortcut: "ADR", alternateKeywords: ["aadhaar card", "aadhar", "adhar", "uid"], outputName: "AADHAAR CARD" },
   { id: "10th-marksheet", displayName: "10th Marksheet", primaryShortcut: "10M", alternateKeywords: ["10th marksheet", "ssc marksheet", "10 mark sheet", "10th mark"], outputName: "10TH MARKSHEET" },

@@ -373,9 +373,8 @@
                   class="bg-surface-container-low border-b border-outline-variant/30 text-secondary uppercase text-[10px] font-bold font-mono-code tracking-wider sticky top-0 z-10">
                   <tr>
                     <th class="py-2.5 px-3 text-center" style="width: 48px;">#</th>
-                    <th class="py-2.5 px-3 truncate" style="width: 24%;">Document Name</th>
-                    <th class="py-2.5 px-3 font-mono-code whitespace-nowrap" style="width: 11%;">Short Code</th>
-                    <th class="py-2.5 px-3" style="width: 48%;">Keywords / Tokens</th>
+                    <th class="py-2.5 px-3 truncate" style="width: 32%;">Document Name</th>
+                    <th class="py-2.5 px-3" style="width: 55%;">Keywords / Tokens</th>
                     <th class="py-2.5 px-3 text-right whitespace-nowrap pr-4" style="width: 90px;">Actions</th>
                   </tr>
                 </thead>
@@ -421,9 +420,9 @@
                 class="bg-surface-container-low border-b border-outline-variant/30 text-secondary uppercase text-[10px] font-bold font-mono-code tracking-wider sticky top-0 z-10">
                 <tr>
                   <th class="py-2.5 px-3 text-center" style="width: 48px;">#</th>
-                  <th class="py-2.5 px-3 font-mono-code whitespace-nowrap" style="width: 11%;">Short Code</th>
-                  <th class="py-2.5 px-3 truncate" style="width: 24%;">Canonical Document Name</th>
-                  <th class="py-2.5 px-3" style="width: 48%;">Alternate Keywords</th>
+                  <th class="py-2.5 px-3 font-mono-code" style="width: 14%;">Short Code(s)</th>
+                  <th class="py-2.5 px-3 truncate" style="width: 25%;">Canonical Document Name</th>
+                  <th class="py-2.5 px-3" style="width: 45%;">Alternate Keywords</th>
                   <th class="py-2.5 px-3 text-right whitespace-nowrap pr-4" style="width: 90px;">Actions</th>
                 </tr>
               </thead>
@@ -472,16 +471,27 @@
 
       <!-- Modal Body (Browser Autofill Completely Disabled) -->
       <form autocomplete="off" onsubmit="return false;" class="p-5 flex flex-col gap-4 text-label-md m-0">
-        <!-- Input: Short Code -->
-        <div class="flex flex-col gap-1.5">
+        <!-- Input: Short Code(s) (Multi-chip UI for Shortcuts, hidden for Preset Documents) -->
+        <div id="containerAddDocCode" class="flex flex-col gap-1.5">
           <label class="font-semibold text-on-surface text-[12px] flex items-center justify-between">
-            <span>Short Code (Abbreviation)</span>
-            <span class="text-secondary font-mono-code text-[11px]">2-8 letters</span>
+            <span>Short Code(s)</span>
+            <span class="text-secondary font-mono-code text-[11px]">Type code &amp; press Enter or Add</span>
           </label>
-          <input id="inputAddDocCode" type="text" maxlength="8" placeholder="e.g. BNF" autocomplete="off"
-            autocomplete="one-time-code" aria-autocomplete="none" autocorrect="off" autocapitalize="off"
-            spellcheck="false" data-lpignore="true" data-form-type="other"
-            class="w-full h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary font-mono-code text-[13px] uppercase font-bold text-on-surface outline-none">
+          <div class="flex items-center gap-2">
+            <input id="inputAddDocCode" type="text" maxlength="8" placeholder="e.g. PIC" autocomplete="off"
+              autocomplete="one-time-code" aria-autocomplete="none" autocorrect="off" autocapitalize="off"
+              spellcheck="false" data-lpignore="true" data-form-type="other"
+              class="flex-1 h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary font-mono-code text-[13px] uppercase font-bold text-on-surface outline-none">
+            <button id="btnAddShortcutChip" type="button"
+              class="h-9 px-3.5 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold text-[12px] flex items-center gap-1 shrink-0 cursor-pointer transition-all shadow-xs">
+              <span class="material-symbols-outlined text-[16px]">add</span>
+              <span>Add</span>
+            </button>
+          </div>
+          <!-- Dynamic Chips Container for Multiple Short Codes -->
+          <div id="containerShortcutChips" class="flex flex-wrap gap-1.5 min-h-[34px] p-2 rounded-lg bg-surface-container-low border border-outline-variant/30 items-center">
+            <!-- Chips rendered dynamically -->
+          </div>
         </div>
 
         <!-- Input: Full Document Name -->
@@ -510,11 +520,10 @@
             Name.</span>
         </div>
 
-        <!-- Live Target Preview -->
+        <!-- Live Target Preview (Without file extension) -->
         <div class="p-3 rounded-xl bg-surface-container-low border border-outline-variant/30 flex flex-col gap-1">
           <span class="text-[10px] font-mono-code uppercase font-bold text-secondary">Target Name Preview</span>
-          <div id="addDocTargetPreview" class="font-mono-code text-[12px] font-bold text-primary break-all">BONAFIDE
-            CERTIFICATE.pdf</div>
+          <div id="addDocTargetPreview" class="font-mono-code text-[12px] font-bold text-primary break-all">BONAFIDE CERTIFICATE</div>
         </div>
       </form>
 

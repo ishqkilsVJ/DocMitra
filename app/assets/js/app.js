@@ -1350,7 +1350,7 @@ y["MAHA DBT FORM"] = y["MAHA DBT"], y.SWAYAM = y["SWAYAM DEENDAYAL YOJANA"], y["
 var b = [
 	{
 		id: "photo",
-		displayName: "Student Photo",
+		displayName: "PHOTO",
 		primaryShortcut: "PIC",
 		alternateKeywords: [
 			"photo",
@@ -5093,7 +5093,8 @@ function Ge(e) {
 }
 var Ke = b.map((e) => ({
 	code: e.primaryShortcut,
-	label: e.displayName,
+	codes: [e.primaryShortcut],
+	label: e.outputName,
 	canonical: e.outputName,
 	keywords: Array.isArray(e.alternateKeywords) ? [...e.alternateKeywords] : []
 })), qe = new Map(Ke.map((e) => [e.code, e])), Je = {
@@ -5863,13 +5864,25 @@ var Ke = b.map((e) => ({
 				if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) e.preventDefault(), this.handleRenameSingleFile(n);
 				else if (e.key === "Tab" && !e.shiftKey) {
 					e.preventDefault();
-					let t = w.value.trim() || n.targetName || n.suggestedName || E(n.name);
-					this.handleConfirmCurrentName(t);
+					let t = w.value.trim(), r = this.resolveShortcut(t);
+					if (r) {
+						let e = k(r.canonical || r.label, this.getEffectiveStudentName(), this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
+						w.value = e, this.handleConfirmCurrentName(e);
+					} else {
+						let e = t || n.targetName || n.suggestedName || E(n.name);
+						this.handleConfirmCurrentName(e);
+					}
 				} else if (e.key === "Tab" && e.shiftKey) e.preventDefault(), this.handleNavigateBackward();
 				else if (e.key === "Enter") {
 					e.preventDefault();
-					let t = w.value.trim() || n.targetName || n.suggestedName || E(n.name);
-					this.handleConfirmCurrentName(t);
+					let t = w.value.trim(), r = this.resolveShortcut(t);
+					if (r) {
+						let e = k(r.canonical || r.label, this.getEffectiveStudentName(), this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
+						w.value = e, this.handleConfirmCurrentName(e);
+					} else {
+						let e = t || n.targetName || n.suggestedName || E(n.name);
+						this.handleConfirmCurrentName(e);
+					}
 				} else /[\\/:*?"<>|]/.test(e.key) && (e.preventDefault(), r.show("Character Not Allowed", `Windows filenames cannot contain ${e.key}`, "warning"));
 			}), w.addEventListener("input", (e) => {
 				let t = e.target.value;
@@ -5879,19 +5892,26 @@ var Ke = b.map((e) => ({
 					n.targetName = n.name, n.docType = null, n.isMatched = !1, o && (o.className = "confidence-badge confidence-badge-low", o.textContent = "🔴 Unmatched"), this.updateTelemetry(), this.renderCoreShortcuts("");
 					return;
 				}
-				let s = a.replace(/\s+/g, "").toLowerCase(), c = this.shortcuts21.find((e) => e.code.toLowerCase() === a.toLowerCase() || e.code.toLowerCase() === s || Array.isArray(e.keywords) && (e.keywords.includes(a.toLowerCase()) || e.keywords.includes(s)));
+				let s = a.replace(/\s+/g, "").toLowerCase(), c = this.resolveShortcut(a) || this.resolveShortcut(s);
 				if (!c) {
-					let e = this.getAllPresetDocuments().find((e) => e.code && (e.code.toLowerCase() === a.toLowerCase() || e.code.toLowerCase() === s) || Array.isArray(e.keywords) && (e.keywords.includes(a.toLowerCase()) || e.keywords.includes(s)));
+					for (let e of this.shortcuts21 || []) if ((Array.isArray(e.keywords) ? e.keywords : []).some((e) => e.toLowerCase() === a.toLowerCase() || e.toLowerCase() === s)) {
+						c = e;
+						break;
+					}
+				}
+				if (!c) {
+					let e = this.getAllPresetDocuments().find((e) => e.code && (e.code.toLowerCase() === a.toLowerCase() || e.code.toLowerCase() === s) || Array.isArray(e.keywords) && e.keywords.some((e) => e.toLowerCase() === a.toLowerCase() || e.toLowerCase() === s));
 					e && (c = {
 						code: e.code,
+						codes: [e.code],
 						canonical: e.name.toUpperCase(),
 						label: e.name
 					});
 				}
 				if (c) {
-					let e = c.canonical;
+					let e = c.canonical || c.label;
 					n.docType = e, n.isMatched = !0, o && (o.className = "confidence-badge confidence-badge-high", o.textContent = `🟢 Matched: ${e}`);
-					let t = k(e, this.state.studentName, this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
+					let t = k(e, this.getEffectiveStudentName(), this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
 					n.targetName = `${t}${i}`;
 				} else {
 					n.docType = a, n.isMatched = !1, o && (o.className = "confidence-badge confidence-badge-med", o.textContent = `✏️ Custom: ${a}`);
@@ -6018,79 +6038,76 @@ var Ke = b.map((e) => ({
 					o.className = "flex items-center gap-1.5 min-w-0 flex-1";
 					let s = document.createElement("span");
 					s.className = "w-1.5 h-1.5 rounded-full bg-error shrink-0", o.appendChild(s);
-					let c = this.state.style || "upper", u = c === "lower" ? (i || "").toLowerCase() : c === "title" ? i && i.length <= 4 && /\d/.test(i) ? i.toUpperCase() : O(i || "", "title") : (i || "").toUpperCase(), d = O(n, c);
-					if (i) {
+					let c = this.state.style || "upper";
+					c === "lower" ? (i || "").toLowerCase() : c === "title" ? i && i.length <= 4 && /\d/.test(i) ? i.toUpperCase() : O(i || "", "title") : (i || "").toUpperCase();
+					let u = O(n, c), d = document.createElement("span");
+					d.className = "font-mono-code text-[11px] font-bold text-on-surface truncate", d.textContent = u, o.appendChild(d);
+					let f = this.state.studentName || this.state.folder?.name || "Student", p = ze(f, n);
+					if (p) {
 						let e = document.createElement("span");
-						e.className = "px-1 py-0.2 rounded bg-amber-500/20 text-amber-900 dark:text-amber-300 font-mono-code text-[9px] font-bold shrink-0", e.textContent = u, o.appendChild(e);
-					}
-					let f = document.createElement("span");
-					f.className = "font-mono-code text-[11px] font-bold text-on-surface truncate", f.textContent = d, o.appendChild(f);
-					let p = this.state.studentName || this.state.folder?.name || "Student", h = ze(p, n);
-					if (h) {
-						let e = document.createElement("span");
-						e.className = "px-1.5 py-0.2 rounded font-mono-code text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold shrink-0 flex items-center gap-0.5", e.textContent = `📅 ${J(h.promisedDate)}`, o.appendChild(e);
+						e.className = "px-1.5 py-0.2 rounded font-mono-code text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold shrink-0 flex items-center gap-0.5", e.textContent = `📅 ${J(p.promisedDate)}`, o.appendChild(e);
 					}
 					a.appendChild(o);
+					let h = document.createElement("div");
+					h.className = "flex items-center gap-1 shrink-0";
 					let g = document.createElement("div");
-					g.className = "flex items-center gap-1 shrink-0";
-					let _ = document.createElement("div");
-					_.className = "relative inline-block";
-					let v = document.createElement("button");
-					v.type = "button", v.className = "px-1.5 py-0.5 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[9px] font-semibold flex items-center gap-0.5 border border-outline-variant/30 cursor-pointer transition-colors";
-					let y = document.createElement("span");
-					y.className = "material-symbols-outlined text-[12px] text-primary", y.textContent = "event", v.appendChild(y), v.appendChild(document.createTextNode("Date")), _.appendChild(v);
-					let b = document.createElement("div");
-					b.className = "hidden absolute right-0 bottom-full mb-1 w-48 bg-surface-container-lowest rounded-lg shadow-lg border border-outline-variant/40 p-2 z-50 flex flex-col gap-1 text-[11px] font-mono-code";
-					let x = document.createElement("button");
-					x.type = "button", x.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", x.textContent = `Today (${J(Y())})`, x.onclick = (e) => {
+					g.className = "relative inline-block";
+					let _ = document.createElement("button");
+					_.type = "button", _.className = "px-1.5 py-0.5 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[9px] font-semibold flex items-center gap-0.5 border border-outline-variant/30 cursor-pointer transition-colors";
+					let v = document.createElement("span");
+					v.className = "material-symbols-outlined text-[12px] text-primary", v.textContent = "event", _.appendChild(v), _.appendChild(document.createTextNode("Date")), g.appendChild(_);
+					let y = document.createElement("div");
+					y.className = "hidden absolute right-0 bottom-full mb-1 w-48 bg-surface-container-lowest rounded-lg shadow-lg border border-outline-variant/40 p-2 z-50 flex flex-col gap-1 text-[11px] font-mono-code";
+					let b = document.createElement("button");
+					b.type = "button", b.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", b.textContent = `Today (${J(Y())})`, b.onclick = (e) => {
 						e.stopPropagation(), q({
-							folderName: p,
-							studentName: p,
+							folderName: f,
+							studentName: f,
 							documentName: n,
 							promisedDate: Y(),
 							note: `Missing ${n} during intake`
-						}), b.classList.add("hidden"), r.show("Follow-up Scheduled", `${n} promise date set for Today`, "success"), this.renderQueue();
-					}, b.appendChild(x);
-					let S = document.createElement("button");
-					S.type = "button", S.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", S.textContent = `Tomorrow (${J(Ve(1))})`, S.onclick = (e) => {
+						}), y.classList.add("hidden"), r.show("Follow-up Scheduled", `${n} promise date set for Today`, "success"), this.renderQueue();
+					}, y.appendChild(b);
+					let x = document.createElement("button");
+					x.type = "button", x.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", x.textContent = `Tomorrow (${J(Ve(1))})`, x.onclick = (e) => {
 						e.stopPropagation(), q({
-							folderName: p,
-							studentName: p,
+							folderName: f,
+							studentName: f,
 							documentName: n,
 							promisedDate: Ve(1),
 							note: `Missing ${n} during intake`
-						}), b.classList.add("hidden"), r.show("Follow-up Scheduled", `${n} promise date set for Tomorrow`, "success"), this.renderQueue();
-					}, b.appendChild(S);
-					let C = document.createElement("button");
-					C.type = "button", C.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", C.textContent = `Monday (${J(He())})`, C.onclick = (e) => {
+						}), y.classList.add("hidden"), r.show("Follow-up Scheduled", `${n} promise date set for Tomorrow`, "success"), this.renderQueue();
+					}, y.appendChild(x);
+					let S = document.createElement("button");
+					S.type = "button", S.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", S.textContent = `Monday (${J(He())})`, S.onclick = (e) => {
 						e.stopPropagation(), q({
-							folderName: p,
-							studentName: p,
+							folderName: f,
+							studentName: f,
 							documentName: n,
 							promisedDate: He(),
 							note: `Missing ${n} during intake`
-						}), b.classList.add("hidden"), r.show("Follow-up Scheduled", `${n} promise date set for Monday`, "success"), this.renderQueue();
-					}, b.appendChild(C);
-					let w = document.createElement("div");
-					w.className = "flex items-center gap-1 pt-1 border-t border-surface-container mt-1";
-					let D = document.createElement("input");
-					D.type = "date", D.className = "flex-1 text-[10px] p-1 rounded bg-surface-container text-on-surface border border-outline-variant/40 outline-none";
-					let A = document.createElement("button");
-					A.type = "button", A.className = "px-2 py-1 rounded bg-primary text-on-primary text-[10px] font-bold cursor-pointer", A.textContent = "Set", A.onclick = (e) => {
-						e.stopPropagation(), D.value && (q({
-							folderName: p,
-							studentName: p,
+						}), y.classList.add("hidden"), r.show("Follow-up Scheduled", `${n} promise date set for Monday`, "success"), this.renderQueue();
+					}, y.appendChild(S);
+					let C = document.createElement("div");
+					C.className = "flex items-center gap-1 pt-1 border-t border-surface-container mt-1";
+					let w = document.createElement("input");
+					w.type = "date", w.className = "flex-1 text-[10px] p-1 rounded bg-surface-container text-on-surface border border-outline-variant/40 outline-none";
+					let D = document.createElement("button");
+					D.type = "button", D.className = "px-2 py-1 rounded bg-primary text-on-primary text-[10px] font-bold cursor-pointer", D.textContent = "Set", D.onclick = (e) => {
+						e.stopPropagation(), w.value && (q({
+							folderName: f,
+							studentName: f,
 							documentName: n,
-							promisedDate: D.value,
+							promisedDate: w.value,
 							note: `Missing ${n} during intake`
-						}), b.classList.add("hidden"), r.show("Follow-up Scheduled", `${n} promise date: ${D.value}`, "success"), this.renderQueue());
-					}, w.appendChild(D), w.appendChild(A), b.appendChild(w), v.onclick = (e) => {
-						e.stopPropagation(), b.classList.toggle("hidden");
-					}, _.appendChild(b), g.appendChild(_);
-					let j = document.createElement("button");
-					j.type = "button", j.className = "px-2 py-0.5 rounded bg-primary hover:bg-primary/90 text-on-primary font-mono-code text-[9px] font-bold flex items-center gap-0.5 shadow-xs cursor-pointer transition-colors";
-					let M = document.createElement("span");
-					M.className = "material-symbols-outlined text-[12px]", M.textContent = "download", j.appendChild(M), j.appendChild(document.createTextNode("Import")), j.onclick = async (e) => {
+						}), y.classList.add("hidden"), r.show("Follow-up Scheduled", `${n} promise date: ${w.value}`, "success"), this.renderQueue());
+					}, C.appendChild(w), C.appendChild(D), y.appendChild(C), _.onclick = (e) => {
+						e.stopPropagation(), y.classList.toggle("hidden");
+					}, g.appendChild(y), h.appendChild(g);
+					let A = document.createElement("button");
+					A.type = "button", A.className = "px-2 py-0.5 rounded bg-primary hover:bg-primary/90 text-on-primary font-mono-code text-[9px] font-bold flex items-center gap-0.5 shadow-xs cursor-pointer transition-colors";
+					let j = document.createElement("span");
+					j.className = "material-symbols-outlined text-[12px]", j.textContent = "download", A.appendChild(j), A.appendChild(document.createTextNode("Import")), A.onclick = async (e) => {
 						e.stopPropagation(), r.show("Select File for Import", `Select document for ${n}`, "info");
 						try {
 							let e = await l("All Supported Files (*.pdf;*.jpg;*.jpeg;*.png;*.docx)|*.pdf;*.jpg;*.jpeg;*.png;*.docx|All Files (*.*)|*.*", `Select File for ${n}`);
@@ -6132,7 +6149,7 @@ var Ke = b.map((e) => ({
 						} catch (e) {
 							r.show("Import Error", e.message, "error");
 						}
-					}, g.appendChild(j), a.appendChild(g), e.appendChild(a);
+					}, h.appendChild(A), a.appendChild(h), e.appendChild(a);
 				}), t.appendChild(e);
 			}
 			e.appendChild(t);
@@ -6164,14 +6181,24 @@ var Ke = b.map((e) => ({
 		let n = this.state.files[this.state.currentIndex], r = n ? E(n.name) : "", i = (e || "").trim();
 		!n?.hasUserEdited && i.toLowerCase() === r.toLowerCase() && (i = "");
 		let a = this.getAllPresetDocuments(), o = [], s = /* @__PURE__ */ new Set();
-		for (let e of this.shortcuts21) {
-			let t = (e.code || "").toUpperCase();
-			t && !s.has(t) && (o.push(e), s.add(t));
+		for (let e of this.shortcuts21 || []) {
+			let t = e.canonical || e.label, n = Array.isArray(e.codes) && e.codes.length > 0 ? e.codes : e.code ? [e.code] : [];
+			for (let r of n) {
+				let i = (r || "").toUpperCase();
+				i && !s.has(i) && (o.push({
+					code: i,
+					codes: n,
+					label: t,
+					canonical: t,
+					keywords: e.keywords
+				}), s.add(i));
+			}
 		}
 		for (let e of a) {
 			let t = (e.code || "").toUpperCase();
 			t && !s.has(t) && (o.push({
 				code: t,
+				codes: [t],
 				label: e.name,
 				canonical: e.name.toUpperCase(),
 				keywords: e.keywords
@@ -6217,13 +6244,36 @@ var Ke = b.map((e) => ({
 			e.className = "text-[11px] text-secondary italic px-1 pt-1", e.textContent = `No shortcode matches — saving as custom text (Showing top suggestions for "${i}")`, t.prepend(e);
 		}
 	}
+	resolveShortcut(e) {
+		if (!e) return null;
+		let t = String(e).trim().toUpperCase();
+		if (!t) return null;
+		for (let e of this.shortcuts21 || []) if (e.code && e.code.toUpperCase() === t || Array.isArray(e.codes) && e.codes.some((e) => e && e.toUpperCase() === t)) return e;
+		for (let e of this.state.customShortcuts || []) if (e.code && e.code.toUpperCase() === t || Array.isArray(e.codes) && e.codes.some((e) => e && e.toUpperCase() === t)) return e;
+		let n = this.getAllPresetDocuments();
+		for (let e of n) if (e.code && e.code.toUpperCase() === t) return {
+			code: e.code,
+			codes: [e.code],
+			canonical: e.name.toUpperCase(),
+			label: e.name,
+			keywords: e.keywords
+		};
+		for (let e of b || []) if (e.primaryShortcut && e.primaryShortcut.toUpperCase() === t) return {
+			code: e.primaryShortcut,
+			codes: [e.primaryShortcut],
+			canonical: e.outputName,
+			label: e.outputName,
+			keywords: e.alternateKeywords
+		};
+		return null;
+	}
 	applyShortcutToCurrentFile(e) {
 		let t = this.state.files[this.state.currentIndex];
 		if (!t) return;
-		let n = this.getAllPresetDocuments(), i = b || [], a = n.find((t) => t.code && t.code.toUpperCase() === e.toUpperCase()) || i.find((t) => t.primaryShortcut && t.primaryShortcut.toUpperCase() === e.toUpperCase()), o = a ? (a.canonical || a.outputName || a.name).toUpperCase() : e.toUpperCase(), s = t.ext || ("." + t.name.split(".").pop()).toLowerCase(), c = k(o, this.getEffectiveStudentName(), this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
-		t.targetName = `${c}${s}`, t.userEditedName = c, t.hasUserEdited = !0, t.isMatched = !0, t.docType = o, t.smartDocType = o, t.smartConfidence = 100, t.status = "ready";
-		let l = document.getElementById("inputRenameTarget");
-		l && (l.value = c, l.focus(), l.select()), r.show("Selected Document", `${e} → ${c}`, "info"), this.updateTelemetry(), this.renderQueue();
+		let n = this.resolveShortcut(e), i = n ? (n.canonical || n.outputName || n.label || n.name).toUpperCase() : e.toUpperCase(), a = t.ext || ("." + t.name.split(".").pop()).toLowerCase(), o = k(i, this.getEffectiveStudentName(), this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
+		t.targetName = `${o}${a}`, t.userEditedName = o, t.hasUserEdited = !0, t.isMatched = !0, t.docType = i, t.smartDocType = i, t.smartConfidence = 100, t.status = "ready";
+		let s = document.getElementById("inputRenameTarget");
+		s && (s.value = o, s.focus(), s.select()), r.show("Selected Document", `${e} → ${o}`, "info"), this.updateTelemetry(), this.renderQueue();
 	}
 	handleNavigateBackward() {
 		this.state.files.length > 0 && (this.state.currentIndex = (this.state.currentIndex - 1 + this.state.files.length) % this.state.files.length, this.renderQueue(), this.renderCurrentPreview());
@@ -6256,46 +6306,51 @@ var Ke = b.map((e) => ({
 			r.show("Document Name Required", "Please provide a valid filename.", "warning");
 			return;
 		}
-		let a = i.replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim(), o = `${a}${n}`, s = /* @__PURE__ */ new Set();
-		for (let e of this.state.files) e !== t && (e.isRenamed || e.isKept ? s.add(e.targetName || e.name) : e.name && s.add(e.name));
-		let c = this.getEffectiveStudentName(), l = j(o, t.name, s, c), u = l.toLowerCase() !== o.toLowerCase();
-		o = l;
-		let f = E(o), p = A(o);
-		if (p) {
-			r.show("Validation Error", `${f}: ${p}`, "error");
+		let a = i.replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim(), o = this.resolveShortcut(a);
+		if (o) {
+			let e = o.canonical || o.label;
+			a = k(e, this.getEffectiveStudentName(), this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim(), t.docType = e, t.isMatched = !0;
+		}
+		let s = `${a}${n}`, c = /* @__PURE__ */ new Set();
+		for (let e of this.state.files) e !== t && (e.isRenamed || e.isKept ? c.add(e.targetName || e.name) : e.name && c.add(e.name));
+		let l = this.getEffectiveStudentName(), u = j(s, t.name, c, l), f = u.toLowerCase() !== s.toLowerCase();
+		s = u;
+		let p = E(s), m = A(s);
+		if (m) {
+			r.show("Validation Error", `${p}: ${m}`, "error");
 			return;
 		}
-		let m = this.state.folder && (this.state.folder.nativePath || this.state.folder.path) || "", h = t.nativePath || t.path || (m ? `${m}/${t.name}` : null), g = E(t.name) !== f, _ = t.rotation && t.rotation % 360 != 0, v = typeof window < "u" && (window.location?.search?.includes("test_mode=1") || window.__DOCMITRA_TEST_MODE__);
-		if (h && (g || _)) {
-			let e = c || t.studentName || "", i = t.rotation || 0;
-			r.show("Renaming Document", `Renaming to ${f}...`, "info");
+		let h = this.state.folder && (this.state.folder.nativePath || this.state.folder.path) || "", g = t.nativePath || t.path || (h ? `${h}/${t.name}` : null), _ = E(t.name) !== p, v = t.rotation && t.rotation % 360 != 0, y = typeof window < "u" && (window.location?.search?.includes("test_mode=1") || window.__DOCMITRA_TEST_MODE__);
+		if (g && (_ || v)) {
+			let e = l || t.studentName || "", i = t.rotation || 0;
+			r.show("Renaming Document", `Renaming to ${p}...`, "info");
 			try {
-				let s;
-				if (s = v ? {
+				let o;
+				if (o = y ? {
 					success: !0,
-					name: o,
-					path: h.replace(/[^\\\/]+$/, o)
-				} : await d(h, o, e, i), !s.success) throw Error(s.error || `Failed to rename ${t.name}`);
-				let c = s.name || o, l = s.path || s.newPath || h.replace(/[^\\\/]+$/, c), f = {
+					name: s,
+					path: g.replace(/[^\\\/]+$/, s)
+				} : await d(g, s, e, i), !o.success) throw Error(o.error || `Failed to rename ${t.name}`);
+				let c = o.name || s, l = o.path || o.newPath || g.replace(/[^\\\/]+$/, c), u = {
 					old: t.name,
 					next: c,
 					file: t,
-					nativePath: h,
+					nativePath: g,
 					studentName: e,
 					rotation: i
 				};
-				if (M.pushBatch(this.state.folder, [f]), t.name = c, t.targetName = c, t.userEditedName = E(c), t.path = l, t.nativePath = l, t.isRenamed = !0, t.status = "renamed", t.smartConfidence = 100, t.hasUserEdited = !0, t.rotation = 0, t._pdfBytes = null, t._blobUrl && typeof URL < "u" && URL.revokeObjectURL) {
+				if (M.pushBatch(this.state.folder, [u]), t.name = c, t.targetName = c, t.userEditedName = E(c), t.path = l, t.nativePath = l, t.isRenamed = !0, t.status = "renamed", t.smartConfidence = 100, t.hasUserEdited = !0, t.rotation = 0, t._pdfBytes = null, t._blobUrl && typeof URL < "u" && URL.revokeObjectURL) {
 					try {
 						URL.revokeObjectURL(t._blobUrl);
 					} catch {}
 					t._blobUrl = null;
 				}
-				t.url = `${typeof window < "u" && window.location?.origin && !window.location.origin.startsWith("file:") && !window.location.origin.includes("tauri") ? window.location.origin : "http://localhost:3000"}/api/serve-file?path=${encodeURIComponent(l)}`, u || c.toLowerCase() !== `${a}${n}`.toLowerCase() ? r.show("Duplicate Auto-Numbered", `Saved as: ${E(c)}`, "info") : r.show("Renamed Successfully", E(c), "success");
+				t.url = `${typeof window < "u" && window.location?.origin && !window.location.origin.startsWith("file:") && !window.location.origin.includes("tauri") ? window.location.origin : "http://localhost:3000"}/api/serve-file?path=${encodeURIComponent(l)}`, f || c.toLowerCase() !== `${a}${n}`.toLowerCase() ? r.show("Duplicate Auto-Numbered", `Saved as: ${E(c)}`, "info") : r.show("Renamed Successfully", E(c), "success");
 			} catch (e) {
 				r.show("Rename Error", e.message, "error");
 				return;
 			}
-		} else t.targetName = o, t.userEditedName = f, t.hasUserEdited = !0, t.isMatched = !0, t.status = "ready", t.smartConfidence = 100, t.smartDocType = t.docType || t.smartDocType || f, u ? r.show("Duplicate Auto-Numbered", `Saved as: ${f}`, "info") : r.show("Name Confirmed", f, "info");
+		} else t.targetName = s, t.userEditedName = p, t.hasUserEdited = !0, t.isMatched = !0, t.status = "ready", t.smartConfidence = 100, t.smartDocType = t.docType || t.smartDocType || p, f ? r.show("Duplicate Auto-Numbered", `Saved as: ${p}`, "info") : r.show("Name Confirmed", p, "info");
 		this.state.files.length > 0 && (this.state.currentIndex = (this.state.currentIndex + 1) % this.state.files.length), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview();
 	}
 	async handleRenameSingleFile(e) {
@@ -6634,21 +6689,20 @@ var Ke = b.map((e) => ({
 		if (!n) return;
 		n.innerHTML = "";
 		let r = (this._presetDocsSearchQuery || "").trim().toLowerCase(), i = r ? e.filter((e) => {
-			let t = (e.name || "").toLowerCase(), n = (e.code || "").toLowerCase(), i = (Array.isArray(e.keywords) ? e.keywords.join(" ") : e.keywords || "").toLowerCase();
-			return t.includes(r) || n.includes(r) || i.includes(r);
+			let t = (e.name || "").toLowerCase(), n = (Array.isArray(e.keywords) ? e.keywords.join(" ") : e.keywords || "").toLowerCase();
+			return t.includes(r) || n.includes(r);
 		}) : e;
 		if (t && (t.textContent = r ? `${i.length} / ${e.length}` : String(e.length)), i.length === 0) {
 			let e = document.createElement("tr");
-			e.innerHTML = r ? `<td colspan="5" class="py-6 text-center text-secondary italic">No documents match "${this._presetDocsSearchQuery}".</td>` : "<td colspan=\"5\" class=\"py-6 text-center text-secondary italic\">No documents in this preset. Click \"Add Document\" above.</td>", n.appendChild(e);
+			e.innerHTML = r ? `<td colspan="4" class="py-6 text-center text-secondary italic">No documents match "${this._presetDocsSearchQuery}".</td>` : "<td colspan=\"4\" class=\"py-6 text-center text-secondary italic\">No documents in this preset. Click \"Add Document\" above.</td>", n.appendChild(e);
 		} else i.forEach((t, r) => {
 			let i = document.createElement("tr");
 			i.className = "hover:bg-surface-container-low transition-colors";
 			let a = Array.isArray(t.keywords) ? t.keywords.join(", ") : t.keywords || "", o = e.indexOf(t);
 			i.innerHTML = `
         <td class="py-2.5 px-3 text-center text-secondary font-mono-code" style="width: 48px;">${r + 1}</td>
-        <td class="py-2.5 px-3 font-semibold text-on-surface truncate" style="width: 24%;" title="${t.name}">${t.name}</td>
-        <td class="py-2.5 px-3 font-mono-code font-bold text-primary whitespace-nowrap" style="width: 11%;">${t.code || "-"}</td>
-        <td class="py-2.5 px-3 text-secondary text-[11px] leading-relaxed whitespace-normal break-words" style="width: 48%;" title="${a}">${a || "<span class=\"italic opacity-50\">-</span>"}</td>
+        <td class="py-2.5 px-3 font-semibold text-on-surface truncate" style="width: 32%;" title="${t.name}">${t.name}</td>
+        <td class="py-2.5 px-3 text-secondary text-[11px] leading-relaxed whitespace-normal break-words" style="width: 55%;" title="${a}">${a || "<span class=\"italic opacity-50\">-</span>"}</td>
         <td class="py-2.5 px-3 text-right whitespace-nowrap pr-4" style="width: 90px;">
           <div class="flex items-center justify-end gap-1">
             <button class="w-6 h-6 rounded hover:bg-primary/10 text-secondary hover:text-primary transition-colors flex items-center justify-center cursor-pointer btn-edit-doc" title="Edit document" type="button" data-doc-idx="${o}">
@@ -6671,8 +6725,8 @@ var Ke = b.map((e) => ({
 		if (!e) return;
 		e.innerHTML = "";
 		let t = document.getElementById("shortcutsCountBadge"), n = this.shortcuts21.length, r = (this._shortcutsSearchQuery || "").trim().toLowerCase(), i = r ? this.shortcuts21.filter((e) => {
-			let t = (e.code || "").toLowerCase(), n = (e.canonical || e.label || "").toLowerCase(), i = (Array.isArray(e.keywords) ? e.keywords.join(" ") : e.keywords || "").toLowerCase();
-			return t.includes(r) || n.includes(r) || i.includes(r);
+			let t = (Array.isArray(e.codes) && e.codes.length > 0 ? e.codes : e.code ? [e.code] : []).some((e) => (e || "").toLowerCase().includes(r)), n = (e.canonical || e.label || "").toLowerCase(), i = (Array.isArray(e.keywords) ? e.keywords.join(" ") : e.keywords || "").toLowerCase();
+			return t || n.includes(r) || i.includes(r);
 		}) : this.shortcuts21;
 		if (t && (t.textContent = r ? `${i.length} / ${n}` : String(n)), i.length === 0) {
 			let t = document.createElement("tr");
@@ -6680,27 +6734,27 @@ var Ke = b.map((e) => ({
 		} else i.forEach((t, n) => {
 			let r = document.createElement("tr");
 			r.className = "hover:bg-surface-container-low transition-colors";
-			let i = Array.isArray(t.keywords) ? t.keywords.join(", ") : t.keywords || "";
+			let i = Array.isArray(t.keywords) ? t.keywords.join(", ") : t.keywords || "", a = Array.isArray(t.codes) && t.codes.length > 0 ? t.codes : t.code ? [t.code] : [], o = a.map((e) => `<span class="px-1.5 py-0.5 rounded font-mono-code font-bold text-[10px] ${Ge(e)}">${e}</span>`).join(" ");
 			r.innerHTML = `
         <td class="py-2.5 px-3 text-center text-secondary font-mono-code" style="width: 48px;">${n + 1}</td>
-        <td class="py-2.5 px-3 font-mono-code font-bold text-primary whitespace-nowrap" style="width: 11%;">${t.code}</td>
-        <td class="py-2.5 px-3 font-semibold text-on-surface truncate" style="width: 24%;" title="${t.canonical || t.label}">${t.canonical || t.label}</td>
-        <td class="py-2.5 px-3 text-secondary text-[11px] leading-relaxed whitespace-normal break-words" style="width: 48%;" title="${i}">${i || "<span class=\"italic opacity-50\">-</span>"}</td>
+        <td class="py-2.5 px-3 whitespace-normal" style="width: 14%;"><div class="flex flex-wrap gap-1">${o}</div></td>
+        <td class="py-2.5 px-3 font-semibold text-on-surface truncate" style="width: 25%;" title="${t.canonical || t.label}">${t.canonical || t.label}</td>
+        <td class="py-2.5 px-3 text-secondary text-[11px] leading-relaxed whitespace-normal break-words" style="width: 45%;" title="${i}">${i || "<span class=\"italic opacity-50\">-</span>"}</td>
         <td class="py-2.5 px-3 text-right whitespace-nowrap pr-4" style="width: 90px;">
           <div class="flex items-center justify-end gap-1">
-            <button class="w-6 h-6 rounded hover:bg-primary/10 text-secondary hover:text-primary transition-colors flex items-center justify-center cursor-pointer btn-edit-shortcut" title="Edit shortcut" type="button" data-code="${t.code}">
+            <button class="w-6 h-6 rounded hover:bg-primary/10 text-secondary hover:text-primary transition-colors flex items-center justify-center cursor-pointer btn-edit-shortcut" title="Edit shortcut" type="button" data-code="${t.code || a[0]}">
               <span class="material-symbols-outlined text-[15px]">edit</span>
             </button>
-            <button class="w-6 h-6 rounded hover:bg-error/10 text-secondary hover:text-error transition-colors flex items-center justify-center cursor-pointer btn-del-shortcut" title="Delete shortcut" type="button" data-code="${t.code}">
+            <button class="w-6 h-6 rounded hover:bg-error/10 text-secondary hover:text-error transition-colors flex items-center justify-center cursor-pointer btn-del-shortcut" title="Delete shortcut" type="button" data-code="${t.code || a[0]}">
               <span class="material-symbols-outlined text-[15px]">delete</span>
             </button>
           </div>
         </td>
       `;
-			let a = r.querySelector(".btn-edit-shortcut");
-			a && a.addEventListener("click", () => this.handleEditShortcut(t.code));
-			let o = r.querySelector(".btn-del-shortcut");
-			o && o.addEventListener("click", () => this.handleRemoveShortcut(t.code)), e.appendChild(r);
+			let s = r.querySelector(".btn-edit-shortcut");
+			s && s.addEventListener("click", () => this.handleEditShortcut(t.code || a[0]));
+			let c = r.querySelector(".btn-del-shortcut");
+			c && c.addEventListener("click", () => this.handleRemoveShortcut(t.code || a[0])), e.appendChild(r);
 		});
 	}
 	handleSwitchActivePreset(e) {
@@ -6754,35 +6808,66 @@ var Ke = b.map((e) => ({
 		this._editingDocIdx = t, this.openAddDocumentModal(e, !1);
 	}
 	handleEditShortcut(e) {
-		let t = this.shortcuts21.find((t) => t.code.toUpperCase() === e.toUpperCase());
-		if (!t) return;
-		let n = (this.state.customShortcuts || []).find((t) => t.code.toUpperCase() === e.toUpperCase());
-		this._editingShortcutCode = e.toUpperCase(), this.openAddDocumentModal({
-			code: t.code,
-			name: t.canonical || t.label,
-			keywords: n ? n.keywords : []
+		let t = (e || "").toUpperCase(), n = this.resolveShortcut(t) || this.shortcuts21.find((e) => e.code && e.code.toUpperCase() === t || Array.isArray(e.codes) && e.codes.some((e) => e && e.toUpperCase() === t));
+		if (!n) return;
+		let r = (this.state.customShortcuts || []).find((e) => e.code && e.code.toUpperCase() === t || Array.isArray(e.codes) && e.codes.some((e) => e && e.toUpperCase() === t));
+		this._editingShortcutCode = t;
+		let i = Array.isArray(n.codes) && n.codes.length > 0 ? n.codes : [n.code || t];
+		this.openAddDocumentModal({
+			code: n.code || t,
+			codes: i,
+			name: n.canonical || n.label,
+			keywords: r ? r.keywords : n.keywords || []
 		}, !0);
+	}
+	renderShortcutChips() {
+		let e = document.getElementById("containerShortcutChips");
+		if (e) {
+			if (e.innerHTML = "", !this._currentShortcutCodes || this._currentShortcutCodes.length === 0) {
+				let t = document.createElement("span");
+				t.className = "text-secondary text-[11px] italic select-none", t.textContent = "No short codes added. Type code above and click Add or press Enter.", e.appendChild(t);
+			} else this._currentShortcutCodes.forEach((t) => {
+				let n = document.createElement("span");
+				n.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-primary text-white font-mono-code font-bold text-[11px] shadow-xs select-none";
+				let r = document.createElement("span");
+				r.textContent = t, n.appendChild(r);
+				let i = document.createElement("button");
+				i.type = "button", i.className = "hover:bg-white/20 rounded p-0.5 inline-flex items-center justify-center cursor-pointer text-white/80 hover:text-white transition-colors", i.title = `Remove ${t}`, i.innerHTML = "<span class=\"material-symbols-outlined text-[13px]\">close</span>", i.addEventListener("click", (e) => {
+					e.preventDefault(), e.stopPropagation(), this._currentShortcutCodes = this._currentShortcutCodes.filter((e) => e !== t), this.renderShortcutChips();
+				}), n.appendChild(i), e.appendChild(n);
+			});
+		}
 	}
 	openAddDocumentModal(e = null, t = !1) {
 		let n = document.getElementById("modalAddDocument");
 		if (!n) return;
-		let r = document.getElementById("inputAddDocCode"), i = document.getElementById("inputAddDocName"), a = document.getElementById("inputAddDocAliases"), o = document.getElementById("addDocTargetPreview"), s = n.querySelector("h3");
-		this._isShortcutOnly = !!t, e ? (s && (s.textContent = t ? "Edit Shortcut" : "Edit Document in Preset"), r && (r.value = e.code || ""), i && (i.value = e.name || e.canonical || ""), a && (a.value = Array.isArray(e.keywords) ? e.keywords.join(", ") : e.keywords || "")) : (this._editingDocIdx = null, this._editingShortcutCode = null, s && (s.textContent = t ? "Add Shortcut" : "Add Document to Preset"), r && (r.value = ""), i && (i.value = ""), a && (a.value = ""));
-		let c = () => {
-			let e = k(i?.value.trim() || "DOCUMENT", this.state.studentName, null, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
-			o && (o.textContent = `${e}.pdf`);
+		let r = document.getElementById("containerAddDocCode"), i = document.getElementById("inputAddDocCode"), a = document.getElementById("inputAddDocName"), o = document.getElementById("inputAddDocAliases"), s = document.getElementById("addDocTargetPreview"), c = n.querySelector("h3"), l = n.querySelector("p");
+		this._isShortcutOnly = !!t, this._isShortcutOnly ? (r && r.classList.remove("hidden"), l && (l.textContent = "Assign short code(s) and keywords to a canonical document name"), this._currentShortcutCodes = e ? Array.isArray(e.codes) && e.codes.length > 0 ? [...e.codes] : e.code ? [e.code] : [] : [], this.renderShortcutChips()) : (r && r.classList.add("hidden"), l && (l.textContent = "Define document name and keywords for auto-matching in preset"), this._currentShortcutCodes = []), e ? (c && (c.textContent = t ? "Edit Shortcut" : "Edit Document in Preset"), i && (i.value = ""), a && (a.value = e.name || e.canonical || ""), o && (o.value = Array.isArray(e.keywords) ? e.keywords.join(", ") : e.keywords || "")) : (this._editingDocIdx = null, this._editingShortcutCode = null, c && (c.textContent = t ? "Add Shortcut" : "Add Document to Preset"), i && (i.value = ""), a && (a.value = ""), o && (o.value = ""));
+		let u = () => {
+			let e = k(a?.value.trim() || "DOCUMENT", this.getEffectiveStudentName(), null, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
+			s && (s.textContent = e);
 		};
-		i && (i.oninput = c, i.onkeydown = (e) => {
+		a && (a.oninput = u, a.onkeydown = (e) => {
 			e.key === "Enter" && (e.preventDefault(), this.handleSaveDocumentType());
-		}), r && (r.oninput = () => {
-			r.value = r.value.toUpperCase();
-		}, r.onkeydown = (e) => {
-			e.key === "Enter" && (e.preventDefault(), i?.focus());
-		}), c(), n.classList.remove("hidden"), r && r.focus();
+		});
+		let d = document.getElementById("btnAddShortcutChip");
+		d && (d.onclick = (e) => {
+			e.preventDefault();
+			let t = (i?.value || "").trim().toUpperCase();
+			t && (this._currentShortcutCodes ||= [], this._currentShortcutCodes.includes(t) || (this._currentShortcutCodes.push(t), this.renderShortcutChips()), i && (i.value = ""), i?.focus());
+		}), i && (i.oninput = () => {
+			i.value = i.value.toUpperCase();
+		}, i.onkeydown = (e) => {
+			if (e.key === "Enter") {
+				e.preventDefault();
+				let t = (i.value || "").trim().toUpperCase();
+				t ? (this._currentShortcutCodes ||= [], this._currentShortcutCodes.includes(t) || (this._currentShortcutCodes.push(t), this.renderShortcutChips()), i.value = "") : a?.focus();
+			}
+		}), u(), n.classList.remove("hidden"), this._isShortcutOnly && i ? i.focus() : a && a.focus();
 	}
 	closeAddDocumentModal() {
 		let e = document.getElementById("modalAddDocument");
-		e && e.classList.add("hidden"), this._editingDocIdx = null, this._editingShortcutCode = null, this._isShortcutOnly = !1;
+		e && e.classList.add("hidden"), this._editingDocIdx = null, this._editingShortcutCode = null, this._isShortcutOnly = !1, this._currentShortcutCodes = [];
 	}
 	handleSaveDocumentType() {
 		let e = document.getElementById("inputAddDocCode"), t = document.getElementById("inputAddDocName"), n = document.getElementById("inputAddDocAliases"), i = (t?.value || "").trim();
@@ -6790,17 +6875,40 @@ var Ke = b.map((e) => ({
 			r.show("Document Name Required", "Please enter a Full Document Name.", "warning");
 			return;
 		}
-		let a = i.toUpperCase(), o = (e?.value || "").trim().toUpperCase();
-		o ||= a.split(/\s+/).filter(Boolean).map((e) => e[0]).join("").slice(0, 4);
-		let s = (n?.value || "").trim(), c = [];
-		c = s ? s.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean) : [a.toLowerCase(), ...I(a)];
-		let l = this._isShortcutOnly;
-		if (!l) {
+		let a = i.toUpperCase(), o = (n?.value || "").trim(), s = [];
+		s = o ? o.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean) : [a.toLowerCase(), ...I(a)];
+		let c = this._isShortcutOnly;
+		if (c) {
+			let t = (e?.value || "").trim().toUpperCase();
+			if (!t || this._currentShortcutCodes && this._currentShortcutCodes.includes(t) || (this._currentShortcutCodes ||= [], this._currentShortcutCodes.push(t)), !this._currentShortcutCodes || this._currentShortcutCodes.length === 0) {
+				r.show("Short Code Required", "Please add at least one short code chip.", "warning");
+				return;
+			}
+			let n = [...this._currentShortcutCodes], i = n[0];
+			if (this._editingShortcutCode) {
+				let e = this._editingShortcutCode.toUpperCase();
+				this.shortcuts21 = this.shortcuts21.filter((t) => !(t.code && t.code.toUpperCase() === e || Array.isArray(t.codes) && t.codes.some((t) => t && t.toUpperCase() === e))), this.state.customShortcuts && (this.state.customShortcuts = this.state.customShortcuts.filter((t) => !(t.code && t.code.toUpperCase() === e || Array.isArray(t.codes) && t.codes.some((t) => t && t.toUpperCase() === e))));
+			}
+			let o = {
+				code: i,
+				codes: n,
+				label: a,
+				canonical: a,
+				keywords: s
+			};
+			this.shortcuts21.push(o), this.state.customShortcuts || (this.state.customShortcuts = []), this.state.customShortcuts.push(o), n.forEach((e) => {
+				le({
+					canonical: a,
+					code: e,
+					primaryKeywords: [a.toLowerCase(), e.toLowerCase()],
+					secondaryKeywords: s
+				});
+			});
+		} else {
 			this.state.documentPresets[this.state.activePreset] || (this.state.documentPresets[this.state.activePreset] = []);
 			let e = this.state.documentPresets[this.state.activePreset], t = {
 				name: a,
-				code: o,
-				keywords: c
+				keywords: s
 			};
 			if (this._editingDocIdx !== null && this._editingDocIdx !== void 0 && e[this._editingDocIdx]) e[this._editingDocIdx] = t;
 			else {
@@ -6808,39 +6916,7 @@ var Ke = b.map((e) => ({
 				n === -1 ? e.push(t) : e[n] = t;
 			}
 		}
-		if (o) {
-			this._editingShortcutCode && this._editingShortcutCode !== o && (this.shortcuts21 = this.shortcuts21.filter((e) => e.code.toUpperCase() !== this._editingShortcutCode), this.state.customShortcuts = (this.state.customShortcuts || []).filter((e) => e.code.toUpperCase() !== this._editingShortcutCode));
-			let e = this.shortcuts21.findIndex((e) => e.code.toUpperCase() === o);
-			e === -1 ? this.shortcuts21.push({
-				code: o,
-				label: i,
-				canonical: a,
-				keywords: c
-			}) : this.shortcuts21[e] = {
-				code: o,
-				label: i,
-				canonical: a,
-				keywords: c
-			}, this.state.customShortcuts || (this.state.customShortcuts = []);
-			let t = this.state.customShortcuts.findIndex((e) => e.code.toUpperCase() === o);
-			t === -1 ? this.state.customShortcuts.push({
-				code: o,
-				label: i,
-				canonical: a,
-				keywords: c
-			}) : this.state.customShortcuts[t] = {
-				code: o,
-				label: i,
-				canonical: a,
-				keywords: c
-			}, le({
-				canonical: a,
-				code: o,
-				primaryKeywords: [a.toLowerCase(), o.toLowerCase()],
-				secondaryKeywords: c
-			});
-		}
-		this._editingDocIdx = null, this._editingShortcutCode = null, this._isShortcutOnly = !1, this.savePresetsAndSettings(), this.closeAddDocumentModal(), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal(l ? "shortcuts" : "presets"), r.show("Saved", `${a} saved successfully.`, "success");
+		this._editingDocIdx = null, this._editingShortcutCode = null, this._isShortcutOnly = !1, this._currentShortcutCodes = [], this.closeAddDocumentModal(), this.savePresetsAndSettings(), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal(c ? "shortcuts" : "presets"), r.show("Saved", `${a} saved successfully.`, "success");
 	}
 	_initCrossCheckEvents() {
 		let e = document.getElementById("modalCrossCheck");
@@ -7412,7 +7488,7 @@ var Ke = b.map((e) => ({
 };
 function Xe() {
 	let e = new Ye();
-	return e.init(), e;
+	return e.init(), typeof window < "u" && (window.docmitraRenamer = e), e;
 }
 // src/services/export-import-service.js
 function Ze(e) {
