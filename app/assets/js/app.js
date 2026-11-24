@@ -2685,7 +2685,7 @@ function j(e, t, n, r = "") {
 	let i = /* @__PURE__ */ new Map();
 	if (n) for (let e of n) e && i.set(e.toLowerCase(), e);
 	if (!i.has(e.toLowerCase()) || e.toLowerCase() === (t || "").toLowerCase()) return e;
-	let a = T(e), o = E(e), s = o, c = 2, l = "", u = (r || "").trim();
+	let a = T(e), o = E(e), s = o, c = 1, l = "", u = (r || "").trim();
 	if (u) {
 		let e = u.toLowerCase(), t = o.toLowerCase();
 		if (t.endsWith(e)) {
@@ -4796,18 +4796,20 @@ function Te(e) {
 	} : e)]));
 }
 // src/services/storage-service.js
-var Ee = "v3_exact_single", V = we(), H = (e, t) => {
+var Ee = "v3_exact_single", V = we(), De = {}, H = (e, t) => {
 	try {
-		let n = localStorage.getItem(e);
-		return n ? JSON.parse(n) : t;
-	} catch {
-		return t;
-	}
+		if (typeof localStorage < "u" && localStorage.getItem) {
+			let t = localStorage.getItem(e);
+			if (t) return JSON.parse(t);
+		}
+	} catch {}
+	return De[e] === void 0 ? t : De[e];
 }, U = (e, t) => {
 	try {
-		localStorage.setItem(e, JSON.stringify(t));
+		typeof localStorage < "u" && localStorage.setItem && localStorage.setItem(e, JSON.stringify(t));
 	} catch {}
-}, De = (e) => {
+	De[e] = t;
+}, Oe = (e) => {
 	let t = {};
 	Object.entries(e || {}).forEach(([e, n]) => {
 		let r = /^12\s*LC$/i.test(e) || e === "12TH LEAVING CERTIFICATE" ? "12TH LC" : e;
@@ -4817,7 +4819,7 @@ var Ee = "v3_exact_single", V = we(), H = (e, t) => {
 	return Object.entries(t).forEach(([e, r]) => {
 		e !== "12TH MARKSHEET AND PASSING" && (n[e] = r, e === "12TH PASSING CERTIFICATE" && t["12TH MARKSHEET AND PASSING"] && (n["12TH MARKSHEET AND PASSING"] = t["12TH MARKSHEET AND PASSING"]));
 	}), n;
-}, Oe = (e) => {
+}, ke = (e) => {
 	let t = e.name === "12TH LEAVING CERTIFICATE" ? "12TH LC" : e.name;
 	return {
 		...e,
@@ -4825,28 +4827,28 @@ var Ee = "v3_exact_single", V = we(), H = (e, t) => {
 		keywords: [...new Set(e.keywords || [])],
 		short: e.short || t.slice(0, 18)
 	};
-}, ke = (e) => {
+}, Ae = (e) => {
 	let t = e.filter((e) => e.name === "12TH MARKSHEET AND PASSING");
 	if (!t.length) return e;
 	let n = e.filter((e) => e.name !== "12TH MARKSHEET AND PASSING"), r = n.findIndex((e) => e.name === "12TH PASSING CERTIFICATE");
 	return n.splice(r < 0 ? n.length : r + 1, 0, ...t), n;
-}, Ae = (e) => {
+}, je = (e) => {
 	let t = Te(z), n = e || {}, r = {};
 	return Object.keys(t).forEach((e) => {
-		let i = Array.isArray(n[e]) ? n[e].map(Oe) : [], a = new Map(i.map((e) => [e.name.toUpperCase(), e]));
+		let i = Array.isArray(n[e]) ? n[e].map(ke) : [], a = new Map(i.map((e) => [e.name.toUpperCase(), e]));
 		t[e].forEach((e) => {
-			let t = Oe(e);
+			let t = ke(e);
 			a.has(t.name.toUpperCase()) || i.push(t);
-		}), r[e] = ke(i);
+		}), r[e] = Ae(i);
 	}), Object.entries(n).forEach(([e, t]) => {
-		r[e] || (r[e] = ke(t.map(Oe)));
+		r[e] || (r[e] = Ae(t.map(ke)));
 	}), r;
 };
-function je() {
+function Me() {
 	let e = localStorage.getItem("dictVersion"), t, n;
-	e === Ee ? (t = De(H("renameSettings", V)), n = H("renameProfiles", { Default: V })) : (t = V, n = { Default: V }, U("renameSettings", t), U("renameProfiles", n), localStorage.setItem("dictVersion", Ee));
+	e === Ee ? (t = Oe(H("renameSettings", V)), n = H("renameProfiles", { Default: V })) : (t = V, n = { Default: V }, U("renameSettings", t), U("renameProfiles", n), localStorage.setItem("dictVersion", Ee));
 	let r = localStorage.getItem("checklistVersion"), i;
-	r === "2026.11.passing_canonical_v2" ? i = Ae(H("checklists", null)) : (i = Te(z), U("checklists", i), localStorage.setItem("checklistVersion", xe));
+	r === "2026.11.passing_canonical_v2" ? i = je(H("checklists", null)) : (i = Te(z), U("checklists", i), localStorage.setItem("checklistVersion", xe));
 	let a = {
 		...ye,
 		...H("spellingCorrections", {}) || {}
@@ -4861,7 +4863,7 @@ function je() {
 		active: Object.keys(n)[0] || "Default"
 	};
 }
-function Me() {
+function Ne() {
 	return new Promise((e, t) => {
 		if (!("indexedDB" in window)) return t(/* @__PURE__ */ Error("IndexedDB unavailable"));
 		let n = indexedDB.open(B.name, B.version);
@@ -4870,8 +4872,8 @@ function Me() {
 		}, n.onsuccess = () => e(n.result), n.onerror = () => t(n.error || /* @__PURE__ */ Error("IndexedDB open failed"));
 	});
 }
-function Ne(e) {
-	return Me().then((t) => new Promise((n, r) => {
+function Pe(e) {
+	return Ne().then((t) => new Promise((n, r) => {
 		let i = t.transaction(B.store, "readwrite");
 		i.objectStore(B.store).put(e, B.key), i.oncomplete = () => n(!0), i.onerror = () => r(i.error);
 	}));
@@ -4886,9 +4888,9 @@ function W(e) {
 		style: e.style,
 		savedAt: (/* @__PURE__ */ new Date()).toISOString()
 	};
-	U("renameSettings", t.groups), U("checklists", t.checklists), U("spellingCorrections", t.spelling), U("renameProfiles", t.profiles), U("linkedRules", t.linkedRules), localStorage.setItem("nameStyle", t.style), Ne(t).catch(() => {});
+	U("renameSettings", t.groups), U("checklists", t.checklists), U("spellingCorrections", t.spelling), U("renameProfiles", t.profiles), U("linkedRules", t.linkedRules), localStorage.setItem("nameStyle", t.style), Pe(t).catch(() => {});
 }
-async function Pe() {
+async function Fe() {
 	try {
 		let e = await (await fetch("http://localhost:3000/api/load-document-presets")).json();
 		if (e && e.success && e.data && e.data.forms) return e.data;
@@ -4897,7 +4899,7 @@ async function Pe() {
 	}
 	return H("documentPresets", { forms: z });
 }
-async function Fe(e) {
+async function Ie(e) {
 	U("documentPresets", e);
 	try {
 		await fetch("http://localhost:3000/api/save-document-presets", {
@@ -4910,21 +4912,21 @@ async function Fe(e) {
 	}
 }
 // src/services/followup-service.js
-var Ie = "studentDocumentFollowUps", Le = [];
+var Le = "studentDocumentFollowUps", Re = [];
 function G() {
 	try {
 		if (typeof localStorage < "u") {
-			let e = localStorage.getItem(Ie);
+			let e = localStorage.getItem(Le);
 			return e ? JSON.parse(e) : [];
 		}
-		return Le;
+		return Re;
 	} catch {
-		return Le;
+		return Re;
 	}
 }
 function K(e) {
 	try {
-		Le = e, typeof localStorage < "u" && localStorage.setItem(Ie, JSON.stringify(e));
+		Re = e, typeof localStorage < "u" && localStorage.setItem(Le, JSON.stringify(e));
 	} catch (e) {
 		console.error("Failed to save follow-ups:", e);
 	}
@@ -4937,7 +4939,7 @@ function q({ folderName: e, studentName: t, documentName: n, promisedDate: r, no
 		folderName: o,
 		studentName: c,
 		documentName: s,
-		promisedDate: r || Ve(),
+		promisedDate: r || He(),
 		note: i || "",
 		status: "pending",
 		createdAt: u,
@@ -4945,18 +4947,18 @@ function q({ folderName: e, studentName: t, documentName: n, promisedDate: r, no
 	};
 	return a.push(d), K(a), d;
 }
-function Re(e, t) {
+function ze(e, t) {
 	let n = G(), r = (e || "").trim().toLowerCase(), i = (t || "").trim().toUpperCase(), a = !1;
 	return n.forEach((e) => {
 		e.folderName.trim().toLowerCase() === r && e.documentName.trim().toUpperCase() === i && e.status === "pending" && (e.status = "resolved", e.resolvedAt = Date.now(), a = !0);
 	}), a && K(n), a;
 }
-function ze(e, t) {
+function Be(e, t) {
 	let n = G(), r = (e || "").trim().toLowerCase(), i = (t || "").trim().toUpperCase();
 	return n.find((e) => e.folderName.trim().toLowerCase() === r && e.documentName.trim().toUpperCase() === i && e.status === "pending") || null;
 }
-function Be(e, t = Y()) {
-	let n = Ue(e, t);
+function Ve(e, t = Y()) {
+	let n = We(e, t);
 	return n < 0 ? "overdue" : n === 0 ? "today" : "upcoming";
 }
 function J(e) {
@@ -4972,19 +4974,19 @@ function Y() {
 	let e = /* @__PURE__ */ new Date();
 	return `${e.getFullYear()}-${String(e.getMonth() + 1).padStart(2, "0")}-${String(e.getDate()).padStart(2, "0")}`;
 }
-function Ve(e = 1) {
+function He(e = 1) {
 	let t = /* @__PURE__ */ new Date();
 	return t.setDate(t.getDate() + e), `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
 }
-function He() {
+function Ue() {
 	let e = /* @__PURE__ */ new Date(), t = (1 - e.getDay() + 7) % 7 || 7;
 	return e.setDate(e.getDate() + t), `${e.getFullYear()}-${String(e.getMonth() + 1).padStart(2, "0")}-${String(e.getDate()).padStart(2, "0")}`;
 }
-function Ue(e, t) {
+function We(e, t) {
 	return e === t ? 0 : e < t ? -1 : 1;
 }
 // tools/rename_tool/rename_tool_ui.js
-function We() {
+function Ge() {
 	if (typeof window < "u") {
 		if (window.__TAURI__?.core?.invoke) return window.__TAURI__.core.invoke;
 		if (window.__TAURI_INTERNALS__?.invoke) return window.__TAURI_INTERNALS__.invoke;
@@ -5023,7 +5025,7 @@ function Z(e) {
 	let t = e.toLowerCase().trim();
 	return !!(t === "thumbs.db" || t === "ehthumbs.db" || t === "desktop.ini" || t === ".ds_store" || t.startsWith(".") || t.startsWith("~$") || t.endsWith(".tmp"));
 }
-function Ge(e) {
+function Ke(e) {
 	let t = (e || "").toUpperCase().trim();
 	return [
 		"ADR",
@@ -5091,15 +5093,15 @@ function Ge(e) {
 		"HST"
 	].includes(t) ? "bg-slate-700 text-white font-extrabold" : "bg-primary text-on-primary font-extrabold";
 }
-var Ke = b.map((e) => ({
+var qe = b.map((e) => ({
 	code: e.primaryShortcut,
 	codes: [e.primaryShortcut],
 	label: e.outputName,
 	canonical: e.outputName,
 	keywords: Array.isArray(e.alternateKeywords) ? [...e.alternateKeywords] : []
-})), qe = new Map(Ke.map((e) => [e.code, e])), Je = {
+})), Je = new Map(qe.map((e) => [e.code, e])), Ye = {
 	"MAHA DBT": (/* @__PURE__ */ "PIC.SIG.ADR.10M.10P.10MP.12M.12P.12MP.12LC.PYM.CST.VAL.NCL.INC.DOM.NAT.RAT.BNK.CAP.BON.FEE.ATT.HST.GAP.SDC.PDC.DTH".split(".")).map((e) => {
-		let t = qe.get(e);
+		let t = Je.get(e);
 		return {
 			name: t.canonical,
 			code: t.code,
@@ -5130,7 +5132,7 @@ var Ke = b.map((e) => ({
 		"PDC",
 		"DIS"
 	].map((e) => {
-		let t = qe.get(e);
+		let t = Je.get(e);
 		return {
 			name: t.canonical,
 			code: t.code,
@@ -5138,7 +5140,7 @@ var Ke = b.map((e) => ({
 		};
 	}),
 	"CET CELL": (/* @__PURE__ */ "PIC.SIG.ADR.APR.CETAF.CETSC.CAP.SRF.10M.10P.10MP.12M.12P.12MP.12LC.DOM.NAT.CST.VAL.NCL.EWS.INC.GAP.MIG.MED.BRT".split(".")).map((e) => {
-		let t = qe.get(e);
+		let t = Je.get(e);
 		return {
 			name: t.canonical,
 			code: t.code,
@@ -5146,14 +5148,14 @@ var Ke = b.map((e) => ({
 		};
 	}),
 	"EDUCATIONAL DOCUMENTS": (/* @__PURE__ */ "PIC.SIG.ADR.10M.10P.10MP.12M.12P.12MP.12LC.PYM.CST.VAL.NCL.INC.DOM.NAT.RAT.BNK.CAP.BON.FEE.ATT.HST.GAP.SDC.PDC.DTH.NHC.DIS.APR.CETAF.CETSC.SRF.EWS.MIG.MED.BRT.PAN.VOT.DL.11M.1YM.2YM.3YM.4YM.DPC.DEG.REG.INT.CHR.GAZ.MIN".split(".")).map((e) => {
-		let t = qe.get(e);
+		let t = Je.get(e);
 		return {
 			name: t.canonical,
 			code: t.code,
 			keywords: [...t.keywords]
 		};
 	})
-}, Ye = class {
+}, Xe = class {
 	constructor() {
 		this.state = {
 			folder: null,
@@ -5180,10 +5182,10 @@ var Ke = b.map((e) => ({
 			activePdfUrl: null,
 			isSmartScanning: !1,
 			isMissingDocsCollapsed: !0
-		}, this._scanAbortController = null, this.shortcuts21 = JSON.parse(JSON.stringify(Ke)), this._presetDocsSearchQuery = "", this._shortcutsSearchQuery = "";
+		}, this._scanAbortController = null, this.shortcuts21 = JSON.parse(JSON.stringify(qe)), this._presetDocsSearchQuery = "", this._shortcutsSearchQuery = "";
 	}
 	init() {
-		this.state.settings = je(), this.loadPresetsAndSettings();
+		this.state.settings = Me(), this.loadPresetsAndSettings();
 		let e = localStorage.getItem("docmitra_casing_style");
 		this.state.style = e && [
 			"upper",
@@ -5191,7 +5193,7 @@ var Ke = b.map((e) => ({
 			"lower"
 		].includes(e.toLowerCase()) ? e.toLowerCase() : "upper", this._bindDOM(), this._bindKeyboardShortcuts(), this._startBackgroundWatcher(), window.addEventListener("storage", (e) => {
 			if (e.key === "docmitra_settings" || e.key === "docmitra_casing_style" || e.key === "docmitra_active_preset") {
-				this.state.settings = je();
+				this.state.settings = Me();
 				let e = localStorage.getItem("docmitra_casing_style");
 				this.state.style = e && [
 					"upper",
@@ -5253,7 +5255,13 @@ var Ke = b.map((e) => ({
 	}
 	_bindDOM() {
 		let e = document.getElementById("btnSelectFolder");
-		e && e.addEventListener("click", () => this.handleSelectFolder());
+		e && e.addEventListener("click", () => this.handleSelectFolder()), document.addEventListener("focusin", (e) => {
+			e.target && e.target.tagName === "INPUT" && ![
+				"checkbox",
+				"radio",
+				"range"
+			].includes(e.target.type) && (e.target.setAttribute("autocomplete", "new-password"), e.target.setAttribute("autocorrect", "off"), e.target.setAttribute("autocapitalize", "off"), e.target.setAttribute("spellcheck", "false"), e.target.setAttribute("data-form-type", "other"), e.target.setAttribute("data-lpignore", "true"));
+		}, !0);
 		let t = document.getElementById("chkIncludeFolderName");
 		if (t) {
 			let e = localStorage.getItem("docmitra_include_folder_name");
@@ -5266,7 +5274,7 @@ var Ke = b.map((e) => ({
 		let n = document.getElementById("btnEditFolderName"), i = document.getElementById("btnApplyFolderName"), a = document.getElementById("displayFolderName"), o = document.getElementById("inputEditFolderName");
 		if (n && o && a) {
 			n.addEventListener("click", () => {
-				o.value = this.state.studentName || this.state.folder?.name || "", a.classList.add("hidden"), n.classList.add("hidden"), o.classList.remove("hidden"), i && i.classList.remove("hidden"), o.focus(), o.select();
+				o.value = this.state.studentName || this.state.folder?.name || "", o.setAttribute("autocomplete", "new-password"), o.setAttribute("autocorrect", "off"), o.setAttribute("autocapitalize", "off"), o.setAttribute("spellcheck", "false"), o.setAttribute("data-form-type", "other"), o.setAttribute("data-lpignore", "true"), a.classList.add("hidden"), n.classList.add("hidden"), o.classList.remove("hidden"), i && i.classList.remove("hidden"), o.focus(), o.select();
 			});
 			let e = async () => {
 				let e = o.value.trim(), t = this.state.studentName || this.state.folder?.name || "", s = this.state.folder && (this.state.folder.nativePath || this.state.folder.path) || "";
@@ -5949,7 +5957,7 @@ var Ke = b.map((e) => ({
 			let o = document.createElement("span");
 			o.className = r ? "w-4 h-4 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-mono-code font-bold text-[10px] flex items-center justify-center shrink-0 border border-emerald-300 dark:border-emerald-700" : n ? "w-4 h-4 rounded bg-primary text-on-primary font-mono-code font-bold text-[10px] flex items-center justify-center shrink-0 shadow-2xs" : "w-4 h-4 rounded bg-surface-container text-secondary font-mono-code font-bold text-[10px] flex items-center justify-center shrink-0", o.textContent = r ? "✓" : String(t + 1), a.appendChild(o);
 			let s = document.createElement("span");
-			s.className = n ? "font-mono-code text-[11px] text-primary font-bold truncate flex-1 min-w-0" : r ? "font-mono-code text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold truncate flex-1 min-w-0" : "font-mono-code text-[11px] text-on-surface font-medium truncate flex-1 min-w-0", s.textContent = r ? E(e.name) : e.hasUserEdited && e.targetName ? E(e.targetName) : O(E(e.name), this.state.style), a.appendChild(s), i.appendChild(a), this.getShortCodeForDoc(e.smartDocType || e.docType);
+			s.className = n ? "font-mono-code text-[11px] text-primary font-bold truncate flex-1 min-w-0" : r ? "font-mono-code text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold truncate flex-1 min-w-0" : "font-mono-code text-[11px] text-on-surface font-medium truncate flex-1 min-w-0", s.textContent = E(r ? e.name : e.hasUserEdited && e.targetName ? e.targetName : O(E(e.name), this.state.style)), a.appendChild(s), i.appendChild(a), this.getShortCodeForDoc(e.smartDocType || e.docType);
 			let c = e.smartConfidence === void 0 ? e.isMatched ? 90 : 0 : e.smartConfidence;
 			if (e.isScanning) {
 				let e = document.createElement("span");
@@ -6042,7 +6050,7 @@ var Ke = b.map((e) => ({
 					c === "lower" ? (i || "").toLowerCase() : c === "title" ? i && i.length <= 4 && /\d/.test(i) ? i.toUpperCase() : O(i || "", "title") : (i || "").toUpperCase();
 					let u = O(n, c), d = document.createElement("span");
 					d.className = "font-mono-code text-[11px] font-bold text-on-surface truncate", d.textContent = u, o.appendChild(d);
-					let f = this.state.studentName || this.state.folder?.name || "Student", p = ze(f, n);
+					let f = this.state.studentName || this.state.folder?.name || "Student", p = Be(f, n);
 					if (p) {
 						let e = document.createElement("span");
 						e.className = "px-1.5 py-0.2 rounded font-mono-code text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold shrink-0 flex items-center gap-0.5", e.textContent = `📅 ${J(p.promisedDate)}`, o.appendChild(e);
@@ -6069,22 +6077,22 @@ var Ke = b.map((e) => ({
 						}), y.classList.add("hidden"), r.show("Follow-up Scheduled", `${n} promise date set for Today`, "success"), this.renderQueue();
 					}, y.appendChild(b);
 					let x = document.createElement("button");
-					x.type = "button", x.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", x.textContent = `Tomorrow (${J(Ve(1))})`, x.onclick = (e) => {
+					x.type = "button", x.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", x.textContent = `Tomorrow (${J(He(1))})`, x.onclick = (e) => {
 						e.stopPropagation(), q({
 							folderName: f,
 							studentName: f,
 							documentName: n,
-							promisedDate: Ve(1),
+							promisedDate: He(1),
 							note: `Missing ${n} during intake`
 						}), y.classList.add("hidden"), r.show("Follow-up Scheduled", `${n} promise date set for Tomorrow`, "success"), this.renderQueue();
 					}, y.appendChild(x);
 					let S = document.createElement("button");
-					S.type = "button", S.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", S.textContent = `Monday (${J(He())})`, S.onclick = (e) => {
+					S.type = "button", S.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", S.textContent = `Monday (${J(Ue())})`, S.onclick = (e) => {
 						e.stopPropagation(), q({
 							folderName: f,
 							studentName: f,
 							documentName: n,
-							promisedDate: He(),
+							promisedDate: Ue(),
 							note: `Missing ${n} during intake`
 						}), y.classList.add("hidden"), r.show("Follow-up Scheduled", `${n} promise date set for Monday`, "success"), this.renderQueue();
 					}, y.appendChild(S);
@@ -6232,7 +6240,7 @@ var Ke = b.map((e) => ({
 			let r = document.createElement("div");
 			r.className = "flex items-center gap-2 min-w-0 flex-1";
 			let i = this.state.style || "upper", a = i === "lower" ? e.code.toLowerCase() : i === "title" ? e.code.length <= 4 && /\d/.test(e.code) ? e.code.toUpperCase() : O(e.code, "title") : e.code.toUpperCase(), o = O(e.label || e.canonical, i), s = document.createElement("span");
-			s.className = `px-2 py-0.5 rounded font-mono-code font-bold text-[11px] shrink-0 ${Ge(e.code)}`, s.textContent = a, r.appendChild(s);
+			s.className = `px-2 py-0.5 rounded font-mono-code font-bold text-[11px] shrink-0 ${Ke(e.code)}`, s.textContent = a, r.appendChild(s);
 			let c = document.createElement("span");
 			c.className = "text-[12px] font-semibold text-on-surface truncate flex-1", c.textContent = o, r.appendChild(c), n.appendChild(r);
 			let l = document.createElement("span");
@@ -6555,10 +6563,10 @@ var Ke = b.map((e) => ({
 		} catch (e) {
 			console.warn("[DocMitra Renamer] Failed to parse local presets:", e);
 		}
-		if (this.state.documentPresets && typeof this.state.documentPresets == "object" && (this.state.documentPresets.SWAYAM && !this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] && (this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] = this.state.documentPresets.SWAYAM, delete this.state.documentPresets.SWAYAM), this.state.documentPresets.EDUCATIONAL && !this.state.documentPresets["EDUCATIONAL DOCUMENTS"] && (this.state.documentPresets["EDUCATIONAL DOCUMENTS"] = this.state.documentPresets.EDUCATIONAL, delete this.state.documentPresets.EDUCATIONAL)), !this.state.documentPresets || Object.keys(this.state.documentPresets).length === 0) this.state.documentPresets = JSON.parse(JSON.stringify(Je)), this.savePresetsAndSettings();
+		if (this.state.documentPresets && typeof this.state.documentPresets == "object" && (this.state.documentPresets.SWAYAM && !this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] && (this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] = this.state.documentPresets.SWAYAM, delete this.state.documentPresets.SWAYAM), this.state.documentPresets.EDUCATIONAL && !this.state.documentPresets["EDUCATIONAL DOCUMENTS"] && (this.state.documentPresets["EDUCATIONAL DOCUMENTS"] = this.state.documentPresets.EDUCATIONAL, delete this.state.documentPresets.EDUCATIONAL)), !this.state.documentPresets || Object.keys(this.state.documentPresets).length === 0) this.state.documentPresets = JSON.parse(JSON.stringify(Ye)), this.savePresetsAndSettings();
 		else {
 			let e = !1;
-			for (let [t, n] of Object.entries(Je)) if (!this.state.documentPresets[t]) this.state.documentPresets[t] = JSON.parse(JSON.stringify(n)), e = !0;
+			for (let [t, n] of Object.entries(Ye)) if (!this.state.documentPresets[t]) this.state.documentPresets[t] = JSON.parse(JSON.stringify(n)), e = !0;
 			else {
 				let r = this.state.documentPresets[t];
 				if (Array.isArray(r)) {
@@ -6582,7 +6590,7 @@ var Ke = b.map((e) => ({
 	}
 	savePresetsAndSettings() {
 		try {
-			localStorage.setItem("docmitra_rename_presets", JSON.stringify(this.state.documentPresets)), localStorage.setItem("docmitra_active_preset", this.state.activePreset), this.state.settings && (this.state.settings.activeChecklist = this.state.activePreset, this.state.settings.checklists = this.state.documentPresets, W(this.state.settings)), this.state.customShortcuts && localStorage.setItem("docmitra_custom_shortcuts", JSON.stringify(this.state.customShortcuts)), Fe({ forms: this.state.documentPresets }).catch(() => {});
+			localStorage.setItem("docmitra_rename_presets", JSON.stringify(this.state.documentPresets)), localStorage.setItem("docmitra_active_preset", this.state.activePreset), this.state.settings && (this.state.settings.activeChecklist = this.state.activePreset, this.state.settings.checklists = this.state.documentPresets, W(this.state.settings)), this.state.customShortcuts && localStorage.setItem("docmitra_custom_shortcuts", JSON.stringify(this.state.customShortcuts)), Ie({ forms: this.state.documentPresets }).catch(() => {});
 		} catch (e) {
 			console.warn("[DocMitra Renamer] Failed to persist presets and settings:", e);
 		}
@@ -6734,7 +6742,7 @@ var Ke = b.map((e) => ({
 		} else i.forEach((t, n) => {
 			let r = document.createElement("tr");
 			r.className = "hover:bg-surface-container-low transition-colors";
-			let i = Array.isArray(t.keywords) ? t.keywords.join(", ") : t.keywords || "", a = Array.isArray(t.codes) && t.codes.length > 0 ? t.codes : t.code ? [t.code] : [], o = a.map((e) => `<span class="px-1.5 py-0.5 rounded font-mono-code font-bold text-[10px] ${Ge(e)}">${e}</span>`).join(" ");
+			let i = Array.isArray(t.keywords) ? t.keywords.join(", ") : t.keywords || "", a = Array.isArray(t.codes) && t.codes.length > 0 ? t.codes : t.code ? [t.code] : [], o = a.map((e) => `<span class="px-1.5 py-0.5 rounded font-mono-code font-bold text-[10px] ${Ke(e)}">${e}</span>`).join(" ");
 			r.innerHTML = `
         <td class="py-2.5 px-3 text-center text-secondary font-mono-code" style="width: 48px;">${n + 1}</td>
         <td class="py-2.5 px-3 whitespace-normal" style="width: 14%;"><div class="flex flex-wrap gap-1">${o}</div></td>
@@ -6792,7 +6800,7 @@ var Ke = b.map((e) => ({
 		this.state.activePreset = t[0] || "MAHA DBT", this.savePresetsAndSettings(), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal("presets"), r.show("Preset Deleted", `Preset "${e}" deleted. Switched to ${this.state.activePreset}.`, "info");
 	}
 	handleResetPresetsDefault() {
-		window.confirm("Reset document presets to factory defaults? All custom presets will be removed and default 4 presets restored.") && (this.state.documentPresets = JSON.parse(JSON.stringify(Je)), this.state.activePreset = "MAHA DBT", this.state.customShortcuts = [], this.shortcuts21 = JSON.parse(JSON.stringify(Ke)), this.savePresetsAndSettings(), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal("presets"), r.show("Reset Complete", "Document presets restored to factory defaults.", "success"));
+		window.confirm("Reset document presets to factory defaults? All custom presets will be removed and default 4 presets restored.") && (this.state.documentPresets = JSON.parse(JSON.stringify(Ye)), this.state.activePreset = "MAHA DBT", this.state.customShortcuts = [], this.shortcuts21 = JSON.parse(JSON.stringify(qe)), this.savePresetsAndSettings(), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal("presets"), r.show("Reset Complete", "Document presets restored to factory defaults.", "success"));
 	}
 	handleRemoveDocFromPreset(e) {
 		let t = this.state.documentPresets[this.state.activePreset];
@@ -6989,11 +6997,7 @@ var Ke = b.map((e) => ({
 		let i = document.getElementById("btnConfirmBatchRename");
 		i && i.addEventListener("click", () => this.handleConfirmCrossCheckRename()), e.querySelectorAll("[data-pattern-order]").forEach((t) => {
 			t.addEventListener("click", () => {
-				this._crossCheckState && (this._crossCheckState.order = t.dataset.patternOrder, e.querySelectorAll("[data-pattern-order]").forEach((e) => e.classList.toggle("active", e === t)), this._renderCrossCheckRows());
-			});
-		}), e.querySelectorAll("[data-pattern-sep]").forEach((t) => {
-			t.addEventListener("click", () => {
-				this._crossCheckState && (this._crossCheckState.separator = t.dataset.patternSep, e.querySelectorAll("[data-pattern-sep]").forEach((e) => e.classList.toggle("active", e === t)), this._renderCrossCheckRows());
+				this._crossCheckState && (this._crossCheckState.order = t.dataset.patternOrder, e.querySelectorAll("[data-pattern-order]").forEach((e) => e.classList.toggle("active", e === t)), this._recalculateAndRenderCrossCheck(!0));
 			});
 		});
 		let a = document.getElementById("btnToggleCrossCheckStudent"), o = document.getElementById("crossCheckStudentToggleLabel");
@@ -7001,10 +7005,10 @@ var Ke = b.map((e) => ({
 			if (!this._crossCheckState) return;
 			this._crossCheckState.includeStudent = !this._crossCheckState.includeStudent;
 			let e = this._crossCheckState.includeStudent;
-			o && (o.textContent = e ? "ON" : "OFF"), a.classList.toggle("bg-primary/10", e), a.classList.toggle("text-primary", e), a.classList.toggle("border-primary/30", e), a.classList.toggle("bg-surface-container", !e), a.classList.toggle("text-secondary", !e), a.classList.toggle("border-outline-variant/40", !e), a.classList.toggle("opacity-60", !e), this._renderCrossCheckRows();
+			o && (o.textContent = e ? "ON" : "OFF"), a.className = `inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold border transition-all cursor-pointer ${e ? "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100" : "bg-white text-slate-500 border-slate-200 hover:bg-slate-100"}`, this._recalculateAndRenderCrossCheck(!0);
 		}), e.querySelectorAll("[data-pattern-case]").forEach((t) => {
 			t.addEventListener("click", () => {
-				this._crossCheckState && (this._crossCheckState.casing = t.dataset.patternCase, e.querySelectorAll("[data-pattern-case]").forEach((e) => e.classList.toggle("active", e === t)), this._renderCrossCheckRows());
+				this._crossCheckState && (this._crossCheckState.casing = t.dataset.patternCase, e.querySelectorAll("[data-pattern-case]").forEach((e) => e.classList.toggle("active", e === t)), this._recalculateAndRenderCrossCheck(!0));
 			});
 		}), e.querySelectorAll("[data-pattern-filter]").forEach((t) => {
 			t.addEventListener("click", () => {
@@ -7013,7 +7017,8 @@ var Ke = b.map((e) => ({
 		});
 		let s = document.getElementById("btnTogglePowerUtilities"), c = document.getElementById("stripPowerUtilities"), l = document.getElementById("powerUtilitiesArrow");
 		s && c && s.addEventListener("click", () => {
-			c.classList.contains("hidden") ? (c.classList.remove("hidden"), l && (l.style.transform = "rotate(180deg)")) : (c.classList.add("hidden"), l && (l.style.transform = "rotate(0deg)"));
+			let e = c.classList.contains("hidden");
+			c.classList.toggle("hidden", !e), c.classList.toggle("flex", e), s.classList.toggle("bg-amber-100", e), s.classList.toggle("text-amber-800", e), s.classList.toggle("border-amber-300", e), s.classList.toggle("bg-white", !e), s.classList.toggle("text-slate-700", !e), s.classList.toggle("border-slate-200", !e), l && l.classList.toggle("rotate-180", e);
 		});
 		let u = document.getElementById("btnCrossCheckApplyReplace"), d = document.getElementById("inputCrossCheckFind"), f = document.getElementById("inputCrossCheckReplace");
 		u && d && f && u.addEventListener("click", () => {
@@ -7029,7 +7034,7 @@ var Ke = b.map((e) => ({
 					let a = new RegExp(e.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), o = i.replace(a, t);
 					this._crossCheckState.overrides.set(r.id, o), n++;
 				}
-			}), r.show("Find & Replace", `Replaced in ${n} document(s).`, "success"), this._renderCrossCheckRows();
+			}), r.show("Find & Replace", `Replaced in ${n} document(s).`, "success"), this._recalculateAndRenderCrossCheck(!0);
 		});
 		let p = document.getElementById("btnCrossCheckCleanJunk");
 		p && p.addEventListener("click", () => {
@@ -7037,7 +7042,7 @@ var Ke = b.map((e) => ({
 			this._getMatchedCrossCheckFiles().forEach((t) => {
 				let n = this._getCrossCheckTargetBase(t), r = _e(n);
 				r !== n && (this._crossCheckState.overrides.set(t.id, r), e++);
-			}), r.show("Junk Cleanup", `Cleaned scanner timestamps and prefixes in ${e} document(s).`, "success"), this._renderCrossCheckRows();
+			}), r.show("Junk Cleanup", `Cleaned scanner timestamps and prefixes in ${e} document(s).`, "success"), this._recalculateAndRenderCrossCheck(!0);
 		});
 		let m = document.getElementById("btnCrossCheckPortalSafe");
 		m && m.addEventListener("click", () => {
@@ -7045,19 +7050,17 @@ var Ke = b.map((e) => ({
 			this._getMatchedCrossCheckFiles().forEach((t) => {
 				let n = this._getCrossCheckTargetBase(t), r = ve(n);
 				r !== n && (this._crossCheckState.overrides.set(t.id, r), e++);
-			}), r.show("Portal-Safe Cleaned", `Formatted ${e} document(s) for admission portals.`, "success"), this._renderCrossCheckRows();
+			}), r.show("Portal-Safe Cleaned", `Formatted ${e} document(s) for admission portals.`, "success"), this._recalculateAndRenderCrossCheck(!0);
 		});
 		let h = document.getElementById("btnCrossCheckResetPatterns");
 		h && h.addEventListener("click", () => {
-			this._crossCheckState.overrides.clear(), this._crossCheckState.order = "doc_student", this._crossCheckState.separator = " ", this._crossCheckState.includeStudent = !0, this._crossCheckState.casing = this.state.style || "upper", this._crossCheckState.filter = "all", e.querySelectorAll("[data-pattern-order]").forEach((e) => e.classList.toggle("active", e.dataset.patternOrder === "doc_student")), e.querySelectorAll("[data-pattern-sep]").forEach((e) => e.classList.toggle("active", e.dataset.patternSep === " ")), e.querySelectorAll("[data-pattern-case]").forEach((e) => e.classList.toggle("active", e.dataset.patternCase === this._crossCheckState.casing)), e.querySelectorAll("[data-pattern-filter]").forEach((e) => e.classList.toggle("active", e.dataset.patternFilter === "all")), o && (o.textContent = "ON"), a && a.classList.remove("opacity-50"), r.show("Rules Reset", "Reset patterns to smart auto-match defaults.", "info"), this._renderCrossCheckRows();
+			this._crossCheckState.overrides.clear(), this._crossCheckState.order = "doc_student", this._crossCheckState.separator = " ", this._crossCheckState.includeStudent = !0, this._crossCheckState.casing = this.state.style || "upper", this._crossCheckState.filter = "all", e.querySelectorAll("[data-pattern-order]").forEach((e) => e.classList.toggle("active", e.dataset.patternOrder === "doc_student")), e.querySelectorAll("[data-pattern-case]").forEach((e) => e.classList.toggle("active", e.dataset.patternCase === this._crossCheckState.casing)), e.querySelectorAll("[data-pattern-filter]").forEach((e) => e.classList.toggle("active", e.dataset.patternFilter === "all")), o && (o.textContent = "ON"), a && (a.className = "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold border transition-all cursor-pointer bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"), r.show("Rules Reset", "Reset patterns to smart auto-match defaults.", "info"), this._recalculateAndRenderCrossCheck(!0);
 		});
 		let g = document.getElementById("chkCrossCheckSelectAll");
 		g && g.addEventListener("change", (t) => {
-			e.querySelectorAll(".crosscheck-row-cb").forEach((e) => {
-				e.checked = t.target.checked;
-				let n = e.closest("tr");
-				n && n.dataset.fileId && this._crossCheckState.userToggled.set(n.dataset.fileId, t.target.checked);
-			}), this._updateCrossCheckSelectionCount();
+			e.querySelectorAll("#crossCheckTableBody > div").forEach((e) => {
+				e.dataset.fileId && this._crossCheckState.userToggled.set(e.dataset.fileId, t.target.checked);
+			}), this._renderCrossCheckRows();
 		}), e.addEventListener("keydown", (t) => {
 			if (e.classList.contains("hidden")) return;
 			let n = t.target.tagName === "INPUT" && t.target.type === "text";
@@ -7080,16 +7083,22 @@ var Ke = b.map((e) => ({
 				return;
 			}
 			if (n) return;
-			let r = Array.from(e.querySelectorAll("#crossCheckTableBody tr"));
+			let r = Array.from(e.querySelectorAll("#crossCheckTableBody > div"));
 			if (r.length !== 0) {
-				if (t.key === "ArrowDown") t.preventDefault(), this._crossCheckState.focusedIndex = Math.min(this._crossCheckState.focusedIndex + 1, r.length - 1), this._highlightFocusedCrossCheckRow(r);
-				else if (t.key === "ArrowUp") t.preventDefault(), this._crossCheckState.focusedIndex = Math.max(this._crossCheckState.focusedIndex - 1, 0), this._highlightFocusedCrossCheckRow(r);
-				else if (t.key === " ") {
+				if (t.key === "ArrowDown") {
+					t.preventDefault(), this._crossCheckState.focusedIndex = Math.min(this._crossCheckState.focusedIndex + 1, r.length - 1), this._renderCrossCheckRows();
+					let e = r[this._crossCheckState.focusedIndex];
+					e && e.scrollIntoView({ block: "nearest" });
+				} else if (t.key === "ArrowUp") {
+					t.preventDefault(), this._crossCheckState.focusedIndex = Math.max(this._crossCheckState.focusedIndex - 1, 0), this._renderCrossCheckRows();
+					let e = r[this._crossCheckState.focusedIndex];
+					e && e.scrollIntoView({ block: "nearest" });
+				} else if (t.key === " ") {
 					t.preventDefault();
 					let e = r[this._crossCheckState.focusedIndex];
-					if (e) {
-						let t = e.querySelector(".crosscheck-row-cb");
-						t && (t.checked = !t.checked, e.dataset.fileId && this._crossCheckState.userToggled.set(e.dataset.fileId, t.checked), this._updateCrossCheckSelectionCount());
+					if (e && e.dataset.fileId) {
+						let t = e.dataset.fileId, n = this._crossCheckState.userToggled.get(t) ?? !1;
+						this._crossCheckState.userToggled.set(t, !n), this._renderCrossCheckRows();
 					}
 				}
 			}
@@ -7116,7 +7125,15 @@ var Ke = b.map((e) => ({
 		return this.state.files.filter((e) => e.isRenamed || e.status === "needs_review" ? !1 : e.smartConfidence >= 80 || e.smartConfidence === void 0 && e.isMatched);
 	}
 	_getCrossCheckTargetBase(e) {
-		return this._crossCheckState && this._crossCheckState.overrides && this._crossCheckState.overrides.has(e.id) ? this._crossCheckState.overrides.get(e.id) : e.docType || E(e.name);
+		if (this._crossCheckState && this._crossCheckState.overrides && this._crossCheckState.overrides.has(e.id)) return this._crossCheckState.overrides.get(e.id);
+		let t = e.docType || e.smartDocType || e.smartMatchedDoc;
+		if (t) return t;
+		let n = (this.state.studentName || "").replace(/\.[a-zA-Z0-9]+$/i, "").trim(), r = E(e.name);
+		if (n) {
+			let e = RegExp(`\\b${n.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&")}\\b`, "gi");
+			r = r.replace(e, "").trim();
+		}
+		return r || E(e.name);
 	}
 	_getCrossCheckTargetName(e) {
 		let t = (this.state.studentName || "").replace(/\.[a-zA-Z0-9]+$/i, "").trim(), n = e.ext || T(e.name) || "", r = this._getCrossCheckTargetBase(e), i = "";
@@ -7128,12 +7145,13 @@ var Ke = b.map((e) => ({
 		}), `${i}${n}`;
 	}
 	openCrossCheckModal() {
-		if (this._getMatchedCrossCheckFiles().length === 0) {
+		let e = this._getMatchedCrossCheckFiles();
+		if (e.length === 0) {
 			r.show("No Matched Documents", "No auto-matched documents found with >=80% confidence.", "info");
 			return;
 		}
-		let e = document.getElementById("modalCrossCheck");
-		if (!e) return;
+		let t = document.getElementById("modalCrossCheck");
+		if (!t) return;
 		this._crossCheckState = {
 			order: "doc_student",
 			separator: " ",
@@ -7143,22 +7161,32 @@ var Ke = b.map((e) => ({
 			overrides: /* @__PURE__ */ new Map(),
 			userToggled: /* @__PURE__ */ new Map(),
 			focusedIndex: 0
-		}, e.querySelectorAll("[data-pattern-order]").forEach((e) => e.classList.toggle("active", e.dataset.patternOrder === "doc_student")), e.querySelectorAll("[data-pattern-sep]").forEach((e) => e.classList.toggle("active", e.dataset.patternSep === " ")), e.querySelectorAll("[data-pattern-case]").forEach((e) => e.classList.toggle("active", e.dataset.patternCase === this._crossCheckState.casing)), e.querySelectorAll("[data-pattern-filter]").forEach((e) => e.classList.toggle("active", e.dataset.patternFilter === "all"));
-		let t = document.getElementById("crossCheckStudentToggleLabel");
-		t && (t.textContent = "ON");
-		let n = document.getElementById("btnToggleCrossCheckStudent");
-		n && (n.classList.add("bg-primary/10", "text-primary", "border-primary/30"), n.classList.remove("bg-surface-container", "text-secondary", "border-outline-variant/40", "opacity-60")), this._renderCrossCheckRows(), e.classList.remove("hidden");
+		}, e.forEach((e) => {
+			let t = this._getCrossCheckTargetName(e), n = E(e.name) === E(t);
+			this._crossCheckState.userToggled.set(e.id, !n);
+		}), t.querySelectorAll("[data-pattern-order]").forEach((e) => e.classList.toggle("active", e.dataset.patternOrder === "doc_student")), t.querySelectorAll("[data-pattern-case]").forEach((e) => e.classList.toggle("active", e.dataset.patternCase === this._crossCheckState.casing)), t.querySelectorAll("[data-pattern-filter]").forEach((e) => e.classList.toggle("active", e.dataset.patternFilter === "all"));
+		let n = document.getElementById("crossCheckStudentToggleLabel");
+		n && (n.textContent = "ON");
+		let i = document.getElementById("btnToggleCrossCheckStudent");
+		i && (i.className = "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold border transition-all cursor-pointer bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"), this._renderCrossCheckRows(), t.classList.remove("hidden");
+	}
+	_recalculateAndRenderCrossCheck(e = !0) {
+		if (!this._crossCheckState) return;
+		let t = this._getMatchedCrossCheckFiles();
+		e && t.forEach((e) => {
+			let t = this._getCrossCheckTargetName(e), n = E(e.name) === E(t);
+			this._crossCheckState.userToggled.set(e.id, !n);
+		}), this._renderCrossCheckRows();
 	}
 	_renderCrossCheckRows() {
-		let e = document.getElementById("modalCrossCheck");
-		if (!e) return;
-		let t = document.getElementById("crossCheckTableBody"), n = document.getElementById("crossCheckIdenticalTableBody"), r = document.getElementById("crossCheckTotalCount"), i = document.getElementById("crossCheckActiveCount"), a = document.getElementById("crossCheckIdenticalCount"), o = document.getElementById("crossCheckActiveEmpty"), s = document.getElementById("drawerIdenticalFiles"), c = document.getElementById("crossCheckStudentLabel"), l = (this.state.studentName || "").replace(/\.[a-zA-Z0-9]+$/i, "").trim();
-		c && (c.textContent = l || "Not Set");
-		let u = this._getMatchedCrossCheckFiles();
-		r && (r.textContent = String(u.length));
-		let d = this._crossCheckState ? this._crossCheckState.filter : "all", f = u.filter((e) => {
+		if (!document.getElementById("modalCrossCheck")) return;
+		let e = document.getElementById("crossCheckTableBody"), t = document.getElementById("crossCheckTotalCount"), n = document.getElementById("crossCheckActiveEmpty"), r = document.getElementById("crossCheckStudentLabel"), i = (this.state.studentName || "").replace(/\.[a-zA-Z0-9]+$/i, "").trim();
+		r && (r.textContent = i || "Not Set");
+		let a = this._getMatchedCrossCheckFiles();
+		t && (t.textContent = String(a.length));
+		let o = this._crossCheckState ? this._crossCheckState.filter : "all", s = a.filter((e) => {
 			let t = (e.ext || T(e.name) || "").toLowerCase();
-			return d === "pdf" ? t === ".pdf" : d !== "images" || [
+			return o === "pdf" ? t === ".pdf" : o !== "images" || [
 				".jpg",
 				".jpeg",
 				".png",
@@ -7166,66 +7194,50 @@ var Ke = b.map((e) => ({
 				".bmp"
 			].includes(t);
 		});
-		t && (t.innerHTML = ""), n && (n.innerHTML = "");
-		let p = [], m = [];
-		f.forEach((e) => {
-			let t = this._getCrossCheckTargetName(e), n = he(e.name, t, this.state.studentName);
-			n.isIdentical ? m.push({
-				file: e,
-				targetName: t,
-				diff: n
-			}) : p.push({
-				file: e,
-				targetName: t,
-				diff: n
-			});
-		}), i && (i.textContent = String(p.length)), a && (a.textContent = String(m.length)), o && o.classList.toggle("hidden", p.length > 0), s && s.classList.toggle("hidden", m.length === 0), p.forEach((e, n) => {
-			let { file: r, targetName: i, diff: a } = e, o = document.createElement("tr");
-			o.className = "hover:bg-surface-container-high/40 transition-colors", o.dataset.fileId = r.id;
-			let s = !this._crossCheckState.userToggled.has(r.id) || this._crossCheckState.userToggled.get(r.id), c = document.createElement("td");
-			c.className = "py-2 px-3 text-center";
-			let l = document.createElement("input");
-			l.type = "checkbox", l.checked = s, l.className = "w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer crosscheck-row-cb", l.addEventListener("change", () => {
-				this._crossCheckState.userToggled.set(r.id, l.checked), this._updateCrossCheckSelectionCount();
-			}), c.appendChild(l), o.appendChild(c);
-			let u = document.createElement("td");
-			u.className = "py-2 px-3 font-mono-code text-[12px] truncate", u.title = E(r.name), u.innerHTML = a.oldHtml, o.appendChild(u);
-			let d = document.createElement("td");
-			d.className = "py-2 px-2 text-center text-outline-variant font-bold select-none", d.textContent = "→", o.appendChild(d);
-			let f = document.createElement("td");
-			f.className = "py-2 px-3 font-mono-code text-[12px] truncate", f.title = E(i), f.innerHTML = a.newHtml, o.appendChild(f);
-			let p = document.createElement("td");
-			p.className = "py-2 px-3 text-right flex items-center justify-end";
-			let m = document.createElement("span"), h = r.smartConfidence === void 0 ? 90 : r.smartConfidence, g = h >= 90 ? "confidence-badge-high" : h >= 80 ? "confidence-badge-med" : "confidence-badge-low", _ = h >= 90 ? "🟢" : h >= 80 ? "🟡" : "🔴";
-			m.className = `confidence-badge ${g} whitespace-nowrap`, m.textContent = `${_} ${h}% Match`, p.appendChild(m), o.appendChild(p), t && t.appendChild(o);
-		}), m.forEach((e) => {
-			let { file: t, targetName: r, diff: i } = e, a = document.createElement("tr");
-			a.className = "hover:bg-surface-container-high/40 transition-colors", a.dataset.fileId = t.id;
-			let o = this._crossCheckState.userToggled.has(t.id) ? this._crossCheckState.userToggled.get(t.id) : !1, s = document.createElement("td");
-			s.className = "py-2 px-3 text-center w-10";
-			let c = document.createElement("input");
-			c.type = "checkbox", c.checked = o, c.className = "w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer crosscheck-row-cb", c.addEventListener("change", () => {
-				this._crossCheckState.userToggled.set(t.id, c.checked), this._updateCrossCheckSelectionCount();
-			}), s.appendChild(c), a.appendChild(s);
-			let l = document.createElement("td");
-			l.className = "py-2 px-3 font-mono-code text-[11px] text-secondary truncate", l.title = E(t.name), l.textContent = E(t.name), a.appendChild(l);
-			let u = document.createElement("td");
-			u.className = "py-2 px-2 text-center text-outline-variant select-none", u.textContent = "→", a.appendChild(u);
-			let d = document.createElement("td");
-			d.className = "py-2 px-3 font-mono-code text-[11px] text-secondary truncate", d.title = E(r), d.textContent = E(r), a.appendChild(d);
-			let f = document.createElement("td");
-			f.className = "py-2 px-3 text-right flex items-center justify-end";
-			let p = document.createElement("span");
-			p.className = "px-2 py-0.5 rounded text-[10px] font-mono-code font-bold bg-surface-container text-secondary border border-outline-variant/30 whitespace-nowrap", p.textContent = "Identical", f.appendChild(p), a.appendChild(f), n && n.appendChild(a);
-		});
-		let h = Array.from(e.querySelectorAll("#crossCheckTableBody tr"));
-		h.length > 0 && (this._crossCheckState.focusedIndex = Math.min(this._crossCheckState.focusedIndex, h.length - 1), this._highlightFocusedCrossCheckRow(h)), this._updateCrossCheckSelectionCount();
+		e && (e.innerHTML = ""), n && n.classList.toggle("hidden", s.length > 0), s.forEach((t, n) => {
+			let r = this._getCrossCheckTargetName(t), i = E(t.name) === E(r), a = this._crossCheckState.userToggled.has(t.id) ? this._crossCheckState.userToggled.get(t.id) : !i, o = this._crossCheckState.focusedIndex === n, s = he(t.name, r, this.state.studentName), c = document.createElement("div");
+			c.dataset.fileId = t.id;
+			let l = "grid grid-cols-[32px_minmax(0,1fr)_22px_minmax(0,1.1fr)_104px] items-center gap-2 px-3 min-h-[38px] py-1.5 rounded-lg border transition-all cursor-pointer ";
+			l += o ? "border-blue-600 bg-blue-50/35 shadow-2xs" : i && !a ? "border-transparent bg-slate-50/45 hover:bg-slate-100/60" : "border-transparent hover:bg-slate-50 border-b-slate-100", c.className = l;
+			let u = document.createElement("div");
+			u.className = "flex items-center justify-center";
+			let d = document.createElement("input");
+			d.type = "checkbox", d.checked = a, d.className = "w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600 crosscheck-row-cb", d.addEventListener("change", (e) => {
+				e.stopPropagation(), this._crossCheckState.userToggled.set(t.id, d.checked), this._updateCrossCheckSelectionCount(), this._renderCrossCheckRows();
+			}), u.appendChild(d), c.appendChild(u);
+			let f = document.createElement("div");
+			f.className = "font-mono-code text-[12px] truncate", f.title = E(t.name), f.innerHTML = i ? `<span class="text-slate-400">${R(E(t.name))}</span>` : s.oldHtml, c.appendChild(f);
+			let p = document.createElement("div");
+			p.className = "flex items-center justify-center text-slate-300 font-bold select-none", p.innerHTML = "<svg class=\"w-3.5 h-3.5 text-slate-300\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M14 5l7 7m0 0l-7 7m7-7H3\"/></svg>", c.appendChild(p);
+			let m = document.createElement("div");
+			m.className = "font-mono-code text-[12px] truncate", m.title = E(r), m.innerHTML = i ? `<span class="text-slate-400 font-medium">${R(E(r))}</span>` : s.newHtml, c.appendChild(m);
+			let h = document.createElement("div");
+			if (h.className = "flex justify-end", i) h.innerHTML = "\n          <span class=\"inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50/90 text-emerald-700 border border-emerald-200/90 whitespace-nowrap\">\n            <svg class=\"w-3 h-3\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M5 13l4 4L19 7\"/></svg>\n            <span>Perfect</span>\n          </span>\n        ";
+			else {
+				let e = t.smartConfidence === void 0 ? 90 : t.smartConfidence, n = e >= 90;
+				h.innerHTML = `
+          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${n ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"} whitespace-nowrap">
+            <span class="w-1.5 h-1.5 rounded-full ${n ? "bg-emerald-500" : "bg-amber-500"}"></span>
+            ${e}% Match
+          </span>
+        `;
+			}
+			c.appendChild(h), c.addEventListener("click", (e) => {
+				e.target !== d && (this._crossCheckState.focusedIndex = n, this._renderCrossCheckRows());
+			}), e && e.appendChild(c);
+		}), s.length > 0 && (this._crossCheckState.focusedIndex = Math.min(this._crossCheckState.focusedIndex, s.length - 1)), this._updateCrossCheckSelectionCount();
 	}
 	_updateCrossCheckSelectionCount() {
 		let e = document.getElementById("modalCrossCheck");
 		if (!e) return;
-		let t = e.querySelectorAll(".crosscheck-row-cb"), n = Array.from(t).filter((e) => e.checked), r = document.getElementById("crossCheckSelectedCount"), i = document.getElementById("confirmRenameLabel"), a = document.getElementById("btnConfirmBatchRename"), o = document.getElementById("chkCrossCheckSelectAll");
-		r && (r.textContent = String(n.length)), i && (i.textContent = `Confirm & Rename (${n.length})`), a && (a.disabled = n.length === 0), o && (o.checked = t.length > 0 && n.length === t.length);
+		let t = this._getMatchedCrossCheckFiles(), n = 0;
+		t.forEach((e) => {
+			(this._crossCheckState?.userToggled.get(e.id) ?? !1) && n++;
+		});
+		let r = document.getElementById("crossCheckSelectedCount"), i = document.getElementById("crossCheckTotalCount"), a = document.getElementById("confirmRenameLabel"), o = document.getElementById("btnConfirmBatchRename"), s = document.getElementById("chkCrossCheckSelectAll");
+		r && (r.textContent = String(n)), i && (i.textContent = String(t.length)), a && (a.textContent = `Confirm & Rename (${n})`), o && (o.disabled = n === 0, o.classList.toggle("opacity-40", n === 0), o.classList.toggle("cursor-not-allowed", n === 0), o.classList.toggle("cursor-pointer", n > 0));
+		let c = Array.from(e.querySelectorAll(".crosscheck-row-cb")), l = c.filter((e) => e.checked).length;
+		s && (s.checked = c.length > 0 && l === c.length, s.indeterminate = l > 0 && l < c.length);
 	}
 	closeCrossCheckModal() {
 		let e = document.getElementById("modalCrossCheck");
@@ -7248,7 +7260,7 @@ var Ke = b.map((e) => ({
 		if (!e) return;
 		let t = e.querySelectorAll(".crosscheck-row-cb:checked"), n = [];
 		if (t.forEach((e) => {
-			let t = e.closest("tr");
+			let t = e.closest("[data-file-id]");
 			if (t && t.dataset.fileId) {
 				let e = this.state.files.find((e) => e.id === t.dataset.fileId);
 				e && n.push(e);
@@ -7417,7 +7429,7 @@ var Ke = b.map((e) => ({
 				this._renderDocumentInfoFallback(n, e);
 			}
 			else {
-				let i = We();
+				let i = Ge();
 				if (e.path && i) n.innerHTML = "<div class=\"flex items-center justify-center w-full h-full text-secondary text-[12px]\"><span class=\"material-symbols-outlined text-[20px] animate-spin text-primary mr-2\">sync</span><span>Loading document preview...</span></div>", i("read_binary_file", { path: e.path }).then((t) => {
 					let n = e.name.toLowerCase().endsWith(".png") ? "image/png" : e.name.toLowerCase().endsWith(".webp") ? "image/webp" : "image/jpeg", i = new Blob([new Uint8Array(t)], { type: n });
 					r(URL.createObjectURL(i));
@@ -7453,7 +7465,7 @@ var Ke = b.map((e) => ({
 				e._pdfBytes = new Uint8Array(t), r(e._pdfBytes);
 			}).catch(() => this._renderDocumentInfoFallback(n, e));
 			else {
-				let t = We();
+				let t = Ge();
 				if (e.path && t) n.innerHTML = "<div class=\"flex items-center justify-center w-full h-full text-secondary text-[12px]\"><span class=\"material-symbols-outlined text-[20px] animate-spin text-primary mr-2\">sync</span><span>Loading PDF preview...</span></div>", t("read_binary_file", { path: e.path }).then((t) => {
 					e._pdfBytes = new Uint8Array(t), r(e._pdfBytes);
 				}).catch((t) => {
@@ -7544,12 +7556,12 @@ var Ke = b.map((e) => ({
 		u.className = "text-center border-t pt-2 border-outline-variant/30 text-[10px] font-mono-code text-secondary", u.textContent = "Air-Gapped High-Precision Preview Stage", e.appendChild(u);
 	}
 };
-function Xe() {
-	let e = new Ye();
+function Ze() {
+	let e = new Xe();
 	return e.init(), typeof window < "u" && (window.docmitraRenamer = e), e;
 }
 // src/services/export-import-service.js
-function Ze(e) {
+function Qe(e) {
 	let t = {
 		format: "BulkStudentRenamerSettings",
 		version: 1,
@@ -7562,7 +7574,7 @@ function Ze(e) {
 	}, n = new Blob([JSON.stringify(t, null, 2)], { type: "application/json" }), r = URL.createObjectURL(n), i = document.createElement("a");
 	i.href = r, i.download = `student-renamer-settings-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.json`, i.click(), setTimeout(() => URL.revokeObjectURL(r), 1e3);
 }
-function Qe(e, t) {
+function $e(e, t) {
 	return new Promise((n, r) => {
 		if (!e) return r(/* @__PURE__ */ Error("No backup file selected."));
 		if (e.size > 5242880) return r(/* @__PURE__ */ Error("Backup file exceeds maximum allowed size (5 MB)."));
@@ -7585,7 +7597,7 @@ function Qe(e, t) {
 	});
 }
 // src/ui/settings-ui.js
-var $e = class {
+var et = class {
 	constructor() {
 		this.state = null, this.initialState = null, this.activeChecklist = "MAHA DBT FORM";
 	}
@@ -7593,9 +7605,9 @@ var $e = class {
 		await this.loadState(), this._bindButtons(), this.renderAll(), console.info("[DocMitra Settings] Settings UI manager initialized.");
 	}
 	async loadState() {
-		this.state = je();
+		this.state = Me();
 		try {
-			let e = await Pe();
+			let e = await Fe();
 			e && e.forms && Object.keys(e.forms).length > 0 && (this.state.checklists = e.forms);
 		} catch (e) {
 			console.warn("[SettingsUI] Could not load presets from server:", e);
@@ -7614,7 +7626,7 @@ var $e = class {
 		let a = document.getElementById("btnExportSettingsJSON");
 		a && a.addEventListener("click", () => {
 			try {
-				Ze(this.state), r.show("Settings Exported", "Configuration JSON file downloaded.", "success");
+				Qe(this.state), r.show("Settings Exported", "Configuration JSON file downloaded.", "success");
 			} catch (e) {
 				r.show("Export Error", e.message, "error");
 			}
@@ -7623,7 +7635,7 @@ var $e = class {
 		o && s && (o.addEventListener("click", () => s.click()), s.addEventListener("change", async (e) => {
 			let t = e.target.files?.[0];
 			if (t) try {
-				await Qe(t, this.state), W(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Import Successful", "System configuration restored and verified.", "success");
+				await $e(t, this.state), W(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Import Successful", "System configuration restored and verified.", "success");
 			} catch (e) {
 				r.show("Import Failed", e.message || "Invalid settings JSON format.", "error");
 			} finally {
@@ -7915,7 +7927,7 @@ var $e = class {
 		});
 	}
 	async handleSave() {
-		W(this.state), await Fe({ forms: this.state.checklists }), this.initialState = JSON.parse(JSON.stringify(this.state)), r.show("Settings Saved", "System rules updated and applied to workstation.", "success");
+		W(this.state), await Ie({ forms: this.state.checklists }), this.initialState = JSON.parse(JSON.stringify(this.state)), r.show("Settings Saved", "System rules updated and applied to workstation.", "success");
 		let e = document.getElementById("settings-modal-overlay");
 		e && e.classList.add("hidden"), document.body.style.overflow = "";
 	}
@@ -7928,12 +7940,12 @@ var $e = class {
 		e && e.classList.add("hidden"), document.body.style.overflow = "";
 	}
 };
-function et() {
-	let e = new $e();
+function tt() {
+	let e = new et();
 	return e.init(), e;
 }
 // tools/pdf_studio/pdf_studio_logic.js
-var tt = {
+var nt = {
 	A4_PORTRAIT: {
 		width: 595.28,
 		height: 841.89,
@@ -7945,7 +7957,7 @@ var tt = {
 		label: "A4 Landscape"
 	}
 };
-function nt(e) {
+function rt(e) {
 	let t = 2, n = e.length;
 	for (; t < n && e[t] === 255;) {
 		let r = e[t + 1];
@@ -7977,8 +7989,8 @@ function Q(e = [], t = "portrait", n = 0) {
 	for (let e = 0; e < c; e++) l.push(3 + e * 3);
 	r.push(i), s(a(`2 0 obj\n<< /Type /Pages /Kids [ ${l.map((e) => `${e} 0 R`).join(" ")} ] /Count ${c} >>\nendobj\n`));
 	for (let o = 0; o < c; o++) {
-		let c = e[o], l = 3 + o * 3, u = l + 1, d = l + 2, f = c.bytes, { width: p, height: m } = c.width && c.height ? c : nt(f), h = tt.A4_PORTRAIT.width, g = tt.A4_PORTRAIT.height;
-		(t === "landscape" || t === "fit" && p > m) && (h = tt.A4_LANDSCAPE.width, g = tt.A4_LANDSCAPE.height);
+		let c = e[o], l = 3 + o * 3, u = l + 1, d = l + 2, f = c.bytes, { width: p, height: m } = c.width && c.height ? c : rt(f), h = nt.A4_PORTRAIT.width, g = nt.A4_PORTRAIT.height;
+		(t === "landscape" || t === "fit" && p > m) && (h = nt.A4_LANDSCAPE.width, g = nt.A4_LANDSCAPE.height);
 		let _ = h - 36, v = g - 36, y = Math.min(_ / p, v / m), b = p * y, x = m * y, S = (h - b) / 2, C = (g - x) / 2, w = n ? ` /Rotate ${n}` : "";
 		r.push(i), s(a(`${l} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${h.toFixed(2)} ${g.toFixed(2)}]${w} /Contents ${u} 0 R /Resources << /XObject << /Im${o + 1} ${d} 0 R >> >> >>\nendobj\n`));
 		let T = `q ${b.toFixed(2)} 0 0 ${x.toFixed(2)} ${S.toFixed(2)} ${C.toFixed(2)} cm /Im${o + 1} Do Q\n`, E = T.length;
@@ -7989,13 +8001,13 @@ function Q(e = [], t = "portrait", n = 0) {
 	for (let e of r) s(a(`${String(e).padStart(10, "0")} 00000 n \n`));
 	return s(a(`trailer\n<< /Size ${d} /Root 1 0 R >>\nstartxref\n${u}\n%%EOF\n`)), new Blob(o, { type: "application/pdf" });
 }
-function rt(e) {
+function it(e) {
 	let t = [], n = e.length, r = 0;
 	for (; r < n - 3;) if (e[r] === 255 && e[r + 1] === 216 && e[r + 2] === 255) {
 		let i = r;
 		for (r += 2; r < n - 1;) {
 			if (e[r] === 255 && e[r + 1] === 217) {
-				let n = r + 2, a = e.slice(i, n), o = nt(a);
+				let n = r + 2, a = e.slice(i, n), o = rt(a);
 				t.push({
 					bytes: a,
 					width: o.width,
@@ -8009,7 +8021,7 @@ function rt(e) {
 	return t;
 }
 function $(e) {
-	let t = rt(e);
+	let t = it(e);
 	if (!t.length) return [];
 	if (t.length === 1) return t;
 	let n = Math.max(...t.map((e) => (e.width || 0) * (e.height || 0))), r = Math.max(...t.map((e) => e.bytes?.length || 0)), i = t.filter((e) => {
@@ -8021,7 +8033,7 @@ function $(e) {
 		return r === n ? (t.bytes?.length || 0) - (e.bytes?.length || 0) : r - n;
 	});
 }
-function it(e, t = "Document.pdf") {
+function at(e, t = "Document.pdf") {
 	let n = $(e), r = t.replace(/\.pdf$/i, "");
 	return n.length ? n.map((e, t) => {
 		let i = n.length === 1 ? `${r}.jpg` : `${r}_page_${t + 1}.jpg`, a = new Blob([e.bytes], { type: "image/jpeg" });
@@ -8035,7 +8047,7 @@ function it(e, t = "Document.pdf") {
 		};
 	}) : [];
 }
-function at(e, t = "Document.pdf") {
+function ot(e, t = "Document.pdf") {
 	let n = $(e), r = t.replace(/\.pdf$/i, "");
 	return n.length ? n.map((e, t) => {
 		let n = `${r}_page_${t + 1}.pdf`, i = Q([e], "portrait");
@@ -8047,7 +8059,7 @@ function at(e, t = "Document.pdf") {
 		};
 	}) : [];
 }
-function ot(e = [], t = "portrait") {
+function st(e = [], t = "portrait") {
 	let n = [];
 	for (let t of e) {
 		let e = $(t);
@@ -8056,7 +8068,7 @@ function ot(e = [], t = "portrait") {
 	if (!n.length) throw Error("No document images could be extracted to merge PDFs.");
 	return Q(n, t);
 }
-function st(e, t = 90) {
+function ct(e, t = 90) {
 	let n = (t % 360 + 360) % 360;
 	if (n === 0) return new Blob([e], { type: "application/pdf" });
 	let r = $(e);
@@ -8075,13 +8087,13 @@ function st(e, t = 90) {
 	}
 	throw Error("No pages found in PDF to rotate.");
 }
-function ct(e, t, n = "auto") {
+function lt(e, t, n = "auto") {
 	if (!e) return "document.pdf";
 	let r = e.lastIndexOf("."), i = r === -1 ? e : e.slice(0, r), a = r === -1 ? "" : e.slice(r), o = i.replace(/[\s_-]+\d+\s*(?:KB|MB)$/i, "").trim();
 	return n === "MB" || n === "auto" && t >= 10485760 ? `${o} ${Math.max(1, Math.round(Number(t || 0) / 1048576))} MB${a}` : `${o} ${Math.max(1, Math.round(Number(t || 0) / 1024))} KB${a}`;
 }
 // tools/pdf_studio/pdf_studio_ui.js
-var lt = class {
+var ut = class {
 	constructor() {
 		this.activeTool = "compress_pdf", this.files = [], this.isProcessing = !1;
 	}
@@ -8298,7 +8310,7 @@ var lt = class {
 	rotateSingleFile(e) {
 		let t = this.files[e];
 		if (t && t.bytes) try {
-			let e = st(t.bytes, 90);
+			let e = ct(t.bytes, 90);
 			e.arrayBuffer().then((n) => {
 				t.bytes = new Uint8Array(n), t.size = e.size, this.renderQueue(), r.show("Page Rotated", `${t.name} rotated 90° clockwise.`, "info");
 			});
@@ -8317,7 +8329,7 @@ var lt = class {
 		let e = 0;
 		this.files.forEach((t) => {
 			if (t.bytes) try {
-				let n = st(t.bytes, 90);
+				let n = ct(t.bytes, 90);
 				n.arrayBuffer().then((i) => {
 					t.bytes = new Uint8Array(i), t.size = n.size, e++, e === this.files.length && (this.renderQueue(), r.show("All Rotated", `Rotated all ${this.files.length} PDFs by 90°.`, "success"));
 				});
@@ -8342,7 +8354,7 @@ var lt = class {
 		r.show("Processing Started", `Running ${this._getToolDisplayName(e)} on ${this.files.length} files...`, "info");
 		try {
 			if (e === "merge_pdf") {
-				let e = ot(this.files.map((e) => e.bytes).filter(Boolean), "portrait");
+				let e = st(this.files.map((e) => e.bytes).filter(Boolean), "portrait");
 				this._downloadBlob(e, "Merged_Admission_Dossier.pdf"), r.show("Merge Complete!", "Merged PDF Dossier generated and saved.", "success");
 			} else if (e === "compress_pdf") {
 				let e = 0;
@@ -8350,19 +8362,19 @@ var lt = class {
 					if (!t.bytes) continue;
 					let n = $(t.bytes), r;
 					r = n.length > 0 ? Q(n, "portrait") : new Blob([t.bytes], { type: "application/pdf" });
-					let i = ct(t.name, r.size);
+					let i = lt(t.name, r.size);
 					this._downloadBlob(r, i), e++;
 				}
 				r.show("Compression Complete!", `Compressed ${e} files to safe MahaDBT thresholds.`, "success");
 			} else if (e === "split_pdf") {
 				let e = 0;
-				for (let t of this.files) t.bytes && at(t.bytes, t.name).forEach((t) => {
+				for (let t of this.files) t.bytes && ot(t.bytes, t.name).forEach((t) => {
 					this._downloadBlob(t.blob, t.fileName), e++;
 				});
 				r.show("Split Complete!", `Extracted ${e} individual PDF pages.`, "success");
 			} else if (e === "pdf_to_jpg") {
 				let e = 0;
-				for (let t of this.files) t.bytes && it(t.bytes, t.name).forEach((t) => {
+				for (let t of this.files) t.bytes && at(t.bytes, t.name).forEach((t) => {
 					this._downloadBlob(t.blob, t.fileName), e++;
 				});
 				r.show("Conversion Complete!", `Extracted ${e} high-resolution JPG pages.`, "success");
@@ -8370,7 +8382,7 @@ var lt = class {
 				let e = 0;
 				for (let t of this.files) {
 					if (!t.bytes) continue;
-					let n = st(t.bytes, 90);
+					let n = ct(t.bytes, 90);
 					this._downloadBlob(n, t.name), e++;
 				}
 				r.show("Rotation Complete!", `Rotated and saved ${e} PDF documents.`, "success");
@@ -8396,12 +8408,12 @@ var lt = class {
 		}, 1e3);
 	}
 };
-function ut() {
-	let e = new lt();
+function dt() {
+	let e = new ut();
 	return e.init(), e;
 }
 // src/modules/image-studio.js
-function dt(e, t, n, r = "magic_color") {
+function ft(e, t, n, r = "magic_color") {
 	if (!e || r === "none" || r === "original") return;
 	let i = e.getImageData(0, 0, t, n), a = i.data;
 	for (let e = 0; e < a.length; e += 4) {
@@ -8418,13 +8430,13 @@ function dt(e, t, n, r = "magic_color") {
 	}
 	e.putImageData(i, 0, 0);
 }
-function ft(e, t = 0) {
+function pt(e, t = 0) {
 	let n = document.createElement("canvas"), r = (t % 360 + 360) % 360, i = r === 90 || r === 270, a = i ? e.height : e.width, o = i ? e.width : e.height;
 	n.width = a, n.height = o;
 	let s = n.getContext("2d");
 	return s.save(), s.translate(n.width / 2, n.height / 2), s.rotate(r * Math.PI / 180), s.drawImage(e, -e.width / 2, -e.height / 2), s.restore(), n;
 }
-async function pt(e, t = 250, n = {}) {
+async function mt(e, t = 250, n = {}) {
 	let { rotation: r = 0, filterMode: i = "none", outputMime: a = "image/jpeg", maxDimension: o = 2400 } = n;
 	return new Promise((n, s) => {
 		let c = new Image(), l = URL.createObjectURL(e);
@@ -8437,7 +8449,7 @@ async function pt(e, t = 250, n = {}) {
 					e = Math.round(e * t), s = Math.round(s * t);
 				}
 				let l;
-				if (r === 0 ? (l = document.createElement("canvas"), l.width = e, l.height = s, l.getContext("2d").drawImage(c, 0, 0, e, s)) : l = ft(c, r), i && i !== "none" && dt(l.getContext("2d"), l.width, l.height, i), !t || t <= 0) {
+				if (r === 0 ? (l = document.createElement("canvas"), l.width = e, l.height = s, l.getContext("2d").drawImage(c, 0, 0, e, s)) : l = pt(c, r), i && i !== "none" && ft(l.getContext("2d"), l.width, l.height, i), !t || t <= 0) {
 					let e = await new Promise((e) => l.toBlob(e, a, .9));
 					return n({
 						blob: e,
@@ -8481,7 +8493,7 @@ async function pt(e, t = 250, n = {}) {
 		}, c.src = l;
 	});
 }
-async function mt(e, t = "image/png") {
+async function ht(e, t = "image/png") {
 	return new Promise((n, r) => {
 		let i = new Image(), a = URL.createObjectURL(e);
 		i.onload = () => {
@@ -8507,7 +8519,7 @@ async function mt(e, t = "image/png") {
 	});
 }
 // src/ui/image-studio-ui.js
-var ht = class {
+var gt = class {
 	constructor() {
 		this.activeTool = "compress_photo_sign", this.files = [], this.isProcessing = !1;
 	}
@@ -8704,7 +8716,7 @@ var ht = class {
 		if (!t || !t.url) return;
 		let n = new Image();
 		n.crossOrigin = "anonymous", n.onload = () => {
-			ft(n, 90).toBlob((e) => {
+			pt(n, 90).toBlob((e) => {
 				t.url = URL.createObjectURL(e), t.size = e.size, t.fileOrBlob = e, this.renderQueue(), r.show("Image Rotated", `${t.name} rotated 90° clockwise.`, "info");
 			}, "image/jpeg", .92);
 		}, n.src = t.url;
@@ -8737,13 +8749,13 @@ var ht = class {
 				let r = n.fileOrBlob;
 				if (!r && n.url && (r = await (await fetch(n.url)).blob()), r) {
 					if (e === "compress_photo_sign") {
-						let e = /sign|signature|स्वाक्षरी/i.test(n.name) ? 18 : 45, i = await pt(r, e);
+						let e = /sign|signature|स्वाक्षरी/i.test(n.name) ? 18 : 45, i = await mt(r, e);
 						this._downloadBlob(i.blob, `Compressed_${n.name}`), t++;
 					} else if (e === "passport_crop") {
-						let e = await pt(await this._cropPassport(r), 48);
+						let e = await mt(await this._cropPassport(r), 48);
 						this._downloadBlob(e.blob, `Passport_${n.name}`), t++;
 					} else if (e === "sign_clean_invert") {
-						let e = await pt(r, 18, { filterMode: "sharp_contrast" });
+						let e = await mt(r, 18, { filterMode: "sharp_contrast" });
 						this._downloadBlob(e.blob, `Clean_Sign_${n.name}`), t++;
 					} else if (e === "image_to_pdf") {
 						let e = await r.arrayBuffer(), i = Q([{
@@ -8753,10 +8765,10 @@ var ht = class {
 						}], "portrait"), a = n.name.replace(/\.[a-zA-Z0-9]+$/, "") + ".pdf";
 						this._downloadBlob(i, a), t++;
 					} else if (e === "magic_color") {
-						let e = await pt(r, 240, { filterMode: "enhanced" });
+						let e = await mt(r, 240, { filterMode: "enhanced" });
 						this._downloadBlob(e.blob, `Magic_${n.name}`), t++;
 					} else {
-						let e = await mt(r, "image/jpeg");
+						let e = await ht(r, "image/jpeg");
 						this._downloadBlob(e.blob, `Converted_${n.name.replace(/\.[a-zA-Z0-9]+$/, ".jpg")}`), t++;
 					}
 				}
@@ -8789,12 +8801,12 @@ var ht = class {
 		}, 1e3);
 	}
 };
-function gt() {
-	let e = new ht();
+function _t() {
+	let e = new gt();
 	return e.init(), e;
 }
 // src/libraries/document-matcher.js
-var _t = [
+var vt = [
 	{
 		id: "12th-marksheet-passing-combined",
 		outputName: "12TH MARKSHEET AND PASSING",
@@ -9104,7 +9116,7 @@ var _t = [
 		]
 	}
 ];
-function vt(e, t = null) {
+function yt(e, t = null) {
 	if (!e || typeof e != "string") return {
 		docType: null,
 		percentage: 0,
@@ -9113,7 +9125,7 @@ function vt(e, t = null) {
 		status: "none"
 	};
 	let n = e.trim().toLowerCase(), r = n.replace(/[-_.]+/g, " ");
-	for (let e of _t) if (n === e.shortcut.toLowerCase() || r.trim() === e.shortcut.toLowerCase()) return {
+	for (let e of vt) if (n === e.shortcut.toLowerCase() || r.trim() === e.shortcut.toLowerCase()) return {
 		docType: e.outputName,
 		percentage: 100,
 		badgeText: `100% Match: ${e.outputName}`,
@@ -9131,7 +9143,7 @@ function vt(e, t = null) {
 			};
 		}
 	}
-	for (let e of _t) for (let t of e.patterns) if (t.test(n) || t.test(r)) return {
+	for (let e of vt) for (let t of e.patterns) if (t.test(n) || t.test(r)) return {
 		docType: e.outputName,
 		percentage: 100,
 		badgeText: `100% Match: ${e.outputName}`,
@@ -9159,16 +9171,16 @@ function vt(e, t = null) {
 	};
 }
 ({ ...Se });
-function yt(e) {
+function bt(e) {
 	if (!e || typeof e != "string") return "";
-	let t = vt(e);
+	let t = yt(e);
 	if (t && t.docType) return t.docType;
 	let n = e.replace(/\.[^/.]+$/, "");
 	return n = n.replace(/\s*\(p\.\d+\)/i, ""), n.trim().toUpperCase();
 }
-function bt(e) {
+function xt(e) {
 	if (!e || typeof e != "string") return "";
-	let t = e.replace(/\.[^/.]+$/, "").trim(), n = vt(t);
+	let t = e.replace(/\.[^/.]+$/, "").trim(), n = yt(t);
 	if (n && n.docType) {
 		let e = n.docType, r = t, i = RegExp(`^${e}\\b`, "i");
 		if (i.test(r) ? r = r.replace(i, "").trim() : e.split(/\s+/).forEach((e) => {
@@ -9180,9 +9192,9 @@ function bt(e) {
 	}
 	return t;
 }
-function xt(e, t = []) {
+function St(e, t = []) {
 	return !Array.isArray(e) || e.length === 0 ? [] : !Array.isArray(t) || t.length === 0 ? [...e] : [...e].sort((e, n) => {
-		let r = e.docType || yt(e.label || e.name), i = n.docType || yt(n.label || n.name), a = t.findIndex((e) => {
+		let r = e.docType || bt(e.label || e.name), i = n.docType || bt(n.label || n.name), a = t.findIndex((e) => {
 			let t = e.toUpperCase(), n = r.toUpperCase();
 			return t === n || n.includes(t) || t.includes(n);
 		}), o = t.findIndex((e) => {
@@ -9193,7 +9205,7 @@ function xt(e, t = []) {
 	});
 }
 // src/ui/print-studio-ui.js
-var St = class {
+var Ct = class {
 	constructor() {
 		this.presets = { ...Se }, this.activePresetKey = "MAHA DBT FORM", this.documents = [], this.activeDocIndex = 0, this.zoomLevel = 100;
 	}
@@ -9340,7 +9352,7 @@ var St = class {
 	}
 	handleAutoOrder() {
 		let e = this.presets[this.activePresetKey] || [];
-		this.documents = xt(this.documents, e), this.activeDocIndex = 0, this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), r.show("Sequence Applied", `Ordered according to ${this.activePresetKey} criteria.`, "success");
+		this.documents = St(this.documents, e), this.activeDocIndex = 0, this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), r.show("Sequence Applied", `Ordered according to ${this.activePresetKey} criteria.`, "success");
 	}
 	async handleBrowseFolder() {
 		r.show("Opening Folder Picker", "Navigating Windows Explorer...", "info");
@@ -9356,7 +9368,7 @@ var St = class {
 				return;
 			}
 			this.documents = t.map((e, t) => {
-				let n = yt(e.name), r = bt(e.name);
+				let n = bt(e.name), r = xt(e.name);
 				return {
 					id: `print_doc_${Date.now()}_${t}`,
 					name: e.name,
@@ -9447,12 +9459,12 @@ var St = class {
 		}
 	}
 };
-function Ct() {
-	let e = new St();
+function wt() {
+	let e = new Ct();
 	return e.init(), e;
 }
 // src/ui/followup-ui.js
-var wt = class {
+var Tt = class {
 	constructor() {
 		this.items = [], this.searchQuery = "";
 	}
@@ -9461,7 +9473,7 @@ var wt = class {
 	}
 	_seedDemoDataIfEmpty() {
 		if (G().length === 0) {
-			let e = Y(), t = Ve(2);
+			let e = Y(), t = He(2);
 			K([
 				{
 					id: "fu_demo_1",
@@ -9571,7 +9583,7 @@ var wt = class {
 			c.appendChild(u), s.appendChild(c), n.appendChild(s);
 			let d = document.createElement("td");
 			d.className = "py-3.5 px-space-md";
-			let f = Be(t.promisedDate), p = document.createElement("div");
+			let f = Ve(t.promisedDate), p = document.createElement("div");
 			p.className = f === "overdue" ? "font-mono-code font-bold text-error" : f === "today" ? "font-mono-code font-bold text-amber-700" : "font-mono-code font-bold text-emerald-700", p.textContent = J(t.promisedDate), d.appendChild(p);
 			let m = document.createElement("span");
 			f === "overdue" ? (m.className = "text-[10px] font-bold uppercase tracking-wider text-error bg-error-container/40 px-1.5 py-0.5 rounded", m.textContent = "OVERDUE") : f === "today" ? (m.className = "text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded", m.textContent = "DUE TODAY") : (m.className = "text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded", m.textContent = "UPCOMING"), d.appendChild(m), n.appendChild(d);
@@ -9640,18 +9652,18 @@ var wt = class {
 		window.open(i, "_blank"), r.show("WhatsApp उघडत आहे", `Opening WhatsApp for ${e.studentName}...`, "info");
 	}
 	markItemResolved(e) {
-		Re(e.folderName, e.documentName), e.status = "resolved", this.renderTable(), r.show("कागदपत्र प्राप्त!", `${e.documentName} for ${e.studentName} marked as received.`, "success");
+		ze(e.folderName, e.documentName), e.status = "resolved", this.renderTable(), r.show("कागदपत्र प्राप्त!", `${e.documentName} for ${e.studentName} marked as received.`, "success");
 	}
 };
-function Tt() {
-	let e = new wt();
+function Et() {
+	let e = new Tt();
 	return e.init(), e;
 }
 // src/ui/index.js
-function Et() {
+function Dt() {
 	let e = new n();
-	e.init(), new i().init(), et();
-	let t = Xe();
+	e.init(), new i().init(), tt();
+	let t = Ze();
 	typeof window < "u" && (window.renamerUI = t, window.location.search.includes("test_loaded=1") && setTimeout(() => {
 		t.state.folder = {
 			name: "Vijay_Ramesh_Yadav",
@@ -9687,7 +9699,7 @@ function Et() {
 		], t.state.currentIndex = 0, t.renderQueue();
 	}, 200)), e.onViewChange = (e, n) => {
 		n === "bulk-renamer" && e !== "bulk-renamer" && t.handleClearQueue(!0);
-	}, ut(), gt(), Ct(), Tt(), a();
+	}, dt(), _t(), wt(), Et(), a();
 	let o = document.getElementById("themeToggleBtn");
 	o && o.addEventListener("click", () => {
 		document.documentElement.classList.toggle("dark");
@@ -9695,5 +9707,5 @@ function Et() {
 		r.show(e ? "Dark Theme Enabled" : "Light Theme Enabled", "UI Preference Updated", "info");
 	}), console.info("[DocMitra] UI Shell & Modules initialized successfully.");
 }
-document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", Et) : Et();
-export { Et as initAppShell };
+document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", Dt) : Dt();
+export { Dt as initAppShell };

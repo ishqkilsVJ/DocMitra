@@ -1272,7 +1272,7 @@ export function uniqueDestination(desired, currentName, usedNames, studentName =
   const suffix = ext(desired);
   const base = cleanName(desired);
   let stem = base;
-  let counter = 2;
+  let counter = 1;
   let studentSuffix = '';
 
   const sClean = (studentName || '').trim();
@@ -2650,7 +2650,7 @@ export function matchFilenameSmart(filename, studentName = '', groups = null, pr
    Cross-Check Powerhouse: Live Word Diff, Pattern Bar & Utility Functions
    ========================================================================== */
 
-function escapeHtml(str) {
+export function escapeHtml(str) {
   if (!str) return '';
   return String(str)
     .replace(/&/g, '&amp;')

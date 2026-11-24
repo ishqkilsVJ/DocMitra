@@ -67,7 +67,8 @@ import {
   computeWordDiff,
   formatPatternName,
   cleanScannerJunk,
-  cleanPortalSafe
+  cleanPortalSafe,
+  escapeHtml
 } from './rename_tool_logic.js';
 import { recordRenameEvent } from '../../src/services/analytics-service.js';
 import { loadSettings, saveSettings, loadDocumentPresets, saveDocumentPresets } from '../../src/services/storage-service.js';
@@ -301,6 +302,18 @@ export class RenamerUIManager {
       btnSelect.addEventListener('click', () => this.handleSelectFolder());
     }
 
+    // Global Autofill Suppressor: completely disables Chromium/WebView2 "Saved Info" popups across all inputs
+    document.addEventListener('focusin', (e) => {
+      if (e.target && e.target.tagName === 'INPUT' && !['checkbox', 'radio', 'range'].includes(e.target.type)) {
+        e.target.setAttribute('autocomplete', 'new-password');
+        e.target.setAttribute('autocorrect', 'off');
+        e.target.setAttribute('autocapitalize', 'off');
+        e.target.setAttribute('spellcheck', 'false');
+        e.target.setAttribute('data-form-type', 'other');
+        e.target.setAttribute('data-lpignore', 'true');
+      }
+    }, true);
+
     // 2. Memory Persistent Checkbox for Folder/Student Name Inclusion
     const chkInclude = document.getElementById('chkIncludeFolderName');
     if (chkInclude) {
@@ -328,6 +341,12 @@ export class RenamerUIManager {
     if (btnEditFolder && inputEditFolder && displayFolder) {
       btnEditFolder.addEventListener('click', () => {
         inputEditFolder.value = this.state.studentName || (this.state.folder?.name || '');
+        inputEditFolder.setAttribute('autocomplete', 'new-password');
+        inputEditFolder.setAttribute('autocorrect', 'off');
+        inputEditFolder.setAttribute('autocapitalize', 'off');
+        inputEditFolder.setAttribute('spellcheck', 'false');
+        inputEditFolder.setAttribute('data-form-type', 'other');
+        inputEditFolder.setAttribute('data-lpignore', 'true');
         displayFolder.classList.add('hidden');
         btnEditFolder.classList.add('hidden');
         inputEditFolder.classList.remove('hidden');
@@ -1979,7 +1998,7 @@ export class RenamerUIManager {
         : (isDone
           ? 'font-mono-code text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold truncate flex-1 min-w-0'
           : 'font-mono-code text-[11px] text-on-surface font-medium truncate flex-1 min-w-0');
-      origTitle.textContent = isDone ? cleanName(f.name) : (f.hasUserEdited && f.targetName ? cleanName(f.targetName) : applyCase(cleanName(f.name), this.state.style));
+      origTitle.textContent = cleanName(isDone ? f.name : (f.hasUserEdited && f.targetName ? f.targetName : applyCase(cleanName(f.name), this.state.style)));
       leftCol.appendChild(origTitle);
 
       item.appendChild(leftCol);
@@ -4326,17 +4345,7 @@ export class RenamerUIManager {
         if (!this._crossCheckState) return;
         this._crossCheckState.order = btn.dataset.patternOrder;
         modal.querySelectorAll('[data-pattern-order]').forEach(b => b.classList.toggle('active', b === btn));
-        this._renderCrossCheckRows();
-      });
-    });
-
-    // Pattern Bar: Separator pills
-    modal.querySelectorAll('[data-pattern-sep]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (!this._crossCheckState) return;
-        this._crossCheckState.separator = btn.dataset.patternSep;
-        modal.querySelectorAll('[data-pattern-sep]').forEach(b => b.classList.toggle('active', b === btn));
-        this._renderCrossCheckRows();
+        this._recalculateAndRenderCrossCheck(true);
       });
     });
 
@@ -4351,14 +4360,10 @@ export class RenamerUIManager {
         if (studentToggleLabel) {
           studentToggleLabel.textContent = isOn ? 'ON' : 'OFF';
         }
-        btnStudentToggle.classList.toggle('bg-primary/10', isOn);
-        btnStudentToggle.classList.toggle('text-primary', isOn);
-        btnStudentToggle.classList.toggle('border-primary/30', isOn);
-        btnStudentToggle.classList.toggle('bg-surface-container', !isOn);
-        btnStudentToggle.classList.toggle('text-secondary', !isOn);
-        btnStudentToggle.classList.toggle('border-outline-variant/40', !isOn);
-        btnStudentToggle.classList.toggle('opacity-60', !isOn);
-        this._renderCrossCheckRows();
+        btnStudentToggle.className = `inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold border transition-all cursor-pointer ${
+          isOn ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'
+        }`;
+        this._recalculateAndRenderCrossCheck(true);
       });
     }
 
@@ -4368,7 +4373,7 @@ export class RenamerUIManager {
         if (!this._crossCheckState) return;
         this._crossCheckState.casing = btn.dataset.patternCase;
         modal.querySelectorAll('[data-pattern-case]').forEach(b => b.classList.toggle('active', b === btn));
-        this._renderCrossCheckRows();
+        this._recalculateAndRenderCrossCheck(true);
       });
     });
 
@@ -4389,12 +4394,16 @@ export class RenamerUIManager {
     if (btnToggleUtilities && stripUtilities) {
       btnToggleUtilities.addEventListener('click', () => {
         const isHidden = stripUtilities.classList.contains('hidden');
-        if (isHidden) {
-          stripUtilities.classList.remove('hidden');
-          if (arrowUtilities) arrowUtilities.style.transform = 'rotate(180deg)';
-        } else {
-          stripUtilities.classList.add('hidden');
-          if (arrowUtilities) arrowUtilities.style.transform = 'rotate(0deg)';
+        stripUtilities.classList.toggle('hidden', !isHidden);
+        stripUtilities.classList.toggle('flex', isHidden);
+        btnToggleUtilities.classList.toggle('bg-amber-100', isHidden);
+        btnToggleUtilities.classList.toggle('text-amber-800', isHidden);
+        btnToggleUtilities.classList.toggle('border-amber-300', isHidden);
+        btnToggleUtilities.classList.toggle('bg-white', !isHidden);
+        btnToggleUtilities.classList.toggle('text-slate-700', !isHidden);
+        btnToggleUtilities.classList.toggle('border-slate-200', !isHidden);
+        if (arrowUtilities) {
+          arrowUtilities.classList.toggle('rotate-180', isHidden);
         }
       });
     }
@@ -4422,7 +4431,7 @@ export class RenamerUIManager {
           }
         });
         toast.show('Find & Replace', `Replaced in ${count} document(s).`, 'success');
-        this._renderCrossCheckRows();
+        this._recalculateAndRenderCrossCheck(true);
       });
     }
 
@@ -4440,7 +4449,7 @@ export class RenamerUIManager {
           }
         });
         toast.show('Junk Cleanup', `Cleaned scanner timestamps and prefixes in ${count} document(s).`, 'success');
-        this._renderCrossCheckRows();
+        this._recalculateAndRenderCrossCheck(true);
       });
     }
 
@@ -4458,7 +4467,7 @@ export class RenamerUIManager {
           }
         });
         toast.show('Portal-Safe Cleaned', `Formatted ${count} document(s) for admission portals.`, 'success');
-        this._renderCrossCheckRows();
+        this._recalculateAndRenderCrossCheck(true);
       });
     }
 
@@ -4475,14 +4484,15 @@ export class RenamerUIManager {
 
         // Reset pill UI
         modal.querySelectorAll('[data-pattern-order]').forEach(b => b.classList.toggle('active', b.dataset.patternOrder === 'doc_student'));
-        modal.querySelectorAll('[data-pattern-sep]').forEach(b => b.classList.toggle('active', b.dataset.patternSep === ' '));
         modal.querySelectorAll('[data-pattern-case]').forEach(b => b.classList.toggle('active', b.dataset.patternCase === this._crossCheckState.casing));
         modal.querySelectorAll('[data-pattern-filter]').forEach(b => b.classList.toggle('active', b.dataset.patternFilter === 'all'));
         if (studentToggleLabel) studentToggleLabel.textContent = 'ON';
-        if (btnStudentToggle) btnStudentToggle.classList.remove('opacity-50');
+        if (btnStudentToggle) {
+          btnStudentToggle.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold border transition-all cursor-pointer bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100';
+        }
 
         toast.show('Rules Reset', 'Reset patterns to smart auto-match defaults.', 'info');
-        this._renderCrossCheckRows();
+        this._recalculateAndRenderCrossCheck(true);
       });
     }
 
@@ -4490,15 +4500,13 @@ export class RenamerUIManager {
     const selectAllCb = document.getElementById('chkCrossCheckSelectAll');
     if (selectAllCb) {
       selectAllCb.addEventListener('change', (e) => {
-        const checkboxes = modal.querySelectorAll('.crosscheck-row-cb');
-        checkboxes.forEach(cb => {
-          cb.checked = e.target.checked;
-          const tr = cb.closest('tr');
-          if (tr && tr.dataset.fileId) {
-            this._crossCheckState.userToggled.set(tr.dataset.fileId, e.target.checked);
+        const rows = modal.querySelectorAll('#crossCheckTableBody > div');
+        rows.forEach(r => {
+          if (r.dataset.fileId) {
+            this._crossCheckState.userToggled.set(r.dataset.fileId, e.target.checked);
           }
         });
-        this._updateCrossCheckSelectionCount();
+        this._renderCrossCheckRows();
       });
     }
 
@@ -4533,29 +4541,29 @@ export class RenamerUIManager {
 
       if (isInput) return;
 
-      const activeRows = Array.from(modal.querySelectorAll('#crossCheckTableBody tr'));
+      const activeRows = Array.from(modal.querySelectorAll('#crossCheckTableBody > div'));
       if (activeRows.length === 0) return;
 
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         this._crossCheckState.focusedIndex = Math.min(this._crossCheckState.focusedIndex + 1, activeRows.length - 1);
-        this._highlightFocusedCrossCheckRow(activeRows);
+        this._renderCrossCheckRows();
+        const curRow = activeRows[this._crossCheckState.focusedIndex];
+        if (curRow) curRow.scrollIntoView({ block: 'nearest' });
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         this._crossCheckState.focusedIndex = Math.max(this._crossCheckState.focusedIndex - 1, 0);
-        this._highlightFocusedCrossCheckRow(activeRows);
+        this._renderCrossCheckRows();
+        const curRow = activeRows[this._crossCheckState.focusedIndex];
+        if (curRow) curRow.scrollIntoView({ block: 'nearest' });
       } else if (e.key === ' ') {
         e.preventDefault();
         const curRow = activeRows[this._crossCheckState.focusedIndex];
-        if (curRow) {
-          const cb = curRow.querySelector('.crosscheck-row-cb');
-          if (cb) {
-            cb.checked = !cb.checked;
-            if (curRow.dataset.fileId) {
-              this._crossCheckState.userToggled.set(curRow.dataset.fileId, cb.checked);
-            }
-            this._updateCrossCheckSelectionCount();
-          }
+        if (curRow && curRow.dataset.fileId) {
+          const fileId = curRow.dataset.fileId;
+          const currentVal = this._crossCheckState.userToggled.get(fileId) ?? false;
+          this._crossCheckState.userToggled.set(fileId, !currentVal);
+          this._renderCrossCheckRows();
         }
       }
     });
@@ -4597,7 +4605,15 @@ export class RenamerUIManager {
     if (this._crossCheckState && this._crossCheckState.overrides && this._crossCheckState.overrides.has(f.id)) {
       return this._crossCheckState.overrides.get(f.id);
     }
-    return f.docType || cleanName(f.name);
+    const doc = f.docType || f.smartDocType || f.smartMatchedDoc;
+    if (doc) return doc;
+    const rawStudent = (this.state.studentName || '').replace(/\.[a-zA-Z0-9]+$/i, '').trim();
+    let base = cleanName(f.name);
+    if (rawStudent) {
+      const sRegex = new RegExp(`\\b${rawStudent.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'gi');
+      base = base.replace(sRegex, '').trim();
+    }
+    return base || cleanName(f.name);
   }
 
   _getCrossCheckTargetName(f) {
@@ -4641,9 +4657,15 @@ export class RenamerUIManager {
       focusedIndex: 0
     };
 
+    // Auto-evaluate initial checkboxes: Perfect files unchecked by default, others checked!
+    matched.forEach(f => {
+      const targetName = this._getCrossCheckTargetName(f);
+      const isPerfect = (cleanName(f.name) === cleanName(targetName));
+      this._crossCheckState.userToggled.set(f.id, !isPerfect);
+    });
+
     // Reset pattern pills UI to initial state
     modal.querySelectorAll('[data-pattern-order]').forEach(b => b.classList.toggle('active', b.dataset.patternOrder === 'doc_student'));
-    modal.querySelectorAll('[data-pattern-sep]').forEach(b => b.classList.toggle('active', b.dataset.patternSep === ' '));
     modal.querySelectorAll('[data-pattern-case]').forEach(b => b.classList.toggle('active', b.dataset.patternCase === this._crossCheckState.casing));
     modal.querySelectorAll('[data-pattern-filter]').forEach(b => b.classList.toggle('active', b.dataset.patternFilter === 'all'));
 
@@ -4651,25 +4673,33 @@ export class RenamerUIManager {
     if (studentToggleLabel) studentToggleLabel.textContent = 'ON';
     const btnStudentToggle = document.getElementById('btnToggleCrossCheckStudent');
     if (btnStudentToggle) {
-      btnStudentToggle.classList.add('bg-primary/10', 'text-primary', 'border-primary/30');
-      btnStudentToggle.classList.remove('bg-surface-container', 'text-secondary', 'border-outline-variant/40', 'opacity-60');
+      btnStudentToggle.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold border transition-all cursor-pointer bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100';
     }
 
     this._renderCrossCheckRows();
     modal.classList.remove('hidden');
   }
 
+  _recalculateAndRenderCrossCheck(settingChanged = true) {
+    if (!this._crossCheckState) return;
+    const allMatched = this._getMatchedCrossCheckFiles();
+    if (settingChanged) {
+      allMatched.forEach(f => {
+        const targetName = this._getCrossCheckTargetName(f);
+        const isPerfect = (cleanName(f.name) === cleanName(targetName));
+        this._crossCheckState.userToggled.set(f.id, !isPerfect);
+      });
+    }
+    this._renderCrossCheckRows();
+  }
+
   _renderCrossCheckRows() {
     const modal = document.getElementById('modalCrossCheck');
     if (!modal) return;
 
-    const tbodyActive = document.getElementById('crossCheckTableBody');
-    const tbodyIdentical = document.getElementById('crossCheckIdenticalTableBody');
+    const tbody = document.getElementById('crossCheckTableBody');
     const totalEl = document.getElementById('crossCheckTotalCount');
-    const activeCountEl = document.getElementById('crossCheckActiveCount');
-    const identicalCountEl = document.getElementById('crossCheckIdenticalCount');
     const activeEmptyEl = document.getElementById('crossCheckActiveEmpty');
-    const drawerIdentical = document.getElementById('drawerIdenticalFiles');
     const studentLabel = document.getElementById('crossCheckStudentLabel');
 
     const rawStudent = (this.state.studentName || '').replace(/\.[a-zA-Z0-9]+$/i, '').trim();
@@ -4690,169 +4720,149 @@ export class RenamerUIManager {
       return true;
     });
 
-    if (tbodyActive) tbodyActive.innerHTML = '';
-    if (tbodyIdentical) tbodyIdentical.innerHTML = '';
+    if (tbody) tbody.innerHTML = '';
+    if (activeEmptyEl) {
+      activeEmptyEl.classList.toggle('hidden', filteredMatched.length > 0);
+    }
 
-    const activeList = [];
-    const identicalList = [];
-
-    filteredMatched.forEach(f => {
+    filteredMatched.forEach((f, index) => {
       const targetName = this._getCrossCheckTargetName(f);
+      const isPerfect = (cleanName(f.name) === cleanName(targetName));
+      const isChecked = this._crossCheckState.userToggled.has(f.id)
+        ? this._crossCheckState.userToggled.get(f.id)
+        : !isPerfect;
+      const isFocused = (this._crossCheckState.focusedIndex === index);
       const diff = computeWordDiff(f.name, targetName, this.state.studentName);
 
-      if (diff.isIdentical) {
-        identicalList.push({ file: f, targetName, diff });
+      const row = document.createElement('div');
+      row.dataset.fileId = f.id;
+      let rowClasses = 'grid grid-cols-[32px_minmax(0,1fr)_22px_minmax(0,1.1fr)_104px] items-center gap-2 px-3 min-h-[38px] py-1.5 rounded-lg border transition-all cursor-pointer ';
+      if (isFocused) {
+        rowClasses += 'border-blue-600 bg-blue-50/35 shadow-2xs';
+      } else if (isPerfect && !isChecked) {
+        rowClasses += 'border-transparent bg-slate-50/45 hover:bg-slate-100/60';
       } else {
-        activeList.push({ file: f, targetName, diff });
+        rowClasses += 'border-transparent hover:bg-slate-50 border-b-slate-100';
       }
-    });
+      row.className = rowClasses;
 
-    if (activeCountEl) activeCountEl.textContent = String(activeList.length);
-    if (identicalCountEl) identicalCountEl.textContent = String(identicalList.length);
-
-    if (activeEmptyEl) {
-      activeEmptyEl.classList.toggle('hidden', activeList.length > 0);
-    }
-
-    if (drawerIdentical) {
-      drawerIdentical.classList.toggle('hidden', identicalList.length === 0);
-    }
-
-    // Render Active Rows (To Be Renamed)
-    activeList.forEach((item, index) => {
-      const { file, targetName, diff } = item;
-      const tr = document.createElement('tr');
-      tr.className = 'hover:bg-surface-container-high/40 transition-colors';
-      tr.dataset.fileId = file.id;
-
-      const isChecked = this._crossCheckState.userToggled.has(file.id)
-        ? this._crossCheckState.userToggled.get(file.id)
-        : true;
-
-      const tdCb = document.createElement('td');
-      tdCb.className = 'py-2 px-3 text-center';
+      // 1. Checkbox
+      const colCb = document.createElement('div');
+      colCb.className = 'flex items-center justify-center';
       const cb = document.createElement('input');
       cb.type = 'checkbox';
       cb.checked = isChecked;
-      cb.className = 'w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer crosscheck-row-cb';
-      cb.addEventListener('change', () => {
-        this._crossCheckState.userToggled.set(file.id, cb.checked);
+      cb.className = 'w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600 crosscheck-row-cb';
+      cb.addEventListener('change', (e) => {
+        e.stopPropagation();
+        this._crossCheckState.userToggled.set(f.id, cb.checked);
         this._updateCrossCheckSelectionCount();
+        this._renderCrossCheckRows();
       });
-      tdCb.appendChild(cb);
-      tr.appendChild(tdCb);
+      colCb.appendChild(cb);
+      row.appendChild(colCb);
 
-      // Old Name (Live Word Diff HTML)
-      const tdOld = document.createElement('td');
-      tdOld.className = 'py-2 px-3 font-mono-code text-[12px] truncate';
-      tdOld.title = cleanName(file.name);
-      tdOld.innerHTML = diff.oldHtml;
-      tr.appendChild(tdOld);
+      // 2. Old Name
+      const colOld = document.createElement('div');
+      colOld.className = 'font-mono-code text-[12px] truncate';
+      colOld.title = cleanName(f.name);
+      if (isPerfect) {
+        colOld.innerHTML = `<span class="text-slate-400">${escapeHtml(cleanName(f.name))}</span>`;
+      } else {
+        colOld.innerHTML = diff.oldHtml;
+      }
+      row.appendChild(colOld);
 
-      // Arrow
-      const tdArr = document.createElement('td');
-      tdArr.className = 'py-2 px-2 text-center text-outline-variant font-bold select-none';
-      tdArr.textContent = '→';
-      tr.appendChild(tdArr);
+      // 3. Arrow
+      const colArr = document.createElement('div');
+      colArr.className = 'flex items-center justify-center text-slate-300 font-bold select-none';
+      colArr.innerHTML = `<svg class="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>`;
+      row.appendChild(colArr);
 
-      // Suggested New Name (Live Word Diff HTML)
-      const tdNew = document.createElement('td');
-      tdNew.className = 'py-2 px-3 font-mono-code text-[12px] truncate';
-      tdNew.title = cleanName(targetName);
-      tdNew.innerHTML = diff.newHtml;
-      tr.appendChild(tdNew);
+      // 4. Suggested New Name
+      const colNew = document.createElement('div');
+      colNew.className = 'font-mono-code text-[12px] truncate';
+      colNew.title = cleanName(targetName);
+      if (isPerfect) {
+        colNew.innerHTML = `<span class="text-slate-400 font-medium">${escapeHtml(cleanName(targetName))}</span>`;
+      } else {
+        colNew.innerHTML = diff.newHtml;
+      }
+      row.appendChild(colNew);
 
-      // Status Badge (Clean, single-line, zero redundant + Student box)
-      const tdConf = document.createElement('td');
-      tdConf.className = 'py-2 px-3 text-right flex items-center justify-end';
-      const badge = document.createElement('span');
+      // 5. Status / Match Badge
+      const colBadge = document.createElement('div');
+      colBadge.className = 'flex justify-end';
+      if (isPerfect) {
+        colBadge.innerHTML = `
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50/90 text-emerald-700 border border-emerald-200/90 whitespace-nowrap">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span>Perfect</span>
+          </span>
+        `;
+      } else {
+        const conf = f.smartConfidence !== undefined ? f.smartConfidence : 90;
+        const isHigh = conf >= 90;
+        const badgeStyle = isHigh
+          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+          : 'bg-amber-50 text-amber-700 border-amber-200';
+        const dotStyle = isHigh ? 'bg-emerald-500' : 'bg-amber-500';
+        colBadge.innerHTML = `
+          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${badgeStyle} whitespace-nowrap">
+            <span class="w-1.5 h-1.5 rounded-full ${dotStyle}"></span>
+            ${conf}% Match
+          </span>
+        `;
+      }
+      row.appendChild(colBadge);
 
-      const conf = file.smartConfidence !== undefined ? file.smartConfidence : 90;
-      const confClass = conf >= 90 ? 'confidence-badge-high' : conf >= 80 ? 'confidence-badge-med' : 'confidence-badge-low';
-      const dot = conf >= 90 ? '🟢' : conf >= 80 ? '🟡' : '🔴';
-      badge.className = `confidence-badge ${confClass} whitespace-nowrap`;
-      badge.textContent = `${dot} ${conf}% Match`;
-      tdConf.appendChild(badge);
-      tr.appendChild(tdConf);
+      row.addEventListener('click', (e) => {
+        if (e.target === cb) return;
+        this._crossCheckState.focusedIndex = index;
+        this._renderCrossCheckRows();
+      });
 
-      if (tbodyActive) tbodyActive.appendChild(tr);
+      if (tbody) tbody.appendChild(row);
     });
 
-    // Render Identical Rows into Collapsible Drawer
-    identicalList.forEach(item => {
-      const { file, targetName, diff } = item;
-      const tr = document.createElement('tr');
-      tr.className = 'hover:bg-surface-container-high/40 transition-colors';
-      tr.dataset.fileId = file.id;
-
-      const isChecked = this._crossCheckState.userToggled.has(file.id)
-        ? this._crossCheckState.userToggled.get(file.id)
-        : false;
-
-      const tdCb = document.createElement('td');
-      tdCb.className = 'py-2 px-3 text-center w-10';
-      const cb = document.createElement('input');
-      cb.type = 'checkbox';
-      cb.checked = isChecked;
-      cb.className = 'w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer crosscheck-row-cb';
-      cb.addEventListener('change', () => {
-        this._crossCheckState.userToggled.set(file.id, cb.checked);
-        this._updateCrossCheckSelectionCount();
-      });
-      tdCb.appendChild(cb);
-      tr.appendChild(tdCb);
-
-      const tdOld = document.createElement('td');
-      tdOld.className = 'py-2 px-3 font-mono-code text-[11px] text-secondary truncate';
-      tdOld.title = cleanName(file.name);
-      tdOld.textContent = cleanName(file.name);
-      tr.appendChild(tdOld);
-
-      const tdArr = document.createElement('td');
-      tdArr.className = 'py-2 px-2 text-center text-outline-variant select-none';
-      tdArr.textContent = '→';
-      tr.appendChild(tdArr);
-
-      const tdNew = document.createElement('td');
-      tdNew.className = 'py-2 px-3 font-mono-code text-[11px] text-secondary truncate';
-      tdNew.title = cleanName(targetName);
-      tdNew.textContent = cleanName(targetName);
-      tr.appendChild(tdNew);
-
-      const tdConf = document.createElement('td');
-      tdConf.className = 'py-2 px-3 text-right flex items-center justify-end';
-      const badge = document.createElement('span');
-      badge.className = 'px-2 py-0.5 rounded text-[10px] font-mono-code font-bold bg-surface-container text-secondary border border-outline-variant/30 whitespace-nowrap';
-      badge.textContent = 'Identical';
-      tdConf.appendChild(badge);
-      tr.appendChild(tdConf);
-
-      if (tbodyIdentical) tbodyIdentical.appendChild(tr);
-    });
-
-    const activeRows = Array.from(modal.querySelectorAll('#crossCheckTableBody tr'));
-    if (activeRows.length > 0) {
-      this._crossCheckState.focusedIndex = Math.min(this._crossCheckState.focusedIndex, activeRows.length - 1);
-      this._highlightFocusedCrossCheckRow(activeRows);
+    if (filteredMatched.length > 0) {
+      this._crossCheckState.focusedIndex = Math.min(this._crossCheckState.focusedIndex, filteredMatched.length - 1);
     }
-
     this._updateCrossCheckSelectionCount();
   }
 
   _updateCrossCheckSelectionCount() {
     const modal = document.getElementById('modalCrossCheck');
     if (!modal) return;
-    const checkboxes = modal.querySelectorAll('.crosscheck-row-cb');
-    const checked = Array.from(checkboxes).filter(cb => cb.checked);
+    const allMatched = this._getMatchedCrossCheckFiles();
+    let checkedCount = 0;
+    allMatched.forEach(f => {
+      const isChecked = this._crossCheckState?.userToggled.get(f.id) ?? false;
+      if (isChecked) checkedCount++;
+    });
+
     const selectedEl = document.getElementById('crossCheckSelectedCount');
+    const totalEl = document.getElementById('crossCheckTotalCount');
     const confirmLabel = document.getElementById('confirmRenameLabel');
     const confirmBtn = document.getElementById('btnConfirmBatchRename');
     const selectAllCb = document.getElementById('chkCrossCheckSelectAll');
 
-    if (selectedEl) selectedEl.textContent = String(checked.length);
-    if (confirmLabel) confirmLabel.textContent = `Confirm & Rename (${checked.length})`;
-    if (confirmBtn) confirmBtn.disabled = checked.length === 0;
-    if (selectAllCb) selectAllCb.checked = (checkboxes.length > 0 && checked.length === checkboxes.length);
+    if (selectedEl) selectedEl.textContent = String(checkedCount);
+    if (totalEl) totalEl.textContent = String(allMatched.length);
+    if (confirmLabel) confirmLabel.textContent = `Confirm & Rename (${checkedCount})`;
+    if (confirmBtn) {
+      confirmBtn.disabled = (checkedCount === 0);
+      confirmBtn.classList.toggle('opacity-40', checkedCount === 0);
+      confirmBtn.classList.toggle('cursor-not-allowed', checkedCount === 0);
+      confirmBtn.classList.toggle('cursor-pointer', checkedCount > 0);
+    }
+
+    const visibleRows = Array.from(modal.querySelectorAll('.crosscheck-row-cb'));
+    const visibleChecked = visibleRows.filter(cb => cb.checked).length;
+    if (selectAllCb) {
+      selectAllCb.checked = (visibleRows.length > 0 && visibleChecked === visibleRows.length);
+      selectAllCb.indeterminate = (visibleChecked > 0 && visibleChecked < visibleRows.length);
+    }
   }
 
   closeCrossCheckModal() {
@@ -4896,9 +4906,9 @@ export class RenamerUIManager {
     const checkedBoxes = modal.querySelectorAll('.crosscheck-row-cb:checked');
     const selectedFiles = [];
     checkedBoxes.forEach(cb => {
-      const tr = cb.closest('tr');
-      if (tr && tr.dataset.fileId) {
-        const f = this.state.files.find(x => x.id === tr.dataset.fileId);
+      const rowEl = cb.closest('[data-file-id]');
+      if (rowEl && rowEl.dataset.fileId) {
+        const f = this.state.files.find(x => x.id === rowEl.dataset.fileId);
         if (f) selectedFiles.push(f);
       }
     });

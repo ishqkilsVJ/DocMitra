@@ -9,19 +9,24 @@ import { makeChecklist } from '../libraries/checklist-library.js';
 const DICT_VERSION = 'v3_exact_single';
 const DEFAULT_GROUPS = exportDictionaryToGroups();
 
+const memoryStorage = {};
 const readLocal = (key, fallback) => {
   try {
-    const v = localStorage.getItem(key);
-    return v ? JSON.parse(v) : fallback;
-  } catch {
-    return fallback;
-  }
+    if (typeof localStorage !== 'undefined' && localStorage.getItem) {
+      const v = localStorage.getItem(key);
+      if (v) return JSON.parse(v);
+    }
+  } catch {}
+  return memoryStorage[key] !== undefined ? memoryStorage[key] : fallback;
 };
 
 const saveLocal = (key, v) => {
   try {
-    localStorage.setItem(key, JSON.stringify(v));
+    if (typeof localStorage !== 'undefined' && localStorage.setItem) {
+      localStorage.setItem(key, JSON.stringify(v));
+    }
   } catch {}
+  memoryStorage[key] = v;
 };
 
 export const normalizeGroups = groups => {
