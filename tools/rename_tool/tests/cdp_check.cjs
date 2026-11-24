@@ -52,16 +52,49 @@ http.get('http://127.0.0.1:9222/json', (res) => {
       const evalId = send('Runtime.evaluate', {
         expression: `
           (() => {
-            const btnBulkRename = document.getElementById('btnRenameMatched');
-            if (btnBulkRename) {
-              btnBulkRename.click();
+            const renamer = window.renamerUI;
+            if (renamer) {
+              // Inject test files with typos and duplicates
+              renamer.state.folder = { name: 'ARATI_ARJUN', path: 'E:/Students/ARATI_ARJUN' };
+              renamer.state.studentName = 'ARATI ARJUN';
+              renamer.state.files = [
+                { id: '1', name: '10 th nark sheet.pdf', targetName: '10TH MARKSHEET ARATI ARJUN.pdf', size: 154200, ext: '.pdf', isMatched: true, smartDocType: '10TH MARKSHEET', smartConfidence: 95 },
+                { id: '2', name: '12 leaving.pdf', targetName: '12TH LC ARATI ARJUN.pdf', size: 140000, ext: '.pdf', isMatched: true, smartDocType: '12TH LC', smartConfidence: 95 },
+                { id: '3', name: '12th lc 2.pdf', targetName: '12TH LC 2 ARATI ARJUN.pdf', size: 140000, ext: '.pdf', isMatched: true, smartDocType: '12TH LC', smartConfidence: 95 },
+                { id: '4', name: 'caste certifikate.pdf', targetName: 'CASTE CERTIFICATE ARATI ARJUN.pdf', size: 180000, ext: '.pdf', isMatched: true, smartDocType: 'CASTE CERTIFICATE', smartConfidence: 95 },
+                { id: '5', name: 'caste certificate 2.pdf', targetName: 'CASTE CERTIFICATE 2 ARATI ARJUN.pdf', size: 180000, ext: '.pdf', isMatched: true, smartDocType: 'CASTE CERTIFICATE', smartConfidence: 95 },
+                { id: '6', name: 'photo scan.jpg', targetName: 'PHOTO ARATI ARJUN.jpg', size: 95000, ext: '.jpg', isMatched: true, smartDocType: 'PHOTO', smartConfidence: 95 },
+                { id: '7', name: 'photo camera.jpg', targetName: 'PHOTO ARATI ARJUN.jpg', size: 95000, ext: '.jpg', isMatched: true, smartDocType: 'PHOTO', smartConfidence: 95 }
+              ];
+              renamer.renderQueue();
+              renamer.renderCurrentPreview();
+              renamer.openCrossCheckModal();
             }
+
             const modal = document.getElementById('modalCrossCheck');
             const isVisible = modal && !modal.classList.contains('hidden');
-            const rowCount = document.querySelectorAll('#crossCheckTableBody [data-file-id]').length;
+            const rows = document.querySelectorAll('#crossCheckTableBody [data-file-id]');
+            
+            // Check for duplicate badges and error badges inside modal rows
+            const dupBadges = document.querySelectorAll('#crossCheckTableBody .badge-dup-confirmed, #crossCheckTableBody .badge-dup-probable');
+            const errorBadges = document.querySelectorAll('#crossCheckTableBody .badge-wrong-minor, #crossCheckTableBody .badge-wrong-major');
+            
+            // Also check sidebar queue badges
+            const sidebarDupBadges = document.querySelectorAll('#col-queue .badge-dup-confirmed, #col-queue .badge-dup-probable');
+
+            const dupTexts = Array.from(dupBadges).map(el => el.textContent.trim());
+            const errTexts = Array.from(errorBadges).map(el => el.textContent.trim());
+            const sidebarDupTexts = Array.from(sidebarDupBadges).map(el => el.textContent.trim());
+
             return JSON.stringify({
               modalOpened: isVisible,
-              rowCount
+              rowCount: rows.length,
+              dupBadgesCountInModal: dupBadges.length,
+              dupTextsInModal: dupTexts,
+              errorBadgesCountInModal: errorBadges.length,
+              errTextsInModal: errTexts,
+              sidebarDupBadgesCount: sidebarDupBadges.length,
+              sidebarDupTexts: sidebarDupTexts
             });
           })()
         `,
@@ -98,13 +131,14 @@ http.get('http://127.0.0.1:9222/json', (res) => {
             }
 
             if (resp.id === evalId) {
-              console.log('BULK RENAME CLICK RESULT:', resp.result?.result?.value);
+              console.log('--- DUAL-MCP LIVE VERIFICATION RESULT ---');
+              console.log(resp.result?.result?.value);
               setTimeout(() => {
                 screenshotId = send('Page.captureScreenshot', { format: 'png' });
-              }, 400);
+              }, 600);
             } else if (resp.id === screenshotId) {
               const base64Data = resp.result.data;
-              const artifactPath = 'C:/Users/USER/.gemini/antigravity/brain/12ea5c70-446e-4ca0-b1ea-4c628e4aaf83/bulk_rename_opened_screenshot.png';
+              const artifactPath = 'C:/Users/USER/.gemini/antigravity/brain/12ea5c70-446e-4ca0-b1ea-4c628e4aaf83/duplicate_and_error_badge_verification.png';
               fs.writeFileSync(artifactPath, Buffer.from(base64Data, 'base64'));
               console.log('Saved screenshot to:', artifactPath);
               console.log('Console Errors:', consoleErrors.length, consoleErrors);

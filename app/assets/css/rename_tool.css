@@ -159,6 +159,30 @@
   border: 1px solid rgba(239, 68, 68, 0.35);
 }
 
+.rename-tool-scope .badge-dup-confirmed {
+  background-color: rgba(244, 63, 94, 0.15);
+  color: #e11d48;
+  border: 1px solid rgba(244, 63, 94, 0.35);
+}
+
+.rename-tool-scope .badge-dup-probable {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.rename-tool-scope .badge-wrong-minor {
+  background-color: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.rename-tool-scope .badge-wrong-major {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
 .rename-tool-scope .smart-scan-pulse {
   animation: smartScanPulseAnim 1.5s infinite ease-in-out;
 }

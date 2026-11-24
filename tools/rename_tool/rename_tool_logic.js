@@ -2824,4 +2824,146 @@ export function cleanPortalSafe(name) {
   return s;
 }
 
+/**
+ * Calculates spelling error / mistake percentage between original filename and target name.
+ * Compares normalized old name vs suggested target name (without file extension) using Levenshtein distance.
+ * Returns 0 if names match or if difference is 0%.
+ * 
+ * Formula:
+ * errorPercent = Math.round((editDistance / Math.max(oldLen, newLen)) * 100)
+ */
+export function computeOldNameErrorPercent(oldName, targetName, studentName = '') {
+  if (!oldName || !targetName) return 0;
+
+  // Strip file extensions
+  const cleanOld = cleanName(oldName).trim();
+  let cleanTarget = cleanName(targetName).trim();
+
+  // If old name does not include student name, but target name does,
+  // compare against the document portion so newly added student name isn't counted as an error.
+  const sName = (studentName || '').trim();
+  if (sName) {
+    const sLower = sName.toLowerCase();
+    const oldLower = cleanOld.toLowerCase();
+    if (!oldLower.includes(sLower)) {
+      const escaped = sName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      cleanTarget = cleanTarget.replace(new RegExp(`\\s*${escaped}\\s*`, 'i'), ' ').trim();
+    }
+  }
+
+  // Normalize: lower case, standardize standard tokens (e.g. "10 th" -> "10th", "mark sheet" -> "marksheet"), collapse whitespace
+  let normOld = cleanOld.toLowerCase()
+    .replace(/(\d+)\s+(th|st|nd|rd)\b/gi, '$1$2')
+    .replace(/\bmark\s+sheet\b/gi, 'marksheet')
+    .replace(/[\s_\-]+/g, ' ')
+    .trim();
+
+  let normTarget = cleanTarget.toLowerCase()
+    .replace(/(\d+)\s+(th|st|nd|rd)\b/gi, '$1$2')
+    .replace(/\bmark\s+sheet\b/gi, 'marksheet')
+    .replace(/[\s_\-]+/g, ' ')
+    .trim();
+
+  if (!normOld || !normTarget || normOld === normTarget) {
+    return 0;
+  }
+
+  const dist = levenshteinDistance(normOld, normTarget);
+  const maxLen = Math.max(normOld.length, normTarget.length);
+  if (maxLen === 0) return 0;
+
+  const pct = Math.round((dist / maxLen) * 100);
+  return Math.min(100, Math.max(0, pct));
+}
+
+/**
+ * Multi-Layer Smart Duplicate Detection Engine
+ * 1. Priority 1 (50% Probable Duplicate): Exact byte size (size > 0) + exact file extension
+ * 2. Priority 2 (100% Confirmed Duplicate): Identical SHA-256 hash OR canonical base document suffix collision
+ * 
+ * Returns Map<fileIdOrName, { status: 'confirmed' | 'probable' | null, reason: string }>
+ */
+export function detectDuplicateFiles(files) {
+  const result = new Map();
+  if (!Array.isArray(files) || files.length === 0) return result;
+
+  // Initialize all to null
+  files.forEach(f => {
+    const key = f.id || f.name;
+    result.set(key, { status: null, reason: '' });
+  });
+
+  // 1. Group by exact file.size + extension
+  const sizeExtGroups = new Map();
+  files.forEach(f => {
+    const size = Number(f.size) || 0;
+    const extStr = (f.ext || ext(f.name) || '').toLowerCase();
+    if (size > 0 && extStr) {
+      const groupKey = `${size}_${extStr}`;
+      if (!sizeExtGroups.has(groupKey)) sizeExtGroups.set(groupKey, []);
+      sizeExtGroups.get(groupKey).push(f);
+    }
+  });
+
+  // 2. Mark Size + Ext matches as 'probable' (50% Dup)
+  sizeExtGroups.forEach((group) => {
+    if (group.length >= 2) {
+      group.forEach(f => {
+        result.set(f.id || f.name, { status: 'probable', reason: 'Same file size & extension' });
+      });
+    }
+  });
+
+  // 3. Mark 100% Confirmed if SHA-256 hash matches
+  const hashGroups = new Map();
+  files.forEach(f => {
+    if (f.sha256) {
+      if (!hashGroups.has(f.sha256)) hashGroups.set(f.sha256, []);
+      hashGroups.get(f.sha256).push(f);
+    }
+  });
+  hashGroups.forEach((group) => {
+    if (group.length >= 2) {
+      group.forEach(f => {
+        result.set(f.id || f.name, { status: 'confirmed', reason: 'Identical SHA-256 content hash' });
+      });
+    }
+  });
+
+  // 4. Mark 100% Confirmed if canonical base document collision with numbered suffix (e.g. CASTE CERTIFICATE, CASTE CERTIFICATE 2)
+  const baseGroups = new Map();
+  files.forEach(f => {
+    const activeName = cleanName(f.targetName || f.name || '');
+    // Normalize and remove suffix copy numbers like " 2", " 3", "(2)", "_2", "-2"
+    let base = activeName.toLowerCase()
+      .replace(/[\s_\-]+(\d+|\(\d+\))(?=\s|$)/gi, '')
+      .replace(/[\s_\-]+/g, ' ')
+      .trim();
+
+    const extStr = (f.ext || ext(f.name) || '').toLowerCase();
+    const groupKey = `${base}|${extStr}`;
+    if (base.length >= 3) {
+      if (!baseGroups.has(groupKey)) baseGroups.set(groupKey, []);
+      baseGroups.get(groupKey).push({ file: f, originalName: activeName });
+    }
+  });
+
+  baseGroups.forEach((items) => {
+    if (items.length >= 2) {
+      const hasSuffixDiff = items.some(item => /[\s_\-]+(\d+|\(\d+\))(?=\s|$)/i.test(item.originalName));
+      const hasSameSize = items.some((item, idx) => {
+        return items.some((other, oIdx) => idx !== oIdx && item.file.size > 0 && item.file.size === other.file.size);
+      });
+      if (hasSuffixDiff || hasSameSize) {
+        items.forEach(item => {
+          result.set(item.file.id || item.file.name, { status: 'confirmed', reason: 'Canonical base document collision' });
+        });
+      }
+    }
+  });
+
+  return result;
+}
+
+
 

@@ -68,7 +68,9 @@ import {
   formatPatternName,
   cleanScannerJunk,
   cleanPortalSafe,
-  escapeHtml
+  escapeHtml,
+  computeOldNameErrorPercent,
+  detectDuplicateFiles
 } from './rename_tool_logic.js';
 import { recordRenameEvent } from '../../src/services/analytics-service.js';
 import { loadSettings, saveSettings, loadDocumentPresets, saveDocumentPresets } from '../../src/services/storage-service.js';
@@ -1319,6 +1321,64 @@ export class RenamerUIManager {
     // AUTOMATIC SMART SCAN ONLY: auto-start sequential scan on folder load
     if (this.state.files.length > 0) {
       this.handleSmartScanBatch();
+      this._computeDuplicateHashesAsync();
+    }
+  }
+
+  async _computeDuplicateHashesAsync() {
+    if (!this.state.files || this.state.files.length === 0) return;
+
+    const sizeMap = new Map();
+    this.state.files.forEach(f => {
+      const s = Number(f.size) || 0;
+      const e = (f.ext || ext(f.name) || '').toLowerCase();
+      if (s > 0 && e) {
+        const k = `${s}_${e}`;
+        if (!sizeMap.has(k)) sizeMap.set(k, []);
+        sizeMap.get(k).push(f);
+      }
+    });
+
+    const candidates = [];
+    sizeMap.forEach(group => {
+      if (group.length >= 2) {
+        group.forEach(f => {
+          if (!f.sha256) candidates.push(f);
+        });
+      }
+    });
+
+    if (candidates.length === 0) return;
+
+    const tauriInvoke = getTauriInvoke();
+
+    let computedAny = false;
+    for (const f of candidates) {
+      try {
+        let buffer = null;
+        if (f.fileObj && typeof f.fileObj.arrayBuffer === 'function') {
+          buffer = await f.fileObj.arrayBuffer();
+        } else if (f.path && tauriInvoke) {
+          const bytes = await tauriInvoke('read_binary_file', { path: f.path });
+          if (bytes) buffer = new Uint8Array(bytes).buffer;
+        }
+        if (buffer && typeof crypto !== 'undefined' && crypto.subtle) {
+          const hashBuf = await crypto.subtle.digest('SHA-256', buffer);
+          const hashArray = Array.from(new Uint8Array(hashBuf));
+          f.sha256 = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+          computedAny = true;
+        }
+      } catch (err) {
+        // Graceful non-blocking failover
+      }
+    }
+
+    if (computedAny) {
+      this.renderQueue();
+      const modal = document.getElementById('modalCrossCheck');
+      if (modal && !modal.classList.contains('hidden')) {
+        this._renderCrossCheckRows();
+      }
     }
   }
 
@@ -1951,6 +2011,8 @@ export class RenamerUIManager {
     const filesContainer = document.createElement('div');
     filesContainer.className = 'flex flex-col gap-1 overflow-y-auto pr-0.5 custom-pan-scroll flex-1';
 
+    const dupMap = detectDuplicateFiles(this.state.files);
+
     this.state.files.forEach((f, fIdx) => {
       const isActive = (fIdx === this.state.currentIndex);
       const isDone = !!f.isRenamed;
@@ -2000,6 +2062,23 @@ export class RenamerUIManager {
       // Compact Badge (~5-7 characters: score + short code)
       const shortCode = this.getShortCodeForDoc(f.smartDocType || f.docType);
       const conf = f.smartConfidence !== undefined ? f.smartConfidence : (f.isMatched ? 90 : 0);
+
+      // Multi-Layer Duplicate Badge (Priority 1: 50% Dup, Priority 2: Duplicate)
+      const dupInfo = dupMap.get(f.id || f.name);
+      const dupStatus = dupInfo ? dupInfo.status : null;
+      if (dupStatus === 'confirmed') {
+        const dupBadge = document.createElement('span');
+        dupBadge.className = 'confidence-badge badge-dup-confirmed shrink-0 text-[10px] px-1.5 py-0.5 select-none';
+        dupBadge.textContent = 'Duplicate';
+        dupBadge.title = 'Confirmed Duplicate (100% Identical or Copy Suffix Collision)';
+        item.appendChild(dupBadge);
+      } else if (dupStatus === 'probable') {
+        const probBadge = document.createElement('span');
+        probBadge.className = 'confidence-badge badge-dup-probable shrink-0 text-[10px] px-1.5 py-0.5 select-none';
+        probBadge.textContent = '50% Dup';
+        probBadge.title = 'Probable Duplicate (Exact same byte size & file extension)';
+        item.appendChild(probBadge);
+      }
 
       if (f.isScanning) {
         const scanBadge = document.createElement('span');
@@ -2793,6 +2872,7 @@ export class RenamerUIManager {
     this.updateTelemetry();
     this.renderQueue();
     this.renderCurrentPreview();
+    this._computeDuplicateHashesAsync();
 
     if (this._scanAbortController) {
       this._scanAbortController.abort();
@@ -2942,6 +3022,7 @@ export class RenamerUIManager {
     this.updateTelemetry();
     this.renderQueue();
     this.renderCurrentPreview();
+    this._computeDuplicateHashesAsync();
   }
 
   async handleRenameSingleFile(file) {
@@ -3101,6 +3182,7 @@ export class RenamerUIManager {
       this.updateTelemetry();
       this.renderQueue();
       this.renderCurrentPreview();
+      this._computeDuplicateHashesAsync();
     } catch (err) {
       toast.show('Rename Failed', err.message, 'error');
     }
@@ -3140,6 +3222,7 @@ export class RenamerUIManager {
       this.updateTelemetry();
       this.renderQueue();
       this.renderCurrentPreview();
+      this._computeDuplicateHashesAsync();
     } catch (err) {
       toast.show('Undo Failed', err.message, 'error');
     }
@@ -4746,6 +4829,8 @@ export class RenamerUIManager {
       activeEmptyEl.classList.toggle('hidden', filteredMatched.length > 0);
     }
 
+    const dupMap = detectDuplicateFiles(this.state.files);
+
     filteredMatched.forEach((f, index) => {
       const targetName = this._getCrossCheckTargetName(f);
       const isPerfect = (cleanName(f.name) === cleanName(targetName));
@@ -4783,14 +4868,51 @@ export class RenamerUIManager {
       colCb.appendChild(cb);
       row.appendChild(colCb);
 
-      // 2. Old Name
+      // 2. Old Name (with right-aligned Duplicate and Error % badges)
       const colOld = document.createElement('div');
-      colOld.className = 'font-mono-code text-[12px] truncate';
-      colOld.title = cleanName(f.name);
+      colOld.className = 'font-mono-code text-[12px] flex items-center justify-between gap-1.5 min-w-0';
+
+      const oldTextSpan = document.createElement('span');
+      oldTextSpan.className = 'truncate flex-1 min-w-0';
+      oldTextSpan.title = cleanName(f.name);
       if (isPerfect) {
-        colOld.innerHTML = `<span class="text-slate-400">${escapeHtml(cleanName(f.name))}</span>`;
+        oldTextSpan.innerHTML = `<span class="text-slate-400">${escapeHtml(cleanName(f.name))}</span>`;
       } else {
-        colOld.innerHTML = diff.oldHtml;
+        oldTextSpan.innerHTML = diff.oldHtml;
+      }
+      colOld.appendChild(oldTextSpan);
+
+      const oldBadgesDiv = document.createElement('div');
+      oldBadgesDiv.className = 'flex items-center gap-1 shrink-0';
+
+      const dupInfo = dupMap.get(f.id || f.name);
+      const dupStatus = dupInfo ? dupInfo.status : null;
+      if (dupStatus === 'confirmed') {
+        const dupBadge = document.createElement('span');
+        dupBadge.className = 'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold badge-dup-confirmed whitespace-nowrap select-none';
+        dupBadge.textContent = 'Duplicate';
+        dupBadge.title = 'Confirmed Duplicate (100% Identical or Copy Suffix Collision)';
+        oldBadgesDiv.appendChild(dupBadge);
+      } else if (dupStatus === 'probable') {
+        const probBadge = document.createElement('span');
+        probBadge.className = 'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold badge-dup-probable whitespace-nowrap select-none';
+        probBadge.textContent = '50% Dup';
+        probBadge.title = 'Probable Duplicate (Exact same byte size & file extension)';
+        oldBadgesDiv.appendChild(probBadge);
+      }
+
+      const errPct = computeOldNameErrorPercent(f.name, targetName, this.state.studentName);
+      if (errPct > 0) {
+        const errBadge = document.createElement('span');
+        const errClass = errPct >= 30 ? 'badge-wrong-major' : 'badge-wrong-minor';
+        errBadge.className = `inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap select-none ${errClass}`;
+        errBadge.textContent = `${errPct}% Wrong`;
+        errBadge.title = `${errPct}% difference from suggested document name`;
+        oldBadgesDiv.appendChild(errBadge);
+      }
+
+      if (oldBadgesDiv.children.length > 0) {
+        colOld.appendChild(oldBadgesDiv);
       }
       row.appendChild(colOld);
 
@@ -5001,6 +5123,7 @@ export class RenamerUIManager {
       this.updateTelemetry();
       this.renderQueue();
       this.renderCurrentPreview();
+      this._computeDuplicateHashesAsync();
     } catch (err) {
       toast.show('Rename Failed', err.message, 'error');
     }
