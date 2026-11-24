@@ -376,6 +376,40 @@
   50% { transform: scale(1.08); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.4); }
 }
 
+/* ==========================================================================
+   4. Sample 1: Uniform Fixed 42px Row Height & Keyword Popover
+   ========================================================================== */
+
+.rename-tool-scope .row-compact-42 {
+  height: 42px !important;
+  max-height: 42px !important;
+}
+
+.rename-tool-scope .row-compact-42 td {
+  height: 42px !important;
+  max-height: 42px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  vertical-align: middle;
+}
+
+.rename-tool-scope .keyword-popover-card {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 6px;
+  z-index: 60;
+  width: 290px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.18), 0 8px 10px -6px rgba(0, 0, 0, 0.12);
+  border: 1px solid #e2e8f0;
+  padding: 10px 12px;
+  pointer-events: auto;
+  text-align: left;
+}
+
+
 
 
 

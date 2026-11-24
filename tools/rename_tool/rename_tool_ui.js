@@ -576,6 +576,33 @@ export class RenamerUIManager {
     if (btnAddNewShortcut) {
       btnAddNewShortcut.addEventListener('click', () => this.openAddDocumentModal(null, true));
     }
+    // Sample 1: Single Unified Top Action Button (+ Add Document / Shortcut)
+    const btnAddDocOrShortcut = document.getElementById('btnAddDocOrShortcut');
+    if (btnAddDocOrShortcut) {
+      btnAddDocOrShortcut.addEventListener('click', () => {
+        const isFromShortcuts = this.state.settingsActiveTab === 'shortcuts' || (document.getElementById('tabContentShortcuts') && !document.getElementById('tabContentShortcuts').classList.contains('hidden'));
+        this.openAddDocumentModal(null, isFromShortcuts);
+      });
+    }
+
+    // Keyboard shortcut Ctrl+N / Cmd+N for adding document/shortcut when Settings modal is open
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
+        const modalSettings = document.getElementById('modalRenameSettings');
+        if (modalSettings && !modalSettings.classList.contains('hidden')) {
+          e.preventDefault();
+          const btnAdd = document.getElementById('btnAddDocOrShortcut') || document.getElementById('btnAddDocToPreset');
+          if (btnAdd) btnAdd.click();
+        }
+      }
+    });
+
+    // Close any open keyword popovers when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.keyword-popover-container')) {
+        document.querySelectorAll('.keyword-popover-card:not(.hidden)').forEach(p => p.classList.add('hidden'));
+      }
+    });
 
     const inputSearchPresetDocs = document.getElementById('inputSearchPresetDocs');
     if (inputSearchPresetDocs) {
@@ -4192,16 +4219,15 @@ export class RenamerUIManager {
 
     filteredDocs.forEach((doc, idx) => {
       const row = document.createElement('tr');
-      row.className = 'hover:bg-surface-container-low transition-colors';
+      row.className = 'row-compact-42 hover:bg-surface-container-low transition-colors group';
 
-      const kwDisplay = Array.isArray(doc.keywords) ? doc.keywords.join(', ') : (doc.keywords || '');
       const origIdx = docs.indexOf(doc);
 
       row.innerHTML = `
-        <td class="py-2.5 px-3 text-center text-secondary font-mono-code" style="width: 48px;">${idx + 1}</td>
-        <td class="py-2.5 px-3 font-semibold text-on-surface truncate" style="width: 32%;" title="${doc.name}">${doc.name}</td>
-        <td class="py-2.5 px-3 text-secondary text-[11px] leading-relaxed whitespace-normal break-words" style="width: 55%;" title="${kwDisplay}">${kwDisplay || '<span class="italic opacity-50">-</span>'}</td>
-        <td class="py-2.5 px-3 text-right whitespace-nowrap pr-4" style="width: 90px;">
+        <td class="py-1 px-3 text-center text-secondary font-mono-code text-[11px]" style="width: 44px;">${idx + 1}</td>
+        <td class="py-1 px-3 font-semibold text-on-surface truncate text-[12px]" style="width: 32%;" title="${escapeHtml(doc.name)}">${escapeHtml(doc.name)}</td>
+        <td class="py-1 px-3 text-secondary text-[11px] overflow-visible relative" style="width: 55%;">${this._renderKeywordsWithPopover(doc.keywords)}</td>
+        <td class="py-1 px-3 text-right whitespace-nowrap pr-4" style="width: 80px;">
           <div class="flex items-center justify-end gap-1">
             <button class="w-6 h-6 rounded hover:bg-primary/10 text-secondary hover:text-primary transition-colors flex items-center justify-center cursor-pointer btn-edit-doc" title="Edit document" type="button" data-doc-idx="${origIdx}">
               <span class="material-symbols-outlined text-[15px]">edit</span>
@@ -4222,7 +4248,72 @@ export class RenamerUIManager {
         delBtn.addEventListener('click', () => this.handleRemoveDocFromPreset(origIdx));
       }
 
+      this._initKeywordPopoverEvents(row);
       tbody.appendChild(row);
+    });
+  }
+
+  _renderKeywordsWithPopover(keywords) {
+    const kwList = Array.isArray(keywords)
+      ? keywords
+      : (typeof keywords === 'string' && keywords ? keywords.split(',').map(s => s.trim()).filter(Boolean) : []);
+
+    if (!kwList || kwList.length === 0) {
+      return '<span class="italic opacity-50 text-[11px]">-</span>';
+    }
+
+    const maxPrimary = 2;
+    const primary = kwList.slice(0, maxPrimary);
+    const overflow = kwList.slice(maxPrimary);
+
+    const primaryHtml = primary.map(k =>
+      `<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface font-medium text-[11px] border border-outline-variant/30 shrink-0 truncate max-w-[120px]" title="${escapeHtml(k)}">${escapeHtml(k)}</span>`
+    ).join('');
+
+    if (overflow.length === 0) {
+      return `<div class="flex items-center gap-1.5 h-full overflow-hidden">${primaryHtml}</div>`;
+    }
+
+    const overflowHtml = overflow.map(k =>
+      `<span class="px-1.5 py-0.5 rounded bg-surface-container text-secondary text-[10px] border border-outline-variant/30">${escapeHtml(k)}</span>`
+    ).join('');
+
+    return `
+      <div class="flex items-center gap-1.5 h-full overflow-visible">
+        ${primaryHtml}
+        <div class="relative inline-block keyword-popover-container">
+          <button type="button" class="btn-kw-popover px-2 py-0.5 rounded-full bg-primary/10 hover:bg-primary/20 text-primary font-bold text-[10px] border border-primary/20 cursor-pointer transition-all flex items-center gap-0.5 shrink-0 select-none" title="Click to view all ${kwList.length} keywords">
+            <span>+${overflow.length} more</span>
+            <span class="material-symbols-outlined text-[12px]">expand_more</span>
+          </button>
+          <div class="keyword-popover-card hidden">
+            <div class="text-[10px] font-bold text-secondary uppercase font-mono-code mb-1.5 flex items-center justify-between">
+              <span>All ${kwList.length} Keyword Aliases</span>
+              <span class="text-primary font-bold">100% Match Engine</span>
+            </div>
+            <div class="flex flex-wrap gap-1 max-h-40 overflow-y-auto pr-1 custom-pan-scroll">
+              ${overflowHtml}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  _initKeywordPopoverEvents(parent) {
+    if (!parent) return;
+    parent.querySelectorAll('.btn-kw-popover').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const container = btn.closest('.keyword-popover-container');
+        const popover = container?.querySelector('.keyword-popover-card');
+        if (!popover) return;
+        const isHidden = popover.classList.contains('hidden');
+        document.querySelectorAll('.keyword-popover-card:not(.hidden)').forEach(p => p.classList.add('hidden'));
+        if (isHidden) {
+          popover.classList.remove('hidden');
+        }
+      });
     });
   }
 
@@ -4256,19 +4347,18 @@ export class RenamerUIManager {
 
     filtered.forEach((s, idx) => {
       const sRow = document.createElement('tr');
-      sRow.className = 'hover:bg-surface-container-low transition-colors';
-      const kwDisplay = Array.isArray(s.keywords) ? s.keywords.join(', ') : (s.keywords || '');
+      sRow.className = 'row-compact-42 hover:bg-surface-container-low transition-colors group';
       const codesList = Array.isArray(s.codes) && s.codes.length > 0 ? s.codes : (s.code ? [s.code] : []);
       const chipsHtml = codesList.map(c =>
         `<span class="px-1.5 py-0.5 rounded font-mono-code font-bold text-[10px] ${getShortcutBadgeColor(c)}">${c}</span>`
       ).join(' ');
 
       sRow.innerHTML = `
-        <td class="py-2.5 px-3 text-center text-secondary font-mono-code" style="width: 48px;">${idx + 1}</td>
-        <td class="py-2.5 px-3 whitespace-normal" style="width: 14%;"><div class="flex flex-wrap gap-1">${chipsHtml}</div></td>
-        <td class="py-2.5 px-3 font-semibold text-on-surface truncate" style="width: 25%;" title="${s.canonical || s.label}">${s.canonical || s.label}</td>
-        <td class="py-2.5 px-3 text-secondary text-[11px] leading-relaxed whitespace-normal break-words" style="width: 45%;" title="${kwDisplay}">${kwDisplay || '<span class="italic opacity-50">-</span>'}</td>
-        <td class="py-2.5 px-3 text-right whitespace-nowrap pr-4" style="width: 90px;">
+        <td class="py-1 px-3 text-center text-secondary font-mono-code text-[11px]" style="width: 44px;">${idx + 1}</td>
+        <td class="py-1 px-3 whitespace-normal" style="width: 15%;"><div class="flex flex-wrap gap-1 max-h-[30px] overflow-hidden">${chipsHtml}</div></td>
+        <td class="py-1 px-3 font-semibold text-on-surface truncate text-[12px]" style="width: 25%;" title="${escapeHtml(s.canonical || s.label)}">${escapeHtml(s.canonical || s.label)}</td>
+        <td class="py-1 px-3 text-secondary text-[11px] overflow-visible relative" style="width: 46%;">${this._renderKeywordsWithPopover(s.keywords)}</td>
+        <td class="py-1 px-3 text-right whitespace-nowrap pr-4" style="width: 80px;">
           <div class="flex items-center justify-end gap-1">
             <button class="w-6 h-6 rounded hover:bg-primary/10 text-secondary hover:text-primary transition-colors flex items-center justify-center cursor-pointer btn-edit-shortcut" title="Edit shortcut" type="button" data-code="${s.code || codesList[0]}">
               <span class="material-symbols-outlined text-[15px]">edit</span>
@@ -4288,6 +4378,7 @@ export class RenamerUIManager {
       if (sDelBtn) {
         sDelBtn.addEventListener('click', () => this.handleRemoveShortcut(s.code || codesList[0]));
       }
+      this._initKeywordPopoverEvents(sRow);
       sTbody.appendChild(sRow);
     });
   }
@@ -4607,6 +4698,27 @@ export class RenamerUIManager {
       });
       container.appendChild(pill);
     });
+    this.updatePresetFeedbackBanner();
+  }
+
+  updatePresetFeedbackBanner() {
+    const banner = document.getElementById('dynamicPresetFeedback');
+    const textEl = document.getElementById('dynamicPresetFeedbackText');
+    if (!banner || !textEl) return;
+
+    const count = this._selectedPresetKeys ? this._selectedPresetKeys.size : 0;
+    if (count === 0) {
+      banner.className = 'p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-[11px] flex items-start gap-2 mt-1';
+      const icon = banner.querySelector('.material-symbols-outlined');
+      if (icon) icon.className = 'material-symbols-outlined text-[16px] text-amber-600 shrink-0 mt-0.5';
+      textEl.innerHTML = '<strong>Shortcut Only:</strong> No presets selected. This will be saved purely as a <em>Keyboard Shortcut &amp; Rename Rule</em> without appearing in any preset checklist.';
+    } else {
+      banner.className = 'p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-on-surface text-[11px] flex items-start gap-2 mt-1';
+      const icon = banner.querySelector('.material-symbols-outlined');
+      if (icon) icon.className = 'material-symbols-outlined text-[16px] text-primary shrink-0 mt-0.5';
+      const list = Array.from(this._selectedPresetKeys).join(', ');
+      textEl.innerHTML = `<strong>Dual Save:</strong> Will be added to <strong>Shortcuts &amp; Rename Rules</strong> AND simultaneously included in preset checklists for: <strong>${escapeHtml(list)}</strong>.`;
+    }
   }
 
   validateKeywordsInput() {
@@ -5038,7 +5150,11 @@ export class RenamerUIManager {
     this.renderQueue();
     this.renderCurrentPreview();
     this.renderSettingsModal(wasFromShortcuts ? 'shortcuts' : 'presets');
-    toast.show('Document Type Saved', `"${docName}" synced across shortcuts & ${selectedPresets.size} preset(s).`, 'success');
+    if (selectedPresets.size === 0) {
+      toast.show('Shortcut Saved', `"${docName}" saved purely as Keyboard Shortcut & Rename Rule.`, 'success');
+    } else {
+      toast.show('Document Type Saved', `"${docName}" saved to Shortcuts & included in ${selectedPresets.size} preset(s).`, 'success');
+    }
   }
 
   /* ==========================================================================

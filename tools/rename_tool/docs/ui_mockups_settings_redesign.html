@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DocMitra Suite — Rename Tool Settings Redesign (5 Visual Mockups)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              500: '#3b82f6',
+              600: '#1d4ed8', // DocMitra Primary Blue
+              700: '#1e40af',
+              900: '#0037b0', // Royal Blue
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 450, 'GRAD' 0, 'opsz' 20;
+      vertical-align: middle;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    /* Fixed Table Heights */
+    .row-compact-42 { height: 42px; max-height: 42px; }
+    .row-compact-52 { height: 52px; max-height: 52px; }
+    .row-compact-36 { height: 36px; max-height: 36px; }
+    .row-compact-46 { height: 46px; max-height: 46px; }
+    .row-compact-44 { height: 44px; max-height: 44px; }
+    
+    /* Popover animation */
+    .popover-card {
+      transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-800 font-sans antialiased min-h-screen p-4 md:p-6 flex flex-col">
+
+  <!-- Top Sticky Navigation & Gallery Controller -->
+  <header class="max-w-7xl mx-auto w-full bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-xl border border-slate-200/80 mb-6 shrink-0">
+    <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shadow-blue-500/30">
+            <span class="material-symbols-outlined text-[19px]">dashboard_customize</span>
+          </div>
+          <div>
+            <h1 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <span>DocMitra Suite — Rename Tool Settings Redesign</span>
+              <span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-mono font-bold">5 VISUAL MOCKUPS</span>
+            </h1>
+            <p class="text-xs text-slate-500">
+              Requirements: <strong>1. Uniform Row Height &amp; Clean Keyword Wrapping</strong> + <strong>2. Single Unified Top Button (`+ Add Document / Shortcut`)</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sample Switcher Pills & Side-by-Side Toggle -->
+      <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+        <div class="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs font-semibold">
+          <button onclick="switchSample(1)" id="pill-sample-1" class="sample-pill px-3 py-1.5 rounded-lg bg-blue-600 text-white shadow-sm transition-all flex items-center gap-1.5">
+            <span class="w-4 h-4 rounded-full bg-white/20 text-[10px] flex items-center justify-center font-bold">1</span>
+            <span>Compact Pill &amp; Popover</span>
+          </button>
+          <button onclick="switchSample(2)" id="pill-sample-2" class="sample-pill px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5">
+            <span class="w-4 h-4 rounded-full bg-slate-300 text-[10px] flex items-center justify-center font-bold text-slate-700">2</span>
+            <span>2-Line Balanced Clamp</span>
+          </button>
+          <button onclick="switchSample(3)" id="pill-sample-3" class="sample-pill px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5">
+            <span class="w-4 h-4 rounded-full bg-slate-300 text-[10px] flex items-center justify-center font-bold text-slate-700">3</span>
+            <span>Ultra-Dense 36px</span>
+          </button>
+          <button onclick="switchSample(4)" id="pill-sample-4" class="sample-pill px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5">
+            <span class="w-4 h-4 rounded-full bg-slate-300 text-[10px] flex items-center justify-center font-bold text-slate-700">4</span>
+            <span>Bento Tag Dropdown</span>
+          </button>
+          <button onclick="switchSample(5)" id="pill-sample-5" class="sample-pill px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5">
+            <span class="w-4 h-4 rounded-full bg-slate-300 text-[10px] flex items-center justify-center font-bold text-slate-700">5</span>
+            <span>Dynamic Search Priority</span>
+          </button>
+        </div>
+
+        <!-- View Mode Toggle -->
+        <button onclick="toggleSideBySide()" id="btnToggleSplit" class="px-3 py-1.5 rounded-xl border border-slate-300 hover:border-blue-500 bg-white text-slate-700 hover:text-blue-600 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs">
+          <span class="material-symbols-outlined text-[16px]">view_column</span>
+          <span id="lblSplitView">Compare Side-by-Side</span>
+        </button>
+
+        <!-- Test Modal Trigger -->
+        <button onclick="openUnifiedAddModal()" class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-blue-500/20 active:scale-95 transition-all">
+          <span class="material-symbols-outlined text-[16px]">add_circle</span>
+          <span>Test Unified Modal</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Showcase Container -->
+  <main class="max-w-7xl mx-auto w-full flex-1 flex flex-col gap-6" id="mockupsContainer">
+
+    <!-- ========================================================================= -->
+    <!-- SAMPLE 1: Compact Pill & Interactive Popover (The SaaS Gold Standard) -->
+    <!-- ========================================================================= -->
+    <div id="sample-view-1" class="sample-card flex flex-col bg-slate-800/60 rounded-3xl p-4 md:p-6 border border-slate-700/60 shadow-2xl">
+      <!-- Architecture Badge & Explanation -->
+      <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-700/80 text-white">
+        <div class="flex items-center gap-3">
+          <span class="px-2.5 py-1 rounded-lg bg-blue-600 text-white font-mono text-xs font-bold shadow-xs">SAMPLE 1</span>
+          <div>
+            <h2 class="text-sm font-bold text-white flex items-center gap-2">
+              <span>Compact 42px Row + Interactive "+X more" Floating Popover</span>
+              <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[11px] font-medium border border-emerald-500/30">Recommended for High Density</span>
+            </h2>
+            <p class="text-[12px] text-slate-400">
+              <strong>Header:</strong> Single Unified Button placed at Top-Right of Modal Header (left of Close 'X').
+              <strong>Row Height:</strong> Exactly 42px. Shows first 2 primary chips + interactive <code class="text-blue-300 bg-slate-800 px-1 rounded">+X more</code> pill with instant hover/click popover.
+            </p>
+          </div>
+        </div>
+        <div class="hidden md:flex items-center gap-2 text-xs text-slate-400 font-mono">
+          <span>Row Height: <strong>42px</strong></span>
+          <span>•</span>
+          <span>Max Rows on Screen: <strong>12 rows</strong></span>
+        </div>
+      </div>
+
+      <!-- The Live Mockup Frame -->
+      <div class="w-full bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden text-slate-900">
+        
+        <!-- Modal Top Header (With Single Unified Button at Top Right) -->
+        <div class="px-5 py-3.5 bg-slate-50 flex items-center justify-between border-b border-slate-200 shrink-0">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+              <span class="material-symbols-outlined text-[20px]">settings</span>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-slate-900">Rename Tool Settings</h3>
+              <p class="text-slate-500 text-[11px]">Manage Document Presets, Checklists, and Keyboard Shortcuts</p>
+            </div>
+          </div>
+          
+          <!-- Unified Top Action Button + Close Button -->
+          <div class="flex items-center gap-3">
+            <button onclick="openUnifiedAddModal()" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm shadow-blue-500/20 flex items-center gap-1.5 cursor-pointer transition-all active:scale-95">
+              <span class="material-symbols-outlined text-[17px]">add_circle</span>
+              <span>+ Add Document / Shortcut</span>
+              <kbd class="px-1.5 py-0.5 rounded bg-blue-800/40 text-[9px] font-mono text-blue-100 font-bold ml-0.5">Ctrl+N</kbd>
+            </button>
+            <div class="h-5 w-px bg-slate-200"></div>
+            <button class="w-7 h-7 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-colors">
+              <span class="material-symbols-outlined text-[18px]">close</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tab Header Bar with Live Badge Counters -->
+        <div class="px-5 pt-2 bg-slate-100/70 flex items-center gap-2 border-b border-slate-200 shrink-0 select-none">
+          <button onclick="switchTabSample1('presets')" id="s1-tab-presets" class="px-4 py-2 text-xs font-bold text-blue-700 border-b-2 border-blue-600 flex items-center gap-2 cursor-pointer transition-all">
+            <span class="material-symbols-outlined text-[16px]">checklist</span>
+            <span>Document Presets &amp; Checklists</span>
+            <span class="px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-700 font-mono text-[10px]">28</span>
+          </button>
+          <button onclick="switchTabSample1('shortcuts')" id="s1-tab-shortcuts" class="px-4 py-2 text-xs font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center gap-2 cursor-pointer transition-all">
+            <span class="material-symbols-outlined text-[16px]">keyboard</span>
+            <span>Shortcuts &amp; Rename Rules</span>
+            <span class="px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-600 font-mono text-[10px]">53</span>
+          </button>
+        </div>
+
+        <!-- Presets Tab Content -->
+        <div id="s1-content-presets" class="p-4 flex flex-col gap-3">
+          
+          <!-- Active Preset Selector Bar -->
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-2.5">
+              <span class="text-[11px] font-bold text-slate-700 uppercase tracking-wider font-mono flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[16px] text-blue-600">bookmark</span>
+                <span>Active Preset:</span>
+              </span>
+              <select class="h-8 pl-2.5 pr-7 rounded-lg bg-white border border-slate-300 font-semibold text-xs text-blue-700 outline-none focus:ring-1 focus:ring-blue-600 cursor-pointer">
+                <option selected>MAHA DBT (28 documents)</option>
+                <option>CET CELL (26 documents)</option>
+                <option>SWAYAM DEENDAYAL YOJANA (22 documents)</option>
+              </select>
+              <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-mono text-[10px] font-bold">ACTIVE</span>
+            </div>
+            <!-- Preset Utility Actions -->
+            <div class="flex items-center gap-1.5 text-xs">
+              <button class="px-2.5 py-1 rounded-md bg-white hover:bg-slate-100 text-slate-700 font-medium border border-slate-300 flex items-center gap-1 transition-all">
+                <span class="material-symbols-outlined text-[14px] text-blue-600">add</span> New
+              </button>
+              <button class="px-2.5 py-1 rounded-md bg-white hover:bg-slate-100 text-slate-700 font-medium border border-slate-300 flex items-center gap-1 transition-all">
+                <span class="material-symbols-outlined text-[14px]">content_copy</span> Copy
+              </button>
+              <button class="px-2.5 py-1 rounded-md bg-white hover:bg-slate-100 text-slate-700 font-medium border border-slate-300 flex items-center gap-1 transition-all">
+                <span class="material-symbols-outlined text-[14px]">edit</span> Rename
+              </button>
+            </div>
+          </div>
+
+          <!-- Document List Filter Bar -->
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-slate-800">Documents in Preset</span>
+              <span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-mono text-[10px] font-bold">28 Total</span>
+            </div>
+            <!-- Live Search Bar -->
+            <div class="relative w-72">
+              <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[15px] text-slate-400">search</span>
+              <input type="text" placeholder="Filter documents or keywords..." class="w-full h-8 pl-8 pr-3 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder:text-slate-400 outline-none focus:border-blue-600 focus:bg-white transition-all">
+            </div>
+          </div>
+
+          <!-- Fixed Height 42px High-Density Table with Clean +X Popover -->
+          <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs">
+            <table class="w-full border-collapse text-left text-xs" style="table-layout: fixed;">
+              <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[10px] font-bold font-mono tracking-wider">
+                <tr>
+                  <th class="py-2.5 px-3 text-center" style="width: 44px;">#</th>
+                  <th class="py-2.5 px-3" style="width: 32%;">Document Name</th>
+                  <th class="py-2.5 px-3" style="width: 54%;">Keywords / Search Tokens (Uniform 42px Row)</th>
+                  <th class="py-2.5 px-3 text-right pr-4" style="width: 80px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                
+                <!-- Row 1: Heavy Keywords (14 keywords) - NO ROW EXPANSION -->
+                <tr class="row-compact-42 hover:bg-blue-50/40 transition-colors group">
+                  <td class="px-3 text-center text-slate-400 font-mono text-[11px]">1</td>
+                  <td class="px-3 font-semibold text-slate-900 truncate" title="10TH MARKSHEET AND PASSING CERTIFICATE 2026">
+                    10TH MARKSHEET AND PASSING CERTIFICATE 2026
+                  </td>
+                  <td class="px-3 overflow-hidden">
+                    <div class="flex items-center gap-1.5 h-full">
+                      <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium text-[11px] border border-slate-200/80 shrink-0">10th</span>
+                      <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium text-[11px] border border-slate-200/80 shrink-0">ssc</span>
+                      <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium text-[11px] border border-slate-200/80 shrink-0 truncate max-w-[90px]">marksheet</span>
+                      <!-- Interactive Popover Pill -->
+                      <div class="relative inline-block">
+                        <button onclick="togglePopover('popover-s1-1')" class="px-2 py-0.5 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[10px] border border-blue-200 cursor-pointer transition-all flex items-center gap-0.5">
+                          <span>+11 more</span>
+                          <span class="material-symbols-outlined text-[12px]">expand_more</span>
+                        </button>
+                        <!-- Popover Card (Absolute Floating) -->
+                        <div id="popover-s1-1" class="hidden absolute left-0 bottom-full mb-1 z-30 w-72 bg-white rounded-xl shadow-xl border border-slate-200 p-3 text-left">
+                          <div class="text-[10px] font-bold text-slate-500 uppercase font-mono mb-1.5 flex items-center justify-between">
+                            <span>All 14 Keyword Aliases</span>
+                            <span class="text-blue-600 font-bold">100% Match Engine</span>
+                          </div>
+                          <div class="flex flex-wrap gap-1">
+                            <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px]">10th</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px]">ssc</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px]">mark sheet</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px]">marksheet</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px]">passing</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px]">certificate</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px]">matric</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px]">matriculation</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px]">10th pass</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px]">class 10</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px]">sanad</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-3 text-right pr-4">
+                    <div class="flex items-center justify-end gap-1">
+                      <button class="w-6 h-6 rounded hover:bg-blue-100 text-slate-400 hover:text-blue-700 transition-colors flex items-center justify-center"><span class="material-symbols-outlined text-[15px]">edit</span></button>
+                      <button class="w-6 h-6 rounded hover:bg-rose-100 text-slate-400 hover:text-rose-600 transition-colors flex items-center justify-center"><span class="material-symbols-outlined text-[15px]">delete</span></button>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Row 2: 12TH PASSING (Updated Stale Bug Fix) -->
+                <tr class="row-compact-42 hover:bg-blue-50/40 transition-colors group">
+                  <td class="px-3 text-center text-slate-400 font-mono text-[11px]">2</td>
+                  <td class="px-3 font-semibold text-slate-900 truncate" title="12TH PASSING">
+                    <span class="text-blue-700 font-bold">12TH PASSING</span>
+                  </td>
+                  <td class="px-3 overflow-hidden">
+                    <div class="flex items-center gap-1.5 h-full">
+                      <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium text-[11px] border border-slate-200/80 shrink-0">12th</span>
+                      <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium text-[11px] border border-slate-200/80 shrink-0">hsc</span>
+                      <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium text-[11px] border border-slate-200/80 shrink-0">passing</span>
+                      <div class="relative inline-block">
+                        <button onclick="togglePopover('popover-s1-2')" class="px-2 py-0.5 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[10px] border border-blue-200 cursor-pointer transition-all flex items-center gap-0.5">
+                          <span>+7 more</span>
+                          <span class="material-symbols-outlined text-[12px]">expand_more</span>
+                        </button>
+                        <div id="popover-s1-2" class="hidden absolute left-0 bottom-full mb-1 z-30 w-72 bg-white rounded-xl shadow-xl border border-slate-200 p-3 text-left">
+                          <div class="text-[10px] font-bold text-slate-500 uppercase font-mono mb-1.5">12TH PASSING Aliases</div>
+                          <div class="flex flex-wrap gap-1">
+                            <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px]">12th</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px]">hsc</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px]">passing</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px]">class 12</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px]">higher secondary</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px]">intermediate</span>
+                            <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px]">board</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-3 text-right pr-4">
+                    <div class="flex items-center justify-end gap-1">
+                      <button class="w-6 h-6 rounded hover:bg-blue-100 text-slate-400 hover:text-blue-700 transition-colors flex items-center justify-center"><span class="material-symbols-outlined text-[15px]">edit</span></button>
+                      <button class="w-6 h-6 rounded hover:bg-rose-100 text-slate-400 hover:text-rose-600 transition-colors flex items-center justify-center"><span class="material-symbols-outlined text-[15px]">delete</span></button>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Row 3: CASTE CERTIFICATE -->
+                <tr class="row-compact-42 hover:bg-blue-50/40 transition-colors group">
+                  <td class="px-3 text-center text-slate-400 font-mono text-[11px]">3</td>
+                  <td class="px-3 font-semibold text-slate-900 truncate" title="CASTE CERTIFICATE">CASTE CERTIFICATE</td>
+                  <td class="px-3 overflow-hidden">
+                    <div class="flex items-center gap-1.5 h-full">
+                      <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium text-[11px] border border-slate-200/80 shrink-0">caste</span>
+                      <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium text-[11px] border border-slate-200/80 shrink-0">cast</span>
+                      <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium text-[11px] border border-slate-200/80 shrink-0">jati</span>
+                      <button class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold text-[10px] border border-blue-200">+5 more</button>
+                    </div>
+                  </td>
+                  <td class="px-3 text-right pr-4">
+                    <div class="flex items-center justify-end gap-1">
+                      <button class="w-6 h-6 rounded hover:bg-blue-100 text-slate-400 hover:text-blue-700 transition-colors flex items-center justify-center"><span class="material-symbols-outlined text-[15px]">edit</span></button>
+                      <button class="w-6 h-6 rounded hover:bg-rose-100 text-slate-400 hover:text-rose-600 transition-colors flex items-center justify-center"><span class="material-symbols-outlined text-[15px]">delete</span></button>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Row 4: DOMICILE CERTIFICATE -->
+                <tr class="row-compact-42 hover:bg-blue-50/40 transition-colors group">
+                  <td class="px-3 text-center text-slate-400 font-mono text-[11px]">4</td>
+                  <td class="px-3 font-semibold text-slate-900 truncate" title="DOMICILE CERTIFICATE">DOMICILE CERTIFICATE</td>
+                  <td class="px-3 overflow-hidden">
+                    <div class="flex items-center gap-1.5 h-full">
+                      <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium text-[11px] border border-slate-200/80 shrink-0">domicile</span>
+                      <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium text-[11px] border border-slate-200/80 shrink-0">dom</span>
+                      <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium text-[11px] border border-slate-200/80 shrink-0">adhivasi</span>
+                      <button class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold text-[10px] border border-blue-200">+6 more</button>
+                    </div>
+                  </td>
+                  <td class="px-3 text-right pr-4">
+                    <div class="flex items-center justify-end gap-1">
+                      <button class="w-6 h-6 rounded hover:bg-blue-100 text-slate-400 hover:text-blue-700 transition-colors flex items-center justify-center"><span class="material-symbols-outlined text-[15px]">edit</span></button>
+                      <button class="w-6 h-6 rounded hover:bg-rose-100 text-slate-400 hover:text-rose-600 transition-colors flex items-center justify-center"><span class="material-symbols-outlined text-[15px]">delete</span></button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Shortcuts Tab Content (Hidden by default, switchable) -->
+        <div id="s1-content-shortcuts" class="p-4 flex flex-col gap-3 hidden">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-800">Shortcuts &amp; Rename Rules</span>
+            <span class="text-xs text-slate-500 font-mono">53 Master Shortcuts</span>
+          </div>
+          <!-- Shortcuts Table with Same 42px Uniform Height -->
+          <div class="border border-slate-200 rounded-xl overflow-hidden bg-white">
+            <table class="w-full border-collapse text-left text-xs" style="table-layout: fixed;">
+              <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[10px] font-bold font-mono">
+                <tr>
+                  <th class="py-2.5 px-3 text-center" style="width: 44px;">#</th>
+                  <th class="py-2.5 px-3" style="width: 15%;">Short Code(s)</th>
+                  <th class="py-2.5 px-3" style="width: 25%;">Canonical Document</th>
+                  <th class="py-2.5 px-3" style="width: 46%;">Keywords / Tokens (42px Uniform)</th>
+                  <th class="py-2.5 px-3 text-right pr-4" style="width: 80px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr class="row-compact-42 hover:bg-blue-50/40 transition-colors">
+                  <td class="px-3 text-center text-slate-400 font-mono text-[11px]">1</td>
+                  <td class="px-3"><span class="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-mono font-bold text-[10px]">10TH</span></td>
+                  <td class="px-3 font-semibold text-slate-900 truncate">10TH MARKSHEET</td>
+                  <td class="px-3 overflow-hidden">
+                    <div class="flex items-center gap-1.5 h-full">
+                      <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[11px]">10th</span>
+                      <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[11px]">ssc</span>
+                      <button class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold text-[10px] border border-blue-200">+10 more</button>
+                    </div>
+                  </td>
+                  <td class="px-3 text-right pr-4">
+                    <button class="w-6 h-6 rounded hover:bg-blue-100 text-slate-400 hover:text-blue-700"><span class="material-symbols-outlined text-[15px]">edit</span></button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- ========================================================================= -->
+    <!-- SAMPLE 2: 2-Line Balanced Clamp with Inline Counter (Balanced View) -->
+    <!-- ========================================================================= -->
+    <div id="sample-view-2" class="sample-card flex flex-col bg-slate-800/60 rounded-3xl p-4 md:p-6 border border-slate-700/60 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-700/80 text-white">
+        <div class="flex items-center gap-3">
+          <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-mono text-xs font-bold shadow-xs">SAMPLE 2</span>
+          <div>
+            <h2 class="text-sm font-bold text-white flex items-center gap-2">
+              <span>2-Line Balanced 52px Clamp + Search-Bar Integrated Action Button</span>
+              <span class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-[11px] font-medium border border-indigo-500/30">More Keywords at a Glance</span>
+            </h2>
+            <p class="text-[12px] text-slate-400">
+              <strong>Button:</strong> Integrated directly into the toolbar alongside the Search Filter.
+              <strong>Row Height:</strong> Exactly 52px (holds 2 neat lines of chips). Shows up to 5-6 chips before showing an inline badge.
+            </p>
+          </div>
+        </div>
+        <div class="hidden md:flex items-center gap-2 text-xs text-slate-400 font-mono">
+          <span>Row Height: <strong>52px</strong></span>
+          <span>•</span>
+          <span>Max Rows: <strong>10 rows</strong></span>
+        </div>
+      </div>
+
+      <div class="w-full bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden text-slate-900">
+        <!-- Calm Minimal Header -->
+        <div class="px-5 py-3.5 bg-slate-50 flex items-center justify-between border-b border-slate-200">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+              <span class="material-symbols-outlined text-[20px]">tune</span>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-slate-900">Rename Tool Settings</h3>
+              <p class="text-slate-500 text-[11px]">Configuration &amp; Preset Rules</p>
+            </div>
+          </div>
+          <button class="w-7 h-7 rounded-lg hover:bg-slate-200 text-slate-400 flex items-center justify-center">
+            <span class="material-symbols-outlined text-[18px]">close</span>
+          </button>
+        </div>
+
+        <!-- Integrated Action Toolbar (Search + Single Add Button Together) -->
+        <div class="p-4 bg-slate-100/60 border-b border-slate-200 flex items-center justify-between gap-3 flex-wrap">
+          <!-- Left: Tab Switcher -->
+          <div class="inline-flex p-1 bg-white rounded-xl border border-slate-200 shadow-xs text-xs font-semibold">
+            <button class="px-3.5 py-1.5 rounded-lg bg-indigo-600 text-white shadow-xs">Document Presets</button>
+            <button class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900">Shortcuts &amp; Rules</button>
+          </div>
+          
+          <!-- Right: Search + Unified Primary Action Button -->
+          <div class="flex items-center gap-2.5">
+            <div class="relative w-64">
+              <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[15px] text-slate-400">search</span>
+              <input type="text" placeholder="Search rules or keywords..." class="w-full h-8.5 pl-8 pr-3 rounded-lg bg-white border border-slate-200 text-xs outline-none focus:border-indigo-600 shadow-xs">
+            </div>
+            <button onclick="openUnifiedAddModal()" class="px-3.5 py-1.5 h-8.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 shrink-0">
+              <span class="material-symbols-outlined text-[16px]">add</span>
+              <span>+ Add Document / Shortcut</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Table with 52px Fixed Height and 2-Line Chip Wrap -->
+        <div class="p-4">
+          <div class="border border-slate-200 rounded-xl overflow-hidden bg-white">
+            <table class="w-full border-collapse text-left text-xs" style="table-layout: fixed;">
+              <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[10px] font-bold font-mono">
+                <tr>
+                  <th class="py-2.5 px-3 text-center" style="width: 44px;">#</th>
+                  <th class="py-2.5 px-3" style="width: 30%;">Document Name</th>
+                  <th class="py-2.5 px-3" style="width: 56%;">Keywords (2-Line Clamp 52px)</th>
+                  <th class="py-2.5 px-3 text-right pr-4" style="width: 80px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr class="row-compact-52 hover:bg-indigo-50/30 transition-colors">
+                  <td class="px-3 text-center text-slate-400 font-mono text-[11px]">1</td>
+                  <td class="px-3 font-semibold text-slate-900 truncate">10TH MARKSHEET AND PASSING CERTIFICATE 2026</td>
+                  <td class="px-3 py-1.5">
+                    <!-- 2-Line clamped flex container -->
+                    <div class="flex flex-wrap gap-1 max-h-[38px] overflow-hidden">
+                      <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-medium border border-slate-200">10th</span>
+                      <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-medium border border-slate-200">ssc</span>
+                      <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-medium border border-slate-200">mark sheet</span>
+                      <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-medium border border-slate-200">marksheet</span>
+                      <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-medium border border-slate-200">passing</span>
+                      <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-medium border border-slate-200">certificate</span>
+                      <span class="px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 text-[10px] font-bold border border-indigo-200 cursor-pointer" title="matric, matriculation, 10th pass, class 10, sanad">+8 more</span>
+                    </div>
+                  </td>
+                  <td class="px-3 text-right pr-4">
+                    <button class="w-6 h-6 rounded hover:bg-slate-200 text-slate-400"><span class="material-symbols-outlined text-[15px]">edit</span></button>
+                  </td>
+                </tr>
+                <tr class="row-compact-52 hover:bg-indigo-50/30 transition-colors">
+                  <td class="px-3 text-center text-slate-400 font-mono text-[11px]">2</td>
+                  <td class="px-3 font-semibold text-slate-900 truncate">12TH PASSING</td>
+                  <td class="px-3 py-1.5">
+                    <div class="flex flex-wrap gap-1 max-h-[38px] overflow-hidden">
+                      <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-medium border border-slate-200">12th</span>
+                      <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-medium border border-slate-200">hsc</span>
+                      <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-medium border border-slate-200">passing</span>
+                      <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-medium border border-slate-200">class 12</span>
+                      <span class="px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 text-[10px] font-bold border border-indigo-200" title="higher secondary, intermediate, board">+4 more</span>
+                    </div>
+                  </td>
+                  <td class="px-3 text-right pr-4">
+                    <button class="w-6 h-6 rounded hover:bg-slate-200 text-slate-400"><span class="material-symbols-outlined text-[15px]">edit</span></button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ========================================================================= -->
+    <!-- SAMPLE 3: Ultra-Dense High-Efficiency Row (Operator Speed Mode) -->
+    <!-- ========================================================================= -->
+    <div id="sample-view-3" class="sample-card flex flex-col bg-slate-800/60 rounded-3xl p-4 md:p-6 border border-slate-700/60 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-700/80 text-white">
+        <div class="flex items-center gap-3">
+          <span class="px-2.5 py-1 rounded-lg bg-teal-600 text-white font-mono text-xs font-bold shadow-xs">SAMPLE 3</span>
+          <div>
+            <h2 class="text-sm font-bold text-white flex items-center gap-2">
+              <span>Ultra-Dense 36px Row + Tab-Level Primary Button</span>
+              <span class="px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 text-[11px] font-medium border border-teal-500/30">Maximum Screen Density</span>
+            </h2>
+            <p class="text-[12px] text-slate-400">
+              <strong>Button:</strong> Placed at the right end of the Tab Bar directly facing the tabs.
+              <strong>Row Height:</strong> Ultra-compact 36px. Gradient fade-out on keywords with expandable drawer on click.
+            </p>
+          </div>
+        </div>
+        <div class="hidden md:flex items-center gap-2 text-xs text-slate-400 font-mono">
+          <span>Row Height: <strong>36px</strong></span>
+          <span>•</span>
+          <span>Max Rows: <strong>14+ rows</strong></span>
+        </div>
+      </div>
+
+      <div class="w-full bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden text-slate-900">
+        <!-- Compact Modal Header -->
+        <div class="px-5 py-3 bg-slate-50 flex items-center justify-between border-b border-slate-200">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-teal-600 text-[20px]">bolt</span>
+            <span class="text-sm font-bold text-slate-900">Rename Tool Settings (High Density)</span>
+          </div>
+          <button class="w-6 h-6 rounded hover:bg-slate-200 text-slate-400 flex items-center justify-center"><span class="material-symbols-outlined text-[16px]">close</span></button>
+        </div>
+
+        <!-- Tab Bar with Right-Aligned Unified Button -->
+        <div class="px-5 bg-slate-100 flex items-center justify-between border-b border-slate-200">
+          <div class="flex items-center gap-1 -mb-px">
+            <button class="px-3.5 py-2 text-xs font-bold text-teal-700 border-b-2 border-teal-600">Document Presets</button>
+            <button class="px-3.5 py-2 text-xs font-medium text-slate-500 hover:text-slate-900">Shortcuts &amp; Rules</button>
+          </div>
+          <button onclick="openUnifiedAddModal()" class="px-3 py-1 rounded-md bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-bold shadow-xs flex items-center gap-1 cursor-pointer">
+            <span class="material-symbols-outlined text-[15px]">add_circle</span>
+            <span>+ Add Document / Shortcut</span>
+          </button>
+        </div>
+
+        <!-- Table with 36px Ultra-Dense Rows -->
+        <div class="p-4">
+          <div class="border border-slate-200 rounded-xl overflow-hidden bg-white">
+            <table class="w-full border-collapse text-left text-xs" style="table-layout: fixed;">
+              <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[9px] font-bold font-mono">
+                <tr>
+                  <th class="py-1.5 px-3 text-center" style="width: 40px;">#</th>
+                  <th class="py-1.5 px-3" style="width: 32%;">Document</th>
+                  <th class="py-1.5 px-3" style="width: 56%;">Keywords (36px Ultra-Dense)</th>
+                  <th class="py-1.5 px-3 text-right pr-4" style="width: 60px;">Act</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 font-label-sm">
+                <tr class="row-compact-36 hover:bg-teal-50/40 transition-colors cursor-pointer">
+                  <td class="px-3 text-center text-slate-400 font-mono text-[10px]">1</td>
+                  <td class="px-3 font-semibold text-slate-900 truncate">10TH MARKSHEET AND PASSING CERTIFICATE 2026</td>
+                  <td class="px-3 overflow-hidden">
+                    <div class="flex items-center gap-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                      <span class="text-slate-600 font-mono text-[11px]">10th, ssc, mark sheet, marksheet...</span>
+                      <span class="px-1.5 py-0.2 rounded bg-teal-100 text-teal-800 text-[9px] font-bold shrink-0">+10 more</span>
+                    </div>
+                  </td>
+                  <td class="px-3 text-right pr-4">
+                    <button class="text-slate-400 hover:text-teal-700"><span class="material-symbols-outlined text-[14px]">edit</span></button>
+                  </td>
+                </tr>
+                <tr class="row-compact-36 hover:bg-teal-50/40 transition-colors cursor-pointer">
+                  <td class="px-3 text-center text-slate-400 font-mono text-[10px]">2</td>
+                  <td class="px-3 font-semibold text-slate-900 truncate">12TH PASSING</td>
+                  <td class="px-3 overflow-hidden">
+                    <div class="flex items-center gap-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                      <span class="text-slate-600 font-mono text-[11px]">12th, hsc, passing, class 12...</span>
+                      <span class="px-1.5 py-0.2 rounded bg-teal-100 text-teal-800 text-[9px] font-bold shrink-0">+7 more</span>
+                    </div>
+                  </td>
+                  <td class="px-3 text-right pr-4">
+                    <button class="text-slate-400 hover:text-teal-700"><span class="material-symbols-outlined text-[14px]">edit</span></button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ========================================================================= -->
+    <!-- SAMPLE 4: Bento Split-Bar with Categorized Token Dropdown -->
+    <!-- ========================================================================= -->
+    <div id="sample-view-4" class="sample-card flex flex-col bg-slate-800/60 rounded-3xl p-4 md:p-6 border border-slate-700/60 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-700/80 text-white">
+        <div class="flex items-center gap-3">
+          <span class="px-2.5 py-1 rounded-lg bg-sky-600 text-white font-mono text-xs font-bold shadow-xs">SAMPLE 4</span>
+          <div>
+            <h2 class="text-sm font-bold text-white flex items-center gap-2">
+              <span>Bento Categorized Tag Dropdown + Split Action Header</span>
+              <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 text-[11px] font-medium border border-sky-500/30">Modern Fluid Bento</span>
+            </h2>
+            <p class="text-[12px] text-slate-400">
+              <strong>Button:</strong> Header Top-Right with Dual Quick-Actions (`+ Add Document / Shortcut` primary + Quick Dropdown).
+              <strong>Row Height:</strong> 46px. Categorized badges: Primary blue tag + secondary gray tags + interactive dropdown chip.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-full bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden text-slate-900">
+        <!-- Header with Split Action Button -->
+        <div class="px-5 py-3.5 bg-slate-50 flex items-center justify-between border-b border-slate-200">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center font-bold">
+              <span class="material-symbols-outlined text-[20px]">layers</span>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-slate-900">Rename Tool Settings</h3>
+              <p class="text-slate-500 text-[11px]">Bento Modular Configuration</p>
+            </div>
+          </div>
+          <!-- Split Action Button -->
+          <div class="flex items-center gap-2">
+            <div class="inline-flex rounded-lg shadow-xs overflow-hidden border border-sky-700">
+              <button onclick="openUnifiedAddModal()" class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold flex items-center gap-1.5 transition-all">
+                <span class="material-symbols-outlined text-[16px]">add</span>
+                <span>+ Add Document / Shortcut</span>
+              </button>
+              <button class="px-2 bg-sky-700 hover:bg-sky-800 text-white border-l border-sky-800 flex items-center justify-center">
+                <span class="material-symbols-outlined text-[16px]">expand_more</span>
+              </button>
+            </div>
+            <button class="w-7 h-7 rounded-lg hover:bg-slate-200 text-slate-400 flex items-center justify-center"><span class="material-symbols-outlined text-[18px]">close</span></button>
+          </div>
+        </div>
+
+        <!-- 46px Categorized Row Table -->
+        <div class="p-4">
+          <div class="border border-slate-200 rounded-xl overflow-hidden bg-white">
+            <table class="w-full border-collapse text-left text-xs" style="table-layout: fixed;">
+              <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[10px] font-bold font-mono">
+                <tr>
+                  <th class="py-2.5 px-3 text-center" style="width: 44px;">#</th>
+                  <th class="py-2.5 px-3" style="width: 32%;">Document</th>
+                  <th class="py-2.5 px-3" style="width: 54%;">Categorized Keywords (46px Fixed)</th>
+                  <th class="py-2.5 px-3 text-right pr-4" style="width: 80px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr class="row-compact-46 hover:bg-sky-50/40 transition-colors">
+                  <td class="px-3 text-center text-slate-400 font-mono text-[11px]">1</td>
+                  <td class="px-3 font-semibold text-slate-900 truncate">10TH MARKSHEET AND PASSING CERTIFICATE 2026</td>
+                  <td class="px-3">
+                    <div class="flex items-center gap-1.5">
+                      <span class="px-2 py-0.5 rounded-md bg-sky-100 text-sky-800 font-bold text-[10px] border border-sky-200">10TH (Primary)</span>
+                      <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[10px]">SSC</span>
+                      <button class="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 font-mono text-[10px] flex items-center gap-0.5 border border-slate-200">
+                        <span>▼ 12 Aliases</span>
+                      </button>
+                    </div>
+                  </td>
+                  <td class="px-3 text-right pr-4">
+                    <button class="w-6 h-6 rounded hover:bg-sky-100 text-slate-400 hover:text-sky-700"><span class="material-symbols-outlined text-[15px]">edit</span></button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ========================================================================= -->
+    <!-- SAMPLE 5: Card-Row Hybrid with Dynamic Search Priority (Smart Focus) -->
+    <!-- ========================================================================= -->
+    <div id="sample-view-5" class="sample-card flex flex-col bg-slate-800/60 rounded-3xl p-4 md:p-6 border border-slate-700/60 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-700/80 text-white">
+        <div class="flex items-center gap-3">
+          <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-mono text-xs font-bold shadow-xs">SAMPLE 5</span>
+          <div>
+            <h2 class="text-sm font-bold text-white flex items-center gap-2">
+              <span>Card-Row 44px + Search-Aware Keyword Prioritization</span>
+              <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[11px] font-medium border border-emerald-500/30">Intelligent Match Focus</span>
+            </h2>
+            <p class="text-[12px] text-slate-400">
+              <strong>Feature:</strong> Typing in search dynamically shifts matching keywords to the front so they are never hidden in overflow!
+              <strong>Header:</strong> Single Unified Button with subtitle hint: <em>"Saves to Shortcuts, or Shortcuts + Presets"</em>.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-full bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden text-slate-900">
+        <!-- Header with Subtitle Hint on Unified Button -->
+        <div class="px-5 py-3.5 bg-slate-50 flex items-center justify-between border-b border-slate-200">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+              <span class="material-symbols-outlined text-[20px]">smart_toy</span>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-slate-900">Rename Tool Settings</h3>
+              <p class="text-slate-500 text-[11px]">Dynamic Search-Aware Dictionary</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2.5">
+            <button onclick="openUnifiedAddModal()" class="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm shadow-emerald-500/20 flex items-center gap-2 transition-all cursor-pointer">
+              <span class="material-symbols-outlined text-[16px]">add_circle</span>
+              <div class="text-left">
+                <div class="leading-none">+ Add Document / Shortcut</div>
+                <div class="text-[9px] text-emerald-200 font-normal leading-tight">Shortcuts &amp; Presets Unified</div>
+              </div>
+            </button>
+            <button class="w-7 h-7 rounded-lg hover:bg-slate-200 text-slate-400 flex items-center justify-center"><span class="material-symbols-outlined text-[18px]">close</span></button>
+          </div>
+        </div>
+
+        <!-- 44px Card-Row Table -->
+        <div class="p-4">
+          <div class="border border-slate-200 rounded-xl overflow-hidden bg-white">
+            <table class="w-full border-collapse text-left text-xs" style="table-layout: fixed;">
+              <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[10px] font-bold font-mono">
+                <tr>
+                  <th class="py-2.5 px-3 text-center" style="width: 44px;">#</th>
+                  <th class="py-2.5 px-3" style="width: 32%;">Document</th>
+                  <th class="py-2.5 px-3" style="width: 54%;">Clean Minimal Tokens (44px Uniform)</th>
+                  <th class="py-2.5 px-3 text-right pr-4" style="width: 80px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr class="row-compact-44 hover:bg-emerald-50/30 transition-colors">
+                  <td class="px-3 text-center text-slate-400 font-mono text-[11px]">1</td>
+                  <td class="px-3 font-semibold text-slate-900 truncate">10TH MARKSHEET AND PASSING CERTIFICATE 2026</td>
+                  <td class="px-3">
+                    <div class="flex items-center gap-1.5 text-slate-700 font-medium">
+                      <span class="px-2 py-0.5 rounded bg-slate-100 text-[11px]">10th</span>
+                      <span class="text-slate-300">•</span>
+                      <span class="px-2 py-0.5 rounded bg-slate-100 text-[11px]">ssc</span>
+                      <span class="text-slate-300">•</span>
+                      <span class="px-2 py-0.5 rounded bg-slate-100 text-[11px]">marksheet</span>
+                      <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] border border-emerald-200 cursor-pointer">+11 more</span>
+                    </div>
+                  </td>
+                  <td class="px-3 text-right pr-4">
+                    <button class="w-6 h-6 rounded hover:bg-emerald-100 text-slate-400 hover:text-emerald-700"><span class="material-symbols-outlined text-[15px]">edit</span></button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+
+  <!-- ========================================================================= -->
+  <!-- INTERACTIVE UNIFIED ADD DOCUMENT / SHORTCUT MODAL PREVIEW -->
+  <!-- Demonstrates Requirement 2 (Preset selected = Both; None = Shortcut only) -->
+  <!-- ========================================================================= -->
+  <div id="modalUnifiedAddPreview" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="w-full max-w-lg bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      
+      <!-- Modal Header -->
+      <div class="px-5 py-3.5 bg-slate-50 flex items-center justify-between border-b border-slate-200">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+            <span class="material-symbols-outlined text-[19px]">add_circle</span>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Add Document / Shortcut</h3>
+            <p class="text-slate-500 text-[11px]">Unified entry for Presets and Shortcuts</p>
+          </div>
+        </div>
+        <button onclick="closeUnifiedAddModal()" class="w-7 h-7 rounded-lg hover:bg-slate-200 text-slate-400 flex items-center justify-center cursor-pointer">
+          <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-5 flex flex-col gap-4 text-xs">
+        
+        <!-- Field 1: Short Code(s) -->
+        <div class="flex flex-col gap-1.5">
+          <label class="font-bold text-slate-700 flex items-center justify-between">
+            <span>Short Code(s) <span class="text-slate-400 font-normal">(Optional for shortcuts)</span></span>
+            <span class="text-[10px] text-blue-600 font-mono">Press Enter to add chip</span>
+          </label>
+          <div class="p-2 rounded-lg bg-slate-50 border border-slate-200 flex flex-wrap items-center gap-1.5 min-h-[40px]">
+            <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-mono font-bold text-[11px] flex items-center gap-1">
+              <span>10TH</span>
+              <button class="hover:text-blue-900"><span class="material-symbols-outlined text-[13px]">close</span></button>
+            </span>
+            <input type="text" placeholder="Type code (e.g. SSC, 10)..." class="bg-transparent text-xs text-slate-800 outline-none flex-1 min-w-[120px]">
+          </div>
+        </div>
+
+        <!-- Field 2: Full Document Name -->
+        <div class="flex flex-col gap-1.5">
+          <label class="font-bold text-slate-700">Full Canonical Document Name <span class="text-rose-500">*</span></label>
+          <input type="text" value="10TH MARKSHEET" class="h-9 px-3 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 outline-none focus:border-blue-600 focus:bg-white transition-all">
+        </div>
+
+        <!-- Field 3: Keywords / Aliases with Auto-Generate -->
+        <div class="flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <label class="font-bold text-slate-700">Keywords / Aliases <span class="text-rose-500">*</span></label>
+            <button class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-[10px] flex items-center gap-1 border border-blue-200 transition-all">
+              <span class="material-symbols-outlined text-[12px]">auto_awesome</span>
+              <span>Auto-Generate</span>
+            </button>
+          </div>
+          <textarea rows="2" class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-800 outline-none focus:border-blue-600 focus:bg-white transition-all">10th, ssc, mark sheet, marksheet, passing, certificate, matric</textarea>
+        </div>
+
+        <!-- Field 4: Include in Presets (Interactive Toggle) -->
+        <div class="flex flex-col gap-2 pt-2 border-t border-slate-200">
+          <label class="font-bold text-slate-700 flex items-center justify-between">
+            <span>Include in Presets (Checklists)</span>
+            <span class="text-[10px] text-slate-400">Click to select presets</span>
+          </label>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="togglePresetPill(this, 'MAHA DBT')" class="preset-pill px-3 py-1.5 rounded-lg border border-blue-600 bg-blue-50 text-blue-700 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer">
+              <span class="material-symbols-outlined text-[15px]">check</span>
+              <span>MAHA DBT</span>
+            </button>
+            <button onclick="togglePresetPill(this, 'CET CELL')" class="preset-pill px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 font-medium text-xs flex items-center gap-1.5 transition-all cursor-pointer hover:border-slate-400">
+              <span class="material-symbols-outlined text-[15px] opacity-40">add</span>
+              <span>CET CELL</span>
+            </button>
+            <button onclick="togglePresetPill(this, 'SWAYAM')" class="preset-pill px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 font-medium text-xs flex items-center gap-1.5 transition-all cursor-pointer hover:border-slate-400">
+              <span class="material-symbols-outlined text-[15px] opacity-40">add</span>
+              <span>SWAYAM</span>
+            </button>
+          </div>
+
+          <!-- DYNAMIC REACTION BANNER (Requirement 2 Behavior) -->
+          <div id="dynamicPresetFeedback" class="p-2.5 rounded-lg bg-blue-50/80 border border-blue-200 text-blue-900 text-[11px] flex items-start gap-2 mt-1">
+            <span class="material-symbols-outlined text-[16px] text-blue-600 shrink-0 mt-0.5">info</span>
+            <div id="feedbackText">
+              <strong>Dual Save:</strong> Will be added to <strong>Shortcuts &amp; Rename Rules</strong> list AND included in the active checklist for <strong>MAHA DBT</strong>.
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-5 py-3 bg-slate-50 flex items-center justify-end gap-2 border-t border-slate-200">
+        <button onclick="closeUnifiedAddModal()" class="px-3.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 font-semibold text-xs cursor-pointer">
+          Cancel
+        </button>
+        <button onclick="saveAndToast()" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs cursor-pointer active:scale-95 transition-all">
+          Save Document / Shortcut
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Interactive JavaScript Logic -->
+  <script>
+    let activeSample = 1;
+    let isSplitView = false;
+    let selectedPresets = ['MAHA DBT'];
+
+    function switchSample(num) {
+      activeSample = num;
+      if (isSplitView) {
+        toggleSideBySide(); // reset split view on single tab click
+      }
+      for (let i = 1; i <= 5; i++) {
+        const card = document.getElementById(`sample-view-${i}`);
+        const pill = document.getElementById(`pill-sample-${i}`);
+        if (i === num) {
+          card.classList.remove('hidden');
+          pill.className = 'sample-pill px-3 py-1.5 rounded-lg bg-blue-600 text-white shadow-sm transition-all flex items-center gap-1.5';
+          pill.querySelector('span:first-child').className = 'w-4 h-4 rounded-full bg-white/20 text-[10px] flex items-center justify-center font-bold';
+        } else {
+          card.classList.add('hidden');
+          pill.className = 'sample-pill px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5';
+          pill.querySelector('span:first-child').className = 'w-4 h-4 rounded-full bg-slate-300 text-[10px] flex items-center justify-center font-bold text-slate-700';
+        }
+      }
+    }
+
+    function toggleSideBySide() {
+      isSplitView = !isSplitView;
+      const container = document.getElementById('mockupsContainer');
+      const lbl = document.getElementById('lblSplitView');
+      const btn = document.getElementById('btnToggleSplit');
+
+      if (isSplitView) {
+        lbl.textContent = 'Single View (1)';
+        btn.classList.add('bg-blue-50', 'text-blue-700', 'border-blue-400');
+        // Show Sample 1 and Sample 2 side by side
+        container.className = 'max-w-7xl mx-auto w-full flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6';
+        document.getElementById('sample-view-1').classList.remove('hidden');
+        document.getElementById('sample-view-2').classList.remove('hidden');
+        document.getElementById('sample-view-3').classList.add('hidden');
+        document.getElementById('sample-view-4').classList.add('hidden');
+        document.getElementById('sample-view-5').classList.add('hidden');
+      } else {
+        lbl.textContent = 'Compare Side-by-Side';
+        btn.classList.remove('bg-blue-50', 'text-blue-700', 'border-blue-400');
+        container.className = 'max-w-7xl mx-auto w-full flex-1 flex flex-col gap-6';
+        switchSample(activeSample);
+      }
+    }
+
+    function switchTabSample1(tab) {
+      const pTab = document.getElementById('s1-tab-presets');
+      const sTab = document.getElementById('s1-tab-shortcuts');
+      const pContent = document.getElementById('s1-content-presets');
+      const sContent = document.getElementById('s1-content-shortcuts');
+
+      if (tab === 'presets') {
+        pTab.className = 'px-4 py-2 text-xs font-bold text-blue-700 border-b-2 border-blue-600 flex items-center gap-2 cursor-pointer transition-all';
+        sTab.className = 'px-4 py-2 text-xs font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center gap-2 cursor-pointer transition-all';
+        pContent.classList.remove('hidden');
+        sContent.classList.add('hidden');
+      } else {
+        sTab.className = 'px-4 py-2 text-xs font-bold text-blue-700 border-b-2 border-blue-600 flex items-center gap-2 cursor-pointer transition-all';
+        pTab.className = 'px-4 py-2 text-xs font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent flex items-center gap-2 cursor-pointer transition-all';
+        sContent.classList.remove('hidden');
+        pContent.classList.add('hidden');
+      }
+    }
+
+    function togglePopover(id) {
+      const popover = document.getElementById(id);
+      if (popover) {
+        popover.classList.toggle('hidden');
+      }
+    }
+
+    function openUnifiedAddModal() {
+      document.getElementById('modalUnifiedAddPreview').classList.remove('hidden');
+    }
+
+    function closeUnifiedAddModal() {
+      document.getElementById('modalUnifiedAddPreview').classList.add('hidden');
+    }
+
+    function togglePresetPill(btn, presetName) {
+      const icon = btn.querySelector('.material-symbols-outlined');
+      if (selectedPresets.includes(presetName)) {
+        selectedPresets = selectedPresets.filter(p => p !== presetName);
+        btn.className = 'preset-pill px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 font-medium text-xs flex items-center gap-1.5 transition-all cursor-pointer hover:border-slate-400';
+        icon.textContent = 'add';
+        icon.className = 'material-symbols-outlined text-[15px] opacity-40';
+      } else {
+        selectedPresets.push(presetName);
+        btn.className = 'preset-pill px-3 py-1.5 rounded-lg border border-blue-600 bg-blue-50 text-blue-700 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer';
+        icon.textContent = 'check';
+        icon.className = 'material-symbols-outlined text-[15px]';
+      }
+
+      // Update feedback banner dynamically
+      const feedbackBanner = document.getElementById('dynamicPresetFeedback');
+      const feedbackText = document.getElementById('feedbackText');
+
+      if (selectedPresets.length === 0) {
+        feedbackBanner.className = 'p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-[11px] flex items-start gap-2 mt-1';
+        feedbackBanner.querySelector('.material-symbols-outlined').className = 'material-symbols-outlined text-[16px] text-amber-600 shrink-0 mt-0.5';
+        feedbackText.innerHTML = '<strong>Shortcut Only:</strong> No presets selected. This document will be saved <em>purely as a Keyboard Shortcut &amp; Rename Rule</em> without appearing in any preset checklist.';
+      } else {
+        feedbackBanner.className = 'p-2.5 rounded-lg bg-blue-50/80 border border-blue-200 text-blue-900 text-[11px] flex items-start gap-2 mt-1';
+        feedbackBanner.querySelector('.material-symbols-outlined').className = 'material-symbols-outlined text-[16px] text-blue-600 shrink-0 mt-0.5';
+        feedbackText.innerHTML = `<strong>Dual Save:</strong> Will be added to <strong>Shortcuts &amp; Rename Rules</strong> AND simultaneously included in preset checklists for <strong>${selectedPresets.join(', ')}</strong>.`;
+      }
+    }
+
+    function saveAndToast() {
+      alert(`Saved! Action: ${selectedPresets.length === 0 ? 'Saved as Shortcut Rule Only' : 'Saved to Shortcuts AND Presets: ' + selectedPresets.join(', ')}`);
+      closeUnifiedAddModal();
+    }
+
+    // Default initialization
+    switchSample(1);
+  </script>
+</body>
+</html>
