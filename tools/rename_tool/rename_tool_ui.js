@@ -454,22 +454,16 @@ export class RenamerUIManager {
       btnUndo.addEventListener('click', () => this.handleUndo());
     }
 
-    // Keep Original & Next (Tab)
-    const btnKeep = document.getElementById('btnKeepOriginal');
-    if (btnKeep) {
-      btnKeep.addEventListener('click', () => this.handleKeepOriginal());
+    // Re-Scan Files (F5)
+    const btnRescan = document.getElementById('btnRescanFiles');
+    if (btnRescan) {
+      btnRescan.addEventListener('click', () => this.handleRescanFiles());
     }
 
     // Save Batch (Ctrl+S)
     const btnSave = document.getElementById('btnSaveBatch');
     if (btnSave) {
       btnSave.addEventListener('click', () => this.handleSaveBatch());
-    }
-
-    // Export Audit (F9)
-    const btnExport = document.getElementById('btnExportAudit');
-    if (btnExport) {
-      btnExport.addEventListener('click', () => this.handleExportAudit());
     }
 
     // Smart Auto-Rename Buttons
@@ -718,10 +712,10 @@ export class RenamerUIManager {
         return;
       }
 
-      // F9: Export Audit
-      if (e.key === 'F9') {
+      // F5: Re-Scan Files
+      if (e.key === 'F5') {
         e.preventDefault();
-        this.handleExportAudit();
+        this.handleRescanFiles();
         return;
       }
 
@@ -1497,8 +1491,8 @@ export class RenamerUIManager {
         return isAutoMatched;
       }).length;
       const span = smartMatchedBtn.querySelector('span:not(.material-symbols-outlined)');
-      if (span) span.textContent = `Rename Matched (${matchedCount})`;
-      smartMatchedBtn.disabled = matchedCount === 0;
+      if (span) span.textContent = `Bulk Rename (${matchedCount})`;
+      smartMatchedBtn.disabled = this.state.files.length === 0;
     }
   }
 
@@ -1988,7 +1982,7 @@ export class RenamerUIManager {
         : (isActive
           ? 'w-4 h-4 rounded bg-primary text-on-primary font-mono-code font-bold text-[10px] flex items-center justify-center shrink-0 shadow-2xs'
           : 'w-4 h-4 rounded bg-surface-container text-secondary font-mono-code font-bold text-[10px] flex items-center justify-center shrink-0');
-      numBadge.textContent = isDone ? '✓' : String(fIdx + 1);
+      numBadge.textContent = String(fIdx + 1);
       leftCol.appendChild(numBadge);
 
       // Clean filename (single line, no extension in UI) - shows actual new renamed name or pending target name
@@ -2748,44 +2742,65 @@ export class RenamerUIManager {
     }
   }
 
-  async handleKeepOriginal() {
-    const current = this.state.files[this.state.currentIndex];
-    if (!current) return;
+  handleRescanFiles() {
+    if (!this.state.files || this.state.files.length === 0) {
+      toast.show('No Files to Re-Scan', 'Please select a folder first.', 'info');
+      return;
+    }
 
-    current.targetName = current.name;
-    current.isKept = true;
-    current.status = 'kept';
+    const effStudent = (this.state.studentName || '').trim();
+    const presetDocs = this.getAllPresetDocuments();
+    let reScannedCount = 0;
 
-    // If file has rotation, apply it to disk even when keeping original name
-    if (current.rotation && current.rotation % 360 !== 0) {
-      const oldPath = current.path || (this.state.folder?.path ? `${this.state.folder.path}/${current.name}` : null);
-      if (oldPath) {
-        try {
-          const rotRes = await rotateNativeFile(oldPath, current.rotation);
-          if (rotRes && rotRes.success) {
-            current.rotation = 0;
-            current._pdfBytes = null;
-            if (current._blobUrl && typeof URL !== 'undefined' && URL.revokeObjectURL) {
-              try { URL.revokeObjectURL(current._blobUrl); } catch (_) { }
-              current._blobUrl = null;
-            }
-          }
-        } catch (e) {
-          console.warn('[DocMitra] Rotation on keep failed:', e);
-        }
+    const usedDestinations = new Set();
+    this.state.files.forEach(f => {
+      if (f.isRenamed) usedDestinations.add(f.targetName || f.name);
+    });
+
+    this.state.files.forEach((f) => {
+      if (f.isRenamed) return;
+
+      const baseName = cleanName(f.name);
+      const extension = f.ext || ext(f.name) || '';
+      const matchSmart = matchFilenameSmart(f.name, effStudent, this.state.settings?.groups, presetDocs);
+      f.docType = matchSmart.docType;
+      f.smartDocType = matchSmart.docType;
+      f.isMatched = matchSmart.confidence >= 30;
+
+      let effectiveConfidence = matchSmart.confidence;
+      let suggested = baseName;
+      if (f.docType) {
+        suggested = buildName(f.docType, effStudent, this.state.settings?.groups, this.state.style);
+      } else {
+        suggested = buildName(baseName, effStudent, null, this.state.style);
       }
-    }
+      if (baseName.toUpperCase() === cleanName(suggested).toUpperCase()) {
+        effectiveConfidence = 100;
+      }
+      f.smartConfidence = effectiveConfidence;
 
-    toast.show('Kept Original', cleanName(current.name), 'info');
+      const desiredWithExt = (suggested.endsWith(extension) ? suggested : suggested + extension);
+      const uniqueName = uniqueDestination(desiredWithExt, f.name, usedDestinations, effStudent);
+      usedDestinations.add(uniqueName);
 
-    // Advance to next file (Circular wrap-around queue navigation: 1..N..1)
-    if (this.state.files.length > 0) {
-      this.state.currentIndex = (this.state.currentIndex + 1) % this.state.files.length;
-    }
+      f.suggestedName = uniqueName;
+      f.targetName = uniqueName;
+      f.status = f.isMatched ? (effectiveConfidence >= 80 ? 'matched' : 'needs_review') : 'unmatched';
+      reScannedCount++;
+    });
 
+    this._recalculateTargetNames(true);
     this.updateTelemetry();
     this.renderQueue();
     this.renderCurrentPreview();
+
+    if (this._scanAbortController) {
+      this._scanAbortController.abort();
+      this._scanAbortController = null;
+    }
+    this.handleSmartScanBatch();
+
+    toast.show('Re-Scan Complete', `Re-scanned ${reScannedCount} files. Scores updated.`, 'success');
   }
 
   async handleConfirmCurrentName(targetName) {
@@ -4636,9 +4651,15 @@ export class RenamerUIManager {
   }
 
   openCrossCheckModal() {
-    const matched = this._getMatchedCrossCheckFiles();
+    let matched = this._getMatchedCrossCheckFiles();
     if (matched.length === 0) {
-      toast.show('No Matched Documents', 'No auto-matched documents found with >=80% confidence.', 'info');
+      matched = this.state.files.filter(f => f.status !== 'needs_review');
+    }
+    if (matched.length === 0) {
+      matched = [...this.state.files];
+    }
+    if (matched.length === 0) {
+      toast.show('No Documents', 'Please select a folder first to bulk rename.', 'info');
       return;
     }
 
@@ -5006,65 +5027,6 @@ export class RenamerUIManager {
 
     localStorage.setItem('docmitra_last_batch', JSON.stringify(snapshot));
     toast.show('Batch State Saved', 'Current progress saved locally.', 'success');
-  }
-
-  handleExportAudit() {
-    if (this.state.files.length === 0) {
-      toast.show('Nothing to Export', 'Queue is empty.', 'info');
-      return;
-    }
-
-    const activePresetName = this.state.activePreset || this.state.settings?.activeChecklist || 'MAHA DBT';
-    let rules = [];
-    if (this.state.documentPresets && this.state.documentPresets[activePresetName]) {
-      rules = this.state.documentPresets[activePresetName].map(d => ({
-        name: d.name,
-        keywords: Array.isArray(d.keywords) ? d.keywords : [d.name.toLowerCase()]
-      }));
-    } else {
-      const checklistsData = this.state.settings?.checklists || DEFAULT_CHECKLISTS_DATA;
-      const rawRules = checklistsData[activePresetName] || DEFAULT_CHECKLISTS_DATA['MAHA DBT FORM'] || [];
-      rules = rawRules.map(r => {
-        if (Array.isArray(r)) {
-          return { name: r[0], keywords: r[1] || [r[0].toLowerCase()] };
-        }
-        return r;
-      });
-    }
-
-    const fileNames = this.state.files.map(f => f.targetName || f.name);
-    const activeLinks = this.state.settings?.linkedRules || DEFAULT_LINKED_RULES;
-    const evaluations = rules.map(rule => evaluateChecklistRule(fileNames, rule, activeLinks));
-
-    const foundCount = evaluations.filter(e => e.status === 'green').length;
-    const missingCount = evaluations.length - foundCount;
-    const percentComplete = rules.length > 0 ? Math.round((foundCount / rules.length) * 100) : 0;
-    const missingList = evaluations
-      .map((e, idx) => (e.status !== 'green' ? rules[idx].name : null))
-      .filter(Boolean);
-
-    const batchResults = [{
-      studentName: this.state.studentName || 'Student',
-      folderName: this.state.folder?.name || 'Folder',
-      summary: {
-        evaluations: evaluations.map((ev, idx) => ({
-          rule: rules[idx],
-          status: ev.status,
-          isLinked: ev.isLinked
-        })),
-        foundCount,
-        missingCount,
-        totalRequired: rules.length,
-        percentComplete,
-        isReady: missingCount === 0,
-        missingList
-      }
-    }];
-
-    const csvContent = generateBatchAuditCSV(batchResults, rules, activePresetName);
-    const filename = `DocMitra_Audit_${(this.state.studentName || 'Batch').replace(/\s+/g, '_')}.csv`;
-    downloadCSV(filename, csvContent);
-    toast.show('Audit Exported', `CSV report for ${rules.length} admission rules downloaded.`, 'success');
   }
 
   handleClearQueue(silent = false) {

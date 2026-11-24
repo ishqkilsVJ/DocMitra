@@ -55,12 +55,12 @@ assert.ok(!footerContent.includes('<kbd'), 'No <kbd> tags should exist in bottom
 
 // Ensure approved buttons exist in bottom execution toolbar
 assert.ok(footerContent.includes('id="btnUndoRename"'), 'Undo button must exist in toolbar');
-assert.ok(footerContent.includes('id="btnKeepOriginal"'), 'Keep Original button must exist in toolbar');
-assert.ok(footerContent.includes('id="btnRenameMatched"'), 'Rename Matched button must exist in toolbar');
-// assert.ok(footerContent.includes('id="btnReviewUnmatched"'), 'Review Unmatched button must exist in toolbar');
-assert.ok(footerContent.includes('id="btnExportAudit"'), 'Export Audit button must exist in toolbar');
+assert.ok(footerContent.includes('id="btnRescanFiles"'), 'Re-Scan button must exist in toolbar');
+assert.ok(footerContent.includes('id="btnRenameMatched"'), 'Bulk Rename button must exist in toolbar');
 
 // Ensure removed buttons are NOT present in visible bottom toolbar
+assert.ok(!footerContent.includes('id="btnKeepOriginal"'), 'Keep Original button must be removed from toolbar');
+assert.ok(!footerContent.includes('id="btnExportAudit"'), 'Export Audit button must be removed from toolbar');
 assert.ok(!footerContent.includes('id="btnSmartScanBatch"'), 'Smart Scan button must be removed from toolbar (automatic scan only)');
 assert.ok(!footerContent.includes('id="btnSaveBatch"'), 'Save Batch button must be removed from toolbar');
 assert.ok(!footerContent.includes('id="btnRenameAll"'), 'Rename All button must be removed/hidden from toolbar (focus on Rename Matched)');

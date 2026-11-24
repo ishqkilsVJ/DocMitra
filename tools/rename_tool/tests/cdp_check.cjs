@@ -8,7 +8,7 @@ http.get('http://127.0.0.1:9222/json', (res) => {
   res.on('end', () => {
     const list = JSON.parse(body);
     const page = list.find(p => p.type === 'page');
-    if (!page) { console.error('No page'); process.exit(1); }
+    if (!page) { console.error('No page found'); process.exit(1); }
 
     const wsUrl = new URL(page.webSocketDebuggerUrl);
     const key = crypto.randomBytes(16).toString('base64');
@@ -47,50 +47,21 @@ http.get('http://127.0.0.1:9222/json', (res) => {
       send('Console.enable');
       send('Runtime.enable');
 
+      const consoleErrors = [];
+
       const evalId = send('Runtime.evaluate', {
         expression: `
           (() => {
-            const renamer = window.docmitraRenamer;
-            if (!renamer) return { error: 'no renamer' };
-            renamer.state.studentName = 'ARATI ARJUN';
-            renamer.state.style = 'upper';
-            renamer.state.files = [
-              { id: 'f1', name: '10 th mark sheet.pdf', size: 1024, ext: '.pdf', smartConfidence: 98, docType: '10TH MARKSHEET', isMatched: true },
-              { id: 'f2', name: '12 leaving.pdf', size: 1024, ext: '.pdf', smartConfidence: 95, docType: '12TH LC', isMatched: true },
-              { id: 'f3', name: 'bank.pdf', size: 1024, ext: '.pdf', smartConfidence: 95, docType: 'BANK PASSBOOK', isMatched: true },
-              { id: 'f4', name: 'cast.pdf', size: 1024, ext: '.pdf', smartConfidence: 95, docType: 'CASTE CERTIFICATE', isMatched: true },
-              { id: 'f5', name: 'income ce.pdf', size: 1024, ext: '.pdf', smartConfidence: 95, docType: 'INCOME CERTIFICATE', isMatched: true },
-              { id: 'f6', name: 'photo ahe.pdf', size: 1024, ext: '.pdf', smartConfidence: 95, docType: 'PHOTO', isMatched: true },
-              { id: 'f7', name: 'pic.pdf', size: 1024, ext: '.pdf', smartConfidence: 95, docType: 'PHOTO', isMatched: true },
-              { id: 'f8', name: 'validety.pdf', size: 1024, ext: '.pdf', smartConfidence: 85, docType: 'CASTE VALIDITY CERTIFICATE', isMatched: true },
-              { id: 'f9', name: 'PHOTO ARATI ARJUN.pdf', size: 1024, ext: '.pdf', smartConfidence: 95, docType: 'PHOTO', isMatched: true },
-              { id: 'f10', name: 'VOTER ID ARATI ARJUN.pdf', size: 1024, ext: '.pdf', smartConfidence: 95, docType: 'VOTER ID', isMatched: true }
-            ];
-            renamer.openCrossCheckModal();
-
-            // Initial state check
-            const initialSelected = document.getElementById('crossCheckSelectedCount')?.textContent;
-
-            // Click Title case
-            const titleBtn = document.querySelector('[data-pattern-case="title"]');
-            if (titleBtn) titleBtn.click();
-
-            const afterTitleSelected = document.getElementById('crossCheckSelectedCount')?.textContent;
-            const btnConfirm = document.getElementById('btnConfirmBatchRename')?.textContent.trim();
-
-            const tbody = document.getElementById('crossCheckTableBody');
-            const rows = tbody ? Array.from(tbody.querySelectorAll('[data-file-id]')).map(r => ({
-              id: r.dataset.fileId,
-              checked: r.querySelector('input[type="checkbox"]')?.checked,
-              text: r.innerText.replace(/\\s+/g, ' ').trim()
-            })) : [];
-
+            const btnBulkRename = document.getElementById('btnRenameMatched');
+            if (btnBulkRename) {
+              btnBulkRename.click();
+            }
+            const modal = document.getElementById('modalCrossCheck');
+            const isVisible = modal && !modal.classList.contains('hidden');
+            const rowCount = document.querySelectorAll('#crossCheckTableBody [data-file-id]').length;
             return JSON.stringify({
-              initialSelected,
-              afterTitleSelected,
-              btnConfirm,
-              allChecked: rows.every(r => r.checked),
-              rowsSample: rows.slice(8)
+              modalOpened: isVisible,
+              rowCount
             });
           })()
         `,
@@ -119,18 +90,26 @@ http.get('http://127.0.0.1:9222/json', (res) => {
 
           try {
             const resp = JSON.parse(payload.toString('utf8'));
+            if (resp.method === 'Console.messageAdded' && resp.params?.message?.level === 'error') {
+              consoleErrors.push(resp.params.message.text);
+            }
+            if (resp.method === 'Runtime.exceptionThrown') {
+              consoleErrors.push(resp.params.exceptionDetails?.text || 'Exception');
+            }
+
             if (resp.id === evalId) {
-              console.log('DYNAMIC AUTO-CHECK TEST RESULT:', resp.result?.result?.value);
+              console.log('BULK RENAME CLICK RESULT:', resp.result?.result?.value);
               setTimeout(() => {
                 screenshotId = send('Page.captureScreenshot', { format: 'png' });
               }, 400);
             } else if (resp.id === screenshotId) {
               const base64Data = resp.result.data;
-              const artifactPath = 'C:/Users/USER/.gemini/antigravity/brain/12ea5c70-446e-4ca0-b1ea-4c628e4aaf83/dynamic_autocheck_screenshot.png';
+              const artifactPath = 'C:/Users/USER/.gemini/antigravity/brain/12ea5c70-446e-4ca0-b1ea-4c628e4aaf83/bulk_rename_opened_screenshot.png';
               fs.writeFileSync(artifactPath, Buffer.from(base64Data, 'base64'));
-              console.log('Saved dynamic check screenshot to:', artifactPath);
+              console.log('Saved screenshot to:', artifactPath);
+              console.log('Console Errors:', consoleErrors.length, consoleErrors);
               socket.end();
-              process.exit(0);
+              process.exit(consoleErrors.length > 0 ? 1 : 0);
             }
           } catch (e) {
             console.error(e);
