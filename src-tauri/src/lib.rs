@@ -161,7 +161,7 @@ fn list_native_directory(path: String) -> Result<DirectoryResult, String> {
             if let Ok(entry) = entry_res {
                 let p = entry.path();
                 let file_name = entry.file_name().to_string_lossy().to_string();
-                if file_name.starts_with('.') {
+                if file_name.starts_with('.') || file_name.eq_ignore_ascii_case("Duplicate Files") {
                     continue;
                 }
                 if let Ok(meta) = entry.metadata() {
@@ -328,6 +328,89 @@ fn rename_native_file(old_path: String, new_name: String) -> Result<RenameResult
 }
 
 #[tauri::command]
+fn move_native_file(source_path: String, target_dir_path: String) -> Result<RenameResult, String> {
+    let clean_source = source_path.replace('/', "\\");
+    let src = PathBuf::from(&clean_source);
+    if !src.exists() || !src.is_file() {
+        return Ok(RenameResult {
+            success: false,
+            old_path: Some(source_path),
+            new_path: None,
+            path: None,
+            new_name: None,
+            error: Some("Source file does not exist on disk".to_string()),
+        });
+    }
+
+    let clean_target_dir = target_dir_path.replace('/', "\\");
+    let target_dir = PathBuf::from(&clean_target_dir);
+    if !target_dir.exists() {
+        if let Err(e) = fs::create_dir_all(&target_dir) {
+            return Ok(RenameResult {
+                success: false,
+                old_path: Some(source_path),
+                new_path: None,
+                path: None,
+                new_name: None,
+                error: Some(format!("Failed to create destination folder: {}", e)),
+            });
+        }
+    }
+
+    let file_name = match src.file_name() {
+        Some(n) => n.to_string_lossy().to_string(),
+        None => return Ok(RenameResult {
+            success: false,
+            old_path: Some(source_path),
+            new_path: None,
+            path: None,
+            new_name: None,
+            error: Some("Invalid filename".to_string()),
+        }),
+    };
+
+    let path_obj = Path::new(&file_name);
+    let stem = match path_obj.file_stem() {
+        Some(s) => s.to_string_lossy().to_string(),
+        None => file_name.clone(),
+    };
+    let ext = match path_obj.extension() {
+        Some(e) => format!(".{}", e.to_string_lossy()),
+        None => String::new(),
+    };
+
+    let mut dest_path = target_dir.join(&file_name);
+    let mut dest_name = file_name.clone();
+    let mut counter = 1;
+    while dest_path.exists() {
+        dest_name = format!("{}_{}{}", stem, counter, ext);
+        dest_path = target_dir.join(&dest_name);
+        counter += 1;
+    }
+
+    if let Err(e) = fs::rename(&src, &dest_path) {
+        return Ok(RenameResult {
+            success: false,
+            old_path: Some(source_path),
+            new_path: None,
+            path: None,
+            new_name: Some(dest_name),
+            error: Some(format!("Move failed: {}", e)),
+        });
+    }
+
+    let new_path_str = dest_path.to_string_lossy().replace('\\', "/");
+    Ok(RenameResult {
+        success: true,
+        old_path: Some(source_path),
+        new_path: Some(new_path_str.clone()),
+        path: Some(new_path_str),
+        new_name: Some(dest_name),
+        error: None,
+    })
+}
+
+#[tauri::command]
 fn open_in_explorer(path: String) -> Result<bool, String> {
     #[cfg(target_os = "windows")]
     {
@@ -376,6 +459,7 @@ pub fn run() {
       list_native_directory,
       rename_native_file,
       rename_native_folder,
+      move_native_file,
       open_in_explorer,
       read_binary_file
     ])

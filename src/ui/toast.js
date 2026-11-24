@@ -31,7 +31,7 @@ class ToastManager {
    * @param {'info'|'success'|'warning'|'error'} [type='info']
    * @param {number} [duration=3000]
    */
-  show(title, subtitle = 'Ready to connect', type = 'info', duration = 3000) {
+  show(title, subtitle = 'Ready to connect', type = 'info', duration = 3000, action = null) {
     this._ensureContainer();
 
     const toast = document.createElement('div');
@@ -72,6 +72,19 @@ class ToastManager {
     }
 
     toast.appendChild(textCol);
+
+    if (action && typeof action.onClick === 'function') {
+      const actionBtn = document.createElement('button');
+      actionBtn.type = 'button';
+      actionBtn.className = 'ml-auto mr-1 px-2.5 py-1 rounded bg-white/20 hover:bg-white/30 active:scale-95 text-white font-bold text-[11px] transition-all cursor-pointer flex items-center gap-1 shadow-2xs';
+      actionBtn.textContent = action.label || 'Undo';
+      actionBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeToast();
+        action.onClick();
+      });
+      toast.appendChild(actionBtn);
+    }
 
     // Dismiss Button
     const dismissBtn = document.createElement('button');

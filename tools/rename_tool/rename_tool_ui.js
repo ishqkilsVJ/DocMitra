@@ -31,6 +31,7 @@ import {
   renameNativeFolder,
   rotateNativeFile,
   importNativeFile,
+  moveNativeFile,
   openFolderInExplorer,
   isNativeAvailable
 } from '../../shared/native-bridge.js';
@@ -246,6 +247,10 @@ export class RenamerUIManager {
     this.shortcuts21 = JSON.parse(JSON.stringify(DEFAULT_SHORTCUTS));
     this._presetDocsSearchQuery = '';
     this._shortcutsSearchQuery = '';
+
+    // Document Sorting & Safe Move History
+    this._sortOrder = 'asc';
+    this._recentMoves = [];
   }
 
   init() {
@@ -456,10 +461,22 @@ export class RenamerUIManager {
       btnUndo.addEventListener('click', () => this.handleUndo());
     }
 
+    // Move to Duplicates Button (Del)
+    const btnMoveDup = document.getElementById('btnMoveToDuplicates');
+    if (btnMoveDup) {
+      btnMoveDup.addEventListener('click', () => this.handleMoveFileToDuplicates());
+    }
+
     // Re-Scan Files (F5)
     const btnRescan = document.getElementById('btnRescanFiles');
     if (btnRescan) {
       btnRescan.addEventListener('click', () => this.handleRescanFiles());
+    }
+
+    // Sort Queue Button (A–Z / Z–A)
+    const btnSortQueue = document.getElementById('btnSortQueue');
+    if (btnSortQueue) {
+      btnSortQueue.addEventListener('click', () => this.handleSortDocuments());
     }
 
     // Save Batch (Ctrl+S)
@@ -718,6 +735,17 @@ export class RenamerUIManager {
       if (e.key === 'F5') {
         e.preventDefault();
         this.handleRescanFiles();
+        return;
+      }
+
+      // Delete: Move active document to "Duplicate Files" subfolder (Safe — never deleted)
+      if (e.key === 'Delete') {
+        if (e.target && e.target.tagName === 'INPUT' && e.target.id !== 'inputRenameTarget') {
+          // Other text inputs keep normal Delete key
+          return;
+        }
+        e.preventDefault();
+        this.handleMoveFileToDuplicates();
         return;
       }
 
@@ -1813,6 +1841,13 @@ export class RenamerUIManager {
 
       // Live keystroke filtering for illegal characters
       targetInput.addEventListener('keydown', (e) => {
+        // Delete key inside target input: intercept and safe-move current file (Backspace remains untouched for text deletion)
+        if (e.key === 'Delete') {
+          e.preventDefault();
+          this.handleMoveFileToDuplicates(currentFile);
+          return;
+        }
+
         // Ctrl+Enter: Instant disk rename for this single file
         if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
           e.preventDefault();
@@ -2110,6 +2145,19 @@ export class RenamerUIManager {
         unmatchBadge.textContent = '🔴 UNMATCH';
         item.appendChild(unmatchBadge);
       }
+
+      // Safe Move action button (Hover to move to Duplicate Files)
+      const btnRowMove = document.createElement('button');
+      btnRowMove.type = 'button';
+      btnRowMove.title = 'Move to "Duplicate Files" subfolder (Del)';
+      btnRowMove.className = 'w-5 h-5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-amber-500 flex items-center justify-center shrink-0 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer';
+      btnRowMove.innerHTML = '<span class="material-symbols-outlined text-[13px]">drive_file_move</span>';
+      btnRowMove.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.handleMoveFileToDuplicates(f);
+      });
+      item.classList.add('group');
+      item.appendChild(btnRowMove);
 
       filesContainer.appendChild(item);
     });
@@ -2821,53 +2869,39 @@ export class RenamerUIManager {
     }
   }
 
-  handleRescanFiles() {
+  async handleRescanFiles() {
     if (!this.state.files || this.state.files.length === 0) {
       toast.show('No Files to Re-Scan', 'Please select a folder first.', 'info');
       return;
     }
 
-    const effStudent = (this.state.studentName || '').trim();
-    const presetDocs = this.getAllPresetDocuments();
-    let reScannedCount = 0;
+    const folderPath = this.state.folder?.nativePath || this.state.folder?.path;
+    if (folderPath && isNativeAvailable()) {
+      try {
+        const res = await listNativeDirectory(folderPath);
+        if (res && res.success && Array.isArray(res.files)) {
+          const validFiles = res.files.filter(f => !isJunkFile(f.name) && !f.name.toLowerCase().includes('duplicate files'));
+          res.files = validFiles;
+          // Fresh reload: reset all files to pending, 0/X Done, and clear green ticks
+          this.loadFolderData(res);
+          this._computeDuplicateHashesAsync();
+          toast.show('Fresh Re-Scan Complete', `Reloaded ${validFiles.length} files from disk. All reset to pending.`, 'success');
+          return;
+        }
+      } catch (err) {
+        console.warn('[DocMitra Renamer] Native rescan fallback:', err);
+      }
+    }
 
-    const usedDestinations = new Set();
+    // In-memory fallback (e.g. test mode / mock dataset):
     this.state.files.forEach(f => {
-      if (f.isRenamed) usedDestinations.add(f.targetName || f.name);
+      f.isRenamed = false;
+      f.isKept = false;
+      f.hasUserEdited = false;
+      f.userEditedName = undefined;
+      f.status = 'pending';
     });
-
-    this.state.files.forEach((f) => {
-      if (f.isRenamed) return;
-
-      const baseName = cleanName(f.name);
-      const extension = f.ext || ext(f.name) || '';
-      const matchSmart = matchFilenameSmart(f.name, effStudent, this.state.settings?.groups, presetDocs);
-      f.docType = matchSmart.docType;
-      f.smartDocType = matchSmart.docType;
-      f.isMatched = matchSmart.confidence >= 30;
-
-      let effectiveConfidence = matchSmart.confidence;
-      let suggested = baseName;
-      if (f.docType) {
-        suggested = buildName(f.docType, effStudent, this.state.settings?.groups, this.state.style);
-      } else {
-        suggested = buildName(baseName, effStudent, null, this.state.style);
-      }
-      if (baseName.toUpperCase() === cleanName(suggested).toUpperCase()) {
-        effectiveConfidence = 100;
-      }
-      f.smartConfidence = effectiveConfidence;
-
-      const desiredWithExt = (suggested.endsWith(extension) ? suggested : suggested + extension);
-      const uniqueName = uniqueDestination(desiredWithExt, f.name, usedDestinations, effStudent);
-      usedDestinations.add(uniqueName);
-
-      f.suggestedName = uniqueName;
-      f.targetName = uniqueName;
-      f.status = f.isMatched ? (effectiveConfidence >= 80 ? 'matched' : 'needs_review') : 'unmatched';
-      reScannedCount++;
-    });
-
+    this.state.currentIndex = 0;
     this._recalculateTargetNames(true);
     this.updateTelemetry();
     this.renderQueue();
@@ -2880,7 +2914,200 @@ export class RenamerUIManager {
     }
     this.handleSmartScanBatch();
 
-    toast.show('Re-Scan Complete', `Re-scanned ${reScannedCount} files. Scores updated.`, 'success');
+    toast.show('Fresh Re-Scan Complete', `All ${this.state.files.length} files reset to 0 Done. Ready for re-matching.`, 'success');
+  }
+
+  handleSortDocuments(order = null) {
+    if (!this.state.files || this.state.files.length === 0) {
+      toast.show('No Files to Sort', 'Please load documents first.', 'info');
+      return;
+    }
+
+    if (order === 'asc' || order === 'desc') {
+      this._sortOrder = order;
+    } else {
+      this._sortOrder = this._sortOrder === 'asc' ? 'desc' : 'asc';
+    }
+
+    const currentFile = this.state.files[this.state.currentIndex];
+
+    this.state.files.sort((a, b) => {
+      const nameA = a.targetName || a.name || '';
+      const nameB = b.targetName || b.name || '';
+      const cmp = nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: 'base' });
+      return this._sortOrder === 'asc' ? cmp : -cmp;
+    });
+
+    if (currentFile) {
+      const newIdx = this.state.files.findIndex(f => f.id === currentFile.id || f.name === currentFile.name);
+      if (newIdx !== -1) this.state.currentIndex = newIdx;
+    }
+
+    const sortQueueLabel = document.getElementById('sortQueueLabel');
+    if (sortQueueLabel) sortQueueLabel.textContent = this._sortOrder === 'asc' ? 'Sort A–Z' : 'Sort Z–A';
+    const modalSortLabel = document.getElementById('modalSortLabel');
+    if (modalSortLabel) modalSortLabel.textContent = this._sortOrder === 'asc' ? 'Sort A–Z' : 'Sort Z–A';
+
+    this.renderQueue();
+    this.renderCurrentPreview();
+
+    const modal = document.getElementById('modalCrossCheck');
+    if (modal && !modal.classList.contains('hidden')) {
+      this._renderCrossCheckRows();
+    }
+
+    toast.show('Sorted', `Documents sorted ${this._sortOrder === 'asc' ? 'A → Z' : 'Z → A'}`, 'info');
+  }
+
+  async handleMoveFileToDuplicates(file = null) {
+    const targetFile = file || this.state.files[this.state.currentIndex];
+    if (!targetFile) {
+      toast.show('No Document Selected', 'Please select a document to move.', 'warning');
+      return;
+    }
+
+    const parentDir = this.state.folder?.nativePath || this.state.folder?.path ||
+      (targetFile.path ? targetFile.path.substring(0, Math.max(targetFile.path.lastIndexOf('\\'), targetFile.path.lastIndexOf('/'))) : '');
+
+    const dupDir = parentDir ? `${parentDir}\\Duplicate Files` : 'Duplicate Files';
+
+    let movedPath = '';
+    if (targetFile.path && isNativeAvailable()) {
+      try {
+        const res = await moveNativeFile(targetFile.path, dupDir);
+        if (!res || !res.success) {
+          toast.show('Move Failed', res?.error || 'Could not move file to Duplicate Files folder.', 'error');
+          return;
+        }
+        movedPath = res.new_path || res.path || `${dupDir}\\${targetFile.name}`;
+      } catch (err) {
+        toast.show('Move Error', err?.message || String(err), 'error');
+        return;
+      }
+    } else {
+      movedPath = `${dupDir}\\${targetFile.name}`;
+    }
+
+    const originalIndex = this.state.files.findIndex(f => f.id === targetFile.id || f.name === targetFile.name);
+    this._recentMoves.push({
+      file: { ...targetFile },
+      srcPath: targetFile.path,
+      movedPath: movedPath,
+      originalIndex: originalIndex
+    });
+
+    if (originalIndex !== -1) {
+      this.state.files.splice(originalIndex, 1);
+      if (this.state.currentIndex >= this.state.files.length) {
+        this.state.currentIndex = Math.max(0, this.state.files.length - 1);
+      }
+    }
+
+    this.updateTelemetry();
+    this.renderQueue();
+    this.renderCurrentPreview();
+
+    const modal = document.getElementById('modalCrossCheck');
+    if (modal && !modal.classList.contains('hidden')) {
+      this._renderCrossCheckRows();
+    }
+
+    toast.show(
+      'Safe Moved',
+      `"${targetFile.name}" moved to "Duplicate Files"`,
+      'info',
+      6000,
+      {
+        label: 'Undo',
+        onClick: () => this.handleUndoSafeMove()
+      }
+    );
+  }
+
+  async handleUndoSafeMove() {
+    if (!this._recentMoves || this._recentMoves.length === 0) {
+      toast.show('Nothing to Undo', 'No recent moved files found.', 'info');
+      return;
+    }
+
+    const lastMove = this._recentMoves.pop();
+    if (!lastMove || !lastMove.file) return;
+
+    if (lastMove.srcPath && lastMove.movedPath && isNativeAvailable()) {
+      try {
+        const targetDir = lastMove.srcPath.substring(0, Math.max(lastMove.srcPath.lastIndexOf('\\'), lastMove.srcPath.lastIndexOf('/')));
+        const res = await moveNativeFile(lastMove.movedPath, targetDir);
+        if (!res || !res.success) {
+          toast.show('Restore Failed', res?.error || 'Could not restore file from Duplicate Files.', 'error');
+          return;
+        }
+      } catch (err) {
+        toast.show('Restore Error', err?.message || String(err), 'error');
+        return;
+      }
+    }
+
+    const insertIdx = Math.min(lastMove.originalIndex ?? this.state.files.length, this.state.files.length);
+    this.state.files.splice(insertIdx, 0, lastMove.file);
+    this.state.currentIndex = insertIdx;
+
+    this.updateTelemetry();
+    this.renderQueue();
+    this.renderCurrentPreview();
+
+    const modal = document.getElementById('modalCrossCheck');
+    if (modal && !modal.classList.contains('hidden')) {
+      this._renderCrossCheckRows();
+    }
+
+    toast.show('Restored', `"${lastMove.file.name}" restored from "Duplicate Files"`, 'success');
+  }
+
+  async handleMoveModalDuplicates() {
+    if (!this.state.files || this.state.files.length === 0) return;
+
+    const dupMap = detectDuplicateFiles(this.state.files);
+    const confirmedGroups = new Map();
+
+    this.state.files.forEach(f => {
+      const info = dupMap.get(f.id || f.name);
+      if (info && info.status === 'confirmed') {
+        let groupKey = f.sha256 ? `hash_${f.sha256}` : null;
+        if (!groupKey) {
+          let base = cleanName(f.targetName || f.name || '').toLowerCase()
+            .replace(/[\s_\-]+(\d+|\(\d+\))(?=\s|$)/gi, '')
+            .replace(/[\s_\-]+/g, ' ')
+            .trim();
+          groupKey = `base_${base}_${(f.ext || ext(f.name) || '').toLowerCase()}`;
+        }
+        if (!confirmedGroups.has(groupKey)) {
+          confirmedGroups.set(groupKey, []);
+        }
+        confirmedGroups.get(groupKey).push(f);
+      }
+    });
+
+    const filesToMove = [];
+    confirmedGroups.forEach(group => {
+      if (group.length > 1) {
+        for (let i = 1; i < group.length; i++) {
+          filesToMove.push(group[i]);
+        }
+      }
+    });
+
+    if (filesToMove.length === 0) {
+      toast.show('No Extra Duplicates', 'All documents are single master copies.', 'info');
+      return;
+    }
+
+    let successCount = 0;
+    for (const f of filesToMove) {
+      await this.handleMoveFileToDuplicates(f);
+      successCount++;
+    }
+
+    toast.show('Duplicates Moved', `Safely moved ${successCount} extra duplicate documents to "Duplicate Files" folder.`, 'success');
   }
 
   async handleConfirmCurrentName(targetName) {
@@ -4485,6 +4712,12 @@ export class RenamerUIManager {
       });
     });
 
+    // Move Duplicates 1-Click Button (Modal Toolbar)
+    const btnModalMoveDup = document.getElementById('btnModalMoveDuplicates');
+    if (btnModalMoveDup) {
+      btnModalMoveDup.addEventListener('click', () => this.handleMoveModalDuplicates());
+    }
+
     // Power Utilities Toggle Button
     const btnToggleUtilities = document.getElementById('btnTogglePowerUtilities');
     const stripUtilities = document.getElementById('stripPowerUtilities');
@@ -4606,6 +4839,12 @@ export class RenamerUIManager {
         });
         this._renderCrossCheckRows();
       });
+    }
+
+    // Modal Sort Button (A–Z / Z–A)
+    const btnModalSort = document.getElementById('btnModalSort');
+    if (btnModalSort) {
+      btnModalSort.addEventListener('click', () => this.handleSortDocuments());
     }
 
     // Keyboard Navigation within Modal
@@ -4831,6 +5070,43 @@ export class RenamerUIManager {
 
     const dupMap = detectDuplicateFiles(this.state.files);
 
+    // Count extra confirmed duplicates for modal toolbar 1-click button
+    let extraDupCount = 0;
+    const confirmedGroups = new Map();
+    this.state.files.forEach(f => {
+      const info = dupMap.get(f.id || f.name);
+      if (info && info.status === 'confirmed') {
+        let groupKey = f.sha256 ? `hash_${f.sha256}` : null;
+        if (!groupKey) {
+          let base = cleanName(f.targetName || f.name || '').toLowerCase()
+            .replace(/[\s_\-]+(\d+|\(\d+\))(?=\s|$)/gi, '')
+            .replace(/[\s_\-]+/g, ' ')
+            .trim();
+          groupKey = `base_${base}_${(f.ext || ext(f.name) || '').toLowerCase()}`;
+        }
+        if (!confirmedGroups.has(groupKey)) {
+          confirmedGroups.set(groupKey, []);
+        }
+        confirmedGroups.get(groupKey).push(f);
+      }
+    });
+    confirmedGroups.forEach(group => {
+      if (group.length > 1) {
+        extraDupCount += (group.length - 1);
+      }
+    });
+
+    const btnModalMoveDup = document.getElementById('btnModalMoveDuplicates');
+    const modalMoveDupLabel = document.getElementById('modalMoveDuplicatesLabel');
+    if (btnModalMoveDup) {
+      if (extraDupCount > 0) {
+        btnModalMoveDup.classList.remove('hidden');
+        if (modalMoveDupLabel) modalMoveDupLabel.textContent = `Move Duplicates (${extraDupCount})`;
+      } else {
+        btnModalMoveDup.classList.add('hidden');
+      }
+    }
+
     filteredMatched.forEach((f, index) => {
       const targetName = this._getCrossCheckTargetName(f);
       const isPerfect = (cleanName(f.name) === cleanName(targetName));
@@ -4909,6 +5185,19 @@ export class RenamerUIManager {
         errBadge.textContent = `${errPct}% Wrong`;
         errBadge.title = `${errPct}% difference from suggested document name`;
         oldBadgesDiv.appendChild(errBadge);
+      }
+
+      if (dupStatus === 'confirmed' || dupStatus === 'probable') {
+        const rowMoveBtn = document.createElement('button');
+        rowMoveBtn.type = 'button';
+        rowMoveBtn.title = 'Move this file to "Duplicate Files" subfolder (Del)';
+        rowMoveBtn.className = 'w-4 h-4 rounded hover:bg-slate-200 text-slate-400 hover:text-amber-600 flex items-center justify-center shrink-0 cursor-pointer ml-0.5';
+        rowMoveBtn.innerHTML = '<span class="material-symbols-outlined text-[12px]">drive_file_move</span>';
+        rowMoveBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.handleMoveFileToDuplicates(f);
+        });
+        oldBadgesDiv.appendChild(rowMoveBtn);
       }
 
       if (oldBadgesDiv.children.length > 0) {

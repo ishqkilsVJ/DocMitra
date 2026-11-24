@@ -217,11 +217,28 @@
       </button>
       <button
         class="px-space-md py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-label-md transition-all flex items-center gap-1.5 border border-slate-700 cursor-pointer shadow-sm"
+        id="btnMoveToDuplicates" title="Move current document to 'Duplicate Files' subfolder (Safe — never deleted) (Del)" type="button">
+        <span class="material-symbols-outlined text-[16px] text-amber-400">drive_file_move</span>
+        <span>Move to Duplicates (Del)</span>
+      </button>
+      <button
+        class="px-space-md py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-label-md transition-all flex items-center gap-1.5 border border-slate-700 cursor-pointer shadow-sm"
         id="btnRescanFiles" title="Re-scan and match all loaded documents (F5)" type="button">
         <span class="material-symbols-outlined text-[16px] text-blue-400">sync</span>
         <span>Re-Scan</span>
         <span class="font-mono-code text-[10px] text-slate-400 bg-slate-700/60 px-1 py-0.5 rounded">F5</span>
       </button>
+      <button
+        class="px-space-md py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-label-md transition-all flex items-center gap-1.5 border border-slate-700 cursor-pointer shadow-sm"
+        id="btnSortQueue" title="Sort documents alphabetically (A–Z / Z–A)" type="button">
+        <span class="material-symbols-outlined text-[16px] text-purple-400">swap_vert</span>
+        <span id="sortQueueLabel">Sort A–Z</span>
+      </button>
+    </div>
+
+    <!-- Safe Mode Instruction Center Badge -->
+    <div class="hidden xl:flex items-center gap-1.5 text-[11px] text-slate-400 font-medium select-none px-3 py-1 bg-slate-800/90 rounded-lg border border-slate-700/60">
+      <span>🛡️ Safe Mode: [Del] only moves file to "Duplicate Files" (never deleted) • Use [Backspace] to delete text</span>
     </div>
     <div class="flex items-center gap-space-sm shrink-0">
       <button
@@ -597,13 +614,23 @@
           </div>
         </div>
 
-        <!-- Power Utilities Collapsible Toggle -->
-        <button id="btnTogglePowerUtilities" type="button"
-                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold border transition-all cursor-pointer bg-white text-slate-700 border-slate-200 hover:bg-slate-100">
-          <svg class="w-3.5 h-3.5 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg>
-          <span>Power Utilities</span>
-          <svg id="powerUtilitiesArrow" class="w-3.5 h-3.5 transition-transform duration-150" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-        </button>
+        <div class="flex items-center gap-2">
+          <!-- Move Duplicates 1-Click Button (Only visible if extra duplicates exist) -->
+          <button id="btnModalMoveDuplicates" type="button"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold border transition-all cursor-pointer bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200 hidden"
+                  title="Safely move extra duplicate copies to 'Duplicate Files' folder (keeps 1 master copy)">
+            <span class="material-symbols-outlined text-[15px]">drive_file_move</span>
+            <span id="modalMoveDuplicatesLabel">Move Duplicates (0)</span>
+          </button>
+
+          <!-- Power Utilities Collapsible Toggle -->
+          <button id="btnTogglePowerUtilities" type="button"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold border transition-all cursor-pointer bg-white text-slate-700 border-slate-200 hover:bg-slate-100">
+            <svg class="w-3.5 h-3.5 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg>
+            <span>Power Utilities</span>
+            <svg id="powerUtilitiesArrow" class="w-3.5 h-3.5 transition-transform duration-150" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+        </div>
       </div>
 
       <!-- Collapsible Power Utilities Inline Strip -->
@@ -639,11 +666,19 @@
 
       <!-- 3. SLIM SELECTION SUB-HEADER BAR (~32px) -->
       <div class="px-5 py-1.5 bg-white border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2 text-xs shrink-0">
-        <label class="inline-flex items-center gap-2 cursor-pointer select-none font-medium text-slate-700 hover:text-slate-900">
-          <input id="chkCrossCheckSelectAll" type="checkbox" checked
-                 class="w-3.5 h-3.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600" />
-          <span>Select All / Deselect All</span>
-        </label>
+        <div class="flex items-center gap-3">
+          <label class="inline-flex items-center gap-2 cursor-pointer select-none font-medium text-slate-700 hover:text-slate-900">
+            <input id="chkCrossCheckSelectAll" type="checkbox" checked
+                   class="w-3.5 h-3.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600" />
+            <span>Select All / Deselect All</span>
+          </label>
+          <button id="btnModalSort" type="button"
+                  class="h-6 px-2 rounded-md text-[11px] font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-all flex items-center gap-1 cursor-pointer"
+                  title="Sort matched documents alphabetically (A–Z / Z–A)">
+            <span class="material-symbols-outlined text-[13px] text-purple-600">swap_vert</span>
+            <span id="modalSortLabel">Sort A–Z</span>
+          </button>
+        </div>
         <div class="flex items-center gap-3 text-slate-600">
           <span>Student: <strong id="crossCheckStudentLabel" class="text-blue-700 font-semibold">Not Set</strong></span>
           <span class="text-slate-300">|</span>

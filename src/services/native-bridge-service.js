@@ -337,6 +337,46 @@ export async function renameNativeFolder(oldPath, newName) {
 }
 
 /**
+ * Atomically moves a file into a target directory (auto-creates folder, auto-resolves collisions with numeric suffix)
+ */
+export async function moveNativeFile(sourcePath, targetDirPath) {
+  const invoke = getTauriInvoke();
+  if (invoke) {
+    try {
+      const res = await invoke('move_native_file', {
+        sourcePath,
+        source_path: sourcePath,
+        targetDirPath,
+        target_dir_path: targetDirPath
+      });
+      if (res) {
+        return {
+          success: !!res.success,
+          oldPath: res.oldPath || res.old_path || sourcePath,
+          newPath: res.path || res.newPath || res.new_path,
+          path: res.path || res.newPath || res.new_path,
+          name: res.newName || res.new_name,
+          error: res.error
+        };
+      }
+    } catch (err) {
+      console.warn('[NativeBridge] Tauri move_native_file failed:', err);
+    }
+  }
+
+  // Fallback for web / test / mock environment
+  const filename = sourcePath.split(/[\/\\]/).pop();
+  return {
+    success: true,
+    oldPath: sourcePath,
+    newPath: `${targetDirPath}/${filename}`,
+    path: `${targetDirPath}/${filename}`,
+    name: filename,
+    error: null
+  };
+}
+
+/**
  * Batch renames multiple files on disk atomically
  */
 export async function batchRenameNativeFiles(renames) {
