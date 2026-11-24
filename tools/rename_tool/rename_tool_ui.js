@@ -1573,13 +1573,8 @@ export class RenamerUIManager {
     // Smart Auto-Rename Action Buttons Counter Sync
     const smartMatchedBtn = document.getElementById('btnRenameMatched');
     if (smartMatchedBtn) {
-      const matchedCount = this.state.files.filter(f => {
-        if (f.isRenamed || f.status === 'needs_review') return false;
-        const isAutoMatched = (f.smartConfidence >= 80 || (f.smartConfidence === undefined && f.isMatched));
-        return isAutoMatched;
-      }).length;
       const span = smartMatchedBtn.querySelector('span:not(.material-symbols-outlined)');
-      if (span) span.textContent = `Bulk Rename (${matchedCount})`;
+      if (span) span.textContent = 'Bulk Rename';
       smartMatchedBtn.disabled = this.state.files.length === 0;
     }
   }
@@ -4932,10 +4927,7 @@ export class RenamerUIManager {
   }
 
   _getMatchedCrossCheckFiles() {
-    return this.state.files.filter(f => {
-      if (f.isRenamed || f.status === 'needs_review') return false;
-      return (f.smartConfidence >= 80 || (f.smartConfidence === undefined && f.isMatched));
-    });
+    return (this.state.files || []).filter(f => !isJunkFile(f.name));
   }
 
   _getCrossCheckTargetBase(f) {
@@ -4973,14 +4965,8 @@ export class RenamerUIManager {
   }
 
   openCrossCheckModal() {
-    let matched = this._getMatchedCrossCheckFiles();
-    if (matched.length === 0) {
-      matched = this.state.files.filter(f => f.status !== 'needs_review');
-    }
-    if (matched.length === 0) {
-      matched = [...this.state.files];
-    }
-    if (matched.length === 0) {
+    const allFiles = this._getMatchedCrossCheckFiles();
+    if (allFiles.length === 0) {
       toast.show('No Documents', 'Please select a folder first to bulk rename.', 'info');
       return;
     }
@@ -5001,7 +4987,7 @@ export class RenamerUIManager {
     };
 
     // Auto-evaluate initial checkboxes: Perfect files unchecked by default, others checked!
-    matched.forEach(f => {
+    allFiles.forEach(f => {
       const targetName = this._getCrossCheckTargetName(f);
       const isPerfect = (cleanName(f.name) === cleanName(targetName));
       this._crossCheckState.userToggled.set(f.id, !isPerfect);
@@ -5233,18 +5219,28 @@ export class RenamerUIManager {
           </span>
         `;
       } else {
-        const conf = f.smartConfidence !== undefined ? f.smartConfidence : 90;
-        const isHigh = conf >= 90;
-        const badgeStyle = isHigh
-          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-          : 'bg-amber-50 text-amber-700 border-amber-200';
-        const dotStyle = isHigh ? 'bg-emerald-500' : 'bg-amber-500';
-        colBadge.innerHTML = `
-          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${badgeStyle} whitespace-nowrap">
-            <span class="w-1.5 h-1.5 rounded-full ${dotStyle}"></span>
-            ${conf}% Match
-          </span>
-        `;
+        const conf = f.smartConfidence !== undefined ? f.smartConfidence : (f.isMatched ? 90 : 0);
+        const isMatched = (f.isMatched !== false && conf >= 30);
+        if (!isMatched) {
+          colBadge.innerHTML = `
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold border bg-rose-50 text-rose-700 border-rose-200 whitespace-nowrap">
+              <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+              Unmatched
+            </span>
+          `;
+        } else {
+          const isHigh = conf >= 90;
+          const badgeStyle = isHigh
+            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+            : 'bg-amber-50 text-amber-700 border-amber-200';
+          const dotStyle = isHigh ? 'bg-emerald-500' : 'bg-amber-500';
+          colBadge.innerHTML = `
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${badgeStyle} whitespace-nowrap">
+              <span class="w-1.5 h-1.5 rounded-full ${dotStyle}"></span>
+              ${conf}% Match
+            </span>
+          `;
+        }
       }
       row.appendChild(colBadge);
 

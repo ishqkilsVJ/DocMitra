@@ -55,70 +55,67 @@ http.get('http://127.0.0.1:9222/json', (res) => {
             const renamer = window.renamerUI;
             if (!renamer) return JSON.stringify({ error: 'window.renamerUI not found' });
 
-            // 1. Verify existence of footer and modal buttons
-            const btnMoveDup = document.getElementById('btnMoveToDuplicates');
-            const btnSortQueue = document.getElementById('btnSortQueue');
-            const btnRescan = document.getElementById('btnRescanFiles');
-            const sortQueueLabel = document.getElementById('sortQueueLabel');
-
-            // 2. Inject test files (with duplicates, typos, and numbering)
-            renamer.state.folder = { name: 'ANJALI_SANTOSH_GAVIT', path: 'E:/Students/ANJALI_SANTOSH_GAVIT' };
-            renamer.state.studentName = 'ANJALI SANTOSH GAVIT';
+            // 1. Inject a dataset identical to the user's scenario:
+            // Some already renamed/done files, some already perfect, and some completely unmatched files (FDFD, FDFS, etc.)
+            renamer.state.folder = { name: 'HASINA_VISHNU_GAVIT', path: 'E:/Students/HASINA_VISHNU_GAVIT' };
+            renamer.state.studentName = 'HASINA VISHNU GAVIT';
             renamer.state.files = [
-              { id: '1', name: '12TH LC.pdf', targetName: '12TH LC ANJALI SANTOSH GAVIT.pdf', size: 140000, ext: '.pdf', isMatched: true, smartDocType: '12TH LC', smartConfidence: 100 },
-              { id: '2', name: '10TH MARKSHEET.pdf', targetName: '10TH MARKSHEET ANJALI SANTOSH GAVIT.pdf', size: 154200, ext: '.pdf', isMatched: true, smartDocType: '10TH MARKSHEET', smartConfidence: 100 },
-              { id: '3', name: '12TH LC 2.pdf', targetName: '12TH LC 2 ANJALI SANTOSH GAVIT.pdf', size: 140000, ext: '.pdf', isMatched: true, smartDocType: '12TH LC', smartConfidence: 95 },
-              { id: '4', name: 'CASTE CERTIFICATE.pdf', targetName: 'CASTE CERTIFICATE ANJALI SANTOSH GAVIT.pdf', size: 180000, ext: '.pdf', isMatched: true, smartDocType: 'CASTE CERTIFICATE', smartConfidence: 100 },
-              { id: '5', name: 'CASTE CERTIFICATE 2.pdf', targetName: 'CASTE CERTIFICATE 2 ANJALI SANTOSH GAVIT.pdf', size: 180000, ext: '.pdf', isMatched: true, smartDocType: 'CASTE CERTIFICATE', smartConfidence: 95 },
-              { id: '6', name: 'AADHAAR CARD.pdf', targetName: 'AADHAAR CARD ANJALI SANTOSH GAVIT.pdf', size: 120000, ext: '.pdf', isMatched: true, smartDocType: 'AADHAAR CARD', smartConfidence: 100 }
+              // 1-3: Already renamed / perfect files
+              { id: '1', name: '10TH MARKSHEET HASINA VISHNU GAVIT.pdf', targetName: '10TH MARKSHEET HASINA VISHNU GAVIT.pdf', size: 154200, ext: '.pdf', isMatched: true, smartDocType: '10TH MARKSHEET', smartConfidence: 100, isRenamed: true, status: 'done' },
+              { id: '2', name: 'CASTE CERTIFICATE HASINA VISHNU GAVIT.pdf', targetName: 'CASTE CERTIFICATE HASINA VISHNU GAVIT.pdf', size: 180000, ext: '.pdf', isMatched: true, smartDocType: 'CASTE CERTIFICATE', smartConfidence: 100, isRenamed: true, status: 'done' },
+              { id: '3', name: 'INCOME CERTIFICATE HASINA VISHNU GAVIT.pdf', targetName: 'INCOME CERTIFICATE HASINA VISHNU GAVIT.pdf', size: 175000, ext: '.pdf', isMatched: true, smartDocType: 'INCOME CERTIFICATE', smartConfidence: 100, isRenamed: true, status: 'done' },
+              // 4-6: Completely unmatched files (like user's FDFD, FDFS, FSDF)
+              { id: '4', name: 'FDFD.pdf', targetName: 'FDFD HASINA VISHNU GAVIT.pdf', size: 90000, ext: '.pdf', isMatched: false, smartDocType: null, smartConfidence: 0, status: 'unmatched' },
+              { id: '5', name: 'FDFS.pdf', targetName: 'FDFS HASINA VISHNU GAVIT.pdf', size: 92000, ext: '.pdf', isMatched: false, smartDocType: null, smartConfidence: 0, status: 'unmatched' },
+              { id: '6', name: 'FSDF.jpg', targetName: 'FSDF HASINA VISHNU GAVIT.jpg', size: 65000, ext: '.jpg', isMatched: false, smartDocType: null, smartConfidence: 0, status: 'unmatched' },
+              // 7-8: Pending matched files
+              { id: '7', name: '12th lc.pdf', targetName: '12TH LC HASINA VISHNU GAVIT.pdf', size: 140000, ext: '.pdf', isMatched: true, smartDocType: '12TH LC', smartConfidence: 95, status: 'matched' },
+              { id: '8', name: 'aadhaar card.pdf', targetName: 'AADHAAR CARD HASINA VISHNU GAVIT.pdf', size: 120000, ext: '.pdf', isMatched: true, smartDocType: 'AADHAAR CARD', smartConfidence: 100, status: 'matched' }
             ];
 
+            renamer.updateTelemetry();
             renamer.renderQueue();
             renamer.renderCurrentPreview();
 
-            // 3. Test Natural Sort
-            renamer.handleSortDocuments('asc');
-            const firstSortedAsc = renamer.state.files[0]?.targetName;
-            renamer.handleSortDocuments('desc');
-            const firstSortedDesc = renamer.state.files[0]?.targetName;
-            renamer.handleSortDocuments('asc'); // Back to asc
+            // Check bottom-right button text
+            const btnRenameMatched = document.getElementById('btnRenameMatched');
+            const btnSpan = btnRenameMatched ? btnRenameMatched.querySelector('span:not(.material-symbols-outlined)') : null;
+            const btnText = btnSpan ? btnSpan.textContent.trim() : '';
 
-            // 4. Test Safe Move & Undo
-            const countBeforeMove = renamer.state.files.length;
-            const fileToMove = renamer.state.files[0];
-            await renamer.handleMoveFileToDuplicates(fileToMove);
-            const countAfterMove = renamer.state.files.length;
-            await renamer.handleUndoSafeMove();
-            const countAfterUndo = renamer.state.files.length;
-
-            // 5. Test Fresh Re-Scan (resetting isRenamed states)
-            renamer.state.files[0].isRenamed = true;
-            renamer.state.files[0].status = 'done';
-            renamer.updateTelemetry();
-            await renamer.handleRescanFiles();
-            const countDoneAfterRescan = renamer.state.files.filter(f => f.isRenamed).length;
-
-            // 6. Test Cross-Check Modal
+            // Open Cross-Check modal
             renamer.openCrossCheckModal();
             const modal = document.getElementById('modalCrossCheck');
             const isModalOpen = modal && !modal.classList.contains('hidden');
-            const btnModalMoveDup = document.getElementById('btnModalMoveDuplicates');
-            const modalMoveDupLabel = document.getElementById('modalMoveDuplicatesLabel');
-            const btnModalSort = document.getElementById('btnModalSort');
-            const modalSortLabel = document.getElementById('modalSortLabel');
+
+            const allRows = document.querySelectorAll('#crossCheckTableBody [data-file-id]');
+            const totalCountEl = document.getElementById('crossCheckTotalCount');
+            const totalShown = totalCountEl ? totalCountEl.textContent.trim() : '';
+
+            // Check if unmatched files are rendered
+            const unmatchedRowFdfd = document.querySelector('#crossCheckTableBody [data-file-id="4"]');
+            const unmatchedRowFdfs = document.querySelector('#crossCheckTableBody [data-file-id="5"]');
+            const hasUnmatchedBadge = document.querySelectorAll('#crossCheckTableBody .bg-rose-50').length > 0;
+
+            // Check if already perfect files are rendered and unchecked by default
+            const perfectRow1 = document.querySelector('#crossCheckTableBody [data-file-id="1"]');
+            const cb1 = perfectRow1 ? perfectRow1.querySelector('input[type="checkbox"]') : null;
+            const isCb1Unchecked = cb1 ? !cb1.checked : false;
+
+            // Check if pending modified files are checked by default
+            const row7 = document.querySelector('#crossCheckTableBody [data-file-id="7"]');
+            const cb7 = row7 ? row7.querySelector('input[type="checkbox"]') : null;
+            const isCb7Checked = cb7 ? cb7.checked : false;
 
             return JSON.stringify({
-              buttonsExist: !!(btnMoveDup && btnSortQueue && btnRescan),
-              sortAscFirst: firstSortedAsc,
-              sortDescFirst: firstSortedDesc,
-              countBeforeMove,
-              countAfterMove,
-              countAfterUndo,
-              countDoneAfterRescan,
-              isModalOpen,
-              modalMoveDupVisible: btnModalMoveDup && !btnModalMoveDup.classList.contains('hidden'),
-              modalMoveDupText: modalMoveDupLabel?.textContent,
-              modalSortText: modalSortLabel?.textContent
+              totalFilesInQueue: renamer.state.files.length,
+              btnText: btnText,
+              isModalOpen: isModalOpen,
+              modalTotalShown: totalShown,
+              modalRowCount: allRows.length,
+              unmatchedFilesRendered: !!(unmatchedRowFdfd && unmatchedRowFdfs),
+              hasUnmatchedBadge: hasUnmatchedBadge,
+              perfectFileUncheckedByDefault: isCb1Unchecked,
+              modifiedFileCheckedByDefault: isCb7Checked
             });
           })()
         `,
@@ -163,7 +160,7 @@ http.get('http://127.0.0.1:9222/json', (res) => {
               }, 700);
             } else if (resp.id === screenshotId) {
               const base64Data = resp.result.data;
-              const artifactPath = 'C:/Users/USER/.gemini/antigravity/brain/12ea5c70-446e-4ca0-b1ea-4c628e4aaf83/safe_move_and_sort_verification.png';
+              const artifactPath = 'C:/Users/USER/.gemini/antigravity/brain/12ea5c70-446e-4ca0-b1ea-4c628e4aaf83/all_files_modal_verification.png';
               fs.writeFileSync(artifactPath, Buffer.from(base64Data, 'base64'));
               console.log('Saved screenshot to:', artifactPath);
               console.log('Console Errors:', consoleErrors.length, consoleErrors);

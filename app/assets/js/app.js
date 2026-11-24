@@ -5821,8 +5821,8 @@ var Ke = S.map((e) => ({
 		}
 		let d = document.getElementById("btnRenameMatched");
 		if (d) {
-			let e = this.state.files.filter((e) => e.isRenamed || e.status === "needs_review" ? !1 : e.smartConfidence >= 80 || e.smartConfidence === void 0 && e.isMatched).length, t = d.querySelector("span:not(.material-symbols-outlined)");
-			t && (t.textContent = `Bulk Rename (${e})`), d.disabled = this.state.files.length === 0;
+			let e = d.querySelector("span:not(.material-symbols-outlined)");
+			e && (e.textContent = "Bulk Rename"), d.disabled = this.state.files.length === 0;
 		}
 	}
 	renderQueue() {
@@ -7299,7 +7299,7 @@ var Ke = S.map((e) => ({
 		});
 	}
 	_getMatchedCrossCheckFiles() {
-		return this.state.files.filter((e) => e.isRenamed || e.status === "needs_review" ? !1 : e.smartConfidence >= 80 || e.smartConfidence === void 0 && e.isMatched);
+		return (this.state.files || []).filter((e) => !Z(e.name));
 	}
 	_getCrossCheckTargetBase(e) {
 		if (this._crossCheckState && this._crossCheckState.overrides && this._crossCheckState.overrides.has(e.id)) return this._crossCheckState.overrides.get(e.id);
@@ -7323,7 +7323,7 @@ var Ke = S.map((e) => ({
 	}
 	openCrossCheckModal() {
 		let e = this._getMatchedCrossCheckFiles();
-		if (e.length === 0 && (e = this.state.files.filter((e) => e.status !== "needs_review")), e.length === 0 && (e = [...this.state.files]), e.length === 0) {
+		if (e.length === 0) {
 			r.show("No Documents", "Please select a folder first to bulk rename.", "info");
 			return;
 		}
@@ -7427,13 +7427,17 @@ var Ke = S.map((e) => ({
 			let x = document.createElement("div");
 			if (x.className = "flex justify-end", i) x.innerHTML = "\n          <span class=\"inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50/90 text-emerald-700 border border-emerald-200/90 whitespace-nowrap\">\n            <svg class=\"w-3 h-3\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M5 13l4 4L19 7\"/></svg>\n            <span>Perfect</span>\n          </span>\n        ";
 			else {
-				let e = t.smartConfidence === void 0 ? 90 : t.smartConfidence, n = e >= 90;
-				x.innerHTML = `
-          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${n ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"} whitespace-nowrap">
-            <span class="w-1.5 h-1.5 rounded-full ${n ? "bg-emerald-500" : "bg-amber-500"}"></span>
-            ${e}% Match
-          </span>
-        `;
+				let e = t.smartConfidence === void 0 ? t.isMatched ? 90 : 0 : t.smartConfidence;
+				if (!(t.isMatched !== !1 && e >= 30)) x.innerHTML = "\n            <span class=\"inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold border bg-rose-50 text-rose-700 border-rose-200 whitespace-nowrap\">\n              <span class=\"w-1.5 h-1.5 rounded-full bg-rose-500\"></span>\n              Unmatched\n            </span>\n          ";
+				else {
+					let t = e >= 90;
+					x.innerHTML = `
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${t ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"} whitespace-nowrap">
+              <span class="w-1.5 h-1.5 rounded-full ${t ? "bg-emerald-500" : "bg-amber-500"}"></span>
+              ${e}% Match
+            </span>
+          `;
+				}
 			}
 			l.appendChild(x), l.addEventListener("click", (e) => {
 				e.target !== f && (this._crossCheckState.focusedIndex = n, this._renderCrossCheckRows());
