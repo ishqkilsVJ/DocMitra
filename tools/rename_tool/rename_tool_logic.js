@@ -404,6 +404,138 @@ export function findKeywordConflict(keyword, targetRuleName, groups) {
   return null;
 }
 
+export const INDIAN_ACADEMIC_SYNONYMS = {
+  // Academic levels
+  '10th': ['ssc', '10', 'matric', 'matriculation', '10th class', 'class 10'],
+  'ssc': ['10th', '10', 'matric', 'matriculation'],
+  '12th': ['hsc', '12', 'inter', 'intermediate', '12th class', 'class 12'],
+  'hsc': ['12th', '12', 'inter', 'intermediate'],
+  '11th': ['11', 'fyjc'],
+  'marksheet': ['mark sheet', 'marks', 'mark', 'result', 'score card', 'grade card'],
+  'passing': ['passing certificate', 'pass cert', 'passing cert', 'pass certificate', 'sanad', 'board cert'],
+  'lc': ['leaving certificate', 'school leaving', 'tc', 'transfer certificate', 'college leaving', 'leaving'],
+  'tc': ['transfer certificate', 'leaving certificate', 'lc', 'school leaving'],
+  // Caste & Validity
+  'caste': ['cast', 'jati', 'samaj', 'jati pramanpatra'],
+  'validity': ['caste validity', 'cvc', 'validity certificate', 'padtalani', 'pramanpatra'],
+  'non creamy': ['ncl', 'non creamy layer', 'non criminal', 'non-creamy', 'unnath va pragat'],
+  'ncl': ['non creamy layer', 'non creamy', 'non criminal'],
+  // Income & Domicile
+  'income': ['utpanna', 'utpanna dakhla', 'tahsildar income', 'form 16', 'salary slip', 'income cert'],
+  'domicile': ['adhivas', 'rehivasi', 'domicile cert', 'residence', 'residence certificate', 'maharashtra domicile'],
+  'nationality': ['rashtriyatva', 'indian nationality', 'nationality cert', 'citizenship'],
+  // Identity & Bio
+  'aadhaar': ['aadhar', 'aadhar card', 'adhar', 'adhaar', 'uid', 'uidai', 'adhar card'],
+  'pan': ['pan card', 'pancard', 'income tax pan'],
+  'voter': ['voter card', 'voting card', 'epic', 'election card', 'matdar card'],
+  'driving': ['driving license', 'license', 'dl', 'vehicle license'],
+  'photo': ['photo', 'photograph', 'passport photo', 'pass photo', 'pic', 'profile photo'],
+  'signature': ['sign', 'signature', 'student signature', 'st sign', 'sig'],
+  // Bonafide, Declarations, Welfare
+  'bonafide': ['bonafide certificate', 'bona fide', 'college bonafide'],
+  'gap': ['gap certificate', 'gap affidavit', 'shikshanit khand'],
+  'self declaration': ['self declaration', 'self declaration certificate', 'swayam ghoshana', 'sdc'],
+  'parent declaration': ['parent declaration', 'parents declaration', 'palak ghoshana', 'pdc'],
+  'death': ['death certificate', 'mrutyu dakhla'],
+  'disability': ['disability certificate', 'handicapped', 'divyang', 'pwd certificate', 'apang', 'pwd'],
+  'ews': ['economically weaker section', 'ews certificate', 'arthik durbal ghatak'],
+  'migration': ['migration certificate', 'migration cert'],
+  'medical': ['medical fitness', 'fitness certificate', 'arogya dakhla'],
+  'birth': ['birth certificate', 'janam dakhla', 'janma pramanpatra'],
+  'ration': ['ration card', 'rationcard', 'ration book', 'rasan kard'],
+  'bank': ['bank passbook', 'passbook', 'account statement', 'bank statement'],
+  // CET / Higher Ed
+  'cetaf': ['cet application form', 'application form', 'cet form'],
+  'cetsc': ['cet score card', 'cet result', 'cet marksheet', 'mht cet score card'],
+  'cap': ['cap allotment', 'allotment letter', 'cap round allotment'],
+  'srf': ['scrutiny form', 'fc verification', 'document verification receipt'],
+  'fee': ['fee receipt', 'fees', 'receipt', 'admission fee receipt'],
+  'attendance': ['attendance certificate', 'attendance report'],
+  'hostel': ['hostel certificate', 'hostel receipt', 'vasatigruh dakhla']
+};
+
+export function generateSmartKeywords(docName, shortCodes = []) {
+  if (!docName || typeof docName !== 'string') return '';
+  const raw = docName.toLowerCase().trim().replace(/[^a-z0-9\s_-]/g, ' ');
+  const words = raw.split(/[\s_-]+/).filter(w => w.length > 0);
+  if (words.length === 0) return '';
+
+  const results = new Set();
+
+  // 1. Full clean base name
+  const cleanBase = words.join(' ');
+  results.add(cleanBase);
+
+  // 2. Add short codes (lowercase)
+  if (Array.isArray(shortCodes)) {
+    for (const sc of shortCodes) {
+      if (sc && typeof sc === 'string') {
+        const c = sc.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+        if (c.length >= 2) results.add(c);
+      }
+    }
+  }
+
+  // 3. Document-specific phrase synonyms (e.g. LC -> leaving certificate, tc, transfer certificate)
+  for (const [key, synList] of Object.entries(INDIAN_ACADEMIC_SYNONYMS)) {
+    const regex = new RegExp(`\\b${key}\\b`, 'i');
+    if (regex.test(cleanBase)) {
+      for (const syn of synList) {
+        results.add(cleanBase.replace(regex, syn));
+        if (words.length <= 4) {
+          results.add(syn);
+        }
+      }
+    }
+  }
+
+  // 4. Number + TH permutations (e.g. 10th / 10, 12th / 12)
+  if (cleanBase.includes('10th')) {
+    results.add(cleanBase.replace(/\b10th\b/g, '10'));
+    results.add(cleanBase.replace(/\b10th\b/g, 'ssc'));
+  } else if (cleanBase.includes('10')) {
+    results.add(cleanBase.replace(/\b10\b/g, '10th'));
+    results.add(cleanBase.replace(/\b10\b/g, 'ssc'));
+  }
+
+  if (cleanBase.includes('12th')) {
+    results.add(cleanBase.replace(/\b12th\b/g, '12'));
+    results.add(cleanBase.replace(/\b12th\b/g, 'hsc'));
+  } else if (cleanBase.includes('12')) {
+    results.add(cleanBase.replace(/\b12\b/g, '12th'));
+    results.add(cleanBase.replace(/\b12\b/g, 'hsc'));
+  }
+
+  // Marksheet variations (e.g. "12th marksheet" -> "12th mark", "12 mark", "hsc mark", "marksheet 12th")
+  if (cleanBase.includes('marksheet')) {
+    results.add(cleanBase.replace(/\bmarksheet\b/g, 'mark'));
+    results.add(cleanBase.replace(/\bmarksheet\b/g, 'mark sheet'));
+    if (words.length >= 2) {
+      results.add(`${words[words.length - 1]} ${words.slice(0, -1).join(' ')}`);
+    }
+  }
+
+  // Passing certificate variations
+  if (cleanBase.includes('passing certificate')) {
+    results.add(cleanBase.replace(/\bpassing certificate\b/g, 'passing'));
+    results.add(cleanBase.replace(/\bpassing certificate\b/g, 'pass cert'));
+  }
+
+  // 5. Individual meaningful words
+  for (const w of words) {
+    if (w.length >= 3 && !['and', 'for', 'the', 'from', 'with'].includes(w)) {
+      results.add(w);
+    }
+  }
+
+  // Clean, trim, unique and format as comma-separated string
+  const cleanTokens = Array.from(results)
+    .map(s => s.trim().toLowerCase().replace(/[^a-z0-9\s_-]/g, '').replace(/\s+/g, ' '))
+    .filter(s => s.length >= 2);
+
+  return Array.from(new Set(cleanTokens)).slice(0, 25).join(', ');
+}
+
 export function matchDocument(input, groups = null) {
   if (!input || typeof input !== 'string') return null;
   const clean = input.toLowerCase().trim();

@@ -71,7 +71,8 @@ import {
   cleanPortalSafe,
   escapeHtml,
   computeOldNameErrorPercent,
-  detectDuplicateFiles
+  detectDuplicateFiles,
+  generateSmartKeywords
 } from './rename_tool_logic.js';
 import { recordRenameEvent } from '../../src/services/analytics-service.js';
 import { loadSettings, saveSettings, loadDocumentPresets, saveDocumentPresets } from '../../src/services/storage-service.js';
@@ -4333,7 +4334,7 @@ export class RenamerUIManager {
       this.renderQueue();
       this.renderCurrentPreview();
       this.renderSettingsModal('presets');
-      toast.show('Document Removed', `${removed.name || 'Document'} removed from preset.`, 'info');
+      toast.show('Document Removed from Preset', `${removed.name || 'Document'} unlinked from "${this.state.activePreset}". Global shortcut preserved.`, 'info');
     }
   }
 
@@ -4344,30 +4345,54 @@ export class RenamerUIManager {
       (s.code && s.code.toUpperCase() === cleanCode) ||
       (Array.isArray(s.codes) && s.codes.some(c => c && c.toUpperCase() === cleanCode))
     );
+    const targetCanon = (targetShortcut?.canonical || targetShortcut?.label || cleanCode).toUpperCase();
+
+    // 1. Remove from master shortcuts list
     if (targetShortcut) {
       this.shortcuts21 = this.shortcuts21.filter(s => s !== targetShortcut);
-      if (this.state.customShortcuts) {
-        this.state.customShortcuts = this.state.customShortcuts.filter(s => {
-          if (s === targetShortcut) return false;
-          if (s.code && s.code.toUpperCase() === cleanCode) return false;
-          if (Array.isArray(s.codes) && s.codes.some(c => c && c.toUpperCase() === cleanCode)) return false;
-          const sCanon = (s.canonical || s.label || '').toUpperCase();
-          const tCanon = (targetShortcut.canonical || targetShortcut.label || '').toUpperCase();
-          if (sCanon && sCanon === tCanon) return false;
-          return true;
-        });
-      }
     } else {
-      this.state.customShortcuts = (this.state.customShortcuts || []).filter(s => s.code.toUpperCase() !== cleanCode);
       this.shortcuts21 = this.shortcuts21.filter(s => s.code.toUpperCase() !== cleanCode);
     }
+
+    // 2. Remove from custom shortcuts persistence
+    if (this.state.customShortcuts) {
+      this.state.customShortcuts = this.state.customShortcuts.filter(s => {
+        if (s === targetShortcut) return false;
+        if (s.code && s.code.toUpperCase() === cleanCode) return false;
+        if (Array.isArray(s.codes) && s.codes.some(c => c && c.toUpperCase() === cleanCode)) return false;
+        const sCanon = (s.canonical || s.label || '').toUpperCase();
+        if (sCanon && sCanon === targetCanon) return false;
+        return true;
+      });
+    }
+
+    // 3. Single Source of Truth: Also unlink from all Presets
+    let unlinkedPresetCount = 0;
+    if (this.state.documentPresets) {
+      for (const presetKey of Object.keys(this.state.documentPresets)) {
+        const list = this.state.documentPresets[presetKey];
+        if (Array.isArray(list)) {
+          const prevLen = list.length;
+          this.state.documentPresets[presetKey] = list.filter(d => {
+            const dCanon = (d.name || '').trim().toUpperCase();
+            const dCode = (d.code || '').trim().toUpperCase();
+            if (dCanon && dCanon === targetCanon) return false;
+            if (dCode && dCode === cleanCode) return false;
+            return true;
+          });
+          if (list.length < prevLen) unlinkedPresetCount++;
+        }
+      }
+    }
+
     this.savePresetsAndSettings();
     this.renderSettingsModal('shortcuts');
-    toast.show('Shortcut Removed', `Shortcut rules for "${targetShortcut?.canonical || cleanCode}" removed.`, 'info');
+    toast.show('Shortcut Removed', `Removed "${targetCanon}" and unlinked from ${unlinkedPresetCount} preset(s).`, 'info');
   }
 
   openEditDocumentModal(doc, idx) {
     this._editingDocIdx = idx;
+    this._editingShortcutCode = null;
     this.openAddDocumentModal(doc, false);
   }
 
@@ -4383,6 +4408,7 @@ export class RenamerUIManager {
       (Array.isArray(x.codes) && x.codes.some(c => c && c.toUpperCase() === cleanCode))
     );
     this._editingShortcutCode = cleanCode;
+    this._editingDocIdx = null;
     const codes = Array.isArray(s.codes) && s.codes.length > 0 ? s.codes : [s.code || cleanCode];
     this.openAddDocumentModal({
       code: s.code || cleanCode,
@@ -4465,13 +4491,71 @@ export class RenamerUIManager {
         e.stopPropagation();
         this._currentShortcutCodes = this._currentShortcutCodes.filter(c => c !== code);
         this.renderShortcutChips();
+        // If aliases were auto-generated, refresh with updated chips
+        const inputName = document.getElementById('inputAddDocName');
+        const inputAliases = document.getElementById('inputAddDocAliases');
+        if (!this._aliasesManuallyEdited && inputName?.value.trim()) {
+          if (inputAliases) inputAliases.value = generateSmartKeywords(inputName.value, this._currentShortcutCodes);
+          this.validateKeywordsInput();
+        }
       });
       chip.appendChild(delBtn);
       container.appendChild(chip);
     });
   }
 
-  openAddDocumentModal(editDoc = null, isShortcutOnly = false) {
+  renderPresetPills() {
+    const container = document.getElementById('containerPresetPills');
+    if (!container) return;
+    container.innerHTML = '';
+    const allPresets = Object.keys(this.state.documentPresets || BUILTIN_PRESETS);
+    if (allPresets.length === 0) {
+      container.innerHTML = '<span class="text-secondary text-[11px] italic">No presets available.</span>';
+      return;
+    }
+
+    allPresets.forEach(presetKey => {
+      const isSelected = this._selectedPresetKeys && this._selectedPresetKeys.has(presetKey);
+      const pill = document.createElement('button');
+      pill.type = 'button';
+      pill.className = isSelected
+        ? 'inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-[#0037b0] text-white font-bold text-[11px] shadow-xs cursor-pointer transition-all border border-[#0037b0]'
+        : 'inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-surface text-secondary hover:text-on-surface font-medium text-[11px] cursor-pointer transition-all border border-outline-variant/50 hover:border-primary/50';
+
+      pill.innerHTML = `
+        <span class="material-symbols-outlined text-[13px] ${isSelected ? 'font-bold' : 'opacity-40'}">${isSelected ? 'check' : 'add'}</span>
+        <span>${escapeHtml(presetKey)}</span>
+      `;
+      pill.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!this._selectedPresetKeys) this._selectedPresetKeys = new Set();
+        if (this._selectedPresetKeys.has(presetKey)) {
+          this._selectedPresetKeys.delete(presetKey);
+        } else {
+          this._selectedPresetKeys.add(presetKey);
+        }
+        this.renderPresetPills();
+      });
+      container.appendChild(pill);
+    });
+  }
+
+  validateKeywordsInput() {
+    const inputAliases = document.getElementById('inputAddDocAliases');
+    const btnSave = document.getElementById('btnSaveAddDoc');
+    const hint = document.getElementById('hintKeywordsValidation');
+    const val = (inputAliases?.value || '').trim();
+    const isValid = val.length > 0;
+    if (btnSave) {
+      btnSave.disabled = !isValid;
+    }
+    if (hint) {
+      hint.classList.toggle('hidden', isValid);
+    }
+    return isValid;
+  }
+
+  openAddDocumentModal(editDoc = null, fromShortcutsTab = false) {
     const modal = document.getElementById('modalAddDocument');
     if (!modal) return;
     const containerCode = document.getElementById('containerAddDocCode');
@@ -4482,36 +4566,76 @@ export class RenamerUIManager {
     const titleEl = modal.querySelector('h3');
     const subTitleEl = modal.querySelector('p');
 
-    this._isShortcutOnly = Boolean(isShortcutOnly);
+    // Short codes are ALWAYS visible in the unified modal
+    if (containerCode) containerCode.classList.remove('hidden');
+    if (subTitleEl) subTitleEl.textContent = 'Define document name, short code(s), keywords, and preset assignments';
 
-    if (this._isShortcutOnly) {
-      if (containerCode) containerCode.classList.remove('hidden');
-      if (subTitleEl) subTitleEl.textContent = 'Assign short code(s) and keywords to a canonical document name';
-      if (editDoc) {
-        this._currentShortcutCodes = Array.isArray(editDoc.codes) && editDoc.codes.length > 0 ? [...editDoc.codes] : (editDoc.code ? [editDoc.code] : []);
-      } else {
-        this._currentShortcutCodes = [];
-      }
-      this.renderShortcutChips();
-    } else {
-      if (containerCode) containerCode.classList.add('hidden');
-      if (subTitleEl) subTitleEl.textContent = 'Define document name and keywords for auto-matching in preset';
-      this._currentShortcutCodes = [];
-    }
+    this._fromShortcutsTab = Boolean(fromShortcutsTab);
+    this._selectedPresetKeys = new Set();
+    this._aliasesManuallyEdited = false;
 
     if (editDoc) {
-      if (titleEl) titleEl.textContent = isShortcutOnly ? 'Edit Shortcut' : 'Edit Document in Preset';
+      const targetCanon = (editDoc.name || editDoc.canonical || '').trim().toUpperCase();
+      const targetCode = (editDoc.code || (Array.isArray(editDoc.codes) ? editDoc.codes[0] : '')).trim().toUpperCase();
+
+      // Find all presets containing this document
+      if (this.state.documentPresets) {
+        for (const [presetKey, list] of Object.entries(this.state.documentPresets)) {
+          if (Array.isArray(list)) {
+            const hasDoc = list.some(d => {
+              const dCanon = (d.name || '').trim().toUpperCase();
+              const dCode = (d.code || '').trim().toUpperCase();
+              return (targetCanon && dCanon === targetCanon) || (targetCode && dCode === targetCode);
+            });
+            if (hasDoc) {
+              this._selectedPresetKeys.add(presetKey);
+            }
+          }
+        }
+      }
+
+      if (!fromShortcutsTab && this.state.activePreset) {
+        this._selectedPresetKeys.add(this.state.activePreset);
+      }
+
+      let initialCodes = [];
+      if (Array.isArray(editDoc.codes) && editDoc.codes.length > 0) {
+        initialCodes = [...editDoc.codes];
+      } else if (editDoc.code) {
+        initialCodes = [editDoc.code];
+      } else {
+        const found = this.shortcuts21.find(s => (s.canonical || s.label || '').toUpperCase() === targetCanon);
+        if (found) {
+          initialCodes = Array.isArray(found.codes) && found.codes.length > 0 ? [...found.codes] : [found.code];
+        }
+      }
+      this._currentShortcutCodes = initialCodes;
+
+      if (titleEl) titleEl.textContent = 'Edit Document Type';
       if (inputCode) inputCode.value = '';
       if (inputName) inputName.value = editDoc.name || editDoc.canonical || '';
-      if (inputAliases) inputAliases.value = Array.isArray(editDoc.keywords) ? editDoc.keywords.join(', ') : (editDoc.keywords || '');
+      if (inputAliases) {
+        inputAliases.value = Array.isArray(editDoc.keywords) ? editDoc.keywords.join(', ') : (editDoc.keywords || '');
+        if (inputAliases.value.trim()) this._aliasesManuallyEdited = true;
+      }
     } else {
       this._editingDocIdx = null;
       this._editingShortcutCode = null;
-      if (titleEl) titleEl.textContent = isShortcutOnly ? 'Add Shortcut' : 'Add Document to Preset';
+      this._currentShortcutCodes = [];
+
+      // If opened from Presets tab, pre-select active preset
+      if (!fromShortcutsTab && this.state.activePreset) {
+        this._selectedPresetKeys.add(this.state.activePreset);
+      }
+
+      if (titleEl) titleEl.textContent = 'Add Document Type';
       if (inputCode) inputCode.value = '';
       if (inputName) inputName.value = '';
       if (inputAliases) inputAliases.value = '';
     }
+
+    this.renderShortcutChips();
+    this.renderPresetPills();
 
     const updatePreview = () => {
       const docName = inputName?.value.trim() || 'DOCUMENT';
@@ -4522,7 +4646,15 @@ export class RenamerUIManager {
     };
 
     if (inputName) {
-      inputName.oninput = updatePreview;
+      inputName.oninput = () => {
+        updatePreview();
+        // If keywords field is empty or was not manually customized, live auto-generate smart keywords
+        if (!this._aliasesManuallyEdited) {
+          const autoKws = generateSmartKeywords(inputName.value, this._currentShortcutCodes);
+          if (inputAliases) inputAliases.value = autoKws;
+        }
+        this.validateKeywordsInput();
+      };
       inputName.onkeydown = (e) => {
         if (e.key === 'Enter') {
           e.preventDefault();
@@ -4571,6 +4703,13 @@ export class RenamerUIManager {
         this.renderShortcutChips();
       }
 
+      // Refresh auto-generated keywords if not manually edited
+      if (!this._aliasesManuallyEdited && inputName?.value.trim()) {
+        const autoKws = generateSmartKeywords(inputName.value, this._currentShortcutCodes);
+        if (inputAliases) inputAliases.value = autoKws;
+      }
+      this.validateKeywordsInput();
+
       if (inputCode) inputCode.value = '';
       inputCode?.focus();
     };
@@ -4599,11 +4738,38 @@ export class RenamerUIManager {
       };
     }
 
+    // Auto-Generate Keywords Button
+    const btnAutoKeywords = document.getElementById('btnAutoGenerateKeywords');
+    if (btnAutoKeywords) {
+      btnAutoKeywords.onclick = (e) => {
+        e.preventDefault();
+        const currentName = (inputName?.value || '').trim();
+        if (!currentName) {
+          toast.show('Document Name Required', 'Please enter Full Document Name first to generate smart keywords.', 'info');
+          inputName?.focus();
+          return;
+        }
+        const autoKws = generateSmartKeywords(currentName, this._currentShortcutCodes);
+        if (inputAliases) {
+          inputAliases.value = autoKws;
+          this._aliasesManuallyEdited = false;
+          this.validateKeywordsInput();
+          toast.show('Keywords Auto-Generated', 'Smart Indian academic aliases generated.', 'success');
+        }
+      };
+    }
+
+    if (inputAliases) {
+      inputAliases.oninput = () => {
+        this._aliasesManuallyEdited = true;
+        this.validateKeywordsInput();
+      };
+    }
+
     updatePreview();
+    this.validateKeywordsInput();
     modal.classList.remove('hidden');
-    if (this._isShortcutOnly && inputCode) {
-      inputCode.focus();
-    } else if (inputName) {
+    if (inputName) {
       inputName.focus();
     }
   }
@@ -4613,8 +4779,10 @@ export class RenamerUIManager {
     if (modal) modal.classList.add('hidden');
     this._editingDocIdx = null;
     this._editingShortcutCode = null;
-    this._isShortcutOnly = false;
+    this._fromShortcutsTab = false;
     this._currentShortcutCodes = [];
+    this._selectedPresetKeys = new Set();
+    this._aliasesManuallyEdited = false;
   }
 
   handleSaveDocumentType() {
@@ -4625,151 +4793,163 @@ export class RenamerUIManager {
     const rawName = (inputName?.value || '').trim();
     if (!rawName) {
       toast.show('Document Name Required', 'Please enter a Full Document Name.', 'warning');
+      inputName?.focus();
       return;
     }
 
     const docName = rawName.toUpperCase();
     const rawAliases = (inputAliases?.value || '').trim();
-    let keywords = [];
-    let hadDuplicateKeywords = false;
-    if (rawAliases) {
-      const rawTokens = rawAliases.split(',')
-        .map(s => s.trim().toLowerCase().replace(/[^a-z0-9\s_-]/g, ''))
-        .filter(s => s.length >= 2);
-      const uniqueSet = new Set(rawTokens);
-      if (rawTokens.length > uniqueSet.size) {
-        hadDuplicateKeywords = true;
-      }
-      keywords = Array.from(uniqueSet);
-    } else {
-      const autoTokens = [docName.toLowerCase(), ...extractCleanTokens(docName)]
-        .map(s => s.trim().toLowerCase().replace(/[^a-z0-9\s_-]/g, ''))
-        .filter(s => s.length >= 2);
-      keywords = Array.from(new Set(autoTokens));
+    if (!rawAliases) {
+      toast.show('Keywords Required', 'Keywords / Aliases are required for smart scanning & auto-matching.', 'warning');
+      inputAliases?.focus();
+      this.validateKeywordsInput();
+      return;
     }
 
-    if (hadDuplicateKeywords) {
-      toast.show('Keywords Cleaned', 'Duplicate keywords automatically cleaned.', 'success');
+    // Process keywords
+    const rawTokens = rawAliases.split(',')
+      .map(s => s.trim().toLowerCase().replace(/[^a-z0-9\s_-]/g, ''))
+      .filter(s => s.length >= 2);
+    const keywords = Array.from(new Set(rawTokens));
+
+    // Commit any pending shortcode in the input
+    const pendingRaw = (inputCode?.value || '').trim().toUpperCase();
+    if (pendingRaw) {
+      const cleanCode = pendingRaw.replace(/[^A-Z0-9_-]/g, '');
+      if (cleanCode && !this._currentShortcutCodes.includes(cleanCode)) {
+        const finalCode = this.findAvailableShortcutCode(cleanCode, docName);
+        this._currentShortcutCodes.push(finalCode);
+      }
     }
 
-    const wasShortcutOnly = this._isShortcutOnly;
-
-    // 1. Add/update in active preset documents unless shortcut-only mode
-    if (!wasShortcutOnly) {
-      if (!this.state.documentPresets[this.state.activePreset]) {
-        this.state.documentPresets[this.state.activePreset] = [];
-      }
-      const currentList = this.state.documentPresets[this.state.activePreset];
-      const docEntry = { name: docName, keywords };
-
-      // Strict Uniqueness Guard: Check if docName already exists in this preset at a different index
-      const conflictIdx = currentList.findIndex((item, idx) => {
-        if (this._editingDocIdx !== null && this._editingDocIdx !== undefined && idx === this._editingDocIdx) {
-          return false;
-        }
-        const n = (typeof item === 'string' ? item : item.name || '').toUpperCase();
-        return n === docName;
-      });
-
-      if (conflictIdx !== -1) {
-        toast.show('Document Exists', `Document "${docName}" is already present in "${this.state.activePreset}".`, 'warning');
-        return;
-      }
-
-      if (this._editingDocIdx !== null && this._editingDocIdx !== undefined && currentList[this._editingDocIdx]) {
-        currentList[this._editingDocIdx] = docEntry;
+    // Auto-generate a shortcode if none provided
+    if (!this._currentShortcutCodes || this._currentShortcutCodes.length === 0) {
+      const words = docName.split(/[\s_-]+/).filter(w => w.length > 0);
+      let candidate = '';
+      if (words.length >= 2) {
+        candidate = (words[0][0] + words[1][0] + (words[2] ? words[2][0] : '')).toUpperCase();
       } else {
-        currentList.push(docEntry);
+        candidate = docName.substring(0, 3).toUpperCase();
       }
-    } else {
-      // 2. Shortcut mode: Multi-short-code support
-      const pendingRaw = (inputCode?.value || '').trim().toUpperCase();
-      if (pendingRaw) {
-        const cleanCode = pendingRaw.replace(/[^A-Z0-9_-]/g, '');
-        if (cleanCode) {
-          if (!this._currentShortcutCodes) this._currentShortcutCodes = [];
-          if (!this._currentShortcutCodes.includes(cleanCode)) {
-            const finalCode = this.findAvailableShortcutCode(cleanCode, docName);
-            this._currentShortcutCodes.push(finalCode);
-            if (finalCode !== cleanCode) {
-              toast.show('Auto-Numbered Code', `Code "${cleanCode}" is assigned to another document. Auto-assigned "${finalCode}".`, 'info');
-            }
-          }
-        }
-      }
-
-      if (!this._currentShortcutCodes || this._currentShortcutCodes.length === 0) {
-        toast.show('Short Code Required', 'Please add at least one short code chip.', 'warning');
-        return;
-      }
-
-      const codes = [...this._currentShortcutCodes];
-      const primaryCode = codes[0];
-
-      // Clean existing shortcut if editing
-      if (this._editingShortcutCode) {
-        const oldCode = this._editingShortcutCode.toUpperCase();
-        const oldShortcut = this.shortcuts21.find(s =>
-          (s.code && s.code.toUpperCase() === oldCode) ||
-          (Array.isArray(s.codes) && s.codes.some(c => c && c.toUpperCase() === oldCode))
-        );
-        if (oldShortcut) {
-          this.shortcuts21 = this.shortcuts21.filter(s => s !== oldShortcut);
-        } else {
-          this.shortcuts21 = this.shortcuts21.filter(s => {
-            if (s.code && s.code.toUpperCase() === oldCode) return false;
-            if (Array.isArray(s.codes) && s.codes.some(c => c && c.toUpperCase() === oldCode)) return false;
-            return true;
-          });
-        }
-        if (this.state.customShortcuts) {
-          this.state.customShortcuts = this.state.customShortcuts.filter(s => {
-            if (s === oldShortcut) return false;
-            if (s.code && s.code.toUpperCase() === oldCode) return false;
-            if (Array.isArray(s.codes) && s.codes.some(c => c && c.toUpperCase() === oldCode)) return false;
-            const sCanon = (s.canonical || s.label || '').toUpperCase();
-            if (oldShortcut && sCanon === (oldShortcut.canonical || oldShortcut.label || '').toUpperCase()) return false;
-            return true;
-          });
-        }
-      }
-
-      const shortcutObj = {
-        code: primaryCode,
-        codes: codes,
-        label: docName,
-        canonical: docName,
-        keywords: keywords
-      };
-
-      this.shortcuts21.push(shortcutObj);
-      if (!this.state.customShortcuts) this.state.customShortcuts = [];
-      this.state.customShortcuts.push(shortcutObj);
-
-      codes.forEach(c => {
-        registerDocumentSignature({
-          canonical: docName,
-          code: c,
-          primaryKeywords: [docName.toLowerCase(), c.toLowerCase()],
-          secondaryKeywords: keywords
-        });
-      });
+      const autoCode = this.findAvailableShortcutCode(candidate || 'DOC', docName);
+      this._currentShortcutCodes.push(autoCode);
     }
 
-    this._editingDocIdx = null;
-    this._editingShortcutCode = null;
-    this._isShortcutOnly = false;
-    this._currentShortcutCodes = [];
+    const codes = [...this._currentShortcutCodes];
+    const primaryCode = codes[0];
 
-    // Persist and refresh
+    // Determine target old identifier if editing
+    let oldCanon = null;
+    let oldCode = null;
+    if (this._editingShortcutCode) {
+      oldCode = this._editingShortcutCode.toUpperCase();
+      const oldShortcut = this.shortcuts21.find(s =>
+        (s.code && s.code.toUpperCase() === oldCode) ||
+        (Array.isArray(s.codes) && s.codes.some(c => c && c.toUpperCase() === oldCode))
+      );
+      oldCanon = (oldShortcut?.canonical || oldShortcut?.label || '').toUpperCase();
+    } else if (this._editingDocIdx !== null && this._editingDocIdx !== undefined) {
+      const activeList = this.state.documentPresets[this.state.activePreset];
+      if (activeList && activeList[this._editingDocIdx]) {
+        oldCanon = (activeList[this._editingDocIdx].name || '').toUpperCase();
+        oldCode = (activeList[this._editingDocIdx].code || '').toUpperCase();
+      }
+    }
+
+    // 1. Clean existing master shortcut if updating
+    if (oldCode || oldCanon) {
+      this.shortcuts21 = this.shortcuts21.filter(s => {
+        const sCanon = (s.canonical || s.label || '').toUpperCase();
+        const sCode = (s.code || '').toUpperCase();
+        if (oldCode && (sCode === oldCode || (Array.isArray(s.codes) && s.codes.some(c => c && c.toUpperCase() === oldCode)))) return false;
+        if (oldCanon && sCanon === oldCanon) return false;
+        return true;
+      });
+      if (this.state.customShortcuts) {
+        this.state.customShortcuts = this.state.customShortcuts.filter(s => {
+          const sCanon = (s.canonical || s.label || '').toUpperCase();
+          const sCode = (s.code || '').toUpperCase();
+          if (oldCode && (sCode === oldCode || (Array.isArray(s.codes) && s.codes.some(c => c && c.toUpperCase() === oldCode)))) return false;
+          if (oldCanon && sCanon === oldCanon) return false;
+          return true;
+        });
+      }
+    }
+
+    // 2. Insert into master registry
+    const shortcutObj = {
+      code: primaryCode,
+      codes: codes,
+      label: docName,
+      canonical: docName,
+      keywords: keywords
+    };
+
+    this.shortcuts21.push(shortcutObj);
+    if (!this.state.customShortcuts) this.state.customShortcuts = [];
+    this.state.customShortcuts.push(shortcutObj);
+
+    codes.forEach(c => {
+      registerDocumentSignature({
+        canonical: docName,
+        code: c,
+        primaryKeywords: [docName.toLowerCase(), c.toLowerCase()],
+        secondaryKeywords: keywords
+      });
+    });
+
+    // 3. Synchronize across ALL presets
+    const selectedPresets = this._selectedPresetKeys || new Set();
+    if (!this.state.documentPresets) this.state.documentPresets = {};
+
+    for (const presetKey of Object.keys(this.state.documentPresets)) {
+      if (!Array.isArray(this.state.documentPresets[presetKey])) {
+        this.state.documentPresets[presetKey] = [];
+      }
+      const list = this.state.documentPresets[presetKey];
+
+      if (selectedPresets.has(presetKey)) {
+        // Document should be present in this preset
+        const existingIdx = list.findIndex(d => {
+          const dCanon = (d.name || '').trim().toUpperCase();
+          const dCode = (d.code || '').trim().toUpperCase();
+          if (oldCanon && dCanon === oldCanon) return true;
+          if (oldCode && dCode === oldCode) return true;
+          if (dCanon === docName) return true;
+          if (dCode === primaryCode) return true;
+          return false;
+        });
+
+        const entry = { name: docName, code: primaryCode, keywords };
+        if (existingIdx !== -1) {
+          list[existingIdx] = entry;
+        } else {
+          list.push(entry);
+        }
+      } else {
+        // Document is NOT selected for this preset - unlink if it previously existed
+        if (oldCanon || oldCode) {
+          this.state.documentPresets[presetKey] = list.filter(d => {
+            const dCanon = (d.name || '').trim().toUpperCase();
+            const dCode = (d.code || '').trim().toUpperCase();
+            if (oldCanon && dCanon === oldCanon) return false;
+            if (oldCode && dCode === oldCode) return false;
+            return true;
+          });
+        }
+      }
+    }
+
+    const wasFromShortcuts = this._fromShortcutsTab;
     this.closeAddDocumentModal();
     this.savePresetsAndSettings();
+    this.syncPresetsToShortcuts();
     this._recalculateTargetNames(true);
     this.updateTelemetry();
     this.renderQueue();
     this.renderCurrentPreview();
-    this.renderSettingsModal(wasShortcutOnly ? 'shortcuts' : 'presets');
-    toast.show('Saved', `${docName} saved successfully.`, 'success');
+    this.renderSettingsModal(wasFromShortcuts ? 'shortcuts' : 'presets');
+    toast.show('Document Type Saved', `"${docName}" synced across shortcuts & ${selectedPresets.size} preset(s).`, 'success');
   }
 
   /* ==========================================================================

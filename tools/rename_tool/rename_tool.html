@@ -469,11 +469,11 @@
         class="px-5 py-4 bg-surface-container-low flex items-center justify-between border-b border-outline-variant/30">
         <div class="flex items-center gap-2.5">
           <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold">
-            <span class="material-symbols-outlined text-[20px]">note_add</span>
+            <span class="material-symbols-outlined text-[20px]">description</span>
           </div>
           <div>
-            <h3 class="font-headline-sm text-[16px] font-bold text-on-surface">Add Document Type to Preset</h3>
-            <p class="text-secondary text-[11px]">Define document name, short code, and keywords for auto-matching</p>
+            <h3 class="font-headline-sm text-[16px] font-bold text-on-surface">Add / Edit Document Type</h3>
+            <p class="text-secondary text-[11px]">Define document name, short code(s), keywords, and preset assignments</p>
           </div>
         </div>
         <button id="btnCloseAddDocModal" type="button"
@@ -484,7 +484,7 @@
 
       <!-- Modal Body (Browser Autofill Completely Disabled) -->
       <form autocomplete="off" onsubmit="return false;" class="p-5 flex flex-col gap-4 text-label-md m-0">
-        <!-- Input: Short Code(s) (Multi-chip UI for Shortcuts, hidden for Preset Documents) -->
+        <!-- Input: Short Code(s) (Multi-chip UI for Shortcuts & Master Document Types) -->
         <div id="containerAddDocCode" class="flex flex-col gap-1.5">
           <label class="font-semibold text-on-surface text-[12px] flex items-center justify-between">
             <span>Short Code(s)</span>
@@ -520,18 +520,44 @@
             class="w-full h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary font-mono-code text-[13px] font-bold text-on-surface outline-none">
         </div>
 
-        <!-- Input: Keywords / Aliases (Optional) -->
+        <!-- Input: Keywords / Aliases * (Required) -->
         <div class="flex flex-col gap-1.5">
           <label class="font-semibold text-on-surface text-[12px] flex items-center justify-between">
-            <span>Keywords / Aliases (Optional)</span>
-            <span class="text-secondary font-mono-code text-[11px]">Comma-separated</span>
+            <div class="flex items-center gap-1.5">
+              <span>Keywords / Aliases</span>
+              <span class="text-error font-bold">* (Required)</span>
+            </div>
+            <button id="btnAutoGenerateKeywords" type="button"
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+              title="Auto-generate smart aliases & Indian academic synonyms">
+              <span class="material-symbols-outlined text-[13px]">auto_awesome</span>
+              <span>✨ Auto-Generate</span>
+            </button>
           </label>
           <input id="inputAddDocAliases" type="text" placeholder="e.g. bonafide, bonafied, cert" autocomplete="off"
             autocomplete="one-time-code" aria-autocomplete="none" autocorrect="off" autocapitalize="off"
             spellcheck="false" data-lpignore="true" data-form-type="other"
             class="w-full h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary font-mono-code text-[12px] text-on-surface outline-none">
-          <span class="text-secondary text-[10px]">Leave blank to automatically derive tokens from Full Document
-            Name.</span>
+          <div id="hintKeywordsValidation" class="text-error text-[10px] hidden font-semibold flex items-center gap-1">
+            <span class="material-symbols-outlined text-[12px]">info</span>
+            <span>At least one keyword is required for smart scanning & auto-matching.</span>
+          </div>
+          <span class="text-secondary text-[10px]">Comma-separated variations used by Smart Scan for 100% accurate file matching.</span>
+        </div>
+
+        <!-- Section: Include in Presets (Optional) -->
+        <div class="flex flex-col gap-1.5">
+          <label class="font-semibold text-on-surface text-[12px] flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <span>Include in Presets</span>
+              <span class="text-secondary text-[11px] font-normal">(Optional)</span>
+            </div>
+            <span class="text-secondary text-[11px]">Click preset to toggle in Missing Documents</span>
+          </label>
+          <div id="containerPresetPills"
+            class="flex flex-wrap gap-1.5 min-h-[38px] p-2 rounded-lg bg-surface-container-low border border-outline-variant/30 items-center">
+            <!-- Dynamic clickable pill badges for all presets -->
+          </div>
         </div>
 
         <!-- Live Target Preview (Without file extension) -->
@@ -550,7 +576,7 @@
           Cancel
         </button>
         <button id="btnSaveAddDoc" type="button"
-          class="px-5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-[12px] font-bold shadow-sm flex items-center gap-1.5 transition-all cursor-pointer">
+          class="px-5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-[12px] font-bold shadow-sm flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
           <span class="material-symbols-outlined text-[16px]">save</span>
           <span>Save Document Type</span>
         </button>
