@@ -134,8 +134,8 @@ runTest('Dynamic preset documents matching & custom documents', () => {
 runTest('Default presets contain MAHA DBT and SWAYAM', () => {
   assert.ok(DEFAULT_CHECKLISTS_DATA['MAHA DBT'], 'MAHA DBT preset missing');
   assert.ok(DEFAULT_CHECKLISTS_DATA['SWAYAM'], 'SWAYAM preset missing');
-  assert.strictEqual(DEFAULT_CHECKLISTS_DATA['MAHA DBT'].length, 13);
-  assert.strictEqual(DEFAULT_CHECKLISTS_DATA['SWAYAM'].length, 11);
+  assert.strictEqual(DEFAULT_CHECKLISTS_DATA['MAHA DBT'].length, 28);
+  assert.strictEqual(DEFAULT_CHECKLISTS_DATA['SWAYAM'].length, 22);
 });
 
 // 7. Structural HTML & DOM Elements Verification

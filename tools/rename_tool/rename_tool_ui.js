@@ -72,7 +72,12 @@ import {
   escapeHtml,
   computeOldNameErrorPercent,
   detectDuplicateFiles,
-  generateSmartKeywords
+  generateSmartKeywords,
+  updateCanonicalName,
+  removeCanonicalName,
+  syncCanonicalNames,
+  updateDocumentPattern,
+  removeDocumentPattern
 } from './rename_tool_logic.js';
 import { recordRenameEvent } from '../../src/services/analytics-service.js';
 import { loadSettings, saveSettings, loadDocumentPresets, saveDocumentPresets } from '../../src/services/storage-service.js';

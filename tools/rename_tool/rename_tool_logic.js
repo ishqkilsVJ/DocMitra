@@ -1455,7 +1455,7 @@ export function uniqueDestination(desired, currentName, usedNames, studentName =
     }
   }
 
-  if (!usedLower.has(desired.toLowerCase()) || desired.toLowerCase() === (currentName || '').toLowerCase()) {
+  if (!usedLower.has(desired.toLowerCase())) {
     return desired;
   }
 
@@ -1492,7 +1492,7 @@ export function uniqueDestination(desired, currentName, usedNames, studentName =
   }
 
   let candidate = `${stem} ${counter}${studentSuffix}${suffix}`;
-  while (usedLower.has(candidate.toLowerCase()) && candidate.toLowerCase() !== (currentName || '').toLowerCase()) {
+  while (usedLower.has(candidate.toLowerCase())) {
     counter++;
     candidate = `${stem} ${counter}${studentSuffix}${suffix}`;
   }

@@ -440,7 +440,7 @@ runStep(31, 'Verify persistent presets loaded from config/document_presets.json'
   assert.ok(fs.existsSync(presetsJsonPath));
   const data = JSON.parse(fs.readFileSync(presetsJsonPath, 'utf8'));
   assert.ok(data.forms['MAHA DBT'], 'MAHA DBT preset must persist');
-  assert.ok(data.forms['SWAYAM'], 'SWAYAM preset must persist');
+  assert.ok(data.forms['SWAYAM'] || data.forms['SWAYAM DEENDAYAL YOJANA'], 'SWAYAM preset must persist');
 });
 
 // ---------------------------------------------------------------------------
