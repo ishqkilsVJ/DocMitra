@@ -4422,7 +4422,7 @@ function he(e) {
 	let i = /* @__PURE__ */ new Map();
 	return e.forEach((e) => {
 		let t = O(e.targetName || e.name || ""), n = t.toLowerCase().replace(/[\s_\-]+(\d+|\(\d+\))(?=\s|$)/gi, "").replace(/[\s_\-]+/g, " ").trim(), r = `${n}|${(e.ext || D(e.name) || "").toLowerCase()}`;
-		n.length >= 3 && (i.has(r) || i.set(r, []), i.get(r).push({
+		n.length >= 1 && (i.has(r) || i.set(r, []), i.get(r).push({
 			file: e,
 			originalName: t
 		}));
@@ -5324,7 +5324,9 @@ var Ke = S.map((e) => ({
 		let c = document.getElementById("btnUndoRename");
 		c && c.addEventListener("click", () => this.handleUndo());
 		let l = document.getElementById("btnMoveToDuplicates");
-		l && l.addEventListener("click", () => this.handleMoveFileToDuplicates());
+		l && l.addEventListener("click", () => {
+			this.getExtraDuplicateFiles().length > 0 ? this.handleMoveAllDuplicates() : this.handleMoveFileToDuplicates();
+		});
 		let u = document.getElementById("btnRescanFiles");
 		u && u.addEventListener("click", () => this.handleRescanFiles());
 		let d = document.getElementById("btnSortQueue");
@@ -5442,7 +5444,7 @@ var Ke = S.map((e) => ({
 				else if (e.key === "F5") e.preventDefault(), this.handleRescanFiles();
 				else if (e.key === "Delete") {
 					if (e.target && e.target.tagName === "INPUT" && e.target.id !== "inputRenameTarget") return;
-					e.preventDefault(), this.handleMoveFileToDuplicates();
+					e.preventDefault(), this.getExtraDuplicateFiles().length > 0 ? this.handleMoveAllDuplicates() : this.handleMoveFileToDuplicates();
 				} else (e.ctrlKey || e.metaKey) && e.key === "ArrowLeft" ? (e.preventDefault(), this.handlePrevFolder()) : (e.ctrlKey || e.metaKey) && e.key === "ArrowRight" ? (e.preventDefault(), this.handleNextFolder()) : (e.ctrlKey || e.metaKey) && (e.key === "z" || e.key === "Z") && !e.shiftKey && e.target.tagName !== "INPUT" ? (e.preventDefault(), this.handleUndo()) : (e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S") && (e.preventDefault(), this.handleSaveBatch());
 			}
 		});
@@ -5824,6 +5826,11 @@ var Ke = S.map((e) => ({
 			let e = d.querySelector("span:not(.material-symbols-outlined)");
 			e && (e.textContent = "Bulk Rename"), d.disabled = this.state.files.length === 0;
 		}
+		let p = document.getElementById("btnMoveToDuplicates"), m = document.getElementById("moveDuplicatesLabel");
+		if (p) {
+			let e = this.getExtraDuplicateFiles();
+			e.length > 0 ? (m && (m.textContent = `Move Duplicates (${e.length})`), p.classList.add("bg-rose-950/80", "hover:bg-rose-900", "border-rose-700/80", "text-rose-200"), p.classList.remove("bg-slate-800", "hover:bg-slate-700", "border-slate-700", "text-slate-200"), p.title = `Safely move ${e.length} extra duplicate copies to "Duplicate Files" (keeps 1 master copy) (Del)`) : (m && (m.textContent = "Move to Duplicates (Del)"), p.classList.remove("bg-rose-950/80", "hover:bg-rose-900", "border-rose-700/80", "text-rose-200"), p.classList.add("bg-slate-800", "hover:bg-slate-700", "border-slate-700", "text-slate-200"), p.title = "Move current document to \"Duplicate Files\" subfolder (Safe — never deleted) (Del)");
+		}
 	}
 	renderQueue() {
 		let e = document.getElementById("col-queue");
@@ -5930,7 +5937,7 @@ var Ke = S.map((e) => ({
 			C.className = "relative flex items-center w-full shadow-sm";
 			let w = document.createElement("input");
 			w.id = "inputRenameTarget", w.type = "text", w.autocomplete = "new-password", w.setAttribute("autocomplete", "new-password"), w.setAttribute("autocorrect", "off"), w.setAttribute("autocapitalize", "off"), w.setAttribute("spellcheck", "false"), w.setAttribute("name", `docmitra_rename_${Date.now()}`), w.className = "w-full h-10 px-3 rounded-lg bg-surface-container-lowest font-mono-code text-[13px] text-on-surface font-semibold border-2 border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-xs", w.value = A(n.userEditedName === void 0 ? n.targetName ? O(n.targetName) : O(n.name) : n.userEditedName, this.state.style || "upper"), w.addEventListener("keydown", (e) => {
-				if (e.key === "Delete") e.preventDefault(), this.handleMoveFileToDuplicates(n);
+				if (e.key === "Delete") e.preventDefault(), this.getExtraDuplicateFiles().length > 0 ? this.handleMoveAllDuplicates() : this.handleMoveFileToDuplicates(n);
 				else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) e.preventDefault(), this.handleRenameSingleFile(n);
 				else if (e.key === "Tab" && !e.shiftKey) {
 					e.preventDefault();
@@ -6404,6 +6411,55 @@ var Ke = S.map((e) => ({
 		let a = document.getElementById("modalCrossCheck");
 		a && !a.classList.contains("hidden") && this._renderCrossCheckRows(), r.show("Sorted", `Documents sorted ${this._sortOrder === "asc" ? "A → Z" : "Z → A"}`, "info");
 	}
+	getExtraDuplicateFiles() {
+		if (!this.state.files || this.state.files.length === 0) return [];
+		let e = he(this.state.files), t = /* @__PURE__ */ new Map();
+		this.state.files.forEach((n) => {
+			let r = e.get(n.id || n.name);
+			if (r && (r.status === "confirmed" || r.status === "probable")) {
+				let e = n.sha256 ? `hash_${n.sha256}` : null;
+				e ||= `base_${O(n.targetName || n.name || "").toLowerCase().replace(/[\s_\-]+(\d+|\(\d+\))(?=\s|$)/gi, "").replace(/[\s_\-]+/g, " ").trim()}_${(n.ext || D(n.name) || "").toLowerCase()}`, t.has(e) || t.set(e, []), t.get(e).push(n);
+			}
+		});
+		let n = [];
+		return t.forEach((e) => {
+			if (e.length > 1) for (let t = 1; t < e.length; t++) n.push(e[t]);
+		}), n;
+	}
+	async handleMoveAllDuplicates() {
+		let e = this.getExtraDuplicateFiles();
+		if (e.length === 0) {
+			r.show("No Extra Duplicates", "All documents are single master copies.", "info");
+			return;
+		}
+		let t = this.state.folder?.nativePath || this.state.folder?.path || (e[0].path ? e[0].path.substring(0, Math.max(e[0].path.lastIndexOf("\\"), e[0].path.lastIndexOf("/"))) : ""), n = t ? `${t}\\Duplicate Files` : "Duplicate Files", i = [], a = new Set(e.map((e) => e.id || e.name));
+		for (let t of e) {
+			let e = "";
+			if (t.path && l()) try {
+				let r = await h(t.path, n);
+				r && r.success && (e = r.new_path || r.path || `${n}\\${t.name}`);
+			} catch (e) {
+				console.warn("[DocMitra Renamer] Move error for", t.name, e);
+			}
+			else e = `${n}\\${t.name}`;
+			let r = this.state.files.findIndex((e) => e.id === t.id || e.name === t.name);
+			i.push({
+				file: { ...t },
+				srcPath: t.path,
+				movedPath: e,
+				originalIndex: r
+			});
+		}
+		this._recentMoves.push({
+			isBatch: !0,
+			records: i
+		}), this.state.files = this.state.files.filter((e) => !a.has(e.id || e.name)), this.state.currentIndex >= this.state.files.length && (this.state.currentIndex = Math.max(0, this.state.files.length - 1)), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this._computeDuplicateHashesAsync();
+		let o = document.getElementById("modalCrossCheck");
+		o && !o.classList.contains("hidden") && this._renderCrossCheckRows(), r.show("Duplicates Moved", `Safely moved ${i.length} duplicate file(s) to "Duplicate Files"`, "success", 7e3, {
+			label: "Undo",
+			onClick: () => this.handleUndoSafeMove()
+		});
+	}
 	async handleMoveFileToDuplicates(e = null) {
 		let t = e || this.state.files[this.state.currentIndex];
 		if (!t) {
@@ -6429,7 +6485,7 @@ var Ke = S.map((e) => ({
 			srcPath: t.path,
 			movedPath: a,
 			originalIndex: o
-		}), o !== -1 && (this.state.files.splice(o, 1), this.state.currentIndex >= this.state.files.length && (this.state.currentIndex = Math.max(0, this.state.files.length - 1))), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview();
+		}), o !== -1 && (this.state.files.splice(o, 1), this.state.currentIndex >= this.state.files.length && (this.state.currentIndex = Math.max(0, this.state.files.length - 1))), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this._computeDuplicateHashesAsync();
 		let s = document.getElementById("modalCrossCheck");
 		s && !s.classList.contains("hidden") && this._renderCrossCheckRows(), r.show("Safe Moved", `"${t.name}" moved to "Duplicate Files"`, "info", 6e3, {
 			label: "Undo",
@@ -6442,7 +6498,24 @@ var Ke = S.map((e) => ({
 			return;
 		}
 		let e = this._recentMoves.pop();
-		if (!e || !e.file) return;
+		if (!e) return;
+		if (e.isBatch && Array.isArray(e.records)) {
+			let t = 0, n = [...e.records].sort((e, t) => (e.originalIndex ?? 0) - (t.originalIndex ?? 0));
+			for (let e of n) {
+				if (e.srcPath && e.movedPath && l()) try {
+					let t = e.srcPath.substring(0, Math.max(e.srcPath.lastIndexOf("\\"), e.srcPath.lastIndexOf("/")));
+					await h(e.movedPath, t);
+				} catch (t) {
+					console.warn("[DocMitra Renamer] Restore error for", e.file?.name, t);
+				}
+				let n = Math.min(e.originalIndex ?? this.state.files.length, this.state.files.length);
+				this.state.files.splice(n, 0, e.file), t++;
+			}
+			this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this._computeDuplicateHashesAsync();
+			let i = document.getElementById("modalCrossCheck");
+			i && !i.classList.contains("hidden") && this._renderCrossCheckRows(), r.show("Restored", `Restored ${t} file(s) from "Duplicate Files"`, "success");
+			return;
+		}
 		if (e.srcPath && e.movedPath && l()) try {
 			let t = e.srcPath.substring(0, Math.max(e.srcPath.lastIndexOf("\\"), e.srcPath.lastIndexOf("/"))), n = await h(e.movedPath, t);
 			if (!n || !n.success) {
@@ -6454,30 +6527,12 @@ var Ke = S.map((e) => ({
 			return;
 		}
 		let t = Math.min(e.originalIndex ?? this.state.files.length, this.state.files.length);
-		this.state.files.splice(t, 0, e.file), this.state.currentIndex = t, this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview();
+		this.state.files.splice(t, 0, e.file), this.state.currentIndex = t, this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this._computeDuplicateHashesAsync();
 		let n = document.getElementById("modalCrossCheck");
 		n && !n.classList.contains("hidden") && this._renderCrossCheckRows(), r.show("Restored", `"${e.file.name}" restored from "Duplicate Files"`, "success");
 	}
 	async handleMoveModalDuplicates() {
-		if (!this.state.files || this.state.files.length === 0) return;
-		let e = he(this.state.files), t = /* @__PURE__ */ new Map();
-		this.state.files.forEach((n) => {
-			let r = e.get(n.id || n.name);
-			if (r && r.status === "confirmed") {
-				let e = n.sha256 ? `hash_${n.sha256}` : null;
-				e ||= `base_${O(n.targetName || n.name || "").toLowerCase().replace(/[\s_\-]+(\d+|\(\d+\))(?=\s|$)/gi, "").replace(/[\s_\-]+/g, " ").trim()}_${(n.ext || D(n.name) || "").toLowerCase()}`, t.has(e) || t.set(e, []), t.get(e).push(n);
-			}
-		});
-		let n = [];
-		if (t.forEach((e) => {
-			if (e.length > 1) for (let t = 1; t < e.length; t++) n.push(e[t]);
-		}), n.length === 0) {
-			r.show("No Extra Duplicates", "All documents are single master copies.", "info");
-			return;
-		}
-		let i = 0;
-		for (let e of n) await this.handleMoveFileToDuplicates(e), i++;
-		r.show("Duplicates Moved", `Safely moved ${i} extra duplicate documents to "Duplicate Files" folder.`, "success");
+		await this.handleMoveAllDuplicates();
 	}
 	async handleConfirmCurrentName(e) {
 		let t = this.state.files[this.state.currentIndex];

@@ -2942,7 +2942,7 @@ export function detectDuplicateFiles(files) {
 
     const extStr = (f.ext || ext(f.name) || '').toLowerCase();
     const groupKey = `${base}|${extStr}`;
-    if (base.length >= 3) {
+    if (base.length >= 1) {
       if (!baseGroups.has(groupKey)) baseGroups.set(groupKey, []);
       baseGroups.get(groupKey).push({ file: f, originalName: activeName });
     }
