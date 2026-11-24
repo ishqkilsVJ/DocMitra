@@ -1169,7 +1169,7 @@ export class RenamerUIManager {
         const baseName = cleanName(f.name);
         const matchSmart = matchFilenameSmart(f.name, this.state.studentName, this.state.settings?.groups, this.getAllPresetDocuments());
         const docType = matchSmart.docType;
-        const isMatched = matchSmart.confidence >= 30;
+        const isMatched = matchSmart.confidence >= 50;
 
         let suggested = baseName;
         if (docType) {
@@ -1309,10 +1309,10 @@ export class RenamerUIManager {
       }
 
       // Batch spelling auto-correction: correct scanner typos before matching
-      // Filename-based matching (30%+ threshold) & preview URL resolution
+      // Filename-based matching (50%+ threshold) & preview URL resolution
       const matchSmart = matchFilenameSmart(f.name, effStudent, this.state.settings?.groups, this.getAllPresetDocuments());
       const docType = matchSmart.docType;
-      const isMatched = matchSmart.confidence >= 30;
+      const isMatched = matchSmart.confidence >= 50;
 
       let suggested = baseName;
       if (docType) {
@@ -1441,7 +1441,7 @@ export class RenamerUIManager {
       if (!f.isRenamed && !f.isKept) {
         if (reMatch || !f.isMatched) {
           const matchSmart = matchFilenameSmart(f.name, effStudent, this.state.settings?.groups, presetDocs);
-          if (matchSmart.confidence >= 30) {
+          if (matchSmart.confidence >= 50) {
             f.docType = matchSmart.docType;
             f.smartDocType = matchSmart.docType;
             f.smartConfidence = matchSmart.confidence;
@@ -1757,7 +1757,7 @@ export class RenamerUIManager {
       if (currentFile.status === 'needs_review') {
         liveBadge.className = 'confidence-badge confidence-badge-med';
         liveBadge.textContent = '🟡 Needs Review';
-      } else if (currentFile.smartConfidence !== undefined && currentFile.smartConfidence >= 30) {
+      } else if (currentFile.smartConfidence !== undefined && currentFile.smartConfidence >= 50) {
         if (currentFile.smartConfidence >= 80) {
           liveBadge.className = 'confidence-badge confidence-badge-high';
           liveBadge.textContent = `🟢 ${currentFile.smartConfidence}% ${currentFile.smartDocType || currentFile.docType || 'DOCUMENT'}`;
@@ -3723,7 +3723,7 @@ export class RenamerUIManager {
           f.smartConfidence = evalRes.confidence;
           f.smartDocType = evalRes.docType;
 
-          if (evalRes.confidence >= 30 && evalRes.docType) {
+          if (evalRes.confidence >= 50 && evalRes.docType) {
             f.docType = evalRes.docType;
             f.isMatched = true;
             if (evalRes.confidence >= 80) highConfCount++;
