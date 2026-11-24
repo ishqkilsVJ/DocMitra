@@ -7059,6 +7059,16 @@ var Ye = S.map((e) => ({
 		} catch (e) {
 			console.warn("[DocMitra Renamer] Failed to parse local presets:", e);
 		}
+		try {
+			let e = localStorage.getItem("docmitra_custom_shortcuts");
+			if (e && (this.state.customShortcuts = JSON.parse(e), Array.isArray(this.state.customShortcuts))) for (let e of this.state.customShortcuts) e.code && !this.shortcuts21.some((t) => t.code.toUpperCase() === e.code.toUpperCase()) && this.shortcuts21.push({
+				code: e.code.toUpperCase(),
+				label: e.label || e.canonical,
+				canonical: e.canonical
+			});
+		} catch (e) {
+			console.warn("[DocMitra Renamer] Failed to parse custom shortcuts:", e);
+		}
 		if (this.state.documentPresets && typeof this.state.documentPresets == "object" && (this.state.documentPresets.SWAYAM && !this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] && (this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] = this.state.documentPresets.SWAYAM, delete this.state.documentPresets.SWAYAM), this.state.documentPresets.EDUCATIONAL && !this.state.documentPresets["EDUCATIONAL DOCUMENTS"] && (this.state.documentPresets["EDUCATIONAL DOCUMENTS"] = this.state.documentPresets.EDUCATIONAL, delete this.state.documentPresets.EDUCATIONAL)), !this.state.documentPresets || Object.keys(this.state.documentPresets).length === 0) this.state.documentPresets = JSON.parse(JSON.stringify(Z)), this.savePresetsAndSettings();
 		else {
 			let e = !1;
@@ -7072,17 +7082,36 @@ var Ye = S.map((e) => ({
 			}
 			e && this.savePresetsAndSettings();
 		}
-		try {
-			let e = localStorage.getItem("docmitra_custom_shortcuts");
-			if (e && (this.state.customShortcuts = JSON.parse(e), Array.isArray(this.state.customShortcuts))) for (let e of this.state.customShortcuts) e.code && !this.shortcuts21.some((t) => t.code.toUpperCase() === e.code.toUpperCase()) && this.shortcuts21.push({
-				code: e.code.toUpperCase(),
-				label: e.label || e.canonical,
-				canonical: e.canonical
-			});
-		} catch (e) {
-			console.warn("[DocMitra Renamer] Failed to parse custom shortcuts:", e);
+		let t = !1, n = (e) => {
+			if (!e || typeof e != "string") return e;
+			let t = e.trim().toUpperCase();
+			return /^[A-Z0-9]+_\d+$/.test(t) ? t.replace(/_(\d+)$/, "$1") : t;
+		};
+		if (this.state.documentPresets && typeof this.state.documentPresets == "object") for (let e of Object.keys(this.state.documentPresets)) {
+			let r = this.state.documentPresets[e];
+			if (Array.isArray(r)) for (let e of r) {
+				if (e && e.code) {
+					let r = n(e.code);
+					r !== e.code && (e.code = r, t = !0);
+				}
+				if (e && Array.isArray(e.codes)) {
+					let r = e.codes.map((e) => n(e));
+					JSON.stringify(r) !== JSON.stringify(e.codes) && (e.codes = r, t = !0);
+				}
+			}
 		}
-		this.syncPresetsToShortcuts();
+		if (Array.isArray(this.state.customShortcuts)) for (let e of this.state.customShortcuts) {
+			if (e && e.code) {
+				let r = n(e.code);
+				r !== e.code && (e.code = r, t = !0);
+			}
+			if (e && Array.isArray(e.codes)) {
+				let r = e.codes.map((e) => n(e));
+				JSON.stringify(r) !== JSON.stringify(e.codes) && (e.codes = r, t = !0);
+			}
+		}
+		if (Array.isArray(this.shortcuts21)) for (let e of this.shortcuts21) e && e.code && (e.code = n(e.code)), e && Array.isArray(e.codes) && (e.codes = e.codes.map((e) => n(e)));
+		t && this.savePresetsAndSettings(), this.syncPresetsToShortcuts();
 	}
 	savePresetsAndSettings() {
 		try {
@@ -7361,8 +7390,8 @@ var Ye = S.map((e) => ({
 			return !1;
 		};
 		if (!i(n)) return n;
-		let a = 2, o = `${n}_${a}`;
-		for (; i(o);) a++, o = `${n}_${a}`;
+		let a = 2, o = `${n}${a}`;
+		for (; i(o);) a++, o = `${n}${a}`;
 		return o;
 	}
 	renderShortcutChips(e = null) {

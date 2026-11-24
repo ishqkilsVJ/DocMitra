@@ -252,7 +252,7 @@ async function runMasterQA() {
     if (inputCode) inputCode.value = 'PIC';
     if (btnAddChip) btnAddChip.click();
 
-    const hasSuffixedCode = ui._currentShortcutCodes && ui._currentShortcutCodes.some(c => c.startsWith('PIC_'));
+    const hasSuffixedCode = ui._currentShortcutCodes && ui._currentShortcutCodes.some(c => c === 'PIC2');
 
     // Test 3: Preset Document Duplication Rejection
     ui.closeAddDocumentModal();

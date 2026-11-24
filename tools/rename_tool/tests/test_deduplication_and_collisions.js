@@ -62,25 +62,25 @@ async function runTests() {
   // 2. Test findAvailableShortcutCode - Collision with another document
   // 'PIC' is assigned to 'PHOTO' in DEFAULT_SHORTCUTS
   const suffixedCode = instance.findAvailableShortcutCode('PIC', 'SIGNATURE');
-  assert.strictEqual(suffixedCode, 'PIC_2', 'Colliding code PIC for SIGNATURE must auto-suffix to PIC_2');
-  console.log('  ✓ Test 2 Passed: Collision auto-suffixing (PIC -> PIC_2 for SIGNATURE) verified');
+  assert.strictEqual(suffixedCode, 'PIC2', 'Colliding code PIC for SIGNATURE must auto-suffix to PIC2');
+  console.log('  ✓ Test 2 Passed: Collision auto-suffixing (PIC -> PIC2 for SIGNATURE) verified');
 
   // 3. Test findAvailableShortcutCode - Same document (editing)
   const selfCode = instance.findAvailableShortcutCode('PIC', 'PHOTO');
   assert.strictEqual(selfCode, 'PIC', 'Code for same canonical document must not be suffixed');
   console.log('  ✓ Test 3 Passed: Non-colliding self-document code preserved unchanged');
 
-  // 4. Test multi-level collision suffixing (PIC_2 already taken)
+  // 4. Test multi-level collision suffixing (PIC2 already taken)
   instance.shortcuts21.push({
-    code: 'PIC_2',
-    codes: ['PIC_2'],
+    code: 'PIC2',
+    codes: ['PIC2'],
     label: 'OTHER DOC',
     canonical: 'OTHER DOC',
     keywords: ['other']
   });
   const suffixedCode3 = instance.findAvailableShortcutCode('PIC', 'THIRD DOC');
-  assert.strictEqual(suffixedCode3, 'PIC_3', 'Auto-suffix must increment to PIC_3 when PIC_2 is also taken');
-  console.log('  ✓ Test 4 Passed: Multi-level collision suffixing (PIC -> PIC_3) verified');
+  assert.strictEqual(suffixedCode3, 'PIC3', 'Auto-suffix must increment to PIC3 when PIC2 is also taken');
+  console.log('  ✓ Test 4 Passed: Multi-level collision suffixing (PIC -> PIC3) verified');
 
   // 5. Test Keyword Sanitization & Deduplication
   const rawKeywordsInput = 'photo, pic, photo, photograph, PHOTO,  pic , a, -';

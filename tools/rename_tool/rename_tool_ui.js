@@ -3812,6 +3812,35 @@ export class RenamerUIManager {
       console.warn('[DocMitra Renamer] Failed to parse local presets:', e);
     }
 
+    // 3. Load custom shortcuts from localStorage
+    try {
+      const storedShortcuts = localStorage.getItem('docmitra_custom_shortcuts');
+      if (storedShortcuts) {
+        this.state.customShortcuts = JSON.parse(storedShortcuts);
+        if (Array.isArray(this.state.customShortcuts)) {
+          for (const cs of this.state.customShortcuts) {
+            if (!cs || !cs.code) continue;
+            const codeUpper = cs.code.toUpperCase();
+            const existingIdx = this.shortcuts21.findIndex(s => s.code.toUpperCase() === codeUpper);
+            const entry = {
+              code: codeUpper,
+              codes: cs.codes || [codeUpper],
+              label: cs.label || cs.canonical || codeUpper,
+              canonical: (cs.canonical || cs.label || codeUpper).toUpperCase(),
+              keywords: Array.isArray(cs.keywords) ? cs.keywords : []
+            };
+            if (existingIdx !== -1) {
+              this.shortcuts21[existingIdx] = entry;
+            } else {
+              this.shortcuts21.push(entry);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[DocMitra Renamer] Failed to parse custom shortcuts:', e);
+    }
+
     if (this.state.documentPresets && typeof this.state.documentPresets === 'object') {
       if (this.state.documentPresets['SWAYAM'] && !this.state.documentPresets['SWAYAM DEENDAYAL YOJANA']) {
         this.state.documentPresets['SWAYAM DEENDAYAL YOJANA'] = this.state.documentPresets['SWAYAM'];
@@ -3827,54 +3856,89 @@ export class RenamerUIManager {
       // Initialize with factory defaults from BUILTIN_PRESETS (MAHA DBT, SWAYAM DEENDAYAL YOJANA, CET CELL, EDUCATIONAL DOCUMENTS)
       this.state.documentPresets = JSON.parse(JSON.stringify(BUILTIN_PRESETS));
       this.savePresetsAndSettings();
-    } else {
-      // Ensure all 4 built-in presets exist and all factory documents are synchronized
-      let needsSave = false;
-      for (const [presetKey, presetDocs] of Object.entries(BUILTIN_PRESETS)) {
-        if (!this.state.documentPresets[presetKey]) {
-          this.state.documentPresets[presetKey] = JSON.parse(JSON.stringify(presetDocs));
-          needsSave = true;
-        } else {
-          const currentList = this.state.documentPresets[presetKey];
-          if (Array.isArray(currentList)) {
-            const currentCodes = new Set(currentList.map(d => (d.code || '').toUpperCase()));
-            for (const factoryDoc of presetDocs) {
-              if (!currentCodes.has(factoryDoc.code.toUpperCase())) {
-                currentList.push(JSON.parse(JSON.stringify(factoryDoc)));
-                needsSave = true;
+    }
+
+    // 4. Auto-migrate legacy shortcut codes with underscores (e.g., PIC_2 -> PIC2)
+    let migratedAny = false;
+    const migrateLegacyCode = (code) => {
+      if (!code || typeof code !== 'string') return code;
+      const clean = code.trim().toUpperCase();
+      if (/^[A-Z0-9]+_\d+$/.test(clean)) {
+        return clean.replace(/_(\d+)$/, '$1');
+      }
+      return clean;
+    };
+
+    if (this.state.documentPresets && typeof this.state.documentPresets === 'object') {
+      for (const presetKey of Object.keys(this.state.documentPresets)) {
+        const list = this.state.documentPresets[presetKey];
+        if (Array.isArray(list)) {
+          for (const doc of list) {
+            if (doc && doc.code) {
+              const migrated = migrateLegacyCode(doc.code);
+              if (migrated !== doc.code) {
+                doc.code = migrated;
+                migratedAny = true;
+              }
+            }
+            if (doc && Array.isArray(doc.codes)) {
+              const newCodes = doc.codes.map(c => migrateLegacyCode(c));
+              if (JSON.stringify(newCodes) !== JSON.stringify(doc.codes)) {
+                doc.codes = newCodes;
+                migratedAny = true;
               }
             }
           }
         }
       }
-      if (needsSave) {
-        this.savePresetsAndSettings();
-      }
     }
 
-    // 3. Load custom shortcuts
-    try {
-      const storedShortcuts = localStorage.getItem('docmitra_custom_shortcuts');
-      if (storedShortcuts) {
-        this.state.customShortcuts = JSON.parse(storedShortcuts);
-        if (Array.isArray(this.state.customShortcuts)) {
-          for (const cs of this.state.customShortcuts) {
-            if (cs.code && !this.shortcuts21.some(s => s.code.toUpperCase() === cs.code.toUpperCase())) {
-              this.shortcuts21.push({
-                code: cs.code.toUpperCase(),
-                label: cs.label || cs.canonical,
-                canonical: cs.canonical
-              });
-            }
+    if (Array.isArray(this.state.customShortcuts)) {
+      for (const cs of this.state.customShortcuts) {
+        if (cs && cs.code) {
+          const migrated = migrateLegacyCode(cs.code);
+          if (migrated !== cs.code) {
+            cs.code = migrated;
+            migratedAny = true;
+          }
+        }
+        if (cs && Array.isArray(cs.codes)) {
+          const newCodes = cs.codes.map(c => migrateLegacyCode(c));
+          if (JSON.stringify(newCodes) !== JSON.stringify(cs.codes)) {
+            cs.codes = newCodes;
+            migratedAny = true;
           }
         }
       }
-    } catch (e) {
-      console.warn('[DocMitra Renamer] Failed to parse custom shortcuts:', e);
     }
 
-    // 4. Automatically sync all unique preset documents to Shortcuts & Rename Rules with ZERO duplicates
+    if (Array.isArray(this.shortcuts21)) {
+      for (const s of this.shortcuts21) {
+        if (s && s.code) {
+          s.code = migrateLegacyCode(s.code);
+        }
+        if (s && Array.isArray(s.codes)) {
+          s.codes = s.codes.map(c => migrateLegacyCode(c));
+        }
+      }
+    }
+
+    if (migratedAny) {
+      this.savePresetsAndSettings();
+    }
+
+    // 5. Automatically sync all unique preset documents to Shortcuts & Rename Rules with ZERO duplicates
     this.syncPresetsToShortcuts();
+
+    // 6. Synchronize canonical names and document patterns to matching engine
+    const allInitialDocs = this.getAllPresetDocuments();
+    syncCanonicalNames(allInitialDocs);
+    for (const d of allInitialDocs) {
+      if (d && d.code && d.name) {
+        updateDocumentPattern(d.code, d.name, d.keywords);
+        updateCanonicalName(d.name, d.name);
+      }
+    }
   }
 
   savePresetsAndSettings() {
@@ -3918,7 +3982,7 @@ export class RenamerUIManager {
 
         if (existingMap.has(code)) {
           const item = existingMap.get(code);
-          if (name && (!item.canonical || item.canonical === item.code)) {
+          if (name) {
             item.canonical = name.toUpperCase();
             item.label = name;
           }
@@ -4452,10 +4516,10 @@ export class RenamerUIManager {
     }
 
     let suffix = 2;
-    let candidate = `${cleanBase}_${suffix}`;
+    let candidate = `${cleanBase}${suffix}`;
     while (isCodeTaken(candidate)) {
       suffix++;
-      candidate = `${cleanBase}_${suffix}`;
+      candidate = `${cleanBase}${suffix}`;
     }
     return candidate;
   }
@@ -4898,6 +4962,25 @@ export class RenamerUIManager {
       });
     });
 
+    updateCanonicalName(docName, docName);
+    updateDocumentPattern(primaryCode, docName, keywords);
+    MASTER_DOCUMENTS_MAP.set(primaryCode, {
+      code: primaryCode,
+      canonical: docName,
+      label: docName,
+      keywords
+    });
+    if (oldCanon && oldCanon !== docName) {
+      removeCanonicalName(oldCanon);
+      updateCanonicalName(oldCanon, docName);
+      for (const f of this.state.files) {
+        if (f.docType && f.docType.toUpperCase() === oldCanon) {
+          f.docType = docName;
+          f.smartDocType = docName;
+        }
+      }
+    }
+
     // 3. Synchronize across ALL presets
     const selectedPresets = this._selectedPresetKeys || new Set();
     if (!this.state.documentPresets) this.state.documentPresets = {};
@@ -4944,6 +5027,7 @@ export class RenamerUIManager {
     this.closeAddDocumentModal();
     this.savePresetsAndSettings();
     this.syncPresetsToShortcuts();
+    syncCanonicalNames(this.getAllPresetDocuments());
     this._recalculateTargetNames(true);
     this.updateTelemetry();
     this.renderQueue();
@@ -4991,9 +5075,8 @@ export class RenamerUIManager {
         if (studentToggleLabel) {
           studentToggleLabel.textContent = isOn ? 'ON' : 'OFF';
         }
-        btnStudentToggle.className = `inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold border transition-all cursor-pointer ${
-          isOn ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'
-        }`;
+        btnStudentToggle.className = `inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold border transition-all cursor-pointer ${isOn ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'
+          }`;
         this._recalculateAndRenderCrossCheck(true);
       });
     }

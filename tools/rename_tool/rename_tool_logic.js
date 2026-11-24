@@ -95,6 +95,28 @@ export const CANONICAL_NAMES = {
   "ATTEMPT CERTIFICATE": "Attempt Certificate"
 };
 
+export function updateCanonicalName(key, canonical) {
+  if (!key) return;
+  const upper = key.trim().toUpperCase();
+  CANONICAL_NAMES[upper] = canonical || key;
+}
+
+export function removeCanonicalName(key) {
+  if (!key) return;
+  const upper = key.trim().toUpperCase();
+  delete CANONICAL_NAMES[upper];
+}
+
+export function syncCanonicalNames(docList) {
+  if (!docList || !Array.isArray(docList)) return;
+  for (const item of docList) {
+    if (!item) continue;
+    const name = (typeof item === 'string' ? item : (item.name || item.canonical || '')).trim();
+    if (!name) continue;
+    CANONICAL_NAMES[name.toUpperCase()] = name;
+  }
+}
+
 export const DEFAULT_SPELLING_RULES = {
   "marskheet": "marksheet",
   "markshet": "marksheet",
@@ -1250,6 +1272,35 @@ export const DOCUMENT_PATTERNS = [
   }
 ];
 
+export function updateDocumentPattern(code, newOutputName, keywords = null) {
+  if (!code || !newOutputName) return;
+  const cleanCode = code.toUpperCase().trim();
+  const pat = DOCUMENT_PATTERNS.find(p => p.shortcut && p.shortcut.toUpperCase() === cleanCode);
+  if (pat) {
+    pat.outputName = newOutputName.toUpperCase().trim();
+    if (keywords && Array.isArray(keywords)) {
+      for (const kw of keywords) {
+        const kwClean = kw.trim().toLowerCase();
+        if (kwClean.length >= 2) {
+          const regex = new RegExp(`\\b${kwClean.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'i');
+          if (!pat.patterns.some(p => p.toString() === regex.toString())) {
+            pat.patterns.unshift(regex);
+          }
+        }
+      }
+    }
+  }
+}
+
+export function removeDocumentPattern(code) {
+  if (!code) return;
+  const cleanCode = code.toUpperCase().trim();
+  const idx = DOCUMENT_PATTERNS.findIndex(p => p.shortcut && p.shortcut.toUpperCase() === cleanCode);
+  if (idx !== -1) {
+    DOCUMENT_PATTERNS.splice(idx, 1);
+  }
+}
+
 export function evaluateMatch(text, groups = null) {
   if (!text || typeof text !== 'string') {
     return { docType: null, confidence: 0, matchedPattern: null };
@@ -1330,12 +1381,19 @@ export function applyCase(textOrSource, targetOrStyle = 'preserve', optionalStyl
 }
 
 export function buildName(input, student, groups, style = 'preserve') {
-  const g = group(input, groups);
   let baseDoc = '';
-  if (!g) {
-    baseDoc = cleanName(input);
+  const trimmed = (input || '').trim();
+  const upper = trimmed.toUpperCase();
+
+  if (CANONICAL_NAMES[upper]) {
+    baseDoc = CANONICAL_NAMES[upper];
   } else {
-    baseDoc = CANONICAL_NAMES[g.toUpperCase()] || g;
+    const g = group(input, groups);
+    if (!g) {
+      baseDoc = cleanName(input);
+    } else {
+      baseDoc = CANONICAL_NAMES[g.toUpperCase()] || g;
+    }
   }
 
   let combined = baseDoc;
@@ -2479,6 +2537,81 @@ export function matchFilenameSmart(filename, studentName = '', groups = null, pr
   const fileTokens = extractCleanTokens(spellingFixed);
   const fileStandards = extractNumericStandards(fileTokens);
 
+  // 0. Active User-Configured Preset / Shortcut Documents Match (Primary Source of Truth)
+  if (presetDocuments) {
+    const pList = Array.isArray(presetDocuments) ? presetDocuments : Object.values(presetDocuments);
+    for (const pDoc of pList) {
+      if (!pDoc) continue;
+      const docName = (typeof pDoc === 'string' ? pDoc : (pDoc.name || pDoc.canonical || (Array.isArray(pDoc) ? pDoc[0] : ''))).trim().toUpperCase();
+      if (!docName) continue;
+      const docCode = (pDoc.code || (Array.isArray(pDoc) && pDoc[2]) || '').trim().toUpperCase();
+      const rawKws = pDoc.keywords || (Array.isArray(pDoc) && pDoc[1]) || [];
+      const kws = Array.isArray(rawKws) ? rawKws : (typeof rawKws === 'string' ? rawKws.split(',').map(s => s.trim()) : []);
+
+      const pDocTokens = extractCleanTokens(docName);
+      const pDocStandards = extractNumericStandards(pDocTokens);
+      if (hasNumericConflict(fileStandards, pDocStandards)) {
+        continue;
+      }
+
+      // A. Check exact shortcode match as token
+      if (docCode) {
+        const codePat = new RegExp(`(^|[^a-z0-9])${docCode}([^a-z0-9]|$)`, 'i');
+        if (codePat.test(spellingFixed) || codePat.test(baseOriginal)) {
+          return {
+            docType: docName,
+            canonical: CANONICAL_NAMES[docName] || docName,
+            code: docCode,
+            confidence: 95,
+            isConfident: true,
+            reason: `Preset shortcode match (${docCode})`
+          };
+        }
+      }
+
+      // B. Check exact or clean full document name match
+      const docNameClean = docName.toLowerCase();
+      if (normalized === docNameClean || normalized.startsWith(docNameClean + ' ') || normalized.endsWith(' ' + docNameClean) || normalized.includes(' ' + docNameClean + ' ')) {
+        return {
+          docType: docName,
+          canonical: CANONICAL_NAMES[docName] || docName,
+          code: docCode || null,
+          confidence: 100,
+          isConfident: true,
+          reason: 'Exact preset document match'
+        };
+      }
+
+      // C. Check keywords
+      for (const kw of kws) {
+        const kwClean = kw.toLowerCase().trim();
+        if (!kwClean) continue;
+        if (kwClean.length <= 3) {
+          const kwPat = new RegExp(`(^|[^a-z0-9])${kwClean}([^a-z0-9]|$)`, 'i');
+          if (kwPat.test(spellingFixed) || kwPat.test(baseOriginal)) {
+            return {
+              docType: docName,
+              canonical: CANONICAL_NAMES[docName] || docName,
+              code: docCode || null,
+              confidence: 95,
+              isConfident: true,
+              reason: `Preset keyword match (${kwClean})`
+            };
+          }
+        } else if (normalized.includes(kwClean)) {
+          return {
+            docType: docName,
+            canonical: CANONICAL_NAMES[docName] || docName,
+            code: docCode || null,
+            confidence: 90,
+            isConfident: true,
+            reason: `Preset keyword match (${kwClean})`
+          };
+        }
+      }
+    }
+  }
+
   // 1. Direct Pattern Match (Regex & Groups)
   let directMatch = evaluateMatch(spellingFixed, groups);
   if (!directMatch.docType) {
@@ -2606,8 +2739,12 @@ export function matchFilenameSmart(filename, studentName = '', groups = null, pr
       const rawKws = item.keywords || (Array.isArray(item) && item[1]) || [];
       const kws = Array.isArray(rawKws) ? rawKws : (typeof rawKws === 'string' ? rawKws.split(',').map(k => k.trim()) : []);
 
-      const existing = PROFILES.find(p => p.type === docName);
-      if (!existing) {
+      const existing = PROFILES.find(p => p.type === docName || (p.code && docCode && p.code.toUpperCase() === docCode));
+      if (existing) {
+        existing.type = docName;
+        existing.code = docCode;
+        existing.tokens = [docName.toLowerCase(), ...kws.map(k => k.toLowerCase())];
+      } else {
         const itemTokens = extractCleanTokens(docName);
         const itemStandards = extractNumericStandards(itemTokens);
         const std = itemStandards.size > 0 ? Array.from(itemStandards)[0] : null;
