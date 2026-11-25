@@ -22,7 +22,7 @@ export const ERROR_CODES = {
     title: 'Folder Permission Denied',
     desc: 'Windows restricted folder access or permission was denied.',
     marathi: 'Windows किंवा ॲन्टीव्हायरसने या फोल्डरला परवानगी नाकारली आहे.',
-    solution: 'Run ClerkMaster as Administrator or check folder security permissions.'
+    solution: 'Run DocMitra as Administrator or check folder security permissions.'
   },
   'CM-103': {
     code: 'CM-103',
@@ -30,7 +30,7 @@ export const ERROR_CODES = {
     title: 'Local Python Bridge Offline',
     desc: 'Local background desktop server (port 3000) is unreachable or timed out.',
     marathi: 'बॅकग्राउंड सर्व्हिस वेळेत प्रतिसाद देत नाहीये. ॲप रीस्टार्ट करा.',
-    solution: 'Restart ClerkMaster software to reconnect the local background engine.'
+    solution: 'Restart DocMitra software to reconnect the local background engine.'
   },
   'CM-104': {
     code: 'CM-104',
@@ -154,7 +154,7 @@ export const ERROR_CODES = {
     title: 'Commercial License Expired',
     desc: 'Software validity period has ended.',
     marathi: 'सॉफ्टवेअर परवान्याची मुदत संपलेली आहे. नूतनीकरणासाठी संपर्क साधा.',
-    solution: 'Renew commercial license with ClerkMaster distributor.'
+    solution: 'Renew commercial license with DocMitra distributor.'
   },
 
   // --------------------------------------------------------------------------
@@ -182,7 +182,7 @@ export const ERROR_CODES = {
     title: 'Update File Replacement Failed',
     desc: 'Failed to copy updated application files in-place.',
     marathi: 'अपडेट फाइल्स रिप्लेस करताना त्रुटी आली.',
-    solution: 'Ensure ClerkMaster directory is not write-locked by another user.'
+    solution: 'Ensure DocMitra directory is not write-locked by another user.'
   }
 };
 
@@ -218,7 +218,7 @@ export function formatErrorSupportReport(code, detail = '') {
   const ver = 'v1.3.0';
   const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   
-  return `ClerkMaster Support Report: [${info.code}] ${info.title} | ${detail ? 'Detail: ' + detail + ' | ' : ''}Time: ${time} | Version: ${ver} | SysKey: ${sysKey}`;
+  return `DocMitra Support Report: [${info.code}] ${info.title} | ${detail ? 'Detail: ' + detail + ' | ' : ''}Time: ${time} | Version: ${ver} | SysKey: ${sysKey}`;
 }
 
 /**

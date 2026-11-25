@@ -60,11 +60,11 @@ class LicensingService {
 
           if (data && data.success) {
             this.isLicensed = true;
-            this.showAlert('🎉 License verified! Unlocking ClerkMaster...', 'success');
+            this.showAlert('🎉 License verified! Unlocking DocMitra...', 'success');
             setTimeout(() => {
               if (overlay) overlay.style.display = 'none';
               if (typeof window.showToast === 'function') {
-                window.showToast(`🎉 ClerkMaster Activated for ${cust}!`, 'success');
+                window.showToast(`🎉 DocMitra Activated for ${cust}!`, 'success');
               }
             }, 1000);
           } else {
@@ -74,7 +74,7 @@ class LicensingService {
           this.showAlert('Network / server error while activating.', 'error');
         } finally {
           submitBtn.disabled = false;
-          submitBtn.textContent = '⚡ Activate & Unlock ClerkMaster';
+          submitBtn.textContent = '⚡ Activate & Unlock DocMitra';
         }
       };
     }

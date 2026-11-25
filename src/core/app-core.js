@@ -1147,7 +1147,7 @@ function handleRenameError(err) {
 
 $('selectFolder').onclick = async () => {
   if (!window.showDirectoryPicker) {
-    showToast('Direct file access requires Google Chrome or Desktop ClerkMaster.', 'warning');
+    showToast('Direct file access requires Google Chrome or Desktop DocMitra.', 'warning');
     return;
   }
   try {
@@ -1271,7 +1271,7 @@ if (selectFilesBtn) {
   };
 }
 
-// Drag & Drop Handler: Drag loose files or an entire folder directly into ClerkMaster
+// Drag & Drop Handler: Drag loose files or an entire folder directly into DocMitra
 window.addEventListener('dragover', (e) => {
   e.preventDefault();
   e.stopPropagation();
