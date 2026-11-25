@@ -162,7 +162,7 @@ describe('DocMitra Rename Tool — Phase 5: Missing Documents & Follow-up Desk T
 
       // 2. Missing Documents 2-column card grid and metadata badges (Requirement 2 & Option 3-A)
       cy.get('.grid.grid-cols-1.md\\:grid-cols-2').should('exist');
-      cy.contains('PDF / JPG').should('be.visible');
+      cy.contains(/PDF|JPG/).should('be.visible');
       cy.contains('Target ≤ 256 KB').should('be.visible');
 
       // 3. Present Documents row metadata with True Created Date (Requirement 3)

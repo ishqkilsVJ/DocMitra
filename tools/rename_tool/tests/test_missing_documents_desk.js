@@ -210,7 +210,7 @@ console.log('  ✓ Verified: Present document rows display true NTFS Created Dat
 // 5. Verify 2-Column Card Grid Layout, Type, Target Size and Follow-up on Missing Document (Requirement 2 & 5)
 assert(html.includes('grid-cols-1 md:grid-cols-2'), 'Missing documents must render in matching 2-column grid layout');
 assert(html.includes('btnMissingEditFolder'), 'Inline Student/Folder edit pencil button must be present in Readiness card');
-assert(html.includes('PDF / JPG'), 'Missing document must display expected file type badge (PDF / JPG)');
+assert(html.includes('PDF') || html.includes('JPG'), 'Missing document must display specific expected file type badge (PDF or JPG)');
 assert(html.includes('Target ≤ 256 KB'), 'Missing document must display Target ≤ 256 KB buffer');
 assert(html.includes('2026-11-28'), 'Missing document must display promised follow-up date');
 console.log('  ✓ Verified: Missing document cards match 2-column grid layout with inline edit and metadata badges');

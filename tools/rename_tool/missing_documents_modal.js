@@ -21,6 +21,25 @@ function formatBytes(bytes) {
   return `${kb} KB`;
 }
 
+// Helper: Determine expected file type and target buffer (PDF for certificates, JPG for photo/signature)
+function getExpectedFileSpec(ruleName, rule) {
+  let ext = 'PDF';
+  if (rule && rule.ext) {
+    ext = rule.ext.toUpperCase().replace('.', '');
+  } else if (rule && rule.format) {
+    ext = rule.format.toUpperCase().replace('.', '');
+  } else {
+    const upper = (typeof ruleName === 'string' ? ruleName : (ruleName.name || '')).toUpperCase();
+    if (upper.includes('PHOTO') || upper.includes('PHOTOGRAPH') || upper.includes('SIGNATURE') || upper.includes('SIGN') || upper.includes('THUMB') || upper.includes('PIC')) {
+      ext = 'JPG';
+    }
+  }
+
+  const isJpg = ext === 'JPG' || ext === 'JPEG';
+  const targetBuffer = isJpg ? 'Target ≤ 100 KB' : 'Target ≤ 256 KB';
+  return { ext, isJpg, targetBuffer };
+}
+
 function formatFileDate(timestamp) {
   if (!timestamp) {
     const now = new Date();
@@ -154,17 +173,17 @@ export class MissingDocumentsModal {
 
         <!-- High-Contrast Administrative Scheme Selector & Esc Close Button -->
         <div class="flex items-center gap-2.5">
-          <div class="flex items-center bg-surface-container-high/80 border border-outline-variant/60 rounded-lg px-2.5 py-1.5 shadow-2xs gap-1.5 hover:border-primary/50 transition-colors">
-            <span class="font-mono-code text-[10px] text-secondary uppercase font-bold tracking-wider">SCHEME:</span>
-            <select id="missingModalSchemeSelect" class="bg-transparent font-mono-code text-[12px] font-bold text-primary focus:outline-none cursor-pointer pr-1">
+          <div class="flex items-center bg-slate-900 border border-slate-700 hover:border-primary/60 rounded-lg px-3 py-1.5 shadow-sm gap-2 transition-all cursor-pointer">
+            <span class="font-mono-code text-[10px] text-slate-400 uppercase font-bold tracking-wider">SCHEME:</span>
+            <select id="missingModalSchemeSelect" class="bg-transparent font-mono-code text-[12px] font-bold text-white focus:outline-none cursor-pointer pr-1">
               ${presetsList.map(p => `
-                <option value="${escapeHtml(p)}" ${p === activePreset ? 'selected' : ''}>${escapeHtml(p)}</option>
+                <option value="${escapeHtml(p)}" class="bg-slate-900 text-white" ${p === activePreset ? 'selected' : ''}>${escapeHtml(p)}</option>
               `).join('')}
             </select>
           </div>
-          <button id="btnMissingModalClose" type="button" class="px-3 py-1.5 rounded-lg bg-surface-container-high/90 hover:bg-surface-container-highest text-on-surface hover:text-primary font-mono-code text-[11px] font-bold transition-all flex items-center gap-1.5 border border-outline-variant/60 shadow-2xs cursor-pointer active:scale-95" title="Return to Main Dashboard (Esc)">
+          <button id="btnMissingModalClose" type="button" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-rose-700 text-slate-200 hover:text-white font-mono-code text-[11px] font-bold transition-all flex items-center gap-1.5 border border-slate-700 shadow-sm cursor-pointer active:scale-95" title="Return to Main Dashboard (Esc)">
             <span>Esc Close</span>
-            <span class="material-symbols-outlined text-[16px]">close</span>
+            <span class="material-symbols-outlined text-[15px]">close</span>
           </button>
         </div>
       </header>
@@ -275,40 +294,43 @@ export class MissingDocumentsModal {
                 const ruleName = typeof rule === 'string' ? rule : (rule.name || '');
                 const ruleTag = rule.tag || rule.code || '';
                 const currentFollowup = followupMap[ruleName] || '';
+                const spec = getExpectedFileSpec(ruleName, rule);
 
                 return `
-                  <div class="p-2.5 rounded-lg bg-surface-container-lowest border border-outline-variant/40 shadow-xs flex flex-col justify-between gap-2 hover:bg-surface-container-low/40 transition-colors">
-                    <!-- Top Row: Dot, Title, Shortcode & Format/Target Tags -->
-                    <div class="flex items-start gap-2 min-w-0">
-                      <div class="w-2.5 h-2.5 rounded-full bg-error shrink-0 ring-4 ring-error/20 mt-1"></div>
-                      <div class="min-w-0 flex-1">
-                        <div class="flex items-center gap-1.5 flex-wrap">
-                          <h2 class="font-headline-sm text-[12px] md:text-[13px] text-on-surface font-bold break-words leading-tight" title="${escapeHtml(ruleName)}">${escapeHtml(ruleName)}</h2>
-                          ${ruleTag ? `<span class="px-1.5 py-0.2 rounded bg-error-container text-error font-mono-code text-[9px] font-bold uppercase shrink-0">${escapeHtml(ruleTag)}</span>` : ''}
-                        </div>
-                        <div class="flex items-center gap-1.5 mt-1 flex-wrap">
-                          <span class="px-1.5 py-0.2 rounded bg-surface-container-high text-on-surface-variant font-mono-code text-[9px] font-bold uppercase border border-outline-variant/20">
-                            PDF / JPG
-                          </span>
-                          <span class="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono-code text-[9px] font-medium border border-slate-200 dark:border-slate-700">
-                            Target ≤ 256 KB
-                          </span>
-                        </div>
+                  <div class="p-2.5 rounded-lg bg-surface-container-lowest border border-rose-200/90 shadow-xs flex flex-col justify-between gap-1.5 hover:border-rose-400 transition-colors">
+                    <!-- Top Row: Icon + Title + Shortcode Chip & Red Missing Badge (Design 1 Strict Mirror) -->
+                    <div class="flex items-center justify-between gap-2 min-w-0">
+                      <div class="flex items-center gap-1.5 min-w-0">
+                        <span class="material-symbols-outlined text-rose-600 text-[16px] shrink-0 font-bold">error_outline</span>
+                        <span class="font-headline-sm text-[12px] font-bold text-on-surface truncate" title="${escapeHtml(ruleName)}">${escapeHtml(ruleName)}</span>
+                        ${ruleTag ? `<span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-700 font-mono-code text-[9px] font-bold uppercase shrink-0">${escapeHtml(ruleTag)}</span>` : ''}
                       </div>
+                      <span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 font-mono-code text-[9px] font-bold shrink-0">Missing</span>
                     </div>
 
-                    <!-- Bottom Row: Follow-up Date Input + Royal Blue Import Button -->
-                    <div class="flex items-center justify-between gap-1.5 pt-1.5 border-t border-outline-variant/20 text-[10px] font-mono-code">
-                      <div class="flex items-center gap-1 bg-surface-container-low border border-outline-variant/40 rounded-md px-1.5 py-0.5 shadow-2xs">
-                        <span class="material-symbols-outlined text-primary text-[14px]">event</span>
-                        <span class="font-label-sm text-[9px] text-secondary uppercase font-semibold">Date:</span>
-                        <input type="date" value="${escapeHtml(currentFollowup)}" data-doc="${escapeHtml(ruleName)}" class="missing-followup-input bg-transparent text-on-surface font-mono-code text-[10px] font-bold focus:outline-none cursor-pointer w-[95px]" title="Set follow-up promise date">
+                    <!-- Bottom Row: Specific File Format (PDF or JPG) + Target Buffer on Left; Follow-up Date + Royal Blue Import on Right -->
+                    <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-secondary pl-5">
+                      <div class="flex items-center gap-2">
+                        <!-- File Type Badge (Specific PDF or JPG) -->
+                        <span class="px-1.5 py-0.2 rounded ${spec.isJpg ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'} font-bold uppercase text-[9px]">
+                          ${escapeHtml(spec.ext)}
+                        </span>
+                        <!-- Target Buffer -->
+                        <span class="text-secondary text-[9px] font-medium">${escapeHtml(spec.targetBuffer)}</span>
                       </div>
 
-                      <button type="button" data-doc="${escapeHtml(ruleName)}" class="btn-missing-import-file px-3 py-1 rounded-md bg-primary hover:bg-primary/90 text-white font-mono-code text-[11px] font-bold shadow-xs flex items-center gap-1 transition-all cursor-pointer active:scale-95 shrink-0">
-                        <span class="material-symbols-outlined text-[14px]">download</span>
-                        <span>Import</span>
-                      </button>
+                      <!-- Compact Follow-up Date + Royal Blue Import Button -->
+                      <div class="flex items-center gap-1.5 shrink-0">
+                        <div class="flex items-center gap-1 bg-surface-container-low border border-outline-variant/40 rounded px-1.5 py-0.5 shadow-2xs" title="Set follow-up promise date">
+                          <span class="material-symbols-outlined text-secondary text-[13px]">calendar_today</span>
+                          <input type="date" value="${escapeHtml(currentFollowup)}" data-doc="${escapeHtml(ruleName)}" class="missing-followup-input bg-transparent text-on-surface font-mono-code text-[9px] font-bold focus:outline-none cursor-pointer w-[92px]">
+                        </div>
+
+                        <button type="button" data-doc="${escapeHtml(ruleName)}" class="btn-missing-import-file px-2.5 py-0.5 rounded bg-primary hover:bg-primary/90 text-white font-mono-code text-[10px] font-bold shadow-xs flex items-center gap-1 transition-all cursor-pointer active:scale-95 shrink-0" title="Import external file into student folder">
+                          <span class="material-symbols-outlined text-[13px]">download</span>
+                          <span>Import</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 `;
@@ -388,9 +410,10 @@ export class MissingDocumentsModal {
           </span>
         </div>
         <div class="flex items-center gap-2">
-          <button id="btnMissingModalDone" type="button" class="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white font-headline-sm text-[12px] font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95">
-            <span>Done / Return to Ledger</span>
-            <kbd class="px-1.5 py-0.5 rounded bg-white/20 text-[10px] font-mono-code font-bold">Esc / Enter</kbd>
+          <button id="btnMissingModalDone" type="button" class="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white font-headline-sm text-[12px] font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95" title="Close and return to Bulk Renamer (Esc)">
+            <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+            <span>Back to Renamer</span>
+            <kbd class="px-1.5 py-0.5 rounded bg-white/20 text-[10px] font-mono-code font-bold">Esc</kbd>
           </button>
         </div>
       </footer>

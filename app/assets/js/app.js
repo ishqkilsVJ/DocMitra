@@ -5720,7 +5720,22 @@ function Y(e) {
 function tt(e) {
 	return !e || e <= 0 ? "0 KB" : `${Math.round(e / 1024)} KB`;
 }
-function nt(e) {
+function nt(e, t) {
+	let n = "PDF";
+	if (t && t.ext) n = t.ext.toUpperCase().replace(".", "");
+	else if (t && t.format) n = t.format.toUpperCase().replace(".", "");
+	else {
+		let t = (typeof e == "string" ? e : e.name || "").toUpperCase();
+		(t.includes("PHOTO") || t.includes("PHOTOGRAPH") || t.includes("SIGNATURE") || t.includes("SIGN") || t.includes("THUMB") || t.includes("PIC")) && (n = "JPG");
+	}
+	let r = n === "JPG" || n === "JPEG";
+	return {
+		ext: n,
+		isJpg: r,
+		targetBuffer: r ? "Target ≤ 100 KB" : "Target ≤ 256 KB"
+	};
+}
+function rt(e) {
 	if (!e) {
 		let e = /* @__PURE__ */ new Date();
 		return `${String(e.getDate()).padStart(2, "0")}-${String(e.getMonth() + 1).padStart(2, "0")}-${e.getFullYear()}`;
@@ -5728,7 +5743,7 @@ function nt(e) {
 	let t = new Date(e);
 	return isNaN(t.getTime()) ? "24-11-2026" : `${String(t.getDate()).padStart(2, "0")}-${String(t.getMonth() + 1).padStart(2, "0")}-${t.getFullYear()}`;
 }
-var rt = class {
+var it = class {
 	constructor(e = {}) {
 		this.container = e.container || document.body, this.onImportFile = e.onImportFile || (() => {}), this.onSetFollowup = e.onSetFollowup || (() => {}), this.onPresetChange = e.onPresetChange || (() => {}), this.onRenameFolder = e.onRenameFolder || (() => {}), this.onClose = e.onClose || (() => {}), this.modalEl = null, this.contentEl = null, this.isOpen = !1, this.currentProps = null, this._handleKeydown = this._handleKeydown.bind(this);
 	}
@@ -5777,17 +5792,17 @@ var rt = class {
 
         <!-- High-Contrast Administrative Scheme Selector & Esc Close Button -->
         <div class="flex items-center gap-2.5">
-          <div class="flex items-center bg-surface-container-high/80 border border-outline-variant/60 rounded-lg px-2.5 py-1.5 shadow-2xs gap-1.5 hover:border-primary/50 transition-colors">
-            <span class="font-mono-code text-[10px] text-secondary uppercase font-bold tracking-wider">SCHEME:</span>
-            <select id="missingModalSchemeSelect" class="bg-transparent font-mono-code text-[12px] font-bold text-primary focus:outline-none cursor-pointer pr-1">
+          <div class="flex items-center bg-slate-900 border border-slate-700 hover:border-primary/60 rounded-lg px-3 py-1.5 shadow-sm gap-2 transition-all cursor-pointer">
+            <span class="font-mono-code text-[10px] text-slate-400 uppercase font-bold tracking-wider">SCHEME:</span>
+            <select id="missingModalSchemeSelect" class="bg-transparent font-mono-code text-[12px] font-bold text-white focus:outline-none cursor-pointer pr-1">
               ${i.map((e) => `
-                <option value="${Y(e)}" ${e === r ? "selected" : ""}>${Y(e)}</option>
+                <option value="${Y(e)}" class="bg-slate-900 text-white" ${e === r ? "selected" : ""}>${Y(e)}</option>
               `).join("")}
             </select>
           </div>
-          <button id="btnMissingModalClose" type="button" class="px-3 py-1.5 rounded-lg bg-surface-container-high/90 hover:bg-surface-container-highest text-on-surface hover:text-primary font-mono-code text-[11px] font-bold transition-all flex items-center gap-1.5 border border-outline-variant/60 shadow-2xs cursor-pointer active:scale-95" title="Return to Main Dashboard (Esc)">
+          <button id="btnMissingModalClose" type="button" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-rose-700 text-slate-200 hover:text-white font-mono-code text-[11px] font-bold transition-all flex items-center gap-1.5 border border-slate-700 shadow-sm cursor-pointer active:scale-95" title="Return to Main Dashboard (Esc)">
             <span>Esc Close</span>
-            <span class="material-symbols-outlined text-[16px]">close</span>
+            <span class="material-symbols-outlined text-[15px]">close</span>
           </button>
         </div>
       </header>
@@ -5895,40 +5910,42 @@ var rt = class {
           ` : `
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[300px] overflow-y-auto custom-pan-scroll pr-1">
               ${a.map((e) => {
-			let t = typeof e == "string" ? e : e.name || "", n = e.tag || e.code || "", r = s[t] || "";
+			let t = typeof e == "string" ? e : e.name || "", n = e.tag || e.code || "", r = s[t] || "", i = nt(t, e);
 			return `
-                  <div class="p-2.5 rounded-lg bg-surface-container-lowest border border-outline-variant/40 shadow-xs flex flex-col justify-between gap-2 hover:bg-surface-container-low/40 transition-colors">
-                    <!-- Top Row: Dot, Title, Shortcode & Format/Target Tags -->
-                    <div class="flex items-start gap-2 min-w-0">
-                      <div class="w-2.5 h-2.5 rounded-full bg-error shrink-0 ring-4 ring-error/20 mt-1"></div>
-                      <div class="min-w-0 flex-1">
-                        <div class="flex items-center gap-1.5 flex-wrap">
-                          <h2 class="font-headline-sm text-[12px] md:text-[13px] text-on-surface font-bold break-words leading-tight" title="${Y(t)}">${Y(t)}</h2>
-                          ${n ? `<span class="px-1.5 py-0.2 rounded bg-error-container text-error font-mono-code text-[9px] font-bold uppercase shrink-0">${Y(n)}</span>` : ""}
-                        </div>
-                        <div class="flex items-center gap-1.5 mt-1 flex-wrap">
-                          <span class="px-1.5 py-0.2 rounded bg-surface-container-high text-on-surface-variant font-mono-code text-[9px] font-bold uppercase border border-outline-variant/20">
-                            PDF / JPG
-                          </span>
-                          <span class="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono-code text-[9px] font-medium border border-slate-200 dark:border-slate-700">
-                            Target ≤ 256 KB
-                          </span>
-                        </div>
+                  <div class="p-2.5 rounded-lg bg-surface-container-lowest border border-rose-200/90 shadow-xs flex flex-col justify-between gap-1.5 hover:border-rose-400 transition-colors">
+                    <!-- Top Row: Icon + Title + Shortcode Chip & Red Missing Badge (Design 1 Strict Mirror) -->
+                    <div class="flex items-center justify-between gap-2 min-w-0">
+                      <div class="flex items-center gap-1.5 min-w-0">
+                        <span class="material-symbols-outlined text-rose-600 text-[16px] shrink-0 font-bold">error_outline</span>
+                        <span class="font-headline-sm text-[12px] font-bold text-on-surface truncate" title="${Y(t)}">${Y(t)}</span>
+                        ${n ? `<span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-700 font-mono-code text-[9px] font-bold uppercase shrink-0">${Y(n)}</span>` : ""}
                       </div>
+                      <span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 font-mono-code text-[9px] font-bold shrink-0">Missing</span>
                     </div>
 
-                    <!-- Bottom Row: Follow-up Date Input + Royal Blue Import Button -->
-                    <div class="flex items-center justify-between gap-1.5 pt-1.5 border-t border-outline-variant/20 text-[10px] font-mono-code">
-                      <div class="flex items-center gap-1 bg-surface-container-low border border-outline-variant/40 rounded-md px-1.5 py-0.5 shadow-2xs">
-                        <span class="material-symbols-outlined text-primary text-[14px]">event</span>
-                        <span class="font-label-sm text-[9px] text-secondary uppercase font-semibold">Date:</span>
-                        <input type="date" value="${Y(r)}" data-doc="${Y(t)}" class="missing-followup-input bg-transparent text-on-surface font-mono-code text-[10px] font-bold focus:outline-none cursor-pointer w-[95px]" title="Set follow-up promise date">
+                    <!-- Bottom Row: Specific File Format (PDF or JPG) + Target Buffer on Left; Follow-up Date + Royal Blue Import on Right -->
+                    <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-secondary pl-5">
+                      <div class="flex items-center gap-2">
+                        <!-- File Type Badge (Specific PDF or JPG) -->
+                        <span class="px-1.5 py-0.2 rounded ${i.isJpg ? "bg-amber-100 text-amber-800 border border-amber-200" : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"} font-bold uppercase text-[9px]">
+                          ${Y(i.ext)}
+                        </span>
+                        <!-- Target Buffer -->
+                        <span class="text-secondary text-[9px] font-medium">${Y(i.targetBuffer)}</span>
                       </div>
 
-                      <button type="button" data-doc="${Y(t)}" class="btn-missing-import-file px-3 py-1 rounded-md bg-primary hover:bg-primary/90 text-white font-mono-code text-[11px] font-bold shadow-xs flex items-center gap-1 transition-all cursor-pointer active:scale-95 shrink-0">
-                        <span class="material-symbols-outlined text-[14px]">download</span>
-                        <span>Import</span>
-                      </button>
+                      <!-- Compact Follow-up Date + Royal Blue Import Button -->
+                      <div class="flex items-center gap-1.5 shrink-0">
+                        <div class="flex items-center gap-1 bg-surface-container-low border border-outline-variant/40 rounded px-1.5 py-0.5 shadow-2xs" title="Set follow-up promise date">
+                          <span class="material-symbols-outlined text-secondary text-[13px]">calendar_today</span>
+                          <input type="date" value="${Y(r)}" data-doc="${Y(t)}" class="missing-followup-input bg-transparent text-on-surface font-mono-code text-[9px] font-bold focus:outline-none cursor-pointer w-[92px]">
+                        </div>
+
+                        <button type="button" data-doc="${Y(t)}" class="btn-missing-import-file px-2.5 py-0.5 rounded bg-primary hover:bg-primary/90 text-white font-mono-code text-[10px] font-bold shadow-xs flex items-center gap-1 transition-all cursor-pointer active:scale-95 shrink-0" title="Import external file into student folder">
+                          <span class="material-symbols-outlined text-[13px]">download</span>
+                          <span>Import</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 `;
@@ -5954,7 +5971,7 @@ var rt = class {
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 max-h-[220px] overflow-y-auto custom-pan-scroll pr-1">
               ${o.length === 0 ? "\n                <div class=\"col-span-2 p-3 text-center text-secondary font-mono-code text-[11px]\">No verified documents loaded in this folder yet.</div>\n              " : o.map((e) => {
-			let t = e.docType || e.name || "Document", n = tt(e.size), r = e.isCombined || !1, i = (e.ext || (e.name ? e.name.split(".").pop() : "PDF")).toUpperCase().replace(".", ""), a = nt(e.dateCreated || e.ctime || e.birthtime || e.dateModified || e.lastModified);
+			let t = e.docType || e.name || "Document", n = tt(e.size), r = e.isCombined || !1, i = (e.ext || (e.name ? e.name.split(".").pop() : "PDF")).toUpperCase().replace(".", ""), a = rt(e.dateCreated || e.ctime || e.birthtime || e.dateModified || e.lastModified);
 			return `
                   <div class="p-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 flex flex-col gap-1.5">
                     <div class="flex items-center justify-between gap-2 min-w-0">
@@ -6000,9 +6017,10 @@ var rt = class {
           </span>
         </div>
         <div class="flex items-center gap-2">
-          <button id="btnMissingModalDone" type="button" class="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white font-headline-sm text-[12px] font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95">
-            <span>Done / Return to Ledger</span>
-            <kbd class="px-1.5 py-0.5 rounded bg-white/20 text-[10px] font-mono-code font-bold">Esc / Enter</kbd>
+          <button id="btnMissingModalDone" type="button" class="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white font-headline-sm text-[12px] font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95" title="Close and return to Bulk Renamer (Esc)">
+            <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+            <span>Back to Renamer</span>
+            <kbd class="px-1.5 py-0.5 rounded bg-white/20 text-[10px] font-mono-code font-bold">Esc</kbd>
           </button>
         </div>
       </footer>
@@ -6048,7 +6066,7 @@ var rt = class {
 	}
 };
 // tools/rename_tool/rename_tool_ui.js
-function it() {
+function at() {
 	if (typeof window < "u") {
 		if (window.__TAURI__?.core?.invoke) return window.__TAURI__.core.invoke;
 		if (window.__TAURI_INTERNALS__?.invoke) return window.__TAURI_INTERNALS__.invoke;
@@ -6087,7 +6105,7 @@ function Z(e) {
 	let t = e.toLowerCase().trim();
 	return !!(t === "thumbs.db" || t === "ehthumbs.db" || t === "desktop.ini" || t === ".ds_store" || t.startsWith(".") || t.startsWith("~$") || t.endsWith(".tmp"));
 }
-function at(e) {
+function ot(e) {
 	let t = (e || "").toUpperCase().trim();
 	return [
 		"ADR",
@@ -6155,15 +6173,15 @@ function at(e) {
 		"HST"
 	].includes(t) ? "bg-slate-700 text-white font-extrabold" : "bg-primary text-on-primary font-extrabold";
 }
-var ot = E.map((e) => ({
+var st = E.map((e) => ({
 	code: e.primaryShortcut,
 	codes: [e.primaryShortcut],
 	label: e.outputName,
 	canonical: e.outputName,
 	keywords: Array.isArray(e.alternateKeywords) ? [...e.alternateKeywords] : []
-})), st = new Map(ot.map((e) => [e.code, e])), ct = {
+})), ct = new Map(st.map((e) => [e.code, e])), lt = {
 	"MAHA DBT": (/* @__PURE__ */ "PIC.SIG.ADR.10M.10P.10MP.12M.12P.12MP.12LC.PYM.CST.VAL.NCL.INC.DOM.NAT.RAT.BNK.CAP.BON.FEE.ATT.HST.GAP.SDC.PDC.DTH".split(".")).map((e) => {
-		let t = st.get(e);
+		let t = ct.get(e);
 		return {
 			name: t.canonical,
 			code: t.code,
@@ -6194,7 +6212,7 @@ var ot = E.map((e) => ({
 		"PDC",
 		"DIS"
 	].map((e) => {
-		let t = st.get(e);
+		let t = ct.get(e);
 		return {
 			name: t.canonical,
 			code: t.code,
@@ -6202,7 +6220,7 @@ var ot = E.map((e) => ({
 		};
 	}),
 	"CET CELL": (/* @__PURE__ */ "PIC.SIG.ADR.APR.CETAF.CETSC.CAP.SRF.10M.10P.10MP.12M.12P.12MP.12LC.DOM.NAT.CST.VAL.NCL.EWS.INC.GAP.MIG.MED.BRT".split(".")).map((e) => {
-		let t = st.get(e);
+		let t = ct.get(e);
 		return {
 			name: t.canonical,
 			code: t.code,
@@ -6210,14 +6228,14 @@ var ot = E.map((e) => ({
 		};
 	}),
 	"EDUCATIONAL DOCUMENTS": (/* @__PURE__ */ "PIC.SIG.ADR.10M.10P.10MP.12M.12P.12MP.12LC.PYM.CST.VAL.NCL.INC.DOM.NAT.RAT.BNK.CAP.BON.FEE.ATT.HST.GAP.SDC.PDC.DTH.NHC.DIS.APR.CETAF.CETSC.SRF.EWS.MIG.MED.BRT.PAN.VOT.DL.11M.1YM.2YM.3YM.4YM.DPC.DEG.REG.INT.CHR.GAZ.MIN".split(".")).map((e) => {
-		let t = st.get(e);
+		let t = ct.get(e);
 		return {
 			name: t.canonical,
 			code: t.code,
 			keywords: [...t.keywords]
 		};
 	})
-}, lt = class {
+}, ut = class {
 	constructor() {
 		this.state = {
 			folder: null,
@@ -6245,7 +6263,7 @@ var ot = E.map((e) => ({
 			isSmartScanning: !1,
 			isMissingDocsCollapsed: !0,
 			isMissingModalOpen: !1
-		}, this._scanAbortController = null, this.missingModal = null, this.shortcuts21 = JSON.parse(JSON.stringify(ot)), this._presetDocsSearchQuery = "", this._shortcutsSearchQuery = "", this._sortOrder = "asc", this._recentMoves = [];
+		}, this._scanAbortController = null, this.missingModal = null, this.shortcuts21 = JSON.parse(JSON.stringify(st)), this._presetDocsSearchQuery = "", this._shortcutsSearchQuery = "", this._sortOrder = "asc", this._recentMoves = [];
 	}
 	init() {
 		this.state.settings = ze(), this.loadPresetsAndSettings();
@@ -6773,7 +6791,7 @@ var ot = E.map((e) => ({
 				e.sha256 || t.push(e);
 			});
 		}), t.length === 0) return;
-		let n = it(), r = !1;
+		let n = at(), r = !1;
 		for (let e of t) try {
 			let t = null;
 			if (e.fileObj && typeof e.fileObj.arrayBuffer == "function") t = await e.fileObj.arrayBuffer();
@@ -7341,7 +7359,7 @@ var ot = E.map((e) => ({
 			let r = document.createElement("div");
 			r.className = "flex items-center gap-2 min-w-0 flex-1";
 			let i = this.state.style || "upper", a = i === "lower" ? e.code.toLowerCase() : i === "title" ? e.code.length <= 4 && /\d/.test(e.code) ? e.code.toUpperCase() : P(e.code, "title") : e.code.toUpperCase(), o = P(e.label || e.canonical, i), s = document.createElement("span");
-			s.className = `px-2 py-0.5 rounded font-mono-code font-bold text-[11px] shrink-0 ${at(e.code)}`, s.textContent = a, r.appendChild(s);
+			s.className = `px-2 py-0.5 rounded font-mono-code font-bold text-[11px] shrink-0 ${ot(e.code)}`, s.textContent = a, r.appendChild(s);
 			let c = document.createElement("span");
 			c.className = "text-[12px] font-semibold text-on-surface truncate flex-1", c.textContent = o, r.appendChild(c), n.appendChild(r);
 			let l = document.createElement("span");
@@ -7820,7 +7838,7 @@ var ot = E.map((e) => ({
 		} catch (e) {
 			console.warn("[DocMitra Renamer] Failed to parse custom shortcuts:", e);
 		}
-		this.state.documentPresets && typeof this.state.documentPresets == "object" && (this.state.documentPresets.SWAYAM && !this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] && (this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] = this.state.documentPresets.SWAYAM, delete this.state.documentPresets.SWAYAM), this.state.documentPresets.EDUCATIONAL && !this.state.documentPresets["EDUCATIONAL DOCUMENTS"] && (this.state.documentPresets["EDUCATIONAL DOCUMENTS"] = this.state.documentPresets.EDUCATIONAL, delete this.state.documentPresets.EDUCATIONAL)), this.state.documentPresets && Object.keys(this.state.documentPresets).length !== 0 || (this.state.documentPresets = JSON.parse(JSON.stringify(ct)), this.savePresetsAndSettings());
+		this.state.documentPresets && typeof this.state.documentPresets == "object" && (this.state.documentPresets.SWAYAM && !this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] && (this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] = this.state.documentPresets.SWAYAM, delete this.state.documentPresets.SWAYAM), this.state.documentPresets.EDUCATIONAL && !this.state.documentPresets["EDUCATIONAL DOCUMENTS"] && (this.state.documentPresets["EDUCATIONAL DOCUMENTS"] = this.state.documentPresets.EDUCATIONAL, delete this.state.documentPresets.EDUCATIONAL)), this.state.documentPresets && Object.keys(this.state.documentPresets).length !== 0 || (this.state.documentPresets = JSON.parse(JSON.stringify(lt)), this.savePresetsAndSettings());
 		let t = !1, n = (e) => {
 			if (!e || typeof e != "string") return e;
 			let t = e.trim().toUpperCase();
@@ -8047,7 +8065,7 @@ var ot = E.map((e) => ({
 		} else i.forEach((t, n) => {
 			let r = document.createElement("tr");
 			r.className = "row-compact-42 hover:bg-surface-container-low transition-colors group";
-			let i = Array.isArray(t.codes) && t.codes.length > 0 ? t.codes : t.code ? [t.code] : [], a = i.map((e) => `<span class="px-1.5 py-0.5 rounded font-mono-code font-bold text-[10px] ${at(e)}">${e}</span>`).join(" ");
+			let i = Array.isArray(t.codes) && t.codes.length > 0 ? t.codes : t.code ? [t.code] : [], a = i.map((e) => `<span class="px-1.5 py-0.5 rounded font-mono-code font-bold text-[10px] ${ot(e)}">${e}</span>`).join(" ");
 			r.innerHTML = `
         <td class="py-1 px-3 text-center text-secondary font-mono-code text-[11px]" style="width: 44px;">${n + 1}</td>
         <td class="py-1 px-3 whitespace-normal" style="width: 15%;"><div class="flex flex-wrap gap-1 max-h-[30px] overflow-hidden">${a}</div></td>
@@ -8105,7 +8123,7 @@ var ot = E.map((e) => ({
 		this.state.activePreset = t[0] || "MAHA DBT", this.savePresetsAndSettings(), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal("presets"), r.show("Preset Deleted", `Preset "${e}" deleted. Switched to ${this.state.activePreset}.`, "info");
 	}
 	handleResetPresetsDefault() {
-		window.confirm("Reset document presets to factory defaults? All custom presets will be removed and default 4 presets restored.") && (this.state.documentPresets = JSON.parse(JSON.stringify(ct)), this.state.activePreset = "MAHA DBT", this.state.customShortcuts = [], this.shortcuts21 = JSON.parse(JSON.stringify(ot)), this.savePresetsAndSettings(), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal("presets"), r.show("Reset Complete", "Document presets restored to factory defaults.", "success"));
+		window.confirm("Reset document presets to factory defaults? All custom presets will be removed and default 4 presets restored.") && (this.state.documentPresets = JSON.parse(JSON.stringify(lt)), this.state.activePreset = "MAHA DBT", this.state.customShortcuts = [], this.shortcuts21 = JSON.parse(JSON.stringify(st)), this.savePresetsAndSettings(), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal("presets"), r.show("Reset Complete", "Document presets restored to factory defaults.", "success"));
 	}
 	handleRemoveDocFromPreset(e) {
 		let t = this.state.documentPresets[this.state.activePreset];
@@ -8198,7 +8216,7 @@ var ot = E.map((e) => ({
 		let e = document.getElementById("containerPresetPills");
 		if (!e) return;
 		e.innerHTML = "";
-		let t = Object.keys(this.state.documentPresets || ct);
+		let t = Object.keys(this.state.documentPresets || lt);
 		t.length === 0 ? e.innerHTML = "<span class=\"text-secondary text-[11px] italic\">No presets available.</span>" : (t.forEach((t) => {
 			let n = this._selectedPresetKeys && this._selectedPresetKeys.has(t), r = document.createElement("button");
 			r.type = "button", r.className = n ? "inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-[#0037b0] text-white font-bold text-[11px] shadow-xs cursor-pointer transition-all border border-[#0037b0]" : "inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-surface text-secondary hover:text-on-surface font-medium text-[11px] cursor-pointer transition-all border border-outline-variant/50 hover:border-primary/50", r.innerHTML = `
@@ -8366,7 +8384,7 @@ var ot = E.map((e) => ({
 				primaryKeywords: [a.toLowerCase(), e.toLowerCase()],
 				secondaryKeywords: c
 			});
-		}), b(a, a), te(d, a, c), st.set(d, {
+		}), b(a, a), te(d, a, c), ct.set(d, {
 			code: d,
 			canonical: a,
 			label: a,
@@ -8847,7 +8865,7 @@ var ot = E.map((e) => ({
 				this._renderDocumentInfoFallback(n, e);
 			}
 			else {
-				let i = it();
+				let i = at();
 				if (e.path && i) n.innerHTML = "<div class=\"flex items-center justify-center w-full h-full text-secondary text-[12px]\"><span class=\"material-symbols-outlined text-[20px] animate-spin text-primary mr-2\">sync</span><span>Loading document preview...</span></div>", i("read_binary_file", { path: e.path }).then((t) => {
 					let n = e.name.toLowerCase().endsWith(".png") ? "image/png" : e.name.toLowerCase().endsWith(".webp") ? "image/webp" : "image/jpeg", i = new Blob([new Uint8Array(t)], { type: n });
 					r(URL.createObjectURL(i));
@@ -8883,7 +8901,7 @@ var ot = E.map((e) => ({
 				e._pdfBytes = new Uint8Array(t), r(e._pdfBytes);
 			}).catch(() => this._renderDocumentInfoFallback(n, e));
 			else {
-				let t = it();
+				let t = at();
 				if (e.path && t) n.innerHTML = "<div class=\"flex items-center justify-center w-full h-full text-secondary text-[12px]\"><span class=\"material-symbols-outlined text-[20px] animate-spin text-primary mr-2\">sync</span><span>Loading PDF preview...</span></div>", t("read_binary_file", { path: e.path }).then((t) => {
 					e._pdfBytes = new Uint8Array(t), r(e._pdfBytes);
 				}).catch((t) => {
@@ -9040,7 +9058,7 @@ var ot = E.map((e) => ({
 		}
 	}
 	openMissingDocumentsModal() {
-		this.missingModal ||= new rt({
+		this.missingModal ||= new it({
 			onImportFile: (e) => this.handleImportMissingDocument(e),
 			onRenameFolder: async (e) => {
 				await this.applyFolderRename(e);
@@ -9107,12 +9125,12 @@ var ot = E.map((e) => ({
 		});
 	}
 };
-function ut() {
-	let e = new lt();
+function dt() {
+	let e = new ut();
 	return e.init(), typeof window < "u" && (window.docmitraRenamer = e), e;
 }
 // src/services/export-import-service.js
-function dt(e) {
+function ft(e) {
 	let t = {
 		format: "BulkStudentRenamerSettings",
 		version: 1,
@@ -9125,7 +9143,7 @@ function dt(e) {
 	}, n = new Blob([JSON.stringify(t, null, 2)], { type: "application/json" }), r = URL.createObjectURL(n), i = document.createElement("a");
 	i.href = r, i.download = `student-renamer-settings-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.json`, i.click(), setTimeout(() => URL.revokeObjectURL(r), 1e3);
 }
-function ft(e, t) {
+function pt(e, t) {
 	return new Promise((n, r) => {
 		if (!e) return r(/* @__PURE__ */ Error("No backup file selected."));
 		if (e.size > 5242880) return r(/* @__PURE__ */ Error("Backup file exceeds maximum allowed size (5 MB)."));
@@ -9148,7 +9166,7 @@ function ft(e, t) {
 	});
 }
 // src/ui/settings-ui.js
-var pt = class {
+var mt = class {
 	constructor() {
 		this.state = null, this.initialState = null, this.activeChecklist = "MAHA DBT FORM";
 	}
@@ -9177,7 +9195,7 @@ var pt = class {
 		let a = document.getElementById("btnExportSettingsJSON");
 		a && a.addEventListener("click", () => {
 			try {
-				dt(this.state), r.show("Settings Exported", "Configuration JSON file downloaded.", "success");
+				ft(this.state), r.show("Settings Exported", "Configuration JSON file downloaded.", "success");
 			} catch (e) {
 				r.show("Export Error", e.message, "error");
 			}
@@ -9186,7 +9204,7 @@ var pt = class {
 		o && s && (o.addEventListener("click", () => s.click()), s.addEventListener("change", async (e) => {
 			let t = e.target.files?.[0];
 			if (t) try {
-				await ft(t, this.state), He(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Import Successful", "System configuration restored and verified.", "success");
+				await pt(t, this.state), He(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Import Successful", "System configuration restored and verified.", "success");
 			} catch (e) {
 				r.show("Import Failed", e.message || "Invalid settings JSON format.", "error");
 			} finally {
@@ -9491,12 +9509,12 @@ var pt = class {
 		e && e.classList.add("hidden"), document.body.style.overflow = "";
 	}
 };
-function mt() {
-	let e = new pt();
+function ht() {
+	let e = new mt();
 	return e.init(), e;
 }
 // tools/pdf_studio/pdf_studio_logic.js
-var ht = {
+var gt = {
 	A4_PORTRAIT: {
 		width: 595.28,
 		height: 841.89,
@@ -9508,7 +9526,7 @@ var ht = {
 		label: "A4 Landscape"
 	}
 };
-function gt(e) {
+function _t(e) {
 	let t = 2, n = e.length;
 	for (; t < n && e[t] === 255;) {
 		let r = e[t + 1];
@@ -9540,8 +9558,8 @@ function Q(e = [], t = "portrait", n = 0) {
 	for (let e = 0; e < c; e++) l.push(3 + e * 3);
 	r.push(i), s(a(`2 0 obj\n<< /Type /Pages /Kids [ ${l.map((e) => `${e} 0 R`).join(" ")} ] /Count ${c} >>\nendobj\n`));
 	for (let o = 0; o < c; o++) {
-		let c = e[o], l = 3 + o * 3, u = l + 1, d = l + 2, f = c.bytes, { width: p, height: m } = c.width && c.height ? c : gt(f), h = ht.A4_PORTRAIT.width, g = ht.A4_PORTRAIT.height;
-		(t === "landscape" || t === "fit" && p > m) && (h = ht.A4_LANDSCAPE.width, g = ht.A4_LANDSCAPE.height);
+		let c = e[o], l = 3 + o * 3, u = l + 1, d = l + 2, f = c.bytes, { width: p, height: m } = c.width && c.height ? c : _t(f), h = gt.A4_PORTRAIT.width, g = gt.A4_PORTRAIT.height;
+		(t === "landscape" || t === "fit" && p > m) && (h = gt.A4_LANDSCAPE.width, g = gt.A4_LANDSCAPE.height);
 		let _ = h - 36, v = g - 36, y = Math.min(_ / p, v / m), b = p * y, x = m * y, S = (h - b) / 2, C = (g - x) / 2, w = n ? ` /Rotate ${n}` : "";
 		r.push(i), s(a(`${l} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${h.toFixed(2)} ${g.toFixed(2)}]${w} /Contents ${u} 0 R /Resources << /XObject << /Im${o + 1} ${d} 0 R >> >> >>\nendobj\n`));
 		let T = `q ${b.toFixed(2)} 0 0 ${x.toFixed(2)} ${S.toFixed(2)} ${C.toFixed(2)} cm /Im${o + 1} Do Q\n`, E = T.length;
@@ -9552,13 +9570,13 @@ function Q(e = [], t = "portrait", n = 0) {
 	for (let e of r) s(a(`${String(e).padStart(10, "0")} 00000 n \n`));
 	return s(a(`trailer\n<< /Size ${d} /Root 1 0 R >>\nstartxref\n${u}\n%%EOF\n`)), new Blob(o, { type: "application/pdf" });
 }
-function _t(e) {
+function vt(e) {
 	let t = [], n = e.length, r = 0;
 	for (; r < n - 3;) if (e[r] === 255 && e[r + 1] === 216 && e[r + 2] === 255) {
 		let i = r;
 		for (r += 2; r < n - 1;) {
 			if (e[r] === 255 && e[r + 1] === 217) {
-				let n = r + 2, a = e.slice(i, n), o = gt(a);
+				let n = r + 2, a = e.slice(i, n), o = _t(a);
 				t.push({
 					bytes: a,
 					width: o.width,
@@ -9572,7 +9590,7 @@ function _t(e) {
 	return t;
 }
 function $(e) {
-	let t = _t(e);
+	let t = vt(e);
 	if (!t.length) return [];
 	if (t.length === 1) return t;
 	let n = Math.max(...t.map((e) => (e.width || 0) * (e.height || 0))), r = Math.max(...t.map((e) => e.bytes?.length || 0)), i = t.filter((e) => {
@@ -9584,7 +9602,7 @@ function $(e) {
 		return r === n ? (t.bytes?.length || 0) - (e.bytes?.length || 0) : r - n;
 	});
 }
-function vt(e, t = "Document.pdf") {
+function yt(e, t = "Document.pdf") {
 	let n = $(e), r = t.replace(/\.pdf$/i, "");
 	return n.length ? n.map((e, t) => {
 		let i = n.length === 1 ? `${r}.jpg` : `${r}_page_${t + 1}.jpg`, a = new Blob([e.bytes], { type: "image/jpeg" });
@@ -9598,7 +9616,7 @@ function vt(e, t = "Document.pdf") {
 		};
 	}) : [];
 }
-function yt(e, t = "Document.pdf") {
+function bt(e, t = "Document.pdf") {
 	let n = $(e), r = t.replace(/\.pdf$/i, "");
 	return n.length ? n.map((e, t) => {
 		let n = `${r}_page_${t + 1}.pdf`, i = Q([e], "portrait");
@@ -9610,7 +9628,7 @@ function yt(e, t = "Document.pdf") {
 		};
 	}) : [];
 }
-function bt(e = [], t = "portrait") {
+function xt(e = [], t = "portrait") {
 	let n = [];
 	for (let t of e) {
 		let e = $(t);
@@ -9619,7 +9637,7 @@ function bt(e = [], t = "portrait") {
 	if (!n.length) throw Error("No document images could be extracted to merge PDFs.");
 	return Q(n, t);
 }
-function xt(e, t = 90) {
+function St(e, t = 90) {
 	let n = (t % 360 + 360) % 360;
 	if (n === 0) return new Blob([e], { type: "application/pdf" });
 	let r = $(e);
@@ -9638,13 +9656,13 @@ function xt(e, t = 90) {
 	}
 	throw Error("No pages found in PDF to rotate.");
 }
-function St(e, t, n = "auto") {
+function Ct(e, t, n = "auto") {
 	if (!e) return "document.pdf";
 	let r = e.lastIndexOf("."), i = r === -1 ? e : e.slice(0, r), a = r === -1 ? "" : e.slice(r), o = i.replace(/[\s_-]+\d+\s*(?:KB|MB)$/i, "").trim();
 	return n === "MB" || n === "auto" && t >= 10485760 ? `${o} ${Math.max(1, Math.round(Number(t || 0) / 1048576))} MB${a}` : `${o} ${Math.max(1, Math.round(Number(t || 0) / 1024))} KB${a}`;
 }
 // tools/pdf_studio/pdf_studio_ui.js
-var Ct = class {
+var wt = class {
 	constructor() {
 		this.activeTool = "compress_pdf", this.files = [], this.isProcessing = !1;
 	}
@@ -9861,7 +9879,7 @@ var Ct = class {
 	rotateSingleFile(e) {
 		let t = this.files[e];
 		if (t && t.bytes) try {
-			let e = xt(t.bytes, 90);
+			let e = St(t.bytes, 90);
 			e.arrayBuffer().then((n) => {
 				t.bytes = new Uint8Array(n), t.size = e.size, this.renderQueue(), r.show("Page Rotated", `${t.name} rotated 90° clockwise.`, "info");
 			});
@@ -9880,7 +9898,7 @@ var Ct = class {
 		let e = 0;
 		this.files.forEach((t) => {
 			if (t.bytes) try {
-				let n = xt(t.bytes, 90);
+				let n = St(t.bytes, 90);
 				n.arrayBuffer().then((i) => {
 					t.bytes = new Uint8Array(i), t.size = n.size, e++, e === this.files.length && (this.renderQueue(), r.show("All Rotated", `Rotated all ${this.files.length} PDFs by 90°.`, "success"));
 				});
@@ -9905,7 +9923,7 @@ var Ct = class {
 		r.show("Processing Started", `Running ${this._getToolDisplayName(e)} on ${this.files.length} files...`, "info");
 		try {
 			if (e === "merge_pdf") {
-				let e = bt(this.files.map((e) => e.bytes).filter(Boolean), "portrait");
+				let e = xt(this.files.map((e) => e.bytes).filter(Boolean), "portrait");
 				this._downloadBlob(e, "Merged_Admission_Dossier.pdf"), r.show("Merge Complete!", "Merged PDF Dossier generated and saved.", "success");
 			} else if (e === "compress_pdf") {
 				let e = 0;
@@ -9913,19 +9931,19 @@ var Ct = class {
 					if (!t.bytes) continue;
 					let n = $(t.bytes), r;
 					r = n.length > 0 ? Q(n, "portrait") : new Blob([t.bytes], { type: "application/pdf" });
-					let i = St(t.name, r.size);
+					let i = Ct(t.name, r.size);
 					this._downloadBlob(r, i), e++;
 				}
 				r.show("Compression Complete!", `Compressed ${e} files to safe MahaDBT thresholds.`, "success");
 			} else if (e === "split_pdf") {
 				let e = 0;
-				for (let t of this.files) t.bytes && yt(t.bytes, t.name).forEach((t) => {
+				for (let t of this.files) t.bytes && bt(t.bytes, t.name).forEach((t) => {
 					this._downloadBlob(t.blob, t.fileName), e++;
 				});
 				r.show("Split Complete!", `Extracted ${e} individual PDF pages.`, "success");
 			} else if (e === "pdf_to_jpg") {
 				let e = 0;
-				for (let t of this.files) t.bytes && vt(t.bytes, t.name).forEach((t) => {
+				for (let t of this.files) t.bytes && yt(t.bytes, t.name).forEach((t) => {
 					this._downloadBlob(t.blob, t.fileName), e++;
 				});
 				r.show("Conversion Complete!", `Extracted ${e} high-resolution JPG pages.`, "success");
@@ -9933,7 +9951,7 @@ var Ct = class {
 				let e = 0;
 				for (let t of this.files) {
 					if (!t.bytes) continue;
-					let n = xt(t.bytes, 90);
+					let n = St(t.bytes, 90);
 					this._downloadBlob(n, t.name), e++;
 				}
 				r.show("Rotation Complete!", `Rotated and saved ${e} PDF documents.`, "success");
@@ -9959,12 +9977,12 @@ var Ct = class {
 		}, 1e3);
 	}
 };
-function wt() {
-	let e = new Ct();
+function Tt() {
+	let e = new wt();
 	return e.init(), e;
 }
 // src/modules/image-studio.js
-function Tt(e, t, n, r = "magic_color") {
+function Et(e, t, n, r = "magic_color") {
 	if (!e || r === "none" || r === "original") return;
 	let i = e.getImageData(0, 0, t, n), a = i.data;
 	for (let e = 0; e < a.length; e += 4) {
@@ -9981,13 +9999,13 @@ function Tt(e, t, n, r = "magic_color") {
 	}
 	e.putImageData(i, 0, 0);
 }
-function Et(e, t = 0) {
+function Dt(e, t = 0) {
 	let n = document.createElement("canvas"), r = (t % 360 + 360) % 360, i = r === 90 || r === 270, a = i ? e.height : e.width, o = i ? e.width : e.height;
 	n.width = a, n.height = o;
 	let s = n.getContext("2d");
 	return s.save(), s.translate(n.width / 2, n.height / 2), s.rotate(r * Math.PI / 180), s.drawImage(e, -e.width / 2, -e.height / 2), s.restore(), n;
 }
-async function Dt(e, t = 250, n = {}) {
+async function Ot(e, t = 250, n = {}) {
 	let { rotation: r = 0, filterMode: i = "none", outputMime: a = "image/jpeg", maxDimension: o = 2400 } = n;
 	return new Promise((n, s) => {
 		let c = new Image(), l = URL.createObjectURL(e);
@@ -10000,7 +10018,7 @@ async function Dt(e, t = 250, n = {}) {
 					e = Math.round(e * t), s = Math.round(s * t);
 				}
 				let l;
-				if (r === 0 ? (l = document.createElement("canvas"), l.width = e, l.height = s, l.getContext("2d").drawImage(c, 0, 0, e, s)) : l = Et(c, r), i && i !== "none" && Tt(l.getContext("2d"), l.width, l.height, i), !t || t <= 0) {
+				if (r === 0 ? (l = document.createElement("canvas"), l.width = e, l.height = s, l.getContext("2d").drawImage(c, 0, 0, e, s)) : l = Dt(c, r), i && i !== "none" && Et(l.getContext("2d"), l.width, l.height, i), !t || t <= 0) {
 					let e = await new Promise((e) => l.toBlob(e, a, .9));
 					return n({
 						blob: e,
@@ -10044,7 +10062,7 @@ async function Dt(e, t = 250, n = {}) {
 		}, c.src = l;
 	});
 }
-async function Ot(e, t = "image/png") {
+async function kt(e, t = "image/png") {
 	return new Promise((n, r) => {
 		let i = new Image(), a = URL.createObjectURL(e);
 		i.onload = () => {
@@ -10070,7 +10088,7 @@ async function Ot(e, t = "image/png") {
 	});
 }
 // src/ui/image-studio-ui.js
-var kt = class {
+var At = class {
 	constructor() {
 		this.activeTool = "compress_photo_sign", this.files = [], this.isProcessing = !1;
 	}
@@ -10267,7 +10285,7 @@ var kt = class {
 		if (!t || !t.url) return;
 		let n = new Image();
 		n.crossOrigin = "anonymous", n.onload = () => {
-			Et(n, 90).toBlob((e) => {
+			Dt(n, 90).toBlob((e) => {
 				t.url = URL.createObjectURL(e), t.size = e.size, t.fileOrBlob = e, this.renderQueue(), r.show("Image Rotated", `${t.name} rotated 90° clockwise.`, "info");
 			}, "image/jpeg", .92);
 		}, n.src = t.url;
@@ -10300,13 +10318,13 @@ var kt = class {
 				let r = n.fileOrBlob;
 				if (!r && n.url && (r = await (await fetch(n.url)).blob()), r) {
 					if (e === "compress_photo_sign") {
-						let e = /sign|signature|स्वाक्षरी/i.test(n.name) ? 18 : 45, i = await Dt(r, e);
+						let e = /sign|signature|स्वाक्षरी/i.test(n.name) ? 18 : 45, i = await Ot(r, e);
 						this._downloadBlob(i.blob, `Compressed_${n.name}`), t++;
 					} else if (e === "passport_crop") {
-						let e = await Dt(await this._cropPassport(r), 48);
+						let e = await Ot(await this._cropPassport(r), 48);
 						this._downloadBlob(e.blob, `Passport_${n.name}`), t++;
 					} else if (e === "sign_clean_invert") {
-						let e = await Dt(r, 18, { filterMode: "sharp_contrast" });
+						let e = await Ot(r, 18, { filterMode: "sharp_contrast" });
 						this._downloadBlob(e.blob, `Clean_Sign_${n.name}`), t++;
 					} else if (e === "image_to_pdf") {
 						let e = await r.arrayBuffer(), i = Q([{
@@ -10316,10 +10334,10 @@ var kt = class {
 						}], "portrait"), a = n.name.replace(/\.[a-zA-Z0-9]+$/, "") + ".pdf";
 						this._downloadBlob(i, a), t++;
 					} else if (e === "magic_color") {
-						let e = await Dt(r, 240, { filterMode: "enhanced" });
+						let e = await Ot(r, 240, { filterMode: "enhanced" });
 						this._downloadBlob(e.blob, `Magic_${n.name}`), t++;
 					} else {
-						let e = await Ot(r, "image/jpeg");
+						let e = await kt(r, "image/jpeg");
 						this._downloadBlob(e.blob, `Converted_${n.name.replace(/\.[a-zA-Z0-9]+$/, ".jpg")}`), t++;
 					}
 				}
@@ -10352,12 +10370,12 @@ var kt = class {
 		}, 1e3);
 	}
 };
-function At() {
-	let e = new kt();
+function jt() {
+	let e = new At();
 	return e.init(), e;
 }
 // src/libraries/document-matcher.js
-var jt = [
+var Mt = [
 	{
 		id: "12th-marksheet-passing-combined",
 		outputName: "12TH MARKSHEET AND PASSING",
@@ -10667,7 +10685,7 @@ var jt = [
 		]
 	}
 ];
-function Mt(e, t = null) {
+function Nt(e, t = null) {
 	if (!e || typeof e != "string") return {
 		docType: null,
 		percentage: 0,
@@ -10676,7 +10694,7 @@ function Mt(e, t = null) {
 		status: "none"
 	};
 	let n = e.trim().toLowerCase(), r = n.replace(/[-_.]+/g, " ");
-	for (let e of jt) if (n === e.shortcut.toLowerCase() || r.trim() === e.shortcut.toLowerCase()) return {
+	for (let e of Mt) if (n === e.shortcut.toLowerCase() || r.trim() === e.shortcut.toLowerCase()) return {
 		docType: e.outputName,
 		percentage: 100,
 		badgeText: `100% Match: ${e.outputName}`,
@@ -10694,7 +10712,7 @@ function Mt(e, t = null) {
 			};
 		}
 	}
-	for (let e of jt) for (let t of e.patterns) if (t.test(n) || t.test(r)) return {
+	for (let e of Mt) for (let t of e.patterns) if (t.test(n) || t.test(r)) return {
 		docType: e.outputName,
 		percentage: 100,
 		badgeText: `100% Match: ${e.outputName}`,
@@ -10722,16 +10740,16 @@ function Mt(e, t = null) {
 	};
 }
 ({ ...Oe });
-function Nt(e) {
+function Pt(e) {
 	if (!e || typeof e != "string") return "";
-	let t = Mt(e);
+	let t = Nt(e);
 	if (t && t.docType) return t.docType;
 	let n = e.replace(/\.[^/.]+$/, "");
 	return n = n.replace(/\s*\(p\.\d+\)/i, ""), n.trim().toUpperCase();
 }
-function Pt(e) {
+function Ft(e) {
 	if (!e || typeof e != "string") return "";
-	let t = e.replace(/\.[^/.]+$/, "").trim(), n = Mt(t);
+	let t = e.replace(/\.[^/.]+$/, "").trim(), n = Nt(t);
 	if (n && n.docType) {
 		let e = n.docType, r = t, i = RegExp(`^${e}\\b`, "i");
 		if (i.test(r) ? r = r.replace(i, "").trim() : e.split(/\s+/).forEach((e) => {
@@ -10743,9 +10761,9 @@ function Pt(e) {
 	}
 	return t;
 }
-function Ft(e, t = []) {
+function It(e, t = []) {
 	return !Array.isArray(e) || e.length === 0 ? [] : !Array.isArray(t) || t.length === 0 ? [...e] : [...e].sort((e, n) => {
-		let r = e.docType || Nt(e.label || e.name), i = n.docType || Nt(n.label || n.name), a = t.findIndex((e) => {
+		let r = e.docType || Pt(e.label || e.name), i = n.docType || Pt(n.label || n.name), a = t.findIndex((e) => {
 			let t = e.toUpperCase(), n = r.toUpperCase();
 			return t === n || n.includes(t) || t.includes(n);
 		}), o = t.findIndex((e) => {
@@ -10756,7 +10774,7 @@ function Ft(e, t = []) {
 	});
 }
 // src/ui/print-studio-ui.js
-var It = class {
+var Lt = class {
 	constructor() {
 		this.presets = { ...Oe }, this.activePresetKey = "MAHA DBT FORM", this.documents = [], this.activeDocIndex = 0, this.zoomLevel = 100;
 	}
@@ -10903,7 +10921,7 @@ var It = class {
 	}
 	handleAutoOrder() {
 		let e = this.presets[this.activePresetKey] || [];
-		this.documents = Ft(this.documents, e), this.activeDocIndex = 0, this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), r.show("Sequence Applied", `Ordered according to ${this.activePresetKey} criteria.`, "success");
+		this.documents = It(this.documents, e), this.activeDocIndex = 0, this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), r.show("Sequence Applied", `Ordered according to ${this.activePresetKey} criteria.`, "success");
 	}
 	async handleBrowseFolder() {
 		r.show("Opening Folder Picker", "Navigating Windows Explorer...", "info");
@@ -10919,7 +10937,7 @@ var It = class {
 				return;
 			}
 			this.documents = t.map((e, t) => {
-				let n = Nt(e.name), r = Pt(e.name);
+				let n = Pt(e.name), r = Ft(e.name);
 				return {
 					id: `print_doc_${Date.now()}_${t}`,
 					name: e.name,
@@ -11010,12 +11028,12 @@ var It = class {
 		}
 	}
 };
-function Lt() {
-	let e = new It();
+function Rt() {
+	let e = new Lt();
 	return e.init(), e;
 }
 // src/ui/followup-ui.js
-var Rt = class {
+var zt = class {
 	constructor() {
 		this.items = [], this.searchQuery = "";
 	}
@@ -11206,15 +11224,15 @@ var Rt = class {
 		Je(e.folderName, e.documentName), e.status = "resolved", this.renderTable(), r.show("कागदपत्र प्राप्त!", `${e.documentName} for ${e.studentName} marked as received.`, "success");
 	}
 };
-function zt() {
-	let e = new Rt();
+function Bt() {
+	let e = new zt();
 	return e.init(), e;
 }
 // src/ui/index.js
-function Bt() {
+function Vt() {
 	let e = new n();
-	e.init(), new a().init(), mt();
-	let t = ut();
+	e.init(), new a().init(), ht();
+	let t = dt();
 	typeof window < "u" && (window.renamerUI = t, window.location.search.includes("test_loaded=1") && setTimeout(() => {
 		t.state.folder = {
 			name: "Vijay_Ramesh_Yadav",
@@ -11250,7 +11268,7 @@ function Bt() {
 		], t.state.currentIndex = 0, t.renderQueue();
 	}, 200)), e.onViewChange = (e, n) => {
 		n === "bulk-renamer" && e !== "bulk-renamer" && t.handleClearQueue(!0);
-	}, wt(), At(), Lt(), zt(), o();
+	}, Tt(), jt(), Rt(), Bt(), o();
 	let i = document.getElementById("themeToggleBtn");
 	i && i.addEventListener("click", () => {
 		document.documentElement.classList.toggle("dark");
@@ -11258,5 +11276,5 @@ function Bt() {
 		r.show(e ? "Dark Theme Enabled" : "Light Theme Enabled", "UI Preference Updated", "info");
 	}), console.info("[DocMitra] UI Shell & Modules initialized successfully.");
 }
-document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", Bt) : Bt();
-export { Bt as initAppShell };
+document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", Vt) : Vt();
+export { Vt as initAppShell };
