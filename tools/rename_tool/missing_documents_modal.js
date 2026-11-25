@@ -308,36 +308,35 @@ export class MissingDocumentsModal {
                 const spec = getExpectedFileSpec(ruleName, rule);
 
                 return `
-                  <div class="p-2.5 rounded-lg bg-surface-container-lowest border border-outline-variant/30 border-l-[3.5px] border-l-rose-500 shadow-2xs hover:shadow-xs flex flex-col justify-between gap-1.5 h-[58px] transition-all">
-                    <!-- Top Row: Title + Shortcode Chip (Left) & Missing Badge (Right) (Sample 4: Bento Left Accent Rail) -->
+                  <div class="p-2.5 rounded-lg bg-surface-container-low border border-rose-200/80 flex flex-col gap-1.5">
                     <div class="flex items-center justify-between gap-2 min-w-0">
                       <div class="flex items-center gap-1.5 min-w-0">
-                        <span class="font-headline-sm text-[12px] font-bold text-on-surface truncate" title="${escapeHtml(ruleName)}">${escapeHtml(ruleName)}</span>
-                        ${ruleTag ? `<span class="px-1.5 py-0.2 rounded bg-surface-container text-secondary font-mono-code text-[9px] font-bold uppercase shrink-0">${escapeHtml(ruleTag)}</span>` : ''}
+                        <span class="material-symbols-outlined text-rose-600 text-[16px] shrink-0">error_outline</span>
+                        <span class="font-label-md text-[12px] font-semibold text-on-surface break-words" title="${escapeHtml(ruleName)}">${escapeHtml(ruleName)}</span>
                       </div>
-                      <span class="px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 border border-rose-200 font-mono-code text-[9px] font-bold shrink-0">Missing</span>
+                      <span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-900 font-mono-code text-[9px] font-bold shrink-0">Missing</span>
                     </div>
 
-                    <!-- Bottom Row: Specific File Format (PDF or JPG) + Target Buffer on Left; Compact Date + Royal Blue Import on Right -->
-                    <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-secondary">
-                      <div class="flex items-center gap-1.5">
-                        <!-- File Type Badge (Specific PDF or JPG) -->
-                        <span class="px-1.5 py-0.2 rounded ${spec.isJpg ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'} font-bold uppercase text-[9px]">
+                    <!-- Metadata Row: File Type Badge, Target Buffer, Date Picker, Import Button (Exact Clone of Green Card) -->
+                    <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-secondary pl-5">
+                      <div class="flex items-center gap-2">
+                        <!-- File Type Badge -->
+                        <span class="px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 font-bold uppercase text-[9px] border border-rose-200">
                           ${escapeHtml(spec.ext)}
                         </span>
                         <!-- Target Buffer -->
-                        <span class="text-secondary text-[9px] font-medium">${escapeHtml(spec.targetBuffer)}</span>
+                        <span>${escapeHtml(spec.targetBuffer)}</span>
                       </div>
 
-                      <!-- Compact Follow-up Date + Royal Blue Import Button -->
-                      <div class="flex items-center gap-1.5 shrink-0">
-                        <div class="flex items-center gap-1 bg-surface-container-low border border-outline-variant/40 rounded px-1.5 py-0.5 shadow-2xs h-[22px]" title="Set follow-up promise date">
-                          <span class="material-symbols-outlined text-secondary text-[12px]">calendar_today</span>
-                          <input type="date" value="${escapeHtml(currentFollowup)}" data-doc="${escapeHtml(ruleName)}" class="missing-followup-input bg-transparent text-on-surface font-mono-code text-[9px] font-semibold focus:outline-none cursor-pointer w-[76px] h-[16px]">
+                      <!-- Follow-up Date + Royal Blue Import Button -->
+                      <div class="flex items-center gap-1.5 shrink-0 h-[18px]">
+                        <div class="flex items-center gap-1 text-on-surface-variant font-medium h-full" title="Set follow-up promise date">
+                          <span class="material-symbols-outlined text-[13px] text-secondary shrink-0">calendar_today</span>
+                          <input type="date" value="${escapeHtml(currentFollowup)}" data-doc="${escapeHtml(ruleName)}" class="missing-followup-input bg-transparent text-on-surface font-mono-code text-[10px] font-semibold focus:outline-none cursor-pointer w-[74px] h-[16px] leading-none p-0 m-0">
                         </div>
 
-                        <button type="button" data-doc="${escapeHtml(ruleName)}" class="btn-missing-import-file px-2 py-0.5 rounded bg-primary hover:bg-primary/90 text-white font-mono-code text-[10px] font-bold shadow-2xs flex items-center gap-1 h-[22px] transition-all cursor-pointer active:scale-95 shrink-0" title="Import external file into student folder">
-                          <span class="material-symbols-outlined text-[12px]">download</span>
+                        <button type="button" data-doc="${escapeHtml(ruleName)}" class="btn-missing-import-file px-2 py-0 rounded bg-primary hover:bg-primary/90 text-white font-mono-code text-[9px] font-bold shadow-2xs flex items-center gap-0.5 h-[18px] transition-all cursor-pointer active:scale-95 shrink-0 leading-none" title="Import external file into student folder">
+                          <span class="material-symbols-outlined text-[11px]">download</span>
                           <span>Import</span>
                         </button>
                       </div>
