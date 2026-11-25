@@ -5,6 +5,8 @@
  * Fully encapsulated ES Module component.
  */
 
+import { readBinaryFile } from '../../shared/native-bridge.js';
+
 function escapeHtml(str) {
   if (!str) return '';
   return String(str)
@@ -77,16 +79,12 @@ export class MissingDocumentsModal {
                 <span id="quickPreviewTitle" class="font-heading font-bold text-sm text-slate-900 truncate">Document Preview</span>
               </div>
               <div class="flex items-center gap-2 shrink-0">
-                <button id="btnQuickPreviewJumpRenamer" type="button" class="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white font-mono-code text-[11px] font-bold shadow-xs transition cursor-pointer flex items-center gap-1 active:scale-95" title="Open and edit in main workstation preview">
-                  <span class="material-symbols-outlined text-[13px]">open_in_new</span>
-                  <span>Open in Renamer</span>
-                </button>
                 <button id="btnQuickPreviewClose" type="button" class="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-200 transition cursor-pointer" title="Close Preview (Esc)">
-                  <span class="material-symbols-outlined text-[18px]">close</span>
+                  <span class="material-symbols-outlined text-[20px]">close</span>
                 </button>
               </div>
             </div>
-            <div id="quickPreviewBody" class="flex-1 overflow-auto p-4 flex items-center justify-center bg-slate-100 min-h-[340px]">
+            <div id="quickPreviewBody" class="flex-1 overflow-auto p-4 flex items-center justify-center bg-slate-100 min-h-[360px]">
               <!-- Dynamic image or PDF canvas rendered here -->
             </div>
           </div>
@@ -145,47 +143,165 @@ export class MissingDocumentsModal {
     }
   }
 
-  showQuickPreview(doc) {
+  async showQuickPreview(doc) {
     if (!this.quickPreviewEl) return;
 
     const titleEl = this.quickPreviewEl.querySelector('#quickPreviewTitle');
     const bodyEl = this.quickPreviewEl.querySelector('#quickPreviewBody');
-    const btnJump = this.quickPreviewEl.querySelector('#btnQuickPreviewJumpRenamer');
 
     const docName = doc.docType || doc.name || 'Document';
     if (titleEl) {
       titleEl.textContent = `${docName} • ${formatBytes(doc.size)}`;
     }
 
-    if (btnJump) {
-      btnJump.onclick = () => {
-        this.closeQuickPreview();
-        this.close();
-        this.onViewDocument(doc);
-      };
-    }
+    if (!bodyEl) return;
 
-    if (bodyEl) {
-      bodyEl.innerHTML = '';
-      const ext = (doc.ext || (doc.name ? doc.name.split('.').pop() : 'pdf')).toLowerCase().replace('.', '');
-      const isImg = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'].includes(ext);
-
-      if (isImg) {
-        const img = document.createElement('img');
-        img.src = doc.url || doc.path || '';
-        img.alt = docName;
-        img.className = 'max-w-full max-h-[60vh] object-contain rounded-lg shadow-md border border-slate-200';
-        bodyEl.appendChild(img);
-      } else {
-        // PDF or generic document
-        const iframe = document.createElement('iframe');
-        iframe.src = doc.url || doc.path || '';
-        iframe.className = 'w-full h-[60vh] rounded-lg border border-slate-200 bg-white';
-        bodyEl.appendChild(iframe);
-      }
-    }
-
+    // 1. Initial Loading Spinner
+    bodyEl.innerHTML = `
+      <div class="flex flex-col items-center justify-center p-8 gap-2 text-slate-500 text-xs font-mono">
+        <span class="material-symbols-outlined text-[28px] animate-spin text-blue-600">sync</span>
+        <span>Loading document preview...</span>
+      </div>
+    `;
     this.quickPreviewEl.classList.remove('hidden');
+
+    const ext = (doc.ext || (doc.name ? doc.name.split('.').pop() : 'pdf')).toLowerCase().replace('.', '');
+    const isImg = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'].includes(ext);
+    const isPdf = ext === 'pdf';
+    const fileRot = doc.rotation || 0;
+
+    // Helper: Create White Bento Card Paper Stage (Exact matching Main Renamer Stage)
+    const paperStage = document.createElement('div');
+    paperStage.className = 'bg-white rounded-lg shadow-xl border border-slate-200 overflow-hidden flex items-center justify-center relative p-2 transition-transform duration-200';
+    paperStage.style.maxHeight = '65vh';
+    paperStage.style.maxWidth = '100%';
+    if (fileRot) {
+      paperStage.style.transform = `rotate(${fileRot}deg)`;
+    }
+
+    // Helper: Render PDF from bytes onto Canvas
+    const renderPdfCanvas = async (bytes) => {
+      if (!window.pdfjsLib) {
+        bodyEl.innerHTML = '<div class="text-xs text-slate-500 font-mono">Initializing PDF engine...</div>';
+        return;
+      }
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.className = 'max-w-full max-h-[60vh] object-contain shadow-sm rounded';
+        const bufferCopy = (bytes instanceof Uint8Array) ? bytes.slice(0) : new Uint8Array(bytes);
+        const pdfDoc = await window.pdfjsLib.getDocument({ data: bufferCopy }).promise;
+        const page = await pdfDoc.getPage(1);
+        const viewport = page.getViewport({ scale: 1.5 });
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext('2d');
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        bodyEl.innerHTML = '';
+        paperStage.appendChild(canvas);
+        bodyEl.appendChild(paperStage);
+      } catch (err) {
+        console.warn('[QuickPreview] PDF render error:', err);
+        bodyEl.innerHTML = `
+          <div class="flex flex-col items-center justify-center p-6 text-center text-slate-500 gap-2">
+            <span class="material-symbols-outlined text-[32px] text-amber-500">picture_as_pdf</span>
+            <span class="text-xs font-semibold text-slate-700">Unable to render PDF preview</span>
+            <span class="text-[11px] text-slate-400 font-mono">${escapeHtml(doc.name || '')}</span>
+          </div>
+        `;
+      }
+    };
+
+    // Case A: Image
+    if (isImg) {
+      const displayImage = (blobUrl) => {
+        const img = document.createElement('img');
+        img.src = blobUrl;
+        img.alt = docName;
+        img.className = 'max-w-full max-h-[60vh] object-contain rounded';
+        bodyEl.innerHTML = '';
+        paperStage.appendChild(img);
+        bodyEl.appendChild(paperStage);
+      };
+
+      if (doc._blobUrl) {
+        displayImage(doc._blobUrl);
+      } else if (doc.fileObj) {
+        try {
+          const blobUrl = URL.createObjectURL(doc.fileObj);
+          doc._blobUrl = blobUrl;
+          displayImage(blobUrl);
+        } catch (_) {
+          displayFallback();
+        }
+      } else {
+        const filePath = doc.path || doc.nativePath;
+        if (filePath) {
+          try {
+            const bytes = await readBinaryFile(filePath);
+            if (!bytes || bytes.length === 0) throw new Error('Empty file bytes');
+            const mime = ext === 'png' ? 'image/png' : (ext === 'webp' ? 'image/webp' : 'image/jpeg');
+            const blob = new Blob([bytes], { type: mime });
+            const blobUrl = URL.createObjectURL(blob);
+            doc._blobUrl = blobUrl;
+            displayImage(blobUrl);
+          } catch (err) {
+            console.warn('[QuickPreview] Image load error:', err);
+            bodyEl.innerHTML = `
+              <div class="flex flex-col items-center justify-center p-6 text-center text-slate-500 gap-2">
+                <span class="material-symbols-outlined text-[32px] text-amber-500">warning</span>
+                <span class="text-xs font-semibold text-slate-700">Unable to load image preview</span>
+                <span class="text-[11px] text-slate-400 font-mono">${escapeHtml(doc.name || '')}</span>
+              </div>
+            `;
+          }
+        } else {
+          bodyEl.innerHTML = '<div class="text-xs text-slate-500 font-mono">No file path available.</div>';
+        }
+      }
+    } else if (isPdf) {
+      // Case B: PDF
+      if (doc._pdfBytes) {
+        await renderPdfCanvas(doc._pdfBytes);
+      } else if (doc.fileObj) {
+        try {
+          const buf = await doc.fileObj.arrayBuffer();
+          doc._pdfBytes = new Uint8Array(buf);
+          await renderPdfCanvas(doc._pdfBytes);
+        } catch (_) {
+          bodyEl.innerHTML = '<div class="text-xs text-rose-500 font-mono">Failed to read PDF file object.</div>';
+        }
+      } else {
+        const filePath = doc.path || doc.nativePath;
+        if (filePath) {
+          try {
+            const bytes = await readBinaryFile(filePath);
+            if (!bytes || bytes.length === 0) throw new Error('Empty PDF bytes');
+            doc._pdfBytes = bytes;
+            await renderPdfCanvas(bytes);
+          } catch (err) {
+            console.warn('[QuickPreview] PDF load error:', err);
+            bodyEl.innerHTML = `
+              <div class="flex flex-col items-center justify-center p-6 text-center text-slate-500 gap-2">
+                <span class="material-symbols-outlined text-[32px] text-amber-500">picture_as_pdf</span>
+                <span class="text-xs font-semibold text-slate-700">Unable to load PDF preview</span>
+                <span class="text-[11px] text-slate-400 font-mono">${escapeHtml(doc.name || '')}</span>
+              </div>
+            `;
+          }
+        } else {
+          bodyEl.innerHTML = '<div class="text-xs text-slate-500 font-mono">No PDF file path available.</div>';
+        }
+      }
+    } else {
+      // Case C: Generic document
+      bodyEl.innerHTML = `
+        <div class="flex flex-col items-center justify-center p-6 text-center text-slate-500 gap-2">
+          <span class="material-symbols-outlined text-[32px] text-blue-500">description</span>
+          <span class="text-xs font-semibold text-slate-700">${escapeHtml(docName)}</span>
+          <span class="text-[11px] text-slate-400 font-mono">${escapeHtml(doc.ext || 'DOCUMENT')} • ${formatBytes(doc.size)}</span>
+        </div>
+      `;
+    }
   }
 
   _handleKeydown(e) {

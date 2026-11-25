@@ -5875,7 +5875,7 @@ var st = class {
 	mount() {
 		if (this.modalEl) return;
 		let e = document.createElement("div");
-		e.id = "modalMissingDocumentsDesk", e.className = "rename-tool-scope fixed inset-0 z-[1050] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 hidden select-none animate-in fade-in duration-150", e.innerHTML = "\n      <div class=\"relative w-full max-w-[1040px] max-h-[94vh] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto transition-all duration-300\">\n        <div id=\"missingModalContent\" class=\"flex flex-col h-full overflow-hidden\"></div>\n\n        <!-- In-Modal Quick Preview Overlay (Choice 3-C) -->\n        <div id=\"inModalQuickPreview\" class=\"hidden absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex flex-col items-center justify-center p-4\">\n          <div class=\"relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] border border-slate-200\">\n            <div class=\"px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between\">\n              <div class=\"flex items-center gap-2 min-w-0\">\n                <span class=\"material-symbols-outlined text-primary text-[20px] shrink-0\">visibility</span>\n                <span id=\"quickPreviewTitle\" class=\"font-heading font-bold text-sm text-slate-900 truncate\">Document Preview</span>\n              </div>\n              <div class=\"flex items-center gap-2 shrink-0\">\n                <button id=\"btnQuickPreviewJumpRenamer\" type=\"button\" class=\"px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white font-mono-code text-[11px] font-bold shadow-xs transition cursor-pointer flex items-center gap-1 active:scale-95\" title=\"Open and edit in main workstation preview\">\n                  <span class=\"material-symbols-outlined text-[13px]\">open_in_new</span>\n                  <span>Open in Renamer</span>\n                </button>\n                <button id=\"btnQuickPreviewClose\" type=\"button\" class=\"p-1.5 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-200 transition cursor-pointer\" title=\"Close Preview (Esc)\">\n                  <span class=\"material-symbols-outlined text-[18px]\">close</span>\n                </button>\n              </div>\n            </div>\n            <div id=\"quickPreviewBody\" class=\"flex-1 overflow-auto p-4 flex items-center justify-center bg-slate-100 min-h-[340px]\">\n              <!-- Dynamic image or PDF canvas rendered here -->\n            </div>\n          </div>\n        </div>\n      </div>\n    ", this.container.appendChild(e), this.modalEl = e, this.contentEl = e.querySelector("#missingModalContent"), this.quickPreviewEl = e.querySelector("#inModalQuickPreview"), this.modalEl.addEventListener("click", (e) => {
+		e.id = "modalMissingDocumentsDesk", e.className = "rename-tool-scope fixed inset-0 z-[1050] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 hidden select-none animate-in fade-in duration-150", e.innerHTML = "\n      <div class=\"relative w-full max-w-[1040px] max-h-[94vh] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto transition-all duration-300\">\n        <div id=\"missingModalContent\" class=\"flex flex-col h-full overflow-hidden\"></div>\n\n        <!-- In-Modal Quick Preview Overlay (Choice 3-C) -->\n        <div id=\"inModalQuickPreview\" class=\"hidden absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex flex-col items-center justify-center p-4\">\n          <div class=\"relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] border border-slate-200\">\n            <div class=\"px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between\">\n              <div class=\"flex items-center gap-2 min-w-0\">\n                <span class=\"material-symbols-outlined text-primary text-[20px] shrink-0\">visibility</span>\n                <span id=\"quickPreviewTitle\" class=\"font-heading font-bold text-sm text-slate-900 truncate\">Document Preview</span>\n              </div>\n              <div class=\"flex items-center gap-2 shrink-0\">\n                <button id=\"btnQuickPreviewClose\" type=\"button\" class=\"p-1.5 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-200 transition cursor-pointer\" title=\"Close Preview (Esc)\">\n                  <span class=\"material-symbols-outlined text-[20px]\">close</span>\n                </button>\n              </div>\n            </div>\n            <div id=\"quickPreviewBody\" class=\"flex-1 overflow-auto p-4 flex items-center justify-center bg-slate-100 min-h-[360px]\">\n              <!-- Dynamic image or PDF canvas rendered here -->\n            </div>\n          </div>\n        </div>\n      </div>\n    ", this.container.appendChild(e), this.modalEl = e, this.contentEl = e.querySelector("#missingModalContent"), this.quickPreviewEl = e.querySelector("#inModalQuickPreview"), this.modalEl.addEventListener("click", (e) => {
 			e.target === this.modalEl && (this.quickPreviewEl.classList.contains("hidden") ? this.close() : this.closeQuickPreview());
 		});
 		let t = e.querySelector("#btnQuickPreviewClose");
@@ -5894,30 +5894,104 @@ var st = class {
 			e && (e.innerHTML = "");
 		}
 	}
-	showQuickPreview(e) {
+	async showQuickPreview(e) {
 		if (!this.quickPreviewEl) return;
-		let t = this.quickPreviewEl.querySelector("#quickPreviewTitle"), n = this.quickPreviewEl.querySelector("#quickPreviewBody"), r = this.quickPreviewEl.querySelector("#btnQuickPreviewJumpRenamer"), i = e.docType || e.name || "Document";
-		if (t && (t.textContent = `${i} • ${at(e.size)}`), r && (r.onclick = () => {
-			this.closeQuickPreview(), this.close(), this.onViewDocument(e);
-		}), n) {
-			n.innerHTML = "";
-			let t = (e.ext || (e.name ? e.name.split(".").pop() : "pdf")).toLowerCase().replace(".", "");
-			if ([
-				"jpg",
-				"jpeg",
-				"png",
-				"webp",
-				"gif",
-				"bmp"
-			].includes(t)) {
-				let t = document.createElement("img");
-				t.src = e.url || e.path || "", t.alt = i, t.className = "max-w-full max-h-[60vh] object-contain rounded-lg shadow-md border border-slate-200", n.appendChild(t);
-			} else {
-				let t = document.createElement("iframe");
-				t.src = e.url || e.path || "", t.className = "w-full h-[60vh] rounded-lg border border-slate-200 bg-white", n.appendChild(t);
+		let t = this.quickPreviewEl.querySelector("#quickPreviewTitle"), n = this.quickPreviewEl.querySelector("#quickPreviewBody"), r = e.docType || e.name || "Document";
+		if (t && (t.textContent = `${r} • ${at(e.size)}`), !n) return;
+		n.innerHTML = "\n      <div class=\"flex flex-col items-center justify-center p-8 gap-2 text-slate-500 text-xs font-mono\">\n        <span class=\"material-symbols-outlined text-[28px] animate-spin text-blue-600\">sync</span>\n        <span>Loading document preview...</span>\n      </div>\n    ", this.quickPreviewEl.classList.remove("hidden");
+		let i = (e.ext || (e.name ? e.name.split(".").pop() : "pdf")).toLowerCase().replace(".", ""), a = [
+			"jpg",
+			"jpeg",
+			"png",
+			"webp",
+			"gif",
+			"bmp"
+		].includes(i), o = i === "pdf", s = e.rotation || 0, c = document.createElement("div");
+		c.className = "bg-white rounded-lg shadow-xl border border-slate-200 overflow-hidden flex items-center justify-center relative p-2 transition-transform duration-200", c.style.maxHeight = "65vh", c.style.maxWidth = "100%", s && (c.style.transform = `rotate(${s}deg)`);
+		let l = async (t) => {
+			if (!window.pdfjsLib) n.innerHTML = "<div class=\"text-xs text-slate-500 font-mono\">Initializing PDF engine...</div>";
+			else try {
+				let e = document.createElement("canvas");
+				e.className = "max-w-full max-h-[60vh] object-contain shadow-sm rounded";
+				let r = t instanceof Uint8Array ? t.slice(0) : new Uint8Array(t), i = await (await window.pdfjsLib.getDocument({ data: r }).promise).getPage(1), a = i.getViewport({ scale: 1.5 });
+				e.width = a.width, e.height = a.height;
+				let o = e.getContext("2d");
+				await i.render({
+					canvasContext: o,
+					viewport: a
+				}).promise, n.innerHTML = "", c.appendChild(e), n.appendChild(c);
+			} catch (t) {
+				console.warn("[QuickPreview] PDF render error:", t), n.innerHTML = `
+          <div class="flex flex-col items-center justify-center p-6 text-center text-slate-500 gap-2">
+            <span class="material-symbols-outlined text-[32px] text-amber-500">picture_as_pdf</span>
+            <span class="text-xs font-semibold text-slate-700">Unable to render PDF preview</span>
+            <span class="text-[11px] text-slate-400 font-mono">${Y(e.name || "")}</span>
+          </div>
+        `;
 			}
-		}
-		this.quickPreviewEl.classList.remove("hidden");
+		};
+		if (a) {
+			let t = (e) => {
+				let t = document.createElement("img");
+				t.src = e, t.alt = r, t.className = "max-w-full max-h-[60vh] object-contain rounded", n.innerHTML = "", c.appendChild(t), n.appendChild(c);
+			};
+			if (e._blobUrl) t(e._blobUrl);
+			else if (e.fileObj) try {
+				let n = URL.createObjectURL(e.fileObj);
+				e._blobUrl = n, t(n);
+			} catch {
+				displayFallback();
+			}
+			else {
+				let r = e.path || e.nativePath;
+				if (r) try {
+					let n = await _(r);
+					if (!n || n.length === 0) throw Error("Empty file bytes");
+					let a = new Blob([n], { type: i === "png" ? "image/png" : i === "webp" ? "image/webp" : "image/jpeg" }), o = URL.createObjectURL(a);
+					e._blobUrl = o, t(o);
+				} catch (t) {
+					console.warn("[QuickPreview] Image load error:", t), n.innerHTML = `
+              <div class="flex flex-col items-center justify-center p-6 text-center text-slate-500 gap-2">
+                <span class="material-symbols-outlined text-[32px] text-amber-500">warning</span>
+                <span class="text-xs font-semibold text-slate-700">Unable to load image preview</span>
+                <span class="text-[11px] text-slate-400 font-mono">${Y(e.name || "")}</span>
+              </div>
+            `;
+				}
+				else n.innerHTML = "<div class=\"text-xs text-slate-500 font-mono\">No file path available.</div>";
+			}
+		} else if (o) {
+			if (e._pdfBytes) await l(e._pdfBytes);
+			else if (e.fileObj) try {
+				let t = await e.fileObj.arrayBuffer();
+				e._pdfBytes = new Uint8Array(t), await l(e._pdfBytes);
+			} catch {
+				n.innerHTML = "<div class=\"text-xs text-rose-500 font-mono\">Failed to read PDF file object.</div>";
+			}
+			else {
+				let t = e.path || e.nativePath;
+				if (t) try {
+					let n = await _(t);
+					if (!n || n.length === 0) throw Error("Empty PDF bytes");
+					e._pdfBytes = n, await l(n);
+				} catch (t) {
+					console.warn("[QuickPreview] PDF load error:", t), n.innerHTML = `
+              <div class="flex flex-col items-center justify-center p-6 text-center text-slate-500 gap-2">
+                <span class="material-symbols-outlined text-[32px] text-amber-500">picture_as_pdf</span>
+                <span class="text-xs font-semibold text-slate-700">Unable to load PDF preview</span>
+                <span class="text-[11px] text-slate-400 font-mono">${Y(e.name || "")}</span>
+              </div>
+            `;
+				}
+				else n.innerHTML = "<div class=\"text-xs text-slate-500 font-mono\">No PDF file path available.</div>";
+			}
+		} else n.innerHTML = `
+        <div class="flex flex-col items-center justify-center p-6 text-center text-slate-500 gap-2">
+          <span class="material-symbols-outlined text-[32px] text-blue-500">description</span>
+          <span class="text-xs font-semibold text-slate-700">${Y(r)}</span>
+          <span class="text-[11px] text-slate-400 font-mono">${Y(e.ext || "DOCUMENT")} • ${at(e.size)}</span>
+        </div>
+      `;
 	}
 	_handleKeydown(e) {
 		if (e.key === "Escape") e.preventDefault(), this.quickPreviewEl && !this.quickPreviewEl.classList.contains("hidden") ? this.closeQuickPreview() : this.close();
