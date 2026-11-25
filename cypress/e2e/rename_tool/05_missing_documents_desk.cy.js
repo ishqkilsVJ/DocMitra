@@ -37,17 +37,16 @@ describe('DocMitra Rename Tool — Phase 5: Missing Documents & Follow-up Desk T
       .should('contain.text', 'Missing Documents & Follow-up Desk');
   });
 
-  it('TC-DESK-02: Header displays dynamic student name, offline badge, and directory path', () => {
+  it('TC-DESK-02: Header displays clean folder badge, student name, and offline status', () => {
     cy.get('#btnOpenMissingDeskModal').click();
 
     cy.get('#modalMissingDocumentsDesk').within(() => {
-      // Student Name Pill
-      cy.get('.px-2\\.5.py-0\\.5.rounded-full.bg-surface-container')
-        .should('contain.text', 'Vijay Ramesh Yadav');
+      // Student Name is visible
+      cy.contains('Vijay Ramesh Yadav').should('be.visible');
 
-      // DIR Path Ribbon
-      cy.contains('DIR:').parent()
-        .should('contain.text', 'E:/Students/Vijay_Ramesh_Yadav');
+      // Clean Folder Ribbon (Option 1-B: clean folder badge without raw DIR file path)
+      cy.contains('Folder:').parent()
+        .should('contain.text', 'Vijay_Ramesh_Yadav');
 
       // Local FS Connected Status
       cy.contains('LOCAL FS CONNECTED').should('be.visible');
@@ -154,6 +153,26 @@ describe('DocMitra Rename Tool — Phase 5: Missing Documents & Follow-up Desk T
     cy.get('#modalMissingDocumentsDesk').should('be.visible');
     cy.get('body').type('{esc}');
     cy.get('#modalMissingDocumentsDesk').should('have.class', 'hidden');
+  });
+
+  it('TC-DESK-08: Layout order and metadata badges on document rows (Date, Size, Type)', () => {
+    cy.get('#btnOpenMissingDeskModal').click();
+
+    cy.get('#modalMissingDocumentsDesk').within(() => {
+      // 1. Verify Application Readiness Status is placed above Missing Documents
+      cy.contains('Application Readiness Status').should('be.visible');
+      cy.contains('Student Name:').should('be.visible');
+
+      // 2. Missing Documents row metadata badges (Option 3-A)
+      cy.contains('PDF / JPG').should('be.visible');
+      cy.contains('Target ≤ 256 KB').should('be.visible');
+
+      // 3. Present Documents row metadata (Option 2-B: DD-MM-YYYY date, size, type)
+      cy.get('details').within(() => {
+        cy.contains('Verified').should('be.visible');
+        cy.contains('calendar_today').should('be.visible');
+      });
+    });
   });
 
 });

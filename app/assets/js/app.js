@@ -5826,7 +5826,8 @@ var it = class {
               </div>
 
               <div class="flex flex-col gap-0.5">
-                <div class="flex items-center gap-2">
+                <span class="font-label-sm text-[10px] text-secondary uppercase tracking-wider font-semibold">Application Readiness Status</span>
+                <div class="flex items-center gap-2 mt-0.5">
                   <span class="font-label-sm text-[10px] text-secondary uppercase tracking-wider font-semibold">Student Name:</span>
                   <span class="px-2.5 py-0.5 rounded-md bg-surface-container-lowest text-primary font-headline-sm text-[13px] font-bold tracking-wide border border-outline-variant/30">
                     ${J(t)}

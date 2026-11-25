@@ -178,16 +178,16 @@ testModal.render({
 
 const html = testModal.contentEl.innerHTML;
 
-// 1. Verify Application Readiness Status is placed BEFORE Missing Documents in DOM
+// 1. Verify Application Readiness Status is placed BEFORE Missing Documents section in scroll body
 const readinessIdx = html.indexOf('Application Readiness Status');
-const missingDocsIdx = html.indexOf('Missing Documents');
+const missingDocsSectionIdx = html.indexOf('<span class="font-headline-sm text-[15px] text-on-surface font-bold">Missing Documents</span>');
 const presentDocsIdx = html.indexOf('Present Documents in Folder');
 
 assert(readinessIdx > 0, 'Application Readiness Status must be present');
-assert(missingDocsIdx > 0, 'Missing Documents section must be present');
+assert(missingDocsSectionIdx > 0, 'Missing Documents section must be present');
 assert(presentDocsIdx > 0, 'Present Documents section must be present');
-assert(readinessIdx < missingDocsIdx, 'Application Readiness must be rendered ABOVE Missing Documents');
-assert(missingDocsIdx < presentDocsIdx, 'Missing Documents must be rendered ABOVE Present Documents');
+assert(readinessIdx < missingDocsSectionIdx, 'Application Readiness must be rendered ABOVE Missing Documents section');
+assert(missingDocsSectionIdx < presentDocsIdx, 'Missing Documents section must be rendered ABOVE Present Documents');
 console.log('  ✓ Verified: Application Readiness is positioned at the top above Missing & Present sections');
 
 // 2. Verify Student Name is displayed inside Readiness card and header
