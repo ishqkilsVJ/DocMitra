@@ -40,6 +40,26 @@
   ],
   "licenses": [
     {
+      "id": "LIC-1795580924864",
+      "customerName": "Vijay Yadv",
+      "hwid": "DM-HW-9245-0181-E965-89D1",
+      "plan": "TRIAL_7D",
+      "planTitle": "7 Days Tester Trial",
+      "modules": [
+        "Bulk Renamer",
+        "Missing & Follow-up Desk",
+        "PDF Studio",
+        "Image Studio"
+      ],
+      "moduleCode": "RFPI",
+      "issuedAt": "2026-11-25 09:58:44",
+      "expiresAt": "2026-12-02 09:58:44",
+      "licenseKey": "DM-ACT-RFPI-20261202-5BBF-AA3C-468D-94D4",
+      "legacyKey": "DM-LIC-5D5E-4248-8C4E-1DCB",
+      "status": "ACTIVE",
+      "notes": ""
+    },
+    {
       "id": "LIC-1795579125152",
       "customerName": "VJ Marathi",
       "hwid": "DM-HW-9245-0181-E965-89D1",
@@ -161,6 +181,26 @@
     }
   ],
   "customers": [
+    {
+      "id": "LIC-1795580924864",
+      "customerName": "Vijay Yadv",
+      "hwid": "DM-HW-9245-0181-E965-89D1",
+      "plan": "TRIAL_7D",
+      "planTitle": "7 Days Tester Trial",
+      "modules": [
+        "Bulk Renamer",
+        "Missing & Follow-up Desk",
+        "PDF Studio",
+        "Image Studio"
+      ],
+      "moduleCode": "RFPI",
+      "issuedAt": "2026-11-25 09:58:44",
+      "expiresAt": "2026-12-02 09:58:44",
+      "licenseKey": "DM-ACT-RFPI-20261202-5BBF-AA3C-468D-94D4",
+      "legacyKey": "DM-LIC-5D5E-4248-8C4E-1DCB",
+      "status": "ACTIVE",
+      "notes": ""
+    },
     {
       "id": "LIC-1795579125152",
       "customerName": "VJ Marathi",
@@ -295,6 +335,14 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "LOG-1795580924867",
+      "timestamp": "2026-11-25 09:58:44",
+      "action": "KEY_GENERATED",
+      "customerName": "Vijay Yadv",
+      "hwid": "DM-HW-9245-0181-E965-89D1",
+      "details": "Issued 7 Days Tester Trial (DM-ACT-RFPI-20261202-5BBF-AA3C-468D-94D4)"
+    },
     {
       "id": "LOG-1795579125152",
       "timestamp": "2026-11-25 09:28:45",

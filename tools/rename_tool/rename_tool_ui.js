@@ -289,6 +289,7 @@ export class RenamerUIManager {
     });
 
     console.info('[DocMitra Renamer] Renamer UI manager initialized.');
+    this.renderQueue();
 
     if (typeof window !== 'undefined' && (window.location.search.includes('test_mode=1') || window.__DOCMITRA_TEST_MODE__)) {
       this._initTestModeData();
@@ -2263,103 +2264,9 @@ export class RenamerUIManager {
   }
 
   /**
-   * Column 3 (Right Utility Panel): Scheme Preset Selector + 2 Summary Cards (Completed & Missing) + ↗ Document Desk Button + Top Core Shortcuts Card (Sample 1 Bento Master)
+   * Build Bento PRESET Dropdown Component (Replacing native <select> / old black box)
    */
-  renderUtilityPanel(container) {
-    while (container.firstChild) {
-      container.removeChild(container.firstChild);
-    }
-
-    if (this.state.files.length === 0) {
-      // Standby / Empty State when no folder loaded
-      const emptyTopCard = document.createElement('div');
-      emptyTopCard.className = 'flex flex-col gap-2 shrink-0 select-none';
-
-      // Scheme Selector (Standby)
-      const schemeBox = document.createElement('div');
-      schemeBox.className = 'flex items-center justify-between bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 shadow-sm';
-      schemeBox.innerHTML = `
-        <span class="font-mono-code text-[10px] text-slate-400 uppercase font-bold tracking-wider shrink-0">SCHEME:</span>
-        <span class="font-mono-code text-[12px] font-bold text-white flex items-center gap-1">
-          ${escapeHtml(this.state.activePreset || 'MAHA DBT')}
-          <span class="material-symbols-outlined text-[14px] text-blue-400">expand_more</span>
-        </span>
-      `;
-      emptyTopCard.appendChild(schemeBox);
-
-      // 2 Cards (Standby)
-      const cardsGrid = document.createElement('div');
-      cardsGrid.className = 'grid grid-cols-2 gap-2';
-      cardsGrid.innerHTML = `
-        <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-2.5 shadow-2xs flex items-center gap-2 opacity-60">
-          <div class="w-7 h-7 rounded-lg bg-surface-container text-secondary flex items-center justify-center font-bold shrink-0">
-            <span class="material-symbols-outlined text-[18px]">verified</span>
-          </div>
-          <div class="min-w-0">
-            <span class="text-[9px] text-secondary uppercase font-semibold block leading-tight truncate">Completed</span>
-            <span class="font-mono-code text-[12px] font-bold text-secondary block leading-tight truncate">0 Docs</span>
-          </div>
-        </div>
-        <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-2.5 shadow-2xs flex items-center gap-2 opacity-60">
-          <div class="w-7 h-7 rounded-lg bg-surface-container text-secondary flex items-center justify-center font-bold shrink-0">
-            <span class="material-symbols-outlined text-[18px]">pending_actions</span>
-          </div>
-          <div class="min-w-0">
-            <span class="text-[9px] text-secondary uppercase font-semibold block leading-tight truncate">Missing</span>
-            <span class="font-mono-code text-[12px] font-bold text-secondary block leading-tight truncate">-- Docs</span>
-          </div>
-        </div>
-      `;
-      emptyTopCard.appendChild(cardsGrid);
-
-      // Button: Document Desk (Standby)
-      const btnStandbyDesk = document.createElement('button');
-      btnStandbyDesk.type = 'button';
-      btnStandbyDesk.id = 'btnOpenMissingDeskModal';
-      btnStandbyDesk.className = 'w-full py-2 px-3 rounded-lg bg-slate-900 text-slate-400 font-mono-code text-[11px] font-bold border border-slate-700 shadow-sm flex items-center justify-center gap-1.5 cursor-not-allowed opacity-50 shrink-0';
-      btnStandbyDesk.disabled = true;
-      btnStandbyDesk.innerHTML = `
-        <span class="material-symbols-outlined text-[15px]">open_in_new</span>
-        <span>↗ Document Desk</span>
-      `;
-      emptyTopCard.appendChild(btnStandbyDesk);
-      container.appendChild(emptyTopCard);
-
-      // Skeleton note
-      const standbyNote = document.createElement('div');
-      standbyNote.className = 'p-2.5 rounded-xl border border-dashed border-outline-variant/40 bg-surface-container-lowest/60 text-[11px] text-secondary/70 italic text-center select-none';
-      standbyNote.textContent = 'Select an intake folder (F2) to verify missing documents.';
-      container.appendChild(standbyNote);
-      return;
-    }
-
-    // 1. DYNAMIC PRESET AUDIT (ACTIVE FOLDER LOADED)
-    const activeRules = this.getActivePresetDocuments();
-    const presentDocs = new Set(
-      this.state.files.map(f => (f.docType || '').toUpperCase()).filter(Boolean)
-    );
-
-    const missingRules = activeRules.filter((rule) => {
-      const cleanRule = (rule.name || rule).toUpperCase();
-      if (presentDocs.has(cleanRule)) return false;
-      for (const link of DEFAULT_LINKED_RULES) {
-        if (link.combined && presentDocs.has(link.combined.toUpperCase())) {
-          if (cleanRule === link.part1.toUpperCase() || cleanRule === link.part2.toUpperCase()) {
-            return false;
-          }
-        }
-      }
-      return true;
-    });
-
-    const presentCount = this.state.files.length;
-    const missingCount = missingRules.length;
-
-    // TOP STATUS CONTAINER (Sample 1: Bento Master)
-    const topStatusSection = document.createElement('div');
-    topStatusSection.className = 'flex flex-col gap-2 shrink-0 select-none';
-
-    // 1.1 Custom Bento PRESET Dropdown (Replacing native <select>)
+  buildPresetDropdown() {
     const presetCard = document.createElement('div');
     presetCard.id = 'customPresetCard';
     presetCard.className = 'group relative flex items-center justify-between bg-surface-container-lowest border border-outline-variant/60 hover:border-primary/80 rounded-xl px-3 h-[38px] shadow-2xs hover:shadow-[0_0_15px_rgba(0,55,176,0.18)] transition-all duration-200 cursor-pointer select-none';
@@ -2479,6 +2386,100 @@ export class RenamerUIManager {
     document.addEventListener('click', handleOutsideClick);
 
     presetCard.appendChild(floatingMenu);
+    return presetCard;
+  }
+
+  /**
+   * Column 3 (Right Utility Panel): Scheme Preset Selector + 2 Summary Cards (Completed & Missing) + ↗ Document Desk Button + Top Core Shortcuts Card (Sample 1 Bento Master)
+   */
+  renderUtilityPanel(container) {
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+
+    if (this.state.files.length === 0) {
+      // Standby / Empty State when no folder loaded
+      const emptyTopCard = document.createElement('div');
+      emptyTopCard.className = 'flex flex-col gap-2 shrink-0 select-none';
+
+      // 1.1 Custom Bento PRESET Dropdown (Replacing native <select> / old black box)
+      const presetCard = this.buildPresetDropdown();
+      emptyTopCard.appendChild(presetCard);
+
+      // 2 Cards (Standby)
+      const cardsGrid = document.createElement('div');
+      cardsGrid.className = 'grid grid-cols-2 gap-2';
+      cardsGrid.innerHTML = `
+        <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-2.5 shadow-2xs flex items-center gap-2 opacity-60">
+          <div class="w-7 h-7 rounded-lg bg-surface-container text-secondary flex items-center justify-center font-bold shrink-0">
+            <span class="material-symbols-outlined text-[18px]">verified</span>
+          </div>
+          <div class="min-w-0">
+            <span class="text-[9px] text-secondary uppercase font-semibold block leading-tight truncate">Completed</span>
+            <span class="font-mono-code text-[12px] font-bold text-secondary block leading-tight truncate">0 Docs</span>
+          </div>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-2.5 shadow-2xs flex items-center gap-2 opacity-60">
+          <div class="w-7 h-7 rounded-lg bg-surface-container text-secondary flex items-center justify-center font-bold shrink-0">
+            <span class="material-symbols-outlined text-[18px]">pending_actions</span>
+          </div>
+          <div class="min-w-0">
+            <span class="text-[9px] text-secondary uppercase font-semibold block leading-tight truncate">Missing</span>
+            <span class="font-mono-code text-[12px] font-bold text-secondary block leading-tight truncate">-- Docs</span>
+          </div>
+        </div>
+      `;
+      emptyTopCard.appendChild(cardsGrid);
+
+      // Button: Document Desk (Standby)
+      const btnStandbyDesk = document.createElement('button');
+      btnStandbyDesk.type = 'button';
+      btnStandbyDesk.id = 'btnOpenMissingDeskModal';
+      btnStandbyDesk.className = 'w-full py-2 px-3 rounded-xl bg-surface-container-lowest text-secondary font-mono-code text-[11px] font-bold border border-outline-variant/60 shadow-2xs flex items-center justify-center gap-1.5 cursor-not-allowed opacity-50 shrink-0';
+      btnStandbyDesk.disabled = true;
+      btnStandbyDesk.innerHTML = `
+        <span class="material-symbols-outlined text-[15px]">open_in_new</span>
+        <span>↗ Document Desk</span>
+      `;
+      emptyTopCard.appendChild(btnStandbyDesk);
+      container.appendChild(emptyTopCard);
+
+      // Skeleton note
+      const standbyNote = document.createElement('div');
+      standbyNote.className = 'p-2.5 rounded-xl border border-dashed border-outline-variant/40 bg-surface-container-lowest/60 text-[11px] text-secondary/70 italic text-center select-none';
+      standbyNote.textContent = 'Select an intake folder (F2) to verify missing documents.';
+      container.appendChild(standbyNote);
+      return;
+    }
+
+    // 1. DYNAMIC PRESET AUDIT (ACTIVE FOLDER LOADED)
+    const activeRules = this.getActivePresetDocuments();
+    const presentDocs = new Set(
+      this.state.files.map(f => (f.docType || '').toUpperCase()).filter(Boolean)
+    );
+
+    const missingRules = activeRules.filter((rule) => {
+      const cleanRule = (rule.name || rule).toUpperCase();
+      if (presentDocs.has(cleanRule)) return false;
+      for (const link of DEFAULT_LINKED_RULES) {
+        if (link.combined && presentDocs.has(link.combined.toUpperCase())) {
+          if (cleanRule === link.part1.toUpperCase() || cleanRule === link.part2.toUpperCase()) {
+            return false;
+          }
+        }
+      }
+      return true;
+    });
+
+    const presentCount = this.state.files.length;
+    const missingCount = missingRules.length;
+
+    // TOP STATUS CONTAINER (Sample 1: Bento Master)
+    const topStatusSection = document.createElement('div');
+    topStatusSection.className = 'flex flex-col gap-2 shrink-0 select-none';
+
+    // 1.1 Custom Bento PRESET Dropdown (Replacing native <select>)
+    const presetCard = this.buildPresetDropdown();
     topStatusSection.appendChild(presetCard);
 
     // 1.2 Two Side-by-Side Summary Cards (Exact Sample 1 / Modal Style)

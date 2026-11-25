@@ -171,17 +171,18 @@ export class MissingDocumentsModal {
           </div>
         </div>
 
-        <!-- High-Contrast Administrative Scheme Selector & Esc Close Button -->
+        <!-- Bento PRESET Dropdown & Esc Close Button -->
         <div class="flex items-center gap-2.5">
-          <div class="flex items-center bg-slate-900 border border-slate-700 hover:border-primary/60 rounded-lg px-3 py-1.5 shadow-sm gap-2 transition-all cursor-pointer">
-            <span class="font-mono-code text-[10px] text-slate-400 uppercase font-bold tracking-wider">SCHEME:</span>
-            <select id="missingModalSchemeSelect" class="bg-transparent font-mono-code text-[12px] font-bold text-white focus:outline-none cursor-pointer pr-1">
+          <div class="group relative flex items-center bg-surface-container-lowest border border-outline-variant/60 hover:border-primary/80 rounded-xl px-3 py-1.5 shadow-2xs hover:shadow-[0_0_15px_rgba(0,55,176,0.18)] transition-all duration-200 cursor-pointer">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary inline-block shrink-0 shadow-[0_0_6px_rgba(0,55,176,0.4)] mr-1.5"></span>
+            <span class="font-mono-code text-[10px] text-secondary group-hover:text-primary uppercase font-bold tracking-wider mr-2">PRESET:</span>
+            <select id="missingModalSchemeSelect" class="bg-transparent font-mono-code text-[12px] font-bold text-on-surface focus:outline-none cursor-pointer pr-1">
               ${presetsList.map(p => `
-                <option value="${escapeHtml(p)}" class="bg-slate-900 text-white" ${p === activePreset ? 'selected' : ''}>${escapeHtml(p)}</option>
+                <option value="${escapeHtml(p)}" class="bg-surface-container text-on-surface" ${p === activePreset ? 'selected' : ''}>${escapeHtml(p)}</option>
               `).join('')}
             </select>
           </div>
-          <button id="btnMissingModalClose" type="button" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-rose-700 text-slate-200 hover:text-white font-mono-code text-[11px] font-bold transition-all flex items-center gap-1.5 border border-slate-700 shadow-sm cursor-pointer active:scale-95" title="Return to Main Dashboard (Esc)">
+          <button id="btnMissingModalClose" type="button" class="px-3 py-1.5 rounded-xl bg-surface-container-lowest hover:bg-rose-50 hover:text-rose-600 text-secondary font-mono-code text-[11px] font-bold transition-all flex items-center gap-1.5 border border-outline-variant/60 hover:border-rose-300 shadow-2xs cursor-pointer active:scale-95" title="Return to Main Dashboard (Esc)">
             <span>Esc Close</span>
             <span class="material-symbols-outlined text-[15px]">close</span>
           </button>
