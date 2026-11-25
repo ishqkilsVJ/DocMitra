@@ -6022,11 +6022,6 @@ var st = class {
             <h1 class="font-heading text-lg sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">
               Missing Documents &amp; Follow-up Desk
             </h1>
-            <p class="text-xs text-slate-500 font-medium flex items-center gap-1.5">
-              <span>Maharashtra Admission &amp; Verification Workflow</span>
-              <span class="inline-block w-1 h-1 rounded-full bg-slate-400"></span>
-              <span>100% Offline Localhost</span>
-            </p>
           </div>
         </div>
 
@@ -6100,9 +6095,6 @@ var st = class {
                   ✓ MahaDBT Compliant
                 </span>
               </div>
-              <p class="text-xs text-slate-500 font-normal leading-relaxed">
-                All present files verified against canonical MahaDBT schema with safe buffers &lt; 256 KB.
-              </p>
             </div>
           </div>
 
@@ -6233,18 +6225,7 @@ var st = class {
       <!-- END: ModalBodyContent -->
 
       <!-- BEGIN: ModalFooter -->
-      <footer class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-4 sticky bottom-0 z-20 shrink-0">
-        <!-- Helper Notice -->
-        <div class="flex items-center space-x-2 text-xs text-slate-600 max-w-xl">
-          <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
-            <path d="M12 16v-4m0-4h.01" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-          </svg>
-          <span class="leading-tight">
-            Imported files automatically move to the active folder, rename to canonical MahaDBT format, and re-scan admission queue.
-          </span>
-        </div>
-
+      <footer class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-end sticky bottom-0 z-20 shrink-0">
         <!-- Action Button -->
         <div>
           <button id="btnMissingModalDone" type="button" class="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md shadow-blue-500/20 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 cursor-pointer active:scale-95" title="Close and return to Bulk Renamer (Esc)">

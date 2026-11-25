@@ -291,7 +291,6 @@
           </div>
           <div>
             <h3 class="font-headline-sm text-[16px] font-bold text-on-surface">Rename Tool Settings</h3>
-            <p class="text-secondary text-[11px]">Manage Document Presets, Checklists, and Keyboard Shortcuts</p>
           </div>
         </div>
         <div class="flex items-center gap-2.5">
@@ -496,7 +495,6 @@
           </div>
           <div>
             <h3 class="font-headline-sm text-[16px] font-bold text-on-surface">Add / Edit Document Type</h3>
-            <p class="text-secondary text-[11px]">Define document name, short code(s), keywords, and preset assignments</p>
           </div>
         </div>
         <button id="btnCloseAddDocModal" type="button"
@@ -535,7 +533,6 @@
         <div class="flex flex-col gap-1.5">
           <label class="font-semibold text-on-surface text-[12px] flex items-center justify-between">
             <span>Full Document Name</span>
-            <span class="text-secondary font-mono-code text-[11px]">Canonical title</span>
           </label>
           <input id="inputAddDocName" type="text" placeholder="e.g. Bonafide Certificate" autocomplete="off"
             autocomplete="one-time-code" aria-autocomplete="none" autocorrect="off" autocapitalize="off"
@@ -575,7 +572,6 @@
               <span>Include in Presets</span>
               <span class="text-secondary text-[11px] font-normal">(Optional)</span>
             </div>
-            <span class="text-secondary text-[11px]">Click preset to toggle in Missing Documents</span>
           </label>
           <div id="containerPresetPills"
             class="flex flex-wrap gap-1.5 min-h-[38px] p-2 rounded-lg bg-surface-container-low border border-outline-variant/30 items-center">
@@ -628,7 +624,6 @@
           </div>
           <div class="min-w-0">
             <h1 class="text-sm font-bold text-slate-900 leading-tight truncate">Cross-Check Matched Documents</h1>
-            <p class="text-[11.5px] text-slate-500 leading-tight mt-0.5 truncate">Verify old and suggested new filenames before executing atomic batch rename</p>
           </div>
         </div>
 
@@ -762,12 +757,6 @@
           <div id="crossCheckActiveEmpty" class="py-8 text-center text-xs text-slate-400 hidden">
             No files match the selected filter.
           </div>
-        </div>
-
-        <!-- Subtle Keyboard Hint -->
-        <div class="mt-1.5 px-2 flex items-center justify-between text-[11px] text-slate-400 shrink-0">
-          <span>Perfect files are unchecked by default — changing Case, Order, or Student auto-selects modified files.</span>
-          <span class="font-mono-code hidden md:inline">↑ / ↓ navigate • Space toggle • Enter confirm</span>
         </div>
       </div>
 

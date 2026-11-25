@@ -1,7 +1,23 @@
 # 🔒 LOCKED TOOL: Bulk Document Renamer (`tools/rename_tool/`)
 
 > [!IMPORTANT]
-> **OFFICIALLY LOCKED & SEALED UNDER CP-032 VERIFICATION**
+> **OFFICIALLY LOCKED & SEALED UNDER CP-033 VERIFICATION**
+> All user-requested cleanups and enhancements are 100% completed, tested, and verified:
+> 1. Cleaned Up Unnecessary Descriptions (Choice 1-A): Removed verbose sub-captions/taglines across 4 modals:
+>    - Missing Documents & Follow-up Desk: Removed header tagline `"Maharashtra Admission & Verification Workflow • 100% Offline Localhost"` and readiness paragraph `"All present files verified against canonical MahaDBT schema with safe buffers < 256 KB."`.
+>    - Cross-Check Matched Documents: Removed header subtitle `"Verify old and suggested new filenames before executing atomic batch rename"`.
+>    - Rename Tool Settings: Removed header subtitle `"Manage Document Presets, Checklists, and Keyboard Shortcuts"`.
+>    - Add / Edit Document Type: Removed header subtitle `"Define document name, short code(s), keywords, and preset assignments"`.
+> 2. Removed Footer Filler Notes (Choice 2-B):
+>    - Missing Documents Desk: Removed helper notice `"Imported files automatically move to the active folder..."`; footer cleanly holds only the `Back to Renamer` button.
+>    - Cross-Check Modal: Removed bottom table sub-line `"Perfect files are unchecked by default..."` and keyboard hint text, maximizing high-density table view.
+> 3. Cleaned Form Sub-Labels (Choice 3-A):
+>    - Add / Edit Document Type: Removed `"Canonical title"` and `"Click preset to toggle in Missing Documents"`.
+>    - Preserved 100% intact: Required validation hint `* (Required)`, Renamer `"Press Tab or Enter to save & next"`, and Column 3 dynamic messages.
+> 4. Dual-MCP Automated QA passed 100% (Playwright MCP E2E + Chrome DevTools MCP with 0 console errors).
+> 5. Built and deployed directly to `C:\Users\USER\AppData\Local\DocMitra\app.exe`.
+
+> **Last QA Stabilization & Verification:** 2026-11-26 (Clean Up Empty & Unnecessary Descriptions [CP-033] Verified 100%: Cleaned all redundant sub-captions and filler footer notes across 4 modals; preserved functional controls and mandatory labels; Dual-MCP QA passed 100%; deployed to app.exe).
 > All user-requested enhancements are 100% completed, tested, and verified:
 > 1. In-Modal Document Preview Engine (Choice 1-A): Authentically renders document preview on clicking Eye icon (`👁️`) in Document Desk. Loads raw bytes through Tauri IPC (`readBinaryFile`), generates typed in-memory `Blob` URLs for images, and compiles PDFs onto high-DPI `<canvas>` via `pdfjsLib` matching main renamer preview stage. Respects active document rotation.
 > 2. Clean Header (Choice 2-A): Completely removed `[Open in Renamer]` blue button; preserved single top-right cross `✕` close button (`#btnQuickPreviewClose`) with instant `Esc` dismissal.
