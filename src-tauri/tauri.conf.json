@@ -5,7 +5,6 @@
   "identifier": "com.docmitra.app",
   "build": {
     "frontendDist": "../app",
-    "devUrl": "http://localhost:1420",
     "beforeDevCommand": "",
     "beforeBuildCommand": "node build-ui.js"
   },
