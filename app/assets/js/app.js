@@ -6742,26 +6742,56 @@ var lt = A.map((e) => ({
 					e.preventDefault();
 					let t = this.state.files[this.state.currentIndex];
 					t && this.handleMoveFileToDuplicates(t);
-				} else (e.ctrlKey || e.metaKey) && e.key === "ArrowLeft" ? (e.preventDefault(), this.handlePrevFolder()) : (e.ctrlKey || e.metaKey) && e.key === "ArrowRight" ? (e.preventDefault(), this.handleNextFolder()) : (e.ctrlKey || e.metaKey) && (e.key === "z" || e.key === "Z") && !e.shiftKey && e.target.tagName !== "INPUT" ? (e.preventDefault(), this.handleUndo()) : (e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S") && (e.preventDefault(), this.handleSaveBatch());
+				} else if ((e.ctrlKey || e.metaKey) && e.key === "ArrowLeft") e.preventDefault(), this.handlePrevFolder();
+				else if ((e.ctrlKey || e.metaKey) && e.key === "ArrowRight") e.preventDefault(), this.handleNextFolder();
+				else if ((e.ctrlKey || e.metaKey) && (e.key === "z" || e.key === "Z") && !e.shiftKey && e.target.tagName !== "INPUT") e.preventDefault(), this.handleUndo();
+				else if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) e.preventDefault(), this.handleSaveBatch();
+				else if ((e.key === "PageDown" || e.key === "PageUp") && this.state.totalPdfPages > 1 && !(e.target && e.target.tagName === "INPUT" && e.target.id !== "inputRenameTarget")) e.preventDefault(), e.key === "PageDown" && this.state.currentPdfPage < this.state.totalPdfPages ? this._renderPdfPage(this.state.currentPdfPage + 1) : e.key === "PageUp" && this.state.currentPdfPage > 1 && this._renderPdfPage(this.state.currentPdfPage - 1);
+				else {
+					if (e.ctrlKey || e.metaKey) {
+						if (e.key === "+" || e.key === "=") {
+							e.preventDefault(), this.state.zoom = Math.min(300, this.state.zoom + 20), this._applyPreviewTransform();
+							return;
+						}
+						if (e.key === "-" || e.key === "_") {
+							e.preventDefault(), this.state.zoom = Math.max(40, this.state.zoom - 20), this._applyPreviewTransform();
+							return;
+						}
+						if (e.key === "0") {
+							e.preventDefault(), this.state.zoom = 100, this._applyPreviewTransform();
+							return;
+						}
+					}
+					if ((e.key === "r" || e.key === "R") && !e.ctrlKey && !e.metaKey && !e.altKey) {
+						if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.isContentEditable)) return;
+						let t = document.getElementById("btnRotateCW");
+						if (t) {
+							e.preventDefault(), t.click();
+							return;
+						}
+					}
+				}
 			}
 		});
 	}
 	_bindPreviewControls() {
 		let e = document.getElementById("col-preview");
 		if (!e) return;
-		let t = e.querySelector("button[title*=\"Zoom In\"]"), n = e.querySelector("button[title*=\"Zoom Out\"]"), i = e.querySelector("button[title*=\"Reset Zoom\"]"), a = e.querySelector("#btnRotateCCW"), o = e.querySelector("#btnRotateCW") || e.querySelector("#btnRenamerRotatePreview"), s = e.querySelector("#btnRotateFlip"), c = e.querySelector("input[type=\"range\"]"), l = e.querySelector("button[title*=\"Fit to A4 Width\"]"), u = e.querySelector("button[title*=\"Pan Hand\"]"), d = e.querySelector("button[title*=\"Split Compare\"]"), f = e.querySelector(".border-t button");
+		let t = e.querySelector("button[title*=\"Zoom In\"]"), n = e.querySelector("button[title*=\"Zoom Out\"]"), i = e.querySelector("button[title*=\"Fit to Page\"]") || e.querySelector("button[title*=\"Fit to A4 Width\"]"), a = e.querySelector("button[title*=\"Reset Zoom\"]"), o = e.querySelector("#btnRotateCCW"), s = e.querySelector("#btnRotateCW") || e.querySelector("#btnRenamerRotatePreview"), c = e.querySelector("#btnRotateFlip"), l = e.querySelector("input[type=\"range\"]"), u = e.querySelector("button[title*=\"Fit to A4 Width\"]"), d = e.querySelector("button[title*=\"Pan Hand\"]"), f = e.querySelector("button[title*=\"Split Compare\"]"), p = e.querySelector(".border-t button");
 		t && t.addEventListener("click", () => {
-			this.state.zoom = Math.min(300, this.state.zoom + 20), c && (c.value = this.state.zoom), this._applyPreviewTransform();
+			this.state.zoom = Math.min(300, this.state.zoom + 20), l && (l.value = this.state.zoom), this._applyPreviewTransform();
 		}), n && n.addEventListener("click", () => {
-			this.state.zoom = Math.max(40, this.state.zoom - 20), c && (c.value = this.state.zoom), this._applyPreviewTransform();
-		}), c && c.addEventListener("input", (e) => {
-			this.state.zoom = Number(e.target.value), this._applyPreviewTransform();
+			this.state.zoom = Math.max(40, this.state.zoom - 20), l && (l.value = this.state.zoom), this._applyPreviewTransform();
 		}), i && i.addEventListener("click", () => {
+			this.state.zoom = 100, l && (l.value = 100), this._applyPreviewTransform();
+		}), l && l.addEventListener("input", (e) => {
+			this.state.zoom = Number(e.target.value), this._applyPreviewTransform();
+		}), a && a.addEventListener("click", () => {
 			this.state.zoom = 100;
 			let e = this.state.files[this.state.currentIndex];
-			e && (e.rotation = 0), this.state.rotation = 0, c && (c.value = 100), this._applyPreviewTransform();
+			e && (e.rotation = 0), this.state.rotation = 0, l && (l.value = 100), this._applyPreviewTransform();
 		});
-		let p = async (e, t) => {
+		let m = async (e, t) => {
 			let n = this.state.files[this.state.currentIndex];
 			if (!n) {
 				this.state.rotation = ((this.state.rotation || 0) + e + 360) % 360, this._applyPreviewTransform();
@@ -6791,45 +6821,53 @@ var lt = A.map((e) => ({
 				t && i && (t.disabled = !1, t.innerHTML = i);
 			}
 		};
-		a && a.addEventListener("click", () => p(-90, a)), o && o.addEventListener("click", () => p(90, o)), s && s.addEventListener("click", () => p(180, s)), l && l.addEventListener("click", () => {
-			this.state.zoom = 120, c && (c.value = 120), this._applyPreviewTransform(), r.show("Fit to A4 Width", "Zoom set to 120% standard document view", "info");
-		}), u && u.addEventListener("click", () => {
+		o && o.addEventListener("click", () => m(-90, o)), s && s.addEventListener("click", () => m(90, s)), c && c.addEventListener("click", () => m(180, c)), u && u.addEventListener("click", () => {
+			this.state.zoom = 120, l && (l.value = 120), this._applyPreviewTransform(), r.show("Fit to A4 Width", "Zoom set to 120% standard document view", "info");
+		}), d && d.addEventListener("click", () => {
 			this.state.panEnabled = !this.state.panEnabled;
 			let t = e.querySelector(".overflow-auto");
-			t && (t.classList.toggle("cursor-grab", this.state.panEnabled), t.classList.toggle("bg-primary/5", this.state.panEnabled)), u.classList.toggle("bg-primary/20", this.state.panEnabled), u.classList.toggle("text-primary", this.state.panEnabled), r.show("Pan Hand", this.state.panEnabled ? "Pan mode active: click & drag preview" : "Pan mode disabled", "info");
+			t && (t.classList.toggle("cursor-grab", this.state.panEnabled), t.classList.toggle("bg-primary/5", this.state.panEnabled)), d.classList.toggle("bg-primary/20", this.state.panEnabled), d.classList.toggle("text-primary", this.state.panEnabled), r.show("Pan Hand", this.state.panEnabled ? "Pan mode active: click & drag preview" : "Pan mode disabled", "info");
 		});
-		let m = e.querySelector(".overflow-auto");
-		if (m) {
-			m.addEventListener("wheel", (e) => {
-				if (e.ctrlKey) {
-					e.preventDefault();
-					let t = e.deltaY < 0 ? 15 : -15;
-					this.state.zoom = Math.max(40, Math.min(300, this.state.zoom + t)), c && (c.value = this.state.zoom), this._applyPreviewTransform();
+		let h = e.querySelector(".overflow-auto");
+		if (h) {
+			let e = !1;
+			h.addEventListener("wheel", (t) => {
+				if (t.ctrlKey) {
+					t.preventDefault();
+					let e = t.deltaY < 0 ? 15 : -15;
+					this.state.zoom = Math.max(40, Math.min(300, this.state.zoom + e)), l && (l.value = this.state.zoom), this._applyPreviewTransform();
+				} else if (this.state.totalPdfPages > 1) {
+					if (e) return;
+					t.deltaY > 18 ? this.state.currentPdfPage < this.state.totalPdfPages && (t.preventDefault(), e = !0, this._renderPdfPage(this.state.currentPdfPage + 1), setTimeout(() => {
+						e = !1;
+					}, 260)) : t.deltaY < -18 && this.state.currentPdfPage > 1 && (t.preventDefault(), e = !0, this._renderPdfPage(this.state.currentPdfPage - 1), setTimeout(() => {
+						e = !1;
+					}, 260));
 				}
 			}, { passive: !1 });
-			let e = !1, t = 0, n = 0, r = 0, i = 0;
-			m.addEventListener("mousedown", (a) => {
-				this.state.panEnabled && (e = !0, m.classList.add("cursor-grabbing"), t = a.pageX - m.offsetLeft, n = a.pageY - m.offsetTop, r = m.scrollLeft, i = m.scrollTop);
-			}), window.addEventListener("mousemove", (a) => {
-				if (!e) return;
-				a.preventDefault();
-				let o = a.pageX - m.offsetLeft, s = a.pageY - m.offsetTop;
-				m.scrollLeft = r - (o - t), m.scrollTop = i - (s - n);
+			let t = !1, n = 0, r = 0, i = 0, a = 0;
+			h.addEventListener("mousedown", (e) => {
+				this.state.panEnabled && (t = !0, h.classList.add("cursor-grabbing"), n = e.pageX - h.offsetLeft, r = e.pageY - h.offsetTop, i = h.scrollLeft, a = h.scrollTop);
+			}), window.addEventListener("mousemove", (e) => {
+				if (!t) return;
+				e.preventDefault();
+				let o = e.pageX - h.offsetLeft, s = e.pageY - h.offsetTop;
+				h.scrollLeft = i - (o - n), h.scrollTop = a - (s - r);
 			}), window.addEventListener("mouseup", () => {
-				e && (e = !1, m.classList.remove("cursor-grabbing"));
+				t && (t = !1, h.classList.remove("cursor-grabbing"));
 			});
 		}
-		d && d.addEventListener("click", () => {
-			this.state.splitCompare = !this.state.splitCompare, d.classList.toggle("bg-primary/20", this.state.splitCompare), d.classList.toggle("text-primary", this.state.splitCompare), this.renderCurrentPreview(), r.show("Split Compare", this.state.splitCompare ? "Split compare mode active" : "Single view restored", "info");
-		}), f && f.addEventListener("click", () => {
-			this.state.zoom = 100, this.state.rotation = 0, c && (c.value = 100), this._applyPreviewTransform(), r.show("Filters Reset", "Preview display restored to default", "info");
+		f && f.addEventListener("click", () => {
+			this.state.splitCompare = !this.state.splitCompare, f.classList.toggle("bg-primary/20", this.state.splitCompare), f.classList.toggle("text-primary", this.state.splitCompare), this.renderCurrentPreview(), r.show("Split Compare", this.state.splitCompare ? "Split compare mode active" : "Single view restored", "info");
+		}), p && p.addEventListener("click", () => {
+			this.state.zoom = 100, this.state.rotation = 0, l && (l.value = 100), this._applyPreviewTransform(), r.show("Filters Reset", "Preview display restored to default", "info");
 		});
-		let h = e.querySelector("#btnPdfPrevPage"), g = e.querySelector("#btnPdfNextPage"), _ = e.querySelector("#renamerPdfPageBadge");
-		h && h.addEventListener("click", (e) => {
+		let g = e.querySelector("#btnPdfPrevPage"), _ = e.querySelector("#btnPdfNextPage"), v = e.querySelector("#renamerPdfPageBadge");
+		g && g.addEventListener("click", (e) => {
 			e.stopPropagation(), this.state.currentPdfPage > 1 && this._renderPdfPage(this.state.currentPdfPage - 1);
-		}), g && g.addEventListener("click", (e) => {
-			e.stopPropagation(), this.state.currentPdfPage < this.state.totalPdfPages && this._renderPdfPage(this.state.currentPdfPage + 1);
 		}), _ && _.addEventListener("click", (e) => {
+			e.stopPropagation(), this.state.currentPdfPage < this.state.totalPdfPages && this._renderPdfPage(this.state.currentPdfPage + 1);
+		}), v && v.addEventListener("click", (e) => {
 			if (e.stopPropagation(), this.state.totalPdfPages > 1) {
 				let e = window.prompt(`Jump to Page (1 to ${this.state.totalPdfPages}):`, String(this.state.currentPdfPage));
 				if (e) {
@@ -6844,8 +6882,8 @@ var lt = A.map((e) => ({
 		e && (e.style.transform = `scale(${this.state.zoom / 100}) rotate(${n}deg)`, e.style.transformOrigin = "center center", e.style.transition = "transform 0.15s ease-out");
 		let r = document.getElementById("col-preview");
 		if (r) {
-			let e = r.querySelector(".font-mono-code.text-label-sm");
-			e && (e.textContent = this.state.zoom === 100 ? "Fit to Page" : `${this.state.zoom}%`);
+			let e = r.querySelector("#renamerZoomReadout") || r.querySelector(".font-mono-code.text-label-sm");
+			e && (e.textContent = this.state.zoom === 100 ? "Fit" : `${this.state.zoom}%`);
 		}
 	}
 	_startBackgroundWatcher() {
@@ -9395,13 +9433,8 @@ var lt = A.map((e) => ({
 			let o = document.createElement("p");
 			o.className = "text-body-sm text-secondary text-[12px] leading-relaxed", o.textContent = "Select a student folder (F2) from the top-right toolbar to begin admission document renaming.", i.appendChild(o), e.appendChild(i);
 			let s = document.createElement("div");
-			s.className = "flex items-center gap-2 font-mono-code text-[11px] text-secondary opacity-60 mt-1 select-none", s.innerHTML = "<span>DPI: Standby</span><span>•</span><span>Buffer: Empty</span><span>•</span><span>Zero Zoom</span>", e.appendChild(s), n.appendChild(e);
+			s.className = "flex items-center gap-2 font-mono-code text-[11px] text-secondary opacity-60 mt-1 select-none", s.innerHTML = "<span>Standby • Ready for Intake</span>", e.appendChild(s), n.appendChild(e);
 			return;
-		}
-		let r = e.querySelector("strong.text-tertiary, strong.text-error");
-		if (r) {
-			let e = (t.size / 1024).toFixed(0);
-			t.size <= 262144 ? (r.className = "text-tertiary font-bold", r.textContent = `${e} KB / 256 KB Safe`) : (r.className = "text-error font-bold", r.textContent = `${e} KB (>256 KB Safe Buffer)`);
 		}
 		if (/\.pdf$/i.test(t.name) || (this.state.activePdfDoc = null, this.state.activePdfUrl = null, this.state.currentPdfPage = 1, this.state.totalPdfPages = 1, this._updatePdfPageIndicator()), this.state.splitCompare && this.state.files.length > 1) {
 			let e = this.state.currentIndex > 0 ? this.state.currentIndex - 1 : 1, r = this.state.files[e], i = document.createElement("div");
@@ -9410,8 +9443,8 @@ var lt = A.map((e) => ({
 			i.appendChild(a), i.appendChild(o), n.appendChild(i), this._applyPreviewTransform();
 			return;
 		}
-		let i = this._createStageElement(t);
-		n.appendChild(i), this._applyPreviewTransform();
+		let r = this._createStageElement(t);
+		n.appendChild(r), this._applyPreviewTransform();
 	}
 	_createStageElement(e, t = null) {
 		let n = document.createElement("div");
@@ -9501,23 +9534,32 @@ var lt = A.map((e) => ({
 	async _renderPdfPage(e, t = null) {
 		if (!this.state.activePdfDoc) return;
 		let n = t || document.getElementById("previewPdfCanvas");
-		if (n) try {
-			let t = await this.state.activePdfDoc.getPage(e), r = t.getViewport({ scale: 2 });
-			n.height = r.height, n.width = r.width;
-			let i = n.getContext("2d");
-			await t.render({
-				canvasContext: i,
-				viewport: r
-			}).promise, this.state.currentPdfPage = e, this._updatePdfPageIndicator();
-		} catch (t) {
-			console.warn(`Error rendering PDF page ${e}:`, t);
+		if (n) {
+			if (this._pdfPageRenderTask) {
+				try {
+					this._pdfPageRenderTask.cancel();
+				} catch {}
+				this._pdfPageRenderTask = null;
+			}
+			try {
+				let t = await this.state.activePdfDoc.getPage(e), r = t.getViewport({ scale: 2 });
+				n.height = r.height, n.width = r.width;
+				let i = n.getContext("2d"), a = t.render({
+					canvasContext: i,
+					viewport: r
+				});
+				this._pdfPageRenderTask = a, await a.promise, this._pdfPageRenderTask = null, this.state.currentPdfPage = e, this._updatePdfPageIndicator();
+			} catch (t) {
+				if (t && t.name === "RenderingCancelledException") return;
+				console.warn(`Error rendering PDF page ${e}:`, t);
+			}
 		}
 	}
 	_updatePdfPageIndicator() {
 		let e = document.getElementById("col-preview");
 		if (!e) return;
-		let t = e.querySelector("#renamerPdfPageBadge"), n = e.querySelector("#btnPdfPrevPage"), r = e.querySelector("#btnPdfNextPage");
-		t && (t.textContent = this.state.totalPdfPages > 1 ? `Page ${this.state.currentPdfPage} of ${this.state.totalPdfPages}` : "Page 1 of 1", t.style.cursor = this.state.totalPdfPages > 1 ? "pointer" : "default", t.title = this.state.totalPdfPages > 1 ? "Click to jump to page" : "Single page document"), n && (n.disabled = this.state.currentPdfPage <= 1), r && (r.disabled = this.state.currentPdfPage >= this.state.totalPdfPages || this.state.totalPdfPages <= 1);
+		let t = e.querySelector("#renamerPdfPageBadge"), n = e.querySelector("#renamerPdfPageBadgeText") || t, r = e.querySelector("#btnPdfPrevPage"), i = e.querySelector("#btnPdfNextPage"), a = e.querySelector("#pdfPulseDot"), o = this.state.totalPdfPages > 1;
+		n && (n.textContent = o ? `Page ${this.state.currentPdfPage} of ${this.state.totalPdfPages}` : "Page 1 of 1"), t && (t.style.cursor = o ? "pointer" : "default", t.title = o ? "Click to jump to any page" : "Single page document"), a && (a.style.display = o ? "inline-block" : "none"), r && (r.disabled = this.state.currentPdfPage <= 1), i && (i.disabled = this.state.currentPdfPage >= this.state.totalPdfPages || !o);
 	}
 	_loadPdfJs(e) {
 		if (window.pdfjsLib) {

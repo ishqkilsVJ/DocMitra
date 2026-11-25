@@ -814,6 +814,55 @@ export class RenamerUIManager {
         this.handleSaveBatch();
         return;
       }
+
+      // Preview: PageUp / PageDown for multi-page PDF navigation
+      if (e.key === 'PageDown' || e.key === 'PageUp') {
+        if (this.state.totalPdfPages > 1) {
+          const isTextInput = (e.target && e.target.tagName === 'INPUT' && e.target.id !== 'inputRenameTarget');
+          if (!isTextInput) {
+            e.preventDefault();
+            if (e.key === 'PageDown' && this.state.currentPdfPage < this.state.totalPdfPages) {
+              this._renderPdfPage(this.state.currentPdfPage + 1);
+            } else if (e.key === 'PageUp' && this.state.currentPdfPage > 1) {
+              this._renderPdfPage(this.state.currentPdfPage - 1);
+            }
+            return;
+          }
+        }
+      }
+
+      // Preview: Ctrl + / Ctrl - / Ctrl 0 Zoom controls
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === '+' || e.key === '=') {
+          e.preventDefault();
+          this.state.zoom = Math.min(300, this.state.zoom + 20);
+          this._applyPreviewTransform();
+          return;
+        } else if (e.key === '-' || e.key === '_') {
+          e.preventDefault();
+          this.state.zoom = Math.max(40, this.state.zoom - 20);
+          this._applyPreviewTransform();
+          return;
+        } else if (e.key === '0') {
+          e.preventDefault();
+          this.state.zoom = 100;
+          this._applyPreviewTransform();
+          return;
+        }
+      }
+
+      // Preview: 'R' key for quick 90° Clockwise Rotation (when not typing in an input)
+      if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) {
+          return;
+        }
+        const btnCW = document.getElementById('btnRotateCW');
+        if (btnCW) {
+          e.preventDefault();
+          btnCW.click();
+          return;
+        }
+      }
     });
   }
 
@@ -823,6 +872,7 @@ export class RenamerUIManager {
 
     const btnZoomIn = colPreview.querySelector('button[title*="Zoom In"]');
     const btnZoomOut = colPreview.querySelector('button[title*="Zoom Out"]');
+    const btnFit = colPreview.querySelector('button[title*="Fit to Page"]') || colPreview.querySelector('button[title*="Fit to A4 Width"]');
     const btnReset = colPreview.querySelector('button[title*="Reset Zoom"]');
     const btnRotateCCW = colPreview.querySelector('#btnRotateCCW');
     const btnRotateCW = colPreview.querySelector('#btnRotateCW') || colPreview.querySelector('#btnRenamerRotatePreview');
@@ -845,6 +895,14 @@ export class RenamerUIManager {
       btnZoomOut.addEventListener('click', () => {
         this.state.zoom = Math.max(40, this.state.zoom - 20);
         if (zoomSlider) zoomSlider.value = this.state.zoom;
+        this._applyPreviewTransform();
+      });
+    }
+
+    if (btnFit) {
+      btnFit.addEventListener('click', () => {
+        this.state.zoom = 100;
+        if (zoomSlider) zoomSlider.value = 100;
         this._applyPreviewTransform();
       });
     }
@@ -965,10 +1023,11 @@ export class RenamerUIManager {
       });
     }
 
-    // Attach dragging & Ctrl+Wheel zoom to preview stage wrapper
+    // Attach dragging & mouse wheel (Ctrl+Wheel Zoom, Normal Wheel Page navigation)
     const stageWrapper = colPreview.querySelector('.overflow-auto');
     if (stageWrapper) {
-      // Ctrl + Wheel zooming for smooth magnification (Feature 3)
+      let wheelThrottle = false;
+      // Mouse wheel: Ctrl + Wheel for zoom, Normal Wheel for multi-page PDF navigation
       stageWrapper.addEventListener('wheel', (e) => {
         if (e.ctrlKey) {
           e.preventDefault();
@@ -976,6 +1035,24 @@ export class RenamerUIManager {
           this.state.zoom = Math.max(40, Math.min(300, this.state.zoom + delta));
           if (zoomSlider) zoomSlider.value = this.state.zoom;
           this._applyPreviewTransform();
+        } else if (this.state.totalPdfPages > 1) {
+          // Normal mouse scroll wheel turns PDF pages
+          if (wheelThrottle) return;
+          if (e.deltaY > 18) {
+            if (this.state.currentPdfPage < this.state.totalPdfPages) {
+              e.preventDefault();
+              wheelThrottle = true;
+              this._renderPdfPage(this.state.currentPdfPage + 1);
+              setTimeout(() => { wheelThrottle = false; }, 260);
+            }
+          } else if (e.deltaY < -18) {
+            if (this.state.currentPdfPage > 1) {
+              e.preventDefault();
+              wheelThrottle = true;
+              this._renderPdfPage(this.state.currentPdfPage - 1);
+              setTimeout(() => { wheelThrottle = false; }, 260);
+            }
+          }
         }
       }, { passive: false });
 
@@ -1080,9 +1157,9 @@ export class RenamerUIManager {
 
     const colPreview = document.getElementById('col-preview');
     if (colPreview) {
-      const zoomLabel = colPreview.querySelector('.font-mono-code.text-label-sm');
+      const zoomLabel = colPreview.querySelector('#renamerZoomReadout') || colPreview.querySelector('.font-mono-code.text-label-sm');
       if (zoomLabel) {
-        zoomLabel.textContent = this.state.zoom === 100 ? 'Fit to Page' : `${this.state.zoom}%`;
+        zoomLabel.textContent = this.state.zoom === 100 ? 'Fit' : `${this.state.zoom}%`;
       }
     }
   }
@@ -6586,27 +6663,14 @@ export class RenamerUIManager {
       textGroup.appendChild(p);
       emptyStage.appendChild(textGroup);
 
-      // Status telemetry strip (Minimalist blueprint status — NO duplicate buttons)
+      // Status telemetry strip (Minimalist blueprint status — NO DPI/Buffer clutter)
       const statusStrip = document.createElement('div');
       statusStrip.className = 'flex items-center gap-2 font-mono-code text-[11px] text-secondary opacity-60 mt-1 select-none';
-      statusStrip.innerHTML = '<span>DPI: Standby</span><span>•</span><span>Buffer: Empty</span><span>•</span><span>Zero Zoom</span>';
+      statusStrip.innerHTML = '<span>Standby • Ready for Intake</span>';
       emptyStage.appendChild(statusStrip);
 
       previewStageWrapper.appendChild(emptyStage);
       return;
-    }
-
-    // Update target buffer telemetry
-    const bufferEl = previewCol.querySelector('strong.text-tertiary, strong.text-error');
-    if (bufferEl) {
-      const sizeKb = (currentFile.size / 1024).toFixed(0);
-      if (currentFile.size <= 256 * 1024) {
-        bufferEl.className = 'text-tertiary font-bold';
-        bufferEl.textContent = `${sizeKb} KB / 256 KB Safe`;
-      } else {
-        bufferEl.className = 'text-error font-bold';
-        bufferEl.textContent = `${sizeKb} KB (>256 KB Safe Buffer)`;
-      }
     }
 
     const isCurrentPdf = /\.pdf$/i.test(currentFile.name);
@@ -6805,20 +6869,33 @@ export class RenamerUIManager {
     const canvas = canvasEl || document.getElementById('previewPdfCanvas');
     if (!canvas) return;
 
+    if (this._pdfPageRenderTask) {
+      try {
+        this._pdfPageRenderTask.cancel();
+      } catch (_) { }
+      this._pdfPageRenderTask = null;
+    }
+
     try {
       const page = await this.state.activePdfDoc.getPage(pageNumber);
       const viewport = page.getViewport({ scale: 2.0 });
       canvas.height = viewport.height;
       canvas.width = viewport.width;
       const ctx = canvas.getContext('2d');
-      await page.render({
+      const renderTask = page.render({
         canvasContext: ctx,
         viewport: viewport
-      }).promise;
+      });
+      this._pdfPageRenderTask = renderTask;
+      await renderTask.promise;
+      this._pdfPageRenderTask = null;
 
       this.state.currentPdfPage = pageNumber;
       this._updatePdfPageIndicator();
     } catch (err) {
+      if (err && err.name === 'RenderingCancelledException') {
+        return;
+      }
       console.warn(`Error rendering PDF page ${pageNumber}:`, err);
     }
   }
@@ -6827,21 +6904,29 @@ export class RenamerUIManager {
     const colPreview = document.getElementById('col-preview');
     if (!colPreview) return;
     const badge = colPreview.querySelector('#renamerPdfPageBadge');
+    const badgeText = colPreview.querySelector('#renamerPdfPageBadgeText') || badge;
     const btnPrev = colPreview.querySelector('#btnPdfPrevPage');
     const btnNext = colPreview.querySelector('#btnPdfNextPage');
+    const pulseDot = colPreview.querySelector('#pdfPulseDot');
 
-    if (badge) {
-      badge.textContent = this.state.totalPdfPages > 1
+    const isMultiPage = (this.state.totalPdfPages > 1);
+    if (badgeText) {
+      badgeText.textContent = isMultiPage
         ? `Page ${this.state.currentPdfPage} of ${this.state.totalPdfPages}`
         : 'Page 1 of 1';
-      badge.style.cursor = this.state.totalPdfPages > 1 ? 'pointer' : 'default';
-      badge.title = this.state.totalPdfPages > 1 ? 'Click to jump to page' : 'Single page document';
+    }
+    if (badge) {
+      badge.style.cursor = isMultiPage ? 'pointer' : 'default';
+      badge.title = isMultiPage ? 'Click to jump to any page' : 'Single page document';
+    }
+    if (pulseDot) {
+      pulseDot.style.display = isMultiPage ? 'inline-block' : 'none';
     }
     if (btnPrev) {
       btnPrev.disabled = (this.state.currentPdfPage <= 1);
     }
     if (btnNext) {
-      btnNext.disabled = (this.state.currentPdfPage >= this.state.totalPdfPages || this.state.totalPdfPages <= 1);
+      btnNext.disabled = (this.state.currentPdfPage >= this.state.totalPdfPages || !isMultiPage);
     }
   }
 

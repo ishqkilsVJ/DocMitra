@@ -350,83 +350,72 @@
               <section class="w-full xl:flex-1 min-w-0 flex flex-col h-full overflow-hidden" id="col-preview">
                 <div
                   class="bg-surface-container-lowest rounded-xl shadow-sm flex flex-col h-full flex-1 min-h-0 overflow-hidden border border-outline-variant/30">
+                  <!-- Bento Slate Bar (Design 2: Zero DPI, Zero Buffer Clutter, High-Visibility Pagination & Rotation) -->
                   <div
-                    class="p-space-xs bg-surface-container-low flex flex-wrap items-center justify-between gap-1 shadow-sm shrink-0">
-                    <div class="flex items-center gap-0.5">
+                    class="px-3 py-1.5 bg-slate-900 border-b border-slate-700/80 flex flex-wrap items-center justify-between gap-2 shadow-sm shrink-0 z-10 text-slate-100">
+                    <!-- Left: Bento Zoom Group -->
+                    <div class="flex items-center gap-1 bg-slate-800/90 rounded-lg p-0.5 border border-slate-700/90 shadow-2xs">
                       <button
-                        class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
+                        class="w-7 h-7 rounded hover:bg-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition-colors cursor-pointer"
                         title="Zoom Out (Ctrl -)" type="button"><span
                           class="material-symbols-outlined text-[16px]">zoom_out</span></button>
-                      <span
-                        class="font-mono-code text-label-sm font-bold px-1.5 py-0.5 bg-surface-container-lowest rounded text-on-surface">Fit
-                        to Page</span>
+                      <span id="renamerZoomReadout"
+                        class="font-mono-code text-[11px] font-bold px-2 py-0.5 bg-slate-950 rounded text-sky-400 min-w-[50px] text-center shadow-inner select-none">Fit</span>
                       <button
-                        class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
+                        class="w-7 h-7 rounded hover:bg-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition-colors cursor-pointer"
                         title="Zoom In (Ctrl +)" type="button"><span
                           class="material-symbols-outlined text-[16px]">zoom_in</span></button>
-                      <input class="w-24 h-1.5 accent-primary cursor-pointer hidden sm:inline-block ml-1" max="350"
-                        min="50" type="range" value="160">
                       <button
-                        class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
+                        class="px-2 h-7 rounded hover:bg-slate-700 flex items-center gap-1 text-[11px] font-semibold text-slate-300 hover:text-white transition-colors cursor-pointer"
+                        title="Fit to Page (Ctrl 0)" type="button"><span
+                          class="material-symbols-outlined text-[15px]">fit_screen</span><span>Fit</span></button>
+                      <button
+                        class="w-7 h-7 rounded hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer"
                         title="Reset Zoom" type="button"><span
-                          class="material-symbols-outlined text-[16px]">restart_alt</span></button>
+                          class="material-symbols-outlined text-[15px]">restart_alt</span></button>
                     </div>
-                    <div class="flex items-center gap-1 font-mono-code text-[11px] text-secondary">
-                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block"></span>
-                      <span id="renamerPdfPageContainer" class="flex items-center gap-1">
-                        <button id="btnPdfPrevPage" type="button"
-                          class="w-4 h-4 rounded hover:bg-surface-container flex items-center justify-center text-secondary hover:text-primary transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-                          title="Previous Page (▲)"><span
-                            class="material-symbols-outlined text-[13px]">arrow_drop_up</span></button>
-                        <span id="renamerPdfPageBadge"
-                          class="cursor-pointer hover:underline hover:text-primary font-bold transition-colors select-none"
-                          title="Click to jump to page">Page 1 of 1</span>
-                        <button id="btnPdfNextPage" type="button"
-                          class="w-4 h-4 rounded hover:bg-surface-container flex items-center justify-center text-secondary hover:text-primary transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-                          title="Next Page (▼)"><span
-                            class="material-symbols-outlined text-[13px]">arrow_drop_down</span></button>
-                      </span>
-                      <span class="text-outline-variant">• 300 DPI</span>
-                      <span class="text-outline-variant">|</span>
-                      <span>Target Buffer: <strong class="text-tertiary">214 KB / 256 KB Safe</strong></span>
-                    </div>
-                    <div class="flex items-center gap-0.5">
-                      <button
-                        class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
-                        title="Pan Hand" type="button"><span
-                          class="material-symbols-outlined text-[15px]">pan_tool</span></button>
-                      <button
-                        class="w-7 h-7 rounded bg-surface-container text-primary flex items-center justify-center shadow-xs"
-                        title="Fit to A4 Width" type="button"><span
-                          class="material-symbols-outlined text-[16px]">fit_screen</span></button>
-                      <!-- 3-Way Unlimited Rotation Toolkit -->
-                      <div class="flex items-center gap-1">
-                        <button
-                          id="btnRotateCCW"
-                          class="h-7 px-2 rounded-lg bg-surface-container hover:bg-primary hover:text-white text-on-surface flex items-center gap-0.5 font-mono-code text-[11px] font-bold border border-outline-variant/40 shadow-2xs hover:shadow-primary/20 transition-all cursor-pointer select-none"
-                          title="Rotate Counter-Clockwise (-90°)" type="button">
-                          <span class="material-symbols-outlined text-[15px]">rotate_left</span>
-                          <span>-90°</span>
-                        </button>
-                        <button
-                          id="btnRotateCW"
-                          class="h-7 px-2 rounded-lg bg-surface-container hover:bg-primary hover:text-white text-on-surface flex items-center gap-0.5 font-mono-code text-[11px] font-bold border border-outline-variant/40 shadow-2xs hover:shadow-primary/20 transition-all cursor-pointer select-none"
-                          title="Rotate Clockwise (+90°)" type="button">
-                          <span class="material-symbols-outlined text-[15px]">rotate_right</span>
-                          <span>+90°</span>
-                        </button>
-                        <button
-                          id="btnRotateFlip"
-                          class="h-7 px-2 rounded-lg bg-surface-container hover:bg-primary hover:text-white text-on-surface flex items-center gap-0.5 font-mono-code text-[11px] font-bold border border-outline-variant/40 shadow-2xs hover:shadow-primary/20 transition-all cursor-pointer select-none"
-                          title="Flip Upside-Down (180° Flip)" type="button">
-                          <span class="material-symbols-outlined text-[15px]">flip</span>
-                          <span>180° Flip</span>
-                        </button>
+
+                    <!-- Center: High-Contrast 4-Page PDF Navigator (Clean, 0 DPI / 0 Buffer Clutter) -->
+                    <div id="renamerPdfPageContainer" class="flex items-center gap-2 bg-slate-800/90 border border-blue-500/40 rounded-lg px-2.5 py-1 shadow-inner">
+                      <button id="btnPdfPrevPage" type="button"
+                        class="w-6 h-6 rounded bg-slate-700 hover:bg-blue-600 text-white flex items-center justify-center transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-slate-700"
+                        title="Previous Page (▲ / PgUp)"><span
+                          class="material-symbols-outlined text-[16px]">chevron_left</span></button>
+                      <div id="renamerPdfPageBadge"
+                        class="flex items-center gap-1.5 cursor-pointer select-none"
+                        title="Click to jump to any page">
+                        <span id="pdfPulseDot" class="w-2 h-2 rounded-full bg-blue-500 animate-pulse inline-block"></span>
+                        <span id="renamerPdfPageBadgeText" class="font-mono-code text-xs font-bold text-white tracking-wide hover:underline hover:text-sky-300 transition-colors">Page 1 of 1</span>
                       </div>
+                      <button id="btnPdfNextPage" type="button"
+                        class="w-6 h-6 rounded bg-slate-700 hover:bg-blue-600 text-white flex items-center justify-center transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-slate-700"
+                        title="Next Page (▼ / PgDn)"><span
+                          class="material-symbols-outlined text-[16px]">chevron_right</span></button>
+                    </div>
+
+                    <!-- Right: High-Visibility 3-Way Rotation Group -->
+                    <div class="flex items-center gap-1">
                       <button
-                        class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
-                        title="Split Compare" type="button"><span
-                          class="material-symbols-outlined text-[16px]">vertical_split</span></button>
+                        id="btnRotateCCW"
+                        class="h-7 px-2.5 rounded-lg bg-slate-800 hover:bg-blue-600 text-slate-200 hover:text-white flex items-center gap-1 font-mono-code text-[11px] font-bold border border-slate-700 shadow-2xs transition-all cursor-pointer select-none"
+                        title="Rotate Counter-Clockwise (-90°)" type="button">
+                        <span class="material-symbols-outlined text-[15px]">rotate_left</span>
+                        <span>-90°</span>
+                      </button>
+                      <button
+                        id="btnRotateCW"
+                        class="h-7 px-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-1 font-mono-code text-[11px] font-bold shadow-md shadow-blue-900/40 transition-all cursor-pointer select-none"
+                        title="Rotate Clockwise (+90°)" type="button">
+                        <span class="material-symbols-outlined text-[15px]">rotate_right</span>
+                        <span>+90°</span>
+                      </button>
+                      <button
+                        id="btnRotateFlip"
+                        class="h-7 px-2.5 rounded-lg bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white flex items-center gap-1 font-mono-code text-[11px] font-bold border border-slate-700 shadow-2xs transition-all cursor-pointer select-none"
+                        title="Flip Upside-Down (180° Flip)" type="button">
+                        <span class="material-symbols-outlined text-[15px]">flip</span>
+                        <span>180° Flip</span>
+                      </button>
                     </div>
                   </div>
                   <div
@@ -435,14 +424,6 @@
                       <span class="material-symbols-outlined text-[64px]">visibility</span>
                       <span class="font-mono-code text-[13px]">No Document Loaded for Preview</span>
                     </div>
-                  </div>
-                  <div
-                    class="p-space-xs bg-surface-container-low flex items-center justify-between text-secondary font-label-sm border-t border-surface-container shrink-0">
-                    <span class="text-on-surface font-semibold text-[11px] flex items-center gap-1"><span
-                        class="material-symbols-outlined text-[14px] text-tertiary">tune</span>Auto Contrast
-                      Active</span>
-                    <button class="text-primary hover:underline text-[11px] font-medium" type="button">Reset
-                      Filters</button>
                   </div>
                 </div>
               </section>

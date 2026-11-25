@@ -1,15 +1,24 @@
 # 🔒 LOCKED TOOL: Bulk Document Renamer (`tools/rename_tool/`)
 
 > [!IMPORTANT]
-> **FROZEN & FULLY VERIFIED UNDER CHECKPOINT `CP-036`**  
+> **FROZEN & FULLY VERIFIED UNDER CHECKPOINT `CP-037`**  
 > **Status:** `LOCKED & PRODUCTION SEALED`  
 > **Module Integrity:** 100% Passing Unit & Dual-MCP Automated QA Tests  
 > **Verification Date:** 2026-11-26  
-> **Core Architecture:** Linked Documents Manager (Tab 3 in Settings), Strict Dropdown-Only Rule Builder, Bi-Directional Satisfaction Engine.
+> **Core Architecture:** Preview Section Redesign - Design 2 Bento Slate Bar, Full DPI & Target Buffer Eradication, High-Visibility Multi-Page PDF Pagination (Page 1 of 4 with pulse indicator), Mouse Scroll Wheel Paging & Ctrl+Wheel Zoom, Keyboard Shortcuts (PageUp/PageDown, Ctrl +/-/0, R key 90° Rotate), Concurrency Cancellation Protection.
 >
 > **LOCKED BY POLICY (`AGENTS.md` Rule 3):**  
 > Zero direct file modifications permitted inside `tools/rename_tool/` without explicit user unlock command:  
 > `UNLOCK RENAME_TOOL`
+
+> **Last QA Stabilization & Verification:** 2026-11-26 (Preview Section Redesign & Multi-Page Navigation [CP-037] Verified 100%:
+> 1. Design 2 Bento Slate Bar: Implemented high-contrast dark slate toolbar matching DocMitra theme with Left Bento Zoom card, Center Multi-Page PDF Navigator, and Right 3-Way Rotation Group (-90°, +90°, 180° Flip). Full parity in rename_tool.html and app/index.html.
+> 2. Zero DPI & Target Buffer Clutter: Completely removed "• 300 DPI" and "Target Buffer: 214 KB / 256 KB Safe" from DOM and UI manager empty/active telemetry.
+> 3. High-Visibility Multi-Page PDF Pagination: Renders "Page X of Y" (e.g. Page 1 of 4) with pulsing royal blue indicator dot when multi-page, interactive jump-to-page click prompt, and reactive prev/next disabled button states.
+> 4. Concurrency Guard on PDF Page Render: Added `_pdfPageRenderTask.cancel()` to gracefully supersede pending renders during rapid page flips.
+> 5. Mouse Scroll Wheel Navigation: Wheel scrolling on preview stage advances PDF pages forward/backward with 260ms throttle, while Ctrl+Wheel smoothly zooms.
+> 6. Keyboard Shortcuts: PageUp / PageDown for PDF pagination, Ctrl +/-/0 for zoom in/out/fit, and R key for instant 90° clockwise physical rotation.
+> Dual-MCP automated QA passed 100% [Playwright MCP E2E + Chrome DevTools 0 console errors]; compiled UI with node build-ui.js and release binary via cargo tauri build [10.07 MB]; deployed directly to C:\Users\USER\AppData\Local\DocMitra\app.exe).
 
 > **Last QA Stabilization & Verification:** 2026-11-26 (Linked Documents Manager & Bi-Directional Satisfaction Engine [CP-036] Verified 100%:
 > 1. Tab 3 Linked Documents in Settings: Added 3rd tab with live count badge (#linkedRulesCountBadge), persisted in localStorage (docmitra_rename_linked_rules), seeded with Indian admission default pairs (10th Marksheet + 10th Passing ↔ 10th Marksheet and Passing Certificate, 12th Marksheet + 12th Passing ↔ 12th Marksheet and Passing Certificate, Domicile + Nationality ↔ Domicile and Nationality Certificate).
