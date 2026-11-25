@@ -22,7 +22,7 @@ describe('DocMitra Rename Tool — Phase 5: Missing Documents & Follow-up Desk T
     // 1. Verify trigger button is visible under Missing Documents section
     cy.get('#btnOpenMissingDeskModal', { timeout: 8000 })
       .should('be.visible')
-      .and('contain.text', 'Open Missing & Follow-up Desk');
+      .and('contain.text', 'Document Desk');
 
     // 2. Click trigger button
     cy.get('#btnOpenMissingDeskModal').click();

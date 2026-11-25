@@ -2198,7 +2198,7 @@ export class RenamerUIManager {
   }
 
   /**
-   * Column 3 (Right Utility Panel): Missing Documents List + Top 5 Core Shortcuts Card
+   * Column 3 (Right Utility Panel): Scheme Preset Selector + 2 Summary Cards (Completed & Missing) + ↗ Document Desk Button + Top Core Shortcuts Card (Sample 1 Bento Master)
    */
   renderUtilityPanel(container) {
     while (container.firstChild) {
@@ -2206,55 +2206,76 @@ export class RenamerUIManager {
     }
 
     if (this.state.files.length === 0) {
-      // 1. Missing Documents Checklist Frame (Blurred / Skeleton Empty State — 0 Dummy Documents)
-      const missingSection = document.createElement('div');
-      missingSection.className = 'flex flex-col gap-1.5 shrink-0 select-none';
+      // Standby / Empty State when no folder loaded
+      const emptyTopCard = document.createElement('div');
+      emptyTopCard.className = 'flex flex-col gap-2 shrink-0 select-none';
 
-      const missingHeader = document.createElement('div');
-      missingHeader.className = 'flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-surface-container border border-outline-variant/30 text-[11px] font-mono-code text-secondary shrink-0';
-      const mLeft = document.createElement('div');
-      mLeft.className = 'flex items-center gap-1.5 font-bold';
-      const mIcon = document.createElement('span');
-      mIcon.className = 'material-symbols-outlined text-[15px] text-secondary';
-      mIcon.textContent = 'checklist';
-      mLeft.appendChild(mIcon);
-      const mTitle = document.createElement('span');
-      mTitle.textContent = 'MISSING DOCUMENTS (Checklist)';
-      mLeft.appendChild(mTitle);
-      missingHeader.appendChild(mLeft);
+      // Scheme Selector (Standby)
+      const schemeBox = document.createElement('div');
+      schemeBox.className = 'flex items-center justify-between bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 shadow-sm';
+      schemeBox.innerHTML = `
+        <span class="font-mono-code text-[10px] text-slate-400 uppercase font-bold tracking-wider shrink-0">SCHEME:</span>
+        <span class="font-mono-code text-[12px] font-bold text-white flex items-center gap-1">
+          ${escapeHtml(this.state.activePreset || 'MAHA DBT')}
+          <span class="material-symbols-outlined text-[14px] text-blue-400">expand_more</span>
+        </span>
+      `;
+      emptyTopCard.appendChild(schemeBox);
 
-      const mStatus = document.createElement('span');
-      mStatus.className = 'text-[10px] text-secondary/70';
-      mStatus.textContent = 'Standby';
-      missingHeader.appendChild(mStatus);
-      missingSection.appendChild(missingHeader);
+      // 2 Cards (Standby)
+      const cardsGrid = document.createElement('div');
+      cardsGrid.className = 'grid grid-cols-2 gap-2';
+      cardsGrid.innerHTML = `
+        <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-2.5 shadow-2xs flex items-center gap-2 opacity-60">
+          <div class="w-7 h-7 rounded-lg bg-surface-container text-secondary flex items-center justify-center font-bold shrink-0">
+            <span class="material-symbols-outlined text-[18px]">verified</span>
+          </div>
+          <div class="min-w-0">
+            <span class="text-[9px] text-secondary uppercase font-semibold block leading-tight truncate">Completed</span>
+            <span class="font-mono-code text-[12px] font-bold text-secondary block leading-tight truncate">0 Docs</span>
+          </div>
+        </div>
+        <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-2.5 shadow-2xs flex items-center gap-2 opacity-60">
+          <div class="w-7 h-7 rounded-lg bg-surface-container text-secondary flex items-center justify-center font-bold shrink-0">
+            <span class="material-symbols-outlined text-[18px]">pending_actions</span>
+          </div>
+          <div class="min-w-0">
+            <span class="text-[9px] text-secondary uppercase font-semibold block leading-tight truncate">Missing</span>
+            <span class="font-mono-code text-[12px] font-bold text-secondary block leading-tight truncate">-- Docs</span>
+          </div>
+        </div>
+      `;
+      emptyTopCard.appendChild(cardsGrid);
 
-      const missingSkeletonBox = document.createElement('div');
-      missingSkeletonBox.className = 'p-3 rounded-xl border border-dashed border-outline-variant/40 bg-surface-container-lowest/60 flex flex-col gap-2 select-none';
-      const sBar1 = document.createElement('div');
-      sBar1.className = 'h-3 w-3/4 bg-slate-300 dark:bg-slate-700/50 rounded skeleton-bar';
-      missingSkeletonBox.appendChild(sBar1);
-      const sBar2 = document.createElement('div');
-      sBar2.className = 'h-3 w-1/2 bg-slate-300 dark:bg-slate-700/50 rounded skeleton-bar';
-      missingSkeletonBox.appendChild(sBar2);
-      const sNote = document.createElement('span');
-      sNote.className = 'text-[11px] text-secondary/60 italic pt-1';
-      sNote.textContent = 'Checklist audit will verify missing records upon folder load.';
-      missingSkeletonBox.appendChild(sNote);
-      missingSection.appendChild(missingSkeletonBox);
-      container.appendChild(missingSection);
+      // Button: Document Desk (Standby)
+      const btnStandbyDesk = document.createElement('button');
+      btnStandbyDesk.type = 'button';
+      btnStandbyDesk.id = 'btnOpenMissingDeskModal';
+      btnStandbyDesk.className = 'w-full py-2 px-3 rounded-lg bg-slate-900 text-slate-400 font-mono-code text-[11px] font-bold border border-slate-700 shadow-sm flex items-center justify-center gap-1.5 cursor-not-allowed opacity-50 shrink-0';
+      btnStandbyDesk.disabled = true;
+      btnStandbyDesk.innerHTML = `
+        <span class="material-symbols-outlined text-[15px]">open_in_new</span>
+        <span>↗ Document Desk</span>
+      `;
+      emptyTopCard.appendChild(btnStandbyDesk);
+      container.appendChild(emptyTopCard);
+
+      // Skeleton note
+      const standbyNote = document.createElement('div');
+      standbyNote.className = 'p-2.5 rounded-xl border border-dashed border-outline-variant/40 bg-surface-container-lowest/60 text-[11px] text-secondary/70 italic text-center select-none';
+      standbyNote.textContent = 'Select an intake folder (F2) to verify missing documents.';
+      container.appendChild(standbyNote);
       return;
     }
 
-    // 1. MISSING DOCUMENTS / CHECKLIST AUDIT (Dynamic per Active Preset)
+    // 1. DYNAMIC PRESET AUDIT (ACTIVE FOLDER LOADED)
     const activeRules = this.getActivePresetDocuments();
-
     const presentDocs = new Set(
       this.state.files.map(f => (f.docType || '').toUpperCase()).filter(Boolean)
     );
 
     const missingRules = activeRules.filter((rule) => {
-      const cleanRule = rule.name.toUpperCase();
+      const cleanRule = (rule.name || rule).toUpperCase();
       if (presentDocs.has(cleanRule)) return false;
       for (const link of DEFAULT_LINKED_RULES) {
         if (link.combined && presentDocs.has(link.combined.toUpperCase())) {
@@ -2266,299 +2287,109 @@ export class RenamerUIManager {
       return true;
     });
 
-    if (missingRules.length > 0) {
-      const missingSection = document.createElement('div');
-      missingSection.className = 'flex flex-col gap-1.5 shrink-0';
+    const presentCount = this.state.files.length;
+    const missingCount = missingRules.length;
 
-      const missingHeader = document.createElement('div');
-      missingHeader.className = 'flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-[11px] font-mono-code text-amber-900 dark:text-amber-300 shrink-0 cursor-pointer select-none hover:bg-amber-500/20 transition-colors' + (this.state.isMissingDocsCollapsed ? ' animate-pulse' : '');
-      missingHeader.onclick = () => {
-        this.state.isMissingDocsCollapsed = !this.state.isMissingDocsCollapsed;
-        this.renderQueue();
-      };
+    // TOP STATUS CONTAINER (Sample 1: Bento Master)
+    const topStatusSection = document.createElement('div');
+    topStatusSection.className = 'flex flex-col gap-2 shrink-0 select-none';
 
-      const leftMissing = document.createElement('div');
-      leftMissing.className = 'flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-400 text-[11px] font-mono-code';
-      const warnIcon = document.createElement('span');
-      warnIcon.className = 'material-symbols-outlined text-[15px]';
-      warnIcon.textContent = 'warning';
-      leftMissing.appendChild(warnIcon);
-      leftMissing.appendChild(document.createTextNode(`${missingRules.length} Missing Documents Found`));
+    // 1.1 Scheme / Preset Selector in Dark Slate Bento Style
+    const schemeBox = document.createElement('div');
+    schemeBox.className = 'flex items-center justify-between bg-slate-900 border border-slate-700 hover:border-primary/60 rounded-lg px-3 py-1.5 shadow-sm transition-all';
 
-      const presetSelect = document.createElement('select');
-      presetSelect.id = 'selectQuickPreset';
-      presetSelect.className = 'px-1.5 py-0.5 rounded bg-amber-600/20 hover:bg-amber-600/30 text-amber-900 dark:text-amber-200 text-[10px] font-mono-code uppercase font-bold ml-1 border-none outline-none cursor-pointer';
-      presetSelect.title = 'Switch active document preset';
-      const availablePresets = this.state.documentPresets ? Object.keys(this.state.documentPresets) : ['MAHA DBT', 'SWAYAM'];
-      availablePresets.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p;
-        opt.textContent = p;
-        if (p === this.state.activePreset) opt.selected = true;
-        presetSelect.appendChild(opt);
-      });
-      presetSelect.addEventListener('click', (e) => e.stopPropagation());
-      presetSelect.addEventListener('change', (e) => {
-        e.stopPropagation();
-        this.handleSwitchActivePreset(e.target.value);
-      });
-      leftMissing.appendChild(presetSelect);
+    const schemeLabel = document.createElement('span');
+    schemeLabel.className = 'font-mono-code text-[10px] text-slate-400 uppercase font-bold tracking-wider shrink-0';
+    schemeLabel.textContent = 'SCHEME:';
+    schemeBox.appendChild(schemeLabel);
 
-      missingHeader.appendChild(leftMissing);
+    const presetSelect = document.createElement('select');
+    presetSelect.id = 'selectQuickPreset';
+    presetSelect.className = 'bg-transparent font-mono-code text-[12px] font-bold text-white focus:outline-none cursor-pointer pr-1 text-right flex-1 ml-2';
+    presetSelect.title = 'Switch active document preset';
 
-      const rightMissing = document.createElement('div');
-      rightMissing.className = 'flex items-center gap-1.5';
+    const availablePresets = this.state.documentPresets ? Object.keys(this.state.documentPresets) : ['MAHA DBT', 'SWAYAM DEENDAYAL YOJANA', 'CET CELL', 'EDUCATIONAL DOCUMENTS'];
+    availablePresets.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p;
+      opt.textContent = p;
+      opt.className = 'bg-slate-900 text-white';
+      if (p === (this.state.activePreset || 'MAHA DBT')) opt.selected = true;
+      presetSelect.appendChild(opt);
+    });
 
-      const chevron = document.createElement('span');
-      chevron.className = 'material-symbols-outlined text-[16px] text-amber-800 transition-transform';
-      chevron.textContent = this.state.isMissingDocsCollapsed ? 'expand_more' : 'expand_less';
-      rightMissing.appendChild(chevron);
-
-      missingHeader.appendChild(rightMissing);
-      missingSection.appendChild(missingHeader);
-
-      // Trigger button per Option 1-A (under missingHeader):
-      const btnOpenDesk = document.createElement('button');
-      btnOpenDesk.type = 'button';
-      btnOpenDesk.id = 'btnOpenMissingDeskModal';
-      btnOpenDesk.className = 'w-full py-1.5 px-3 rounded-lg bg-primary hover:bg-primary/90 text-white font-mono-code text-[11px] font-bold shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-98 shrink-0';
-      btnOpenDesk.title = 'Open Dedicated Missing Documents & Follow-up Desk Modal';
-      btnOpenDesk.innerHTML = `
-        <span class="material-symbols-outlined text-[15px]">open_in_new</span>
-        <span>↗ Open Missing &amp; Follow-up Desk</span>
-      `;
-      btnOpenDesk.onclick = (e) => {
-        e.stopPropagation();
-        this.openMissingDocumentsModal();
-      };
-      missingSection.appendChild(btnOpenDesk);
-
-      if (!this.state.isMissingDocsCollapsed) {
-        const missingList = document.createElement('div');
-        missingList.className = 'flex flex-col gap-1 shrink-0';
-
-        missingRules.forEach((ruleObj) => {
-          const ruleName = ruleObj.name;
-          const ruleCode = ruleObj.code;
-          const mItem = document.createElement('article');
-          mItem.className = 'h-8 px-2 py-1 rounded-lg bg-surface-container-lowest shadow-xs flex items-center justify-between gap-1.5 border border-amber-500/30 hover:border-amber-500/50 transition-colors shrink-0';
-
-          const leftCol = document.createElement('div');
-          leftCol.className = 'flex items-center gap-1.5 min-w-0 flex-1';
-
-          const redDot = document.createElement('span');
-          redDot.className = 'w-1.5 h-1.5 rounded-full bg-error shrink-0';
-          leftCol.appendChild(redDot);
-
-          const style = this.state.style || 'upper';
-          const displayRuleCode = style === 'lower'
-            ? (ruleCode || '').toLowerCase()
-            : (style === 'title'
-              ? (ruleCode && ruleCode.length <= 4 && /\d/.test(ruleCode) ? ruleCode.toUpperCase() : applyCase(ruleCode || '', 'title'))
-              : (ruleCode || '').toUpperCase());
-          const displayRuleName = applyCase(ruleName, style);
-
-          const titleSpan = document.createElement('span');
-          titleSpan.className = 'font-mono-code text-[11px] font-bold text-on-surface truncate';
-          titleSpan.textContent = displayRuleName;
-          leftCol.appendChild(titleSpan);
-
-          const studentName = this.state.studentName || this.state.folder?.name || 'Student';
-          const pendingFollowup = getPendingFollowUp(studentName, ruleName);
-
-          if (pendingFollowup) {
-            const statusBadge = document.createElement('span');
-            statusBadge.className = 'px-1.5 py-0.2 rounded font-mono-code text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold shrink-0 flex items-center gap-0.5';
-            statusBadge.textContent = `📅 ${formatFriendlyDate(pendingFollowup.promisedDate)}`;
-            leftCol.appendChild(statusBadge);
-          }
-
-          mItem.appendChild(leftCol);
-
-          // Inline Action Buttons (Follow-up + Import)
-          const actionRow = document.createElement('div');
-          actionRow.className = 'flex items-center gap-1 shrink-0';
-
-          // 1. Follow-up Date Picker Popover Button
-          const popoverWrapper = document.createElement('div');
-          popoverWrapper.className = 'relative inline-block';
-
-          const btnFollowup = document.createElement('button');
-          btnFollowup.type = 'button';
-          btnFollowup.className = 'px-1.5 py-0.5 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-mono-code text-[9px] font-semibold flex items-center gap-0.5 border border-outline-variant/30 cursor-pointer transition-colors';
-          const calIcon = document.createElement('span');
-          calIcon.className = 'material-symbols-outlined text-[12px] text-primary';
-          calIcon.textContent = 'event';
-          btnFollowup.appendChild(calIcon);
-          btnFollowup.appendChild(document.createTextNode('Date'));
-          popoverWrapper.appendChild(btnFollowup);
-
-          const dateMenu = document.createElement('div');
-          dateMenu.className = 'hidden absolute right-0 bottom-full mb-1 w-48 bg-surface-container-lowest rounded-lg shadow-lg border border-outline-variant/40 p-2 z-50 flex flex-col gap-1 text-[11px] font-mono-code';
-
-          const optToday = document.createElement('button');
-          optToday.type = 'button';
-          optToday.className = 'w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer';
-          optToday.textContent = `Today (${formatFriendlyDate(getTodayDateString())})`;
-          optToday.onclick = (e) => {
-            e.stopPropagation();
-            addOrUpdateFollowUp({
-              folderName: studentName,
-              studentName: studentName,
-              documentName: ruleName,
-              promisedDate: getTodayDateString(),
-              note: `Missing ${ruleName} during intake`
-            });
-            dateMenu.classList.add('hidden');
-            toast.show('Follow-up Scheduled', `${ruleName} promise date set for Today`, 'success');
-            this.renderQueue();
-          };
-          dateMenu.appendChild(optToday);
-
-          const optTomorrow = document.createElement('button');
-          optTomorrow.type = 'button';
-          optTomorrow.className = 'w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer';
-          optTomorrow.textContent = `Tomorrow (${formatFriendlyDate(getTomorrowDateString(1))})`;
-          optTomorrow.onclick = (e) => {
-            e.stopPropagation();
-            addOrUpdateFollowUp({
-              folderName: studentName,
-              studentName: studentName,
-              documentName: ruleName,
-              promisedDate: getTomorrowDateString(1),
-              note: `Missing ${ruleName} during intake`
-            });
-            dateMenu.classList.add('hidden');
-            toast.show('Follow-up Scheduled', `${ruleName} promise date set for Tomorrow`, 'success');
-            this.renderQueue();
-          };
-          dateMenu.appendChild(optTomorrow);
-
-          const optMonday = document.createElement('button');
-          optMonday.type = 'button';
-          optMonday.className = 'w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer';
-          optMonday.textContent = `Monday (${formatFriendlyDate(getNextMondayDateString())})`;
-          optMonday.onclick = (e) => {
-            e.stopPropagation();
-            addOrUpdateFollowUp({
-              folderName: studentName,
-              studentName: studentName,
-              documentName: ruleName,
-              promisedDate: getNextMondayDateString(),
-              note: `Missing ${ruleName} during intake`
-            });
-            dateMenu.classList.add('hidden');
-            toast.show('Follow-up Scheduled', `${ruleName} promise date set for Monday`, 'success');
-            this.renderQueue();
-          };
-          dateMenu.appendChild(optMonday);
-
-          // Custom date input
-          const customDateDiv = document.createElement('div');
-          customDateDiv.className = 'flex items-center gap-1 pt-1 border-t border-surface-container mt-1';
-          const dateInput = document.createElement('input');
-          dateInput.type = 'date';
-          dateInput.className = 'flex-1 text-[10px] p-1 rounded bg-surface-container text-on-surface border border-outline-variant/40 outline-none';
-          const btnSetCustom = document.createElement('button');
-          btnSetCustom.type = 'button';
-          btnSetCustom.className = 'px-2 py-1 rounded bg-primary text-on-primary text-[10px] font-bold cursor-pointer';
-          btnSetCustom.textContent = 'Set';
-          btnSetCustom.onclick = (e) => {
-            e.stopPropagation();
-            if (dateInput.value) {
-              addOrUpdateFollowUp({
-                folderName: studentName,
-                studentName: studentName,
-                documentName: ruleName,
-                promisedDate: dateInput.value,
-                note: `Missing ${ruleName} during intake`
-              });
-              dateMenu.classList.add('hidden');
-              toast.show('Follow-up Scheduled', `${ruleName} promise date: ${dateInput.value}`, 'success');
-              this.renderQueue();
-            }
-          };
-          customDateDiv.appendChild(dateInput);
-          customDateDiv.appendChild(btnSetCustom);
-          dateMenu.appendChild(customDateDiv);
-
-          btnFollowup.onclick = (e) => {
-            e.stopPropagation();
-            dateMenu.classList.toggle('hidden');
-          };
-          popoverWrapper.appendChild(dateMenu);
-          actionRow.appendChild(popoverWrapper);
-
-          // 2. Direct Import Button (Functional: Copies file on disk into student folder)
-          const btnImport = document.createElement('button');
-          btnImport.type = 'button';
-          btnImport.className = 'px-2 py-0.5 rounded bg-primary hover:bg-primary/90 text-on-primary font-mono-code text-[9px] font-bold flex items-center gap-0.5 shadow-xs cursor-pointer transition-colors';
-          const impIcon = document.createElement('span');
-          impIcon.className = 'material-symbols-outlined text-[12px]';
-          impIcon.textContent = 'download';
-          btnImport.appendChild(impIcon);
-          btnImport.appendChild(document.createTextNode('Import'));
-
-          btnImport.onclick = async (e) => {
-            e.stopPropagation();
-            await this.handleImportMissingDocument(ruleName);
-          };
-          actionRow.appendChild(btnImport);
-
-          mItem.appendChild(actionRow);
-          missingList.appendChild(mItem);
-        });
-
-        missingSection.appendChild(missingList);
+    presetSelect.addEventListener('change', (e) => {
+      e.stopPropagation();
+      this.handleSwitchActivePreset(e.target.value);
+      if (this.state.isMissingModalOpen) {
+        this.updateMissingModal();
       }
-      container.appendChild(missingSection);
-    } else {
-      const allDoneCard = document.createElement('div');
-      allDoneCard.className = 'p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 flex items-center justify-between gap-2 text-emerald-800 dark:text-emerald-300';
-      const doneLeft = document.createElement('div');
-      doneLeft.className = 'flex items-center gap-2';
-      const checkIcon = document.createElement('span');
-      checkIcon.className = 'material-symbols-outlined text-[18px] text-tertiary';
-      checkIcon.textContent = 'check_circle';
-      doneLeft.appendChild(checkIcon);
-      const doneText = document.createElement('span');
-      doneText.className = 'font-mono-code text-[11px] font-bold';
-      doneText.textContent = 'All Required Documents Present';
-      doneLeft.appendChild(doneText);
-      allDoneCard.appendChild(doneLeft);
+    });
+    schemeBox.appendChild(presetSelect);
+    topStatusSection.appendChild(schemeBox);
 
-      const donePresetSelect = document.createElement('select');
-      donePresetSelect.className = 'px-1.5 py-0.5 rounded bg-emerald-600/20 text-emerald-900 dark:text-emerald-200 text-[10px] font-mono-code uppercase font-bold border-none outline-none cursor-pointer';
-      const availablePresets = this.state.documentPresets ? Object.keys(this.state.documentPresets) : ['MAHA DBT', 'SWAYAM'];
-      availablePresets.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p;
-        opt.textContent = p;
-        if (p === this.state.activePreset) opt.selected = true;
-        donePresetSelect.appendChild(opt);
-      });
-      donePresetSelect.addEventListener('change', (e) => this.handleSwitchActivePreset(e.target.value));
-      allDoneCard.appendChild(donePresetSelect);
+    // 1.2 Two Side-by-Side Summary Cards (Exact Sample 1 / Modal Style)
+    const cardsGrid = document.createElement('div');
+    cardsGrid.className = 'grid grid-cols-2 gap-2';
 
-      const btnOpenDeskDone = document.createElement('button');
-      btnOpenDeskDone.type = 'button';
-      btnOpenDeskDone.id = 'btnOpenMissingDeskDone';
-      btnOpenDeskDone.className = 'w-full py-1.5 px-3 rounded-lg bg-emerald-700/20 hover:bg-emerald-700/30 text-emerald-900 dark:text-emerald-300 font-mono-code text-[11px] font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all mt-1.5';
-      btnOpenDeskDone.title = 'Open Dedicated Missing Documents & Follow-up Desk Modal';
-      btnOpenDeskDone.innerHTML = `
-        <span class="material-symbols-outlined text-[15px]">open_in_new</span>
-        <span>↗ Open Readiness &amp; Follow-up Desk</span>
-      `;
-      btnOpenDeskDone.onclick = (e) => {
-        e.stopPropagation();
-        this.openMissingDocumentsModal();
-      };
-      allDoneCard.appendChild(btnOpenDeskDone);
+    // Left Card: COMPLETED (Emerald)
+    const completedCard = document.createElement('div');
+    completedCard.className = 'bg-surface-container-lowest border border-emerald-300 dark:border-emerald-700 rounded-xl p-2.5 shadow-2xs flex items-center gap-2';
+    completedCard.innerHTML = `
+      <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold shrink-0">
+        <span class="material-symbols-outlined text-[18px]">verified</span>
+      </div>
+      <div class="min-w-0">
+        <span class="text-[9px] text-secondary uppercase font-semibold block leading-tight truncate">Completed</span>
+        <span class="font-mono-code text-[12px] font-bold text-emerald-800 dark:text-emerald-400 block leading-tight truncate">${presentCount} Docs</span>
+      </div>
+    `;
+    cardsGrid.appendChild(completedCard);
 
-      container.appendChild(allDoneCard);
-    }
+    // Right Card: MISSING (Soft Red / Rose)
+    const missingCard = document.createElement('div');
+    missingCard.className = 'bg-surface-container-lowest border border-rose-300 dark:border-rose-700 rounded-xl p-2.5 shadow-2xs flex items-center gap-2';
+    missingCard.innerHTML = `
+      <div class="w-7 h-7 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center font-bold shrink-0">
+        <span class="material-symbols-outlined text-[18px]">pending_actions</span>
+      </div>
+      <div class="min-w-0">
+        <span class="text-[9px] text-secondary uppercase font-semibold block leading-tight truncate">Missing</span>
+        <span class="font-mono-code text-[12px] font-bold text-rose-700 dark:text-rose-400 block leading-tight truncate">${missingCount} Docs</span>
+      </div>
+    `;
+    cardsGrid.appendChild(missingCard);
+    topStatusSection.appendChild(cardsGrid);
 
-    // 2. SMART SUGGESTIONS CONTAINER (Always visible below Missing Documents)
+    // 1.3 Compact Action Button: ↗ Document Desk (Black Mode + Subtle Blink/Pulse)
+    const btnOpenDesk = document.createElement('button');
+    btnOpenDesk.type = 'button';
+    btnOpenDesk.id = 'btnOpenMissingDeskModal';
+    btnOpenDesk.className = 'w-full py-2 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 active:scale-98 text-white font-mono-code text-[11px] font-bold border border-slate-700 shadow-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0';
+    btnOpenDesk.title = 'Open Document Desk Modal (Missing docs, follow-up dates & import)';
+
+    // Subtle Live Blink / Pulse Dot when missing documents exist
+    const pulseDot = missingCount > 0 ? `
+      <span class="relative flex h-2 w-2 mr-0.5 shrink-0" title="${missingCount} missing documents need attention">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+      </span>
+    ` : '';
+
+    btnOpenDesk.innerHTML = `
+      <span class="material-symbols-outlined text-[15px]">open_in_new</span>
+      <span>↗ Document Desk</span>
+      ${pulseDot}
+    `;
+
+    btnOpenDesk.onclick = (e) => {
+      e.stopPropagation();
+      this.openMissingDocumentsModal();
+    };
+    topStatusSection.appendChild(btnOpenDesk);
+    container.appendChild(topStatusSection);
+
+    // 2. SMART SUGGESTIONS CONTAINER (Always visible below, 100% UNTOUCHED)
     const shortcutsSection = document.createElement('div');
     shortcutsSection.id = 'coreShortcutsContainer';
     shortcutsSection.className = 'flex flex-col gap-1.5 shrink-0 mt-2 bg-surface-container-lowest/80 p-2.5 rounded-xl border border-outline-variant/30 shadow-xs';
