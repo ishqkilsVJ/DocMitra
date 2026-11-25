@@ -495,6 +495,33 @@ export class RenamerUIManager {
     if (tabBtnShortcuts) {
       tabBtnShortcuts.addEventListener('click', () => this.renderSettingsModal('shortcuts'));
     }
+    const tabBtnLinked = document.getElementById('tabBtnLinked');
+    if (tabBtnLinked) {
+      tabBtnLinked.addEventListener('click', () => this.renderSettingsModal('linked'));
+    }
+    const btnOpenAddLinkModal = document.getElementById('btnOpenAddLinkRuleModal');
+    if (btnOpenAddLinkModal) {
+      btnOpenAddLinkModal.addEventListener('click', () => this.openAddLinkRuleModal());
+    }
+    const btnCloseLinkModal = document.getElementById('btnCloseLinkRuleModal');
+    if (btnCloseLinkModal) {
+      btnCloseLinkModal.addEventListener('click', () => this.closeAddLinkRuleModal());
+    }
+    const btnCancelLinkModal = document.getElementById('btnCancelLinkRuleModal');
+    if (btnCancelLinkModal) {
+      btnCancelLinkModal.addEventListener('click', () => this.closeAddLinkRuleModal());
+    }
+    const btnSaveLinkRule = document.getElementById('btnSaveLinkRule');
+    if (btnSaveLinkRule) {
+      btnSaveLinkRule.addEventListener('click', () => this.handleSaveLinkRule());
+    }
+    const inputSearchLinked = document.getElementById('inputSearchLinkedRules');
+    if (inputSearchLinked) {
+      inputSearchLinked.addEventListener('input', (e) => {
+        this._linkedRulesSearchQuery = e.target.value;
+        this.renderLinkedRulesTable();
+      });
+    }
     const selectActivePreset = document.getElementById('selectActivePreset');
     if (selectActivePreset) {
       selectActivePreset.addEventListener('change', (e) => this.handleSwitchActivePreset(e.target.value));
@@ -694,6 +721,12 @@ export class RenamerUIManager {
         if (modalRenameSettings && !modalRenameSettings.classList.contains('hidden')) {
           e.preventDefault();
           this.handleCloseSettingsModal();
+          return;
+        }
+        const modalAddLink = document.getElementById('modalAddLinkRule');
+        if (modalAddLink && !modalAddLink.classList.contains('hidden')) {
+          e.preventDefault();
+          this.closeAddLinkRuleModal();
           return;
         }
         const modalAddDoc = document.getElementById('modalAddDocument');
@@ -2608,15 +2641,7 @@ export class RenamerUIManager {
 
     const missingRules = activeRules.filter((rule) => {
       const cleanRule = (rule.name || rule).toUpperCase();
-      if (presentDocs.has(cleanRule)) return false;
-      for (const link of DEFAULT_LINKED_RULES) {
-        if (link.combined && presentDocs.has(link.combined.toUpperCase())) {
-          if (cleanRule === link.part1.toUpperCase() || cleanRule === link.part2.toUpperCase()) {
-            return false;
-          }
-        }
-      }
-      return true;
+      return !this.isChecklistRuleSatisfied(cleanRule, presentDocs);
     });
 
     const presentCount = this.state.files.length;
@@ -3978,12 +4003,50 @@ export class RenamerUIManager {
         updateCanonicalName(d.name, d.name);
       }
     }
+
+    // 7. Load Linked / Combined Document Rules from localStorage or seed defaults
+    try {
+      const storedLinked = localStorage.getItem('docmitra_rename_linked_rules');
+      if (storedLinked) {
+        this.state.linkedRules = JSON.parse(storedLinked);
+      }
+    } catch (e) {
+      console.warn('[DocMitra Renamer] Failed to parse linked rules:', e);
+    }
+    if (!Array.isArray(this.state.linkedRules) || this.state.linkedRules.length === 0) {
+      this.state.linkedRules = [
+        {
+          id: "link_10th",
+          combined: "10TH MARKSHEET AND PASSING CERTIFICATE",
+          part1: "10TH MARKSHEET",
+          part2: "10TH PASSING CERTIFICATE"
+        },
+        {
+          id: "link_12th",
+          combined: "12TH MARKSHEET AND PASSING CERTIFICATE",
+          part1: "12TH MARKSHEET",
+          part2: "12TH PASSING CERTIFICATE"
+        },
+        {
+          id: "link_domicile_nationality",
+          combined: "DOMICILE AND NATIONALITY CERTIFICATE",
+          part1: "DOMICILE CERTIFICATE",
+          part2: "NATIONALITY CERTIFICATE"
+        }
+      ];
+      this.saveLinkedRules();
+    } else {
+      this.updateLinkedRulesCountBadge();
+    }
   }
 
   savePresetsAndSettings() {
     try {
       localStorage.setItem('docmitra_rename_presets', JSON.stringify(this.state.documentPresets));
       localStorage.setItem('docmitra_active_preset', this.state.activePreset);
+      if (this.state.linkedRules) {
+        localStorage.setItem('docmitra_rename_linked_rules', JSON.stringify(this.state.linkedRules));
+      }
       if (this.state.settings) {
         this.state.settings.activeChecklist = this.state.activePreset;
         this.state.settings.checklists = this.state.documentPresets;
@@ -3996,6 +4059,82 @@ export class RenamerUIManager {
     } catch (e) {
       console.warn('[DocMitra Renamer] Failed to persist presets and settings:', e);
     }
+  }
+
+  saveLinkedRules() {
+    try {
+      if (Array.isArray(this.state.linkedRules)) {
+        localStorage.setItem('docmitra_rename_linked_rules', JSON.stringify(this.state.linkedRules));
+      }
+    } catch (e) {
+      console.warn('[DocMitra Renamer] Failed to save linked rules:', e);
+    }
+    this.updateLinkedRulesCountBadge();
+  }
+
+  updateLinkedRulesCountBadge() {
+    const count = (this.state.linkedRules || []).length;
+    const badge1 = document.getElementById('linkedRulesCountBadge');
+    if (badge1) badge1.textContent = String(count);
+    const badge2 = document.getElementById('linkedTableCountBadge');
+    if (badge2) badge2.textContent = String(count);
+  }
+
+  getLinkedRules() {
+    if (Array.isArray(this.state.linkedRules) && this.state.linkedRules.length > 0) {
+      return this.state.linkedRules;
+    }
+    return [
+      {
+        id: "link_10th",
+        combined: "10TH MARKSHEET AND PASSING CERTIFICATE",
+        part1: "10TH MARKSHEET",
+        part2: "10TH PASSING CERTIFICATE"
+      },
+      {
+        id: "link_12th",
+        combined: "12TH MARKSHEET AND PASSING CERTIFICATE",
+        part1: "12TH MARKSHEET",
+        part2: "12TH PASSING CERTIFICATE"
+      },
+      {
+        id: "link_domicile_nationality",
+        combined: "DOMICILE AND NATIONALITY CERTIFICATE",
+        part1: "DOMICILE CERTIFICATE",
+        part2: "NATIONALITY CERTIFICATE"
+      }
+    ];
+  }
+
+  /**
+   * Bi-Directional Satisfaction Logic:
+   * Case A: Rule is Part 1 or Part 2, and Combined file is present -> Satisfied!
+   * Case B: Rule is Combined, and BOTH Part 1 AND Part 2 are present -> Satisfied!
+   * Case C: Rule is Part 1, and only Part 1 is present -> Satisfied (Part 2 remains missing).
+   */
+  isChecklistRuleSatisfied(cleanRule, presentDocsSet) {
+    if (presentDocsSet.has(cleanRule)) return true;
+    const links = this.getLinkedRules();
+    for (const link of links) {
+      const comb = (link.combined || '').toUpperCase();
+      const p1 = (link.part1 || '').toUpperCase();
+      const p2 = (link.part2 || '').toUpperCase();
+
+      // Case A: Rule is a part, but combined document is present in folder
+      if (comb && presentDocsSet.has(comb)) {
+        if (cleanRule === p1 || cleanRule === p2) {
+          return true;
+        }
+      }
+
+      // Case B: Rule is combined, but BOTH separate parts are present in folder
+      if (cleanRule === comb) {
+        if (p1 && p2 && presentDocsSet.has(p1) && presentDocsSet.has(p2)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   syncPresetsToShortcuts() {
@@ -4150,23 +4289,31 @@ export class RenamerUIManager {
   renderSettingsModal(activeTab = 'presets') {
     const tabPresets = document.getElementById('tabContentPresets');
     const tabShortcuts = document.getElementById('tabContentShortcuts');
+    const tabLinked = document.getElementById('tabContentLinked');
     const btnTabPresets = document.getElementById('tabBtnPresets');
     const btnTabShortcuts = document.getElementById('tabBtnShortcuts');
+    const btnTabLinked = document.getElementById('tabBtnLinked');
+
+    [btnTabPresets, btnTabShortcuts, btnTabLinked].forEach(b => {
+      b?.classList.remove('text-primary', 'border-primary', 'font-bold');
+      b?.classList.add('text-secondary', 'border-transparent', 'font-medium');
+    });
+    tabPresets?.classList.add('hidden');
+    tabShortcuts?.classList.add('hidden');
+    tabLinked?.classList.add('hidden');
 
     if (activeTab === 'presets') {
       tabPresets?.classList.remove('hidden');
-      tabShortcuts?.classList.add('hidden');
       btnTabPresets?.classList.add('text-primary', 'border-primary', 'font-bold');
       btnTabPresets?.classList.remove('text-secondary', 'border-transparent', 'font-medium');
-      btnTabShortcuts?.classList.remove('text-primary', 'border-primary', 'font-bold');
-      btnTabShortcuts?.classList.add('text-secondary', 'border-transparent', 'font-medium');
-    } else {
-      tabPresets?.classList.add('hidden');
+    } else if (activeTab === 'shortcuts') {
       tabShortcuts?.classList.remove('hidden');
       btnTabShortcuts?.classList.add('text-primary', 'border-primary', 'font-bold');
       btnTabShortcuts?.classList.remove('text-secondary', 'border-transparent', 'font-medium');
-      btnTabPresets?.classList.remove('text-primary', 'border-primary', 'font-bold');
-      btnTabPresets?.classList.add('text-secondary', 'border-transparent', 'font-medium');
+    } else if (activeTab === 'linked') {
+      tabLinked?.classList.remove('hidden');
+      btnTabLinked?.classList.add('text-primary', 'border-primary', 'font-bold');
+      btnTabLinked?.classList.remove('text-secondary', 'border-transparent', 'font-medium');
     }
 
     // 1. Populate Bento PRESET Dropdown in Settings Modal (Exact Parity)
@@ -4177,6 +4324,9 @@ export class RenamerUIManager {
 
     // 3. Populate Shortcuts Table
     this.renderShortcutsTable();
+
+    // 4. Populate Linked Rules Table
+    this.renderLinkedRulesTable();
   }
 
   renderPresetDocsTable() {
@@ -4465,11 +4615,11 @@ export class RenamerUIManager {
     };
   }
 
-  showCustomPresetDeleteDialog(presetName) {
-    let modal = document.getElementById('modalConfirmDeletePreset');
+  showCustomConfirmationDialog({ title = 'Confirm Action', messageHtml = '', confirmText = 'Confirm', onConfirm = null }) {
+    let modal = document.getElementById('modalConfirmActionDialog');
     if (!modal) {
       modal = document.createElement('div');
-      modal.id = 'modalConfirmDeletePreset';
+      modal.id = 'modalConfirmActionDialog';
       modal.className = 'fixed inset-0 z-[10000] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-150';
       document.body.appendChild(modal);
     }
@@ -4481,17 +4631,17 @@ export class RenamerUIManager {
           </svg>
         </div>
         <div class="space-y-1">
-          <h3 class="text-base font-bold text-slate-900 font-heading">Delete Preset</h3>
+          <h3 class="text-base font-bold text-slate-900 font-heading">${escapeHtml(title)}</h3>
           <p class="text-xs text-slate-600 leading-relaxed">
-            Are you sure you want to permanently delete preset <strong class="text-rose-700 font-mono">${escapeHtml(presetName)}</strong>?
+            ${messageHtml}
           </p>
         </div>
         <div class="flex items-center justify-center gap-2.5 w-full pt-1">
-          <button id="btnCancelCustomPresetDelete" type="button" class="flex-1 py-2 px-3 rounded-lg border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold transition cursor-pointer">
+          <button id="btnCancelCustomConfirm" type="button" class="flex-1 py-2 px-3 rounded-lg border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold transition cursor-pointer">
             Cancel
           </button>
-          <button id="btnProceedCustomPresetDelete" type="button" class="flex-1 py-2 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-bold shadow-xs transition cursor-pointer">
-            Delete Preset
+          <button id="btnProceedCustomConfirm" type="button" class="flex-1 py-2 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-bold shadow-xs transition cursor-pointer">
+            ${escapeHtml(confirmText)}
           </button>
         </div>
       </div>
@@ -4512,24 +4662,327 @@ export class RenamerUIManager {
     };
     document.addEventListener('keydown', handleKey);
 
-    modal.querySelector('#btnCancelCustomPresetDelete').onclick = cleanup;
+    const btnCancel = modal.querySelector('#btnCancelCustomConfirm');
+    if (btnCancel) btnCancel.onclick = cleanup;
     modal.onclick = (e) => {
       if (e.target === modal) cleanup();
     };
 
-    modal.querySelector('#btnProceedCustomPresetDelete').onclick = () => {
-      cleanup();
-      delete this.state.documentPresets[presetName];
-      const remaining = Object.keys(this.state.documentPresets);
-      this.state.activePreset = remaining[0] || 'MAHA DBT';
-      this.savePresetsAndSettings();
-      this._recalculateTargetNames(true);
-      this.updateTelemetry();
-      this.renderQueue();
-      this.renderCurrentPreview();
-      this.renderSettingsModal('presets');
-      toast.show('Preset Deleted', `Preset "${presetName}" deleted. Switched to ${this.state.activePreset}.`, 'info');
+    const btnProceed = modal.querySelector('#btnProceedCustomConfirm');
+    if (btnProceed) {
+      btnProceed.onclick = () => {
+        cleanup();
+        if (typeof onConfirm === 'function') onConfirm();
+      };
+    }
+  }
+
+  showCustomPresetDeleteDialog(presetName) {
+    this.showCustomConfirmationDialog({
+      title: 'Delete Preset',
+      messageHtml: `Are you sure you want to permanently delete preset <strong class="text-rose-700 font-mono">${escapeHtml(presetName)}</strong>?`,
+      confirmText: 'Delete Preset',
+      onConfirm: () => {
+        delete this.state.documentPresets[presetName];
+        if (this.state.settings && this.state.settings.checklists) {
+          delete this.state.settings.checklists[presetName];
+        }
+        const remaining = Object.keys(this.state.documentPresets);
+        this.state.activePreset = remaining[0] || 'MAHA DBT';
+        this.savePresetsAndSettings();
+        this._recalculateTargetNames(true);
+        this.updateTelemetry();
+        this.renderQueue();
+        this.renderCurrentPreview();
+        this.renderSettingsModal('presets');
+        toast.show('Preset Deleted', `Preset "${presetName}" deleted. Switched to ${this.state.activePreset}.`, 'info');
+      }
+    });
+  }
+
+  renderLinkedRulesTable() {
+    const rules = this.getLinkedRules();
+    const countBadge = document.getElementById('linkedTableCountBadge');
+    const headerBadge = document.getElementById('linkedRulesCountBadge');
+    const tbody = document.getElementById('linkedRulesTableBody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+    const q = (this._linkedRulesSearchQuery || '').trim().toLowerCase();
+    const filteredRules = q ? rules.filter(r => {
+      const comb = (r.combined || '').toLowerCase();
+      const p1 = (r.part1 || '').toLowerCase();
+      const p2 = (r.part2 || '').toLowerCase();
+      return comb.includes(q) || p1.includes(q) || p2.includes(q);
+    }) : rules;
+
+    if (countBadge) countBadge.textContent = q ? `${filteredRules.length} / ${rules.length}` : String(rules.length);
+    if (headerBadge) headerBadge.textContent = String(rules.length);
+
+    if (filteredRules.length === 0) {
+      const emptyRow = document.createElement('tr');
+      if (q) {
+        emptyRow.innerHTML = `<td colspan="5" class="py-6 text-center text-secondary italic">No linked rules match "${escapeHtml(this._linkedRulesSearchQuery)}".</td>`;
+      } else {
+        emptyRow.innerHTML = '<td colspan="5" class="py-6 text-center text-secondary italic">No linked rules configured. Click "+ Add Link Rule" to link combined documents.</td>';
+      }
+      tbody.appendChild(emptyRow);
+      return;
+    }
+
+    filteredRules.forEach((rule, idx) => {
+      const row = document.createElement('tr');
+      row.className = 'row-compact-42 hover:bg-surface-container-low transition-colors group';
+
+      row.innerHTML = `
+        <td class="py-1 px-3 text-center text-secondary font-mono-code text-[11px]" style="width: 44px;">${idx + 1}</td>
+        <td class="py-1 px-3 font-semibold text-primary truncate text-[12px]" style="width: 32%;" title="${escapeHtml(rule.combined)}">
+          <div class="flex items-center gap-1.5 truncate">
+            <span class="material-symbols-outlined text-[14px] text-primary shrink-0">link</span>
+            <span class="truncate">${escapeHtml(rule.combined)}</span>
+          </div>
+        </td>
+        <td class="py-1 px-3 text-on-surface truncate text-[12px]" style="width: 27%;" title="${escapeHtml(rule.part1)}">
+          <span class="px-2 py-0.5 rounded bg-surface-container text-slate-800 text-[11px] font-mono-code">${escapeHtml(rule.part1)}</span>
+        </td>
+        <td class="py-1 px-3 text-on-surface truncate text-[12px]" style="width: 27%;" title="${escapeHtml(rule.part2)}">
+          <span class="px-2 py-0.5 rounded bg-surface-container text-slate-800 text-[11px] font-mono-code">${escapeHtml(rule.part2)}</span>
+        </td>
+        <td class="py-1 px-3 text-right whitespace-nowrap pr-4" style="width: 80px;">
+          <div class="flex items-center justify-end gap-1">
+            <button class="w-6 h-6 rounded hover:bg-primary/10 text-secondary hover:text-primary transition-colors flex items-center justify-center cursor-pointer btn-edit-link" title="Edit linked rule" type="button" data-rule-id="${escapeHtml(rule.id)}">
+              <span class="material-symbols-outlined text-[15px]">edit</span>
+            </button>
+            <button class="w-6 h-6 rounded hover:bg-error/10 text-secondary hover:text-error transition-colors flex items-center justify-center cursor-pointer btn-del-link" title="Delete linked rule" type="button" data-rule-id="${escapeHtml(rule.id)}">
+              <span class="material-symbols-outlined text-[15px]">delete</span>
+            </button>
+          </div>
+        </td>
+      `;
+
+      const editBtn = row.querySelector('.btn-edit-link');
+      if (editBtn) {
+        editBtn.addEventListener('click', () => this.openAddLinkRuleModal(rule.id));
+      }
+      const delBtn = row.querySelector('.btn-del-link');
+      if (delBtn) {
+        delBtn.addEventListener('click', () => this.handleDeleteLinkRule(rule.id));
+      }
+
+      tbody.appendChild(row);
+    });
+  }
+
+  getMasterCanonicalDocuments() {
+    const docSet = new Set();
+    
+    // 1. From shortcuts21 / registered shortcuts
+    if (Array.isArray(this.shortcuts21)) {
+      for (const s of this.shortcuts21) {
+        const name = (s.canonical || s.label || s.name || '').trim().toUpperCase();
+        if (name) docSet.add(name);
+      }
+    }
+    
+    // 2. From custom shortcuts
+    if (Array.isArray(this.state.customShortcuts)) {
+      for (const s of this.state.customShortcuts) {
+        const name = (s.canonical || s.label || s.name || '').trim().toUpperCase();
+        if (name) docSet.add(name);
+      }
+    }
+
+    // 3. From all presets
+    if (this.state.documentPresets) {
+      for (const list of Object.values(this.state.documentPresets)) {
+        if (Array.isArray(list)) {
+          for (const d of list) {
+            const name = (d.name || d || '').trim().toUpperCase();
+            if (name) docSet.add(name);
+          }
+        }
+      }
+    }
+
+    // 4. From existing linked rules
+    const currentLinks = this.getLinkedRules();
+    for (const link of currentLinks) {
+      if (link.combined) docSet.add(link.combined.trim().toUpperCase());
+      if (link.part1) docSet.add(link.part1.trim().toUpperCase());
+      if (link.part2) docSet.add(link.part2.trim().toUpperCase());
+    }
+
+    // Common standard document names
+    [
+      '10TH MARKSHEET',
+      '10TH PASSING CERTIFICATE',
+      '10TH MARKSHEET AND PASSING CERTIFICATE',
+      '12TH MARKSHEET',
+      '12TH PASSING CERTIFICATE',
+      '12TH MARKSHEET AND PASSING CERTIFICATE',
+      'DOMICILE CERTIFICATE',
+      'NATIONALITY CERTIFICATE',
+      'DOMICILE AND NATIONALITY CERTIFICATE',
+      'CASTE CERTIFICATE',
+      'CASTE VALIDITY CERTIFICATE',
+      'NON CREAMY LAYER CERTIFICATE',
+      'INCOME CERTIFICATE',
+      'RATION CARD',
+      'AADHAAR CARD',
+      'PAN CARD',
+      'VOTER ID',
+      'BANK PASSBOOK',
+      'LEAVING CERTIFICATE',
+      'TRANSFER CERTIFICATE',
+      'GAP CERTIFICATE',
+      'MIGRATION CERTIFICATE',
+      'PHOTO',
+      'SIGNATURE'
+    ].forEach(d => docSet.add(d));
+
+    return Array.from(docSet).filter(Boolean).sort((a, b) => a.localeCompare(b));
+  }
+
+  openAddLinkRuleModal(editRuleId = null) {
+    const modal = document.getElementById('modalAddLinkRule');
+    if (!modal) return;
+
+    const titleEl = document.getElementById('modalAddLinkRuleTitle');
+    const inputId = document.getElementById('inputEditLinkRuleId');
+    const selComb = document.getElementById('selectLinkCombined');
+    const selP1 = document.getElementById('selectLinkPart1');
+    const selP2 = document.getElementById('selectLinkPart2');
+
+    const canonicalDocs = this.getMasterCanonicalDocuments();
+
+    const populateSelect = (selectEl, defaultPlaceholder, selectedVal = '') => {
+      if (!selectEl) return;
+      selectEl.innerHTML = `<option value="">-- ${defaultPlaceholder} --</option>`;
+      canonicalDocs.forEach(docName => {
+        const opt = document.createElement('option');
+        opt.value = docName;
+        opt.textContent = docName;
+        if (selectedVal && docName.toUpperCase() === selectedVal.toUpperCase()) {
+          opt.selected = true;
+        }
+        selectEl.appendChild(opt);
+      });
     };
+
+    let targetRule = null;
+    if (editRuleId) {
+      targetRule = this.getLinkedRules().find(r => r.id === editRuleId);
+    }
+
+    if (targetRule) {
+      if (titleEl) titleEl.textContent = 'Edit Link Rule';
+      if (inputId) inputId.value = targetRule.id;
+      populateSelect(selComb, 'Select Combined Document', targetRule.combined);
+      populateSelect(selP1, 'Select Part 1 Document', targetRule.part1);
+      populateSelect(selP2, 'Select Part 2 Document', targetRule.part2);
+    } else {
+      if (titleEl) titleEl.textContent = 'Add Link Rule';
+      if (inputId) inputId.value = '';
+      populateSelect(selComb, 'Select Combined Document', '');
+      populateSelect(selP1, 'Select Part 1 Document', '');
+      populateSelect(selP2, 'Select Part 2 Document', '');
+    }
+
+    modal.classList.remove('hidden');
+    selComb?.focus();
+  }
+
+  closeAddLinkRuleModal() {
+    const modal = document.getElementById('modalAddLinkRule');
+    if (modal) modal.classList.add('hidden');
+    const inputId = document.getElementById('inputEditLinkRuleId');
+    if (inputId) inputId.value = '';
+  }
+
+  handleSaveLinkRule() {
+    const inputId = document.getElementById('inputEditLinkRuleId');
+    const selComb = document.getElementById('selectLinkCombined');
+    const selP1 = document.getElementById('selectLinkPart1');
+    const selP2 = document.getElementById('selectLinkPart2');
+
+    const ruleId = inputId ? inputId.value.trim() : '';
+    const comb = selComb ? selComb.value.trim().toUpperCase() : '';
+    const p1 = selP1 ? selP1.value.trim().toUpperCase() : '';
+    const p2 = selP2 ? selP2.value.trim().toUpperCase() : '';
+
+    if (!comb || !p1 || !p2) {
+      toast.show('Missing Selection', 'Please select Combined, Part 1, and Part 2 documents.', 'warning');
+      return;
+    }
+
+    if (p1 === p2) {
+      toast.show('Invalid Rule', 'Part 1 and Part 2 cannot be the same document.', 'warning');
+      return;
+    }
+
+    if (comb === p1 || comb === p2) {
+      toast.show('Invalid Rule', 'Combined document cannot be identical to its component parts.', 'warning');
+      return;
+    }
+
+    const currentRules = this.getLinkedRules();
+    // Check duplicates
+    const dup = currentRules.find(r => {
+      if (ruleId && r.id === ruleId) return false;
+      const sameComb = (r.combined || '').toUpperCase() === comb;
+      const sameParts = ((r.part1 || '').toUpperCase() === p1 && (r.part2 || '').toUpperCase() === p2) ||
+                        ((r.part1 || '').toUpperCase() === p2 && (r.part2 || '').toUpperCase() === p1);
+      return sameComb || sameParts;
+    });
+
+    if (dup) {
+      toast.show('Duplicate Rule', 'A link rule with these documents already exists.', 'warning');
+      return;
+    }
+
+    if (ruleId) {
+      const idx = this.state.linkedRules.findIndex(r => r.id === ruleId);
+      if (idx !== -1) {
+        this.state.linkedRules[idx] = { id: ruleId, combined: comb, part1: p1, part2: p2 };
+      }
+    } else {
+      const newId = `link_${Date.now()}`;
+      if (!Array.isArray(this.state.linkedRules)) {
+        this.state.linkedRules = [];
+      }
+      this.state.linkedRules.push({
+        id: newId,
+        combined: comb,
+        part1: p1,
+        part2: p2
+      });
+    }
+
+    this.saveLinkedRules();
+    this.closeAddLinkRuleModal();
+    this.renderLinkedRulesTable();
+    this.updateTelemetry();
+    this.updateMissingModal();
+    toast.show('Rule Saved', `Linked rule for "${comb}" saved successfully.`, 'success');
+  }
+
+  handleDeleteLinkRule(id) {
+    const rule = this.getLinkedRules().find(r => r.id === id);
+    if (!rule) return;
+
+    this.showCustomConfirmationDialog({
+      title: 'Delete Link Rule',
+      messageHtml: `Are you sure you want to permanently delete the link rule for <strong class="text-rose-700 font-mono">${escapeHtml(rule.combined)}</strong>?`,
+      confirmText: 'Delete Rule',
+      onConfirm: () => {
+        this.state.linkedRules = this.getLinkedRules().filter(r => r.id !== id);
+        this.saveLinkedRules();
+        this.renderLinkedRulesTable();
+        this.updateTelemetry();
+        this.updateMissingModal();
+        toast.show('Rule Deleted', `Removed linked rule for "${rule.combined}".`, 'info');
+      }
+    });
   }
 
   handleNewPreset() {
@@ -4593,20 +5046,24 @@ export class RenamerUIManager {
   }
 
   handleResetPresetsDefault() {
-    const confirmReset = window.confirm('Reset document presets to factory defaults? All custom presets will be removed and default 4 presets restored.');
-    if (!confirmReset) return;
-
-    this.state.documentPresets = JSON.parse(JSON.stringify(BUILTIN_PRESETS));
-    this.state.activePreset = 'MAHA DBT';
-    this.state.customShortcuts = [];
-    this.shortcuts21 = JSON.parse(JSON.stringify(DEFAULT_SHORTCUTS));
-    this.savePresetsAndSettings();
-    this._recalculateTargetNames(true);
-    this.updateTelemetry();
-    this.renderQueue();
-    this.renderCurrentPreview();
-    this.renderSettingsModal('presets');
-    toast.show('Reset Complete', 'Document presets restored to factory defaults.', 'success');
+    this.showCustomConfirmationDialog({
+      title: 'Reset Presets',
+      messageHtml: 'Reset document presets to factory defaults? All custom presets will be removed and default 4 presets restored.',
+      confirmText: 'Reset Presets',
+      onConfirm: () => {
+        this.state.documentPresets = JSON.parse(JSON.stringify(BUILTIN_PRESETS));
+        this.state.activePreset = 'MAHA DBT';
+        this.state.customShortcuts = [];
+        this.shortcuts21 = JSON.parse(JSON.stringify(DEFAULT_SHORTCUTS));
+        this.savePresetsAndSettings();
+        this._recalculateTargetNames(true);
+        this.updateTelemetry();
+        this.renderQueue();
+        this.renderCurrentPreview();
+        this.renderSettingsModal('presets');
+        toast.show('Reset Complete', 'Document presets restored to factory defaults.', 'success');
+      }
+    });
   }
 
   handleRemoveDocFromPreset(idx) {
@@ -6706,21 +7163,14 @@ export class RenamerUIManager {
 
     const missingRules = activeRules.filter((rule) => {
       const cleanRule = (rule.name || rule).toUpperCase();
-      if (presentDocsSet.has(cleanRule)) return false;
-      for (const link of DEFAULT_LINKED_RULES) {
-        if (link.combined && presentDocsSet.has(link.combined.toUpperCase())) {
-          if (cleanRule === link.part1.toUpperCase() || cleanRule === link.part2.toUpperCase()) {
-            return false;
-          }
-        }
-      }
-      return true;
+      return !this.isChecklistRuleSatisfied(cleanRule, presentDocsSet);
     });
 
     const presentDocs = this.state.files.map(f => {
       const docType = f.docType || f.targetName || f.name;
       let isCombined = false;
-      for (const link of DEFAULT_LINKED_RULES) {
+      const links = this.getLinkedRules();
+      for (const link of links) {
         if (link.combined && (docType || '').toUpperCase() === link.combined.toUpperCase()) {
           isCombined = true;
           break;
@@ -6746,6 +7196,43 @@ export class RenamerUIManager {
         fileObj: f.fileObj || f.file || null
       };
     });
+
+    // Check for rules in active preset that are satisfied via combined doc and append to presentDocs
+    for (const rule of activeRules) {
+      const cleanRule = (rule.name || rule).toUpperCase();
+      if (!presentDocsSet.has(cleanRule) && this.isChecklistRuleSatisfied(cleanRule, presentDocsSet)) {
+        const links = this.getLinkedRules();
+        const matchingLink = links.find(l => 
+          (l.part1 && l.part1.toUpperCase() === cleanRule) || 
+          (l.part2 && l.part2.toUpperCase() === cleanRule)
+        );
+        const combName = matchingLink ? matchingLink.combined.toUpperCase() : '';
+        const parentFile = this.state.files.find(f => {
+          const dt = (f.docType || f.targetName || f.name || '').toUpperCase();
+          return combName && dt.includes(combName);
+        }) || this.state.files[0];
+        
+        if (parentFile) {
+          const fileExt = parentFile.ext || ext(parentFile.name) || 'pdf';
+          const filePath = parentFile.path || parentFile.filePath || parentFile.nativePath || '';
+          presentDocs.push({
+            name: `${parentFile.name} (${cleanRule})`,
+            docType: cleanRule,
+            size: parentFile.size || 0,
+            ext: fileExt.toUpperCase().replace('.', ''),
+            dateModified: parentFile.dateModified || Date.now(),
+            dateCreated: parentFile.dateCreated || Date.now(),
+            isCombined: true,
+            path: filePath,
+            nativePath: filePath,
+            rotation: parentFile.rotation || 0,
+            _blobUrl: parentFile._blobUrl || null,
+            _pdfBytes: parentFile._pdfBytes || null,
+            fileObj: parentFile.fileObj || null
+          });
+        }
+      }
+    }
 
     const followupMap = {};
     missingRules.forEach(r => {

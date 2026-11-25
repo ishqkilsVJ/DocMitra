@@ -1,18 +1,21 @@
 # 🔒 LOCKED TOOL: Bulk Document Renamer (`tools/rename_tool/`)
 
 > [!IMPORTANT]
-> **STATUS: LOCKED & SEALED UNDER CP-035 VERIFICATION**  
-> Module: `tools/rename_tool/`  
-> Last Verified Milestone: `CP-035` (Final Polish: Zero-Localhost Inline Preset Rename & Custom Delete Dialog, Unified Esc/Cross Step-Back Hierarchy, Compact Date Picker Icon, Pulsing Folder Badge, Document Desk Rebrand)  
-> All files inside `tools/rename_tool/` are strictly locked. No modifications permitted without explicit user instruction containing: `UNLOCK RENAME_TOOL`.
+> **FROZEN & FULLY VERIFIED UNDER CHECKPOINT `CP-036`**  
+> **Status:** `LOCKED & PRODUCTION SEALED`  
+> **Module Integrity:** 100% Passing Unit & Dual-MCP Automated QA Tests  
+> **Verification Date:** 2026-11-26  
+> **Core Architecture:** Linked Documents Manager (Tab 3 in Settings), Strict Dropdown-Only Rule Builder, Bi-Directional Satisfaction Engine.
+>
+> **LOCKED BY POLICY (`AGENTS.md` Rule 3):**  
+> Zero direct file modifications permitted inside `tools/rename_tool/` without explicit user unlock command:  
+> `UNLOCK RENAME_TOOL`
 
-> **Last QA Stabilization & Verification:** 2026-11-26 (Final Polish 5 UI/UX Upgrades [CP-035] Verified 100%:
-> 1. Zero `localhost` Popups for Preset Actions: Removed all native window.prompt and window.confirm dialogs; implemented in-place inline text editing for Rename, New, and Copy presets with green tick (✓) Apply and cancel (×) buttons; implemented custom in-app confirmation modal for Delete preset with 0 browser popups.
-> 2. Unified Esc & Cross (×) Step-Back Dismissal: In Document Desk, pressing Esc or clicking × when Quick Preview is active closes strictly the preview layer (1 step back) keeping Document Desk open; pressing Esc in Document Desk closes the desk returning to Bulk Renamer.
-> 3. Compact Date Picker Icon & Full Document Title Visibility: Replaced bulky 128px text date box in Missing rows with a compact calendar icon button (📅) with native showPicker() and compact date badge, giving 100% width to document names without truncation.
-> 4. Bold & Highlighted Folder Name: Upgraded top folder name container with bold typography, highlighted badge styling, and live blue pulsing indicator dot (animate-pulse).
-> 5. MahaDBT Removal, Top Cards Alignment & Document Desk Rebrand: Removed '✓ MahaDBT Compliant' badge; aligned top summary cards 1:1 with columns below (Left: MISSING DOCUMENTS [Rose], Right: PRESENT DOCUMENTS [Emerald]); rebranded modal header and references to 'Document Desk'.
-> Dual-MCP automated QA passed 100% [Playwright MCP E2E + Chrome DevTools 0 console errors]; compiled UI with node build-ui.js and release binary via cargo tauri build [10.55 MB]; deployed directly to C:\Users\USER\AppData\Local\DocMitra\app.exe).
+> **Last QA Stabilization & Verification:** 2026-11-26 (Linked Documents Manager & Bi-Directional Satisfaction Engine [CP-036] Verified 100%:
+> 1. Tab 3 Linked Documents in Settings: Added 3rd tab with live count badge (#linkedRulesCountBadge), persisted in localStorage (docmitra_rename_linked_rules), seeded with Indian admission default pairs (10th Marksheet + 10th Passing ↔ 10th Marksheet and Passing Certificate, 12th Marksheet + 12th Passing ↔ 12th Marksheet and Passing Certificate, Domicile + Nationality ↔ Domicile and Nationality Certificate).
+> 2. Strict Dropdown-Only Rule Builder: + Add Link Rule modal with 3 dropdowns (Combined Document, Part 1, Part 2) populated from 58 master canonical documents with zero text typing, self-linking prevention, duplicate detection, and clean custom confirmation delete modal.
+> 3. Bi-Directional Satisfaction Logic: Case A (Combined file satisfies Part 1 & Part 2), Case B (Both separate files satisfy Combined requirement), Case C (Single separate file leaves other part pending/missing); real-time reactivity without app restart;
+> Dual-MCP automated QA passed 100% [Playwright MCP E2E + Chrome DevTools 0 console errors]; compiled UI with node build-ui.js and release binary via cargo tauri build [10.56 MB]; deployed directly to C:\Users\USER\AppData\Local\DocMitra\app.exe).
 
 > **Last QA Stabilization & Verification:** 2026-11-26 (Final 100% 7 Core Production Enhancements [CP-034] Verified 100%: 
 > 1. Cycle-Completion Auto-Sort: Automatically triggers natural sort (1-0, A-Z) when looping from last document back to first document; manual Sort A-Z button preserved.

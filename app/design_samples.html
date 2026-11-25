@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DocMitra Missing Card Redesign - 5 Bento Samples</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f8fafc;
+    }
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
+    }
+    /* Hide native calendar icon in date inputs for custom styled triggers */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      opacity: 0.6;
+      cursor: pointer;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body class="p-8 text-slate-800">
+
+  <div class="max-w-5xl mx-auto space-y-8">
+    <!-- Header -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex items-center justify-between">
+      <div>
+        <h1 class="text-xl font-bold text-slate-900">Missing Documents Card Redesign — 5 Bento Samples</h1>
+        <p class="text-xs text-slate-500 mt-1">Comparison with Green (Verified) Card: Strict ~54px Height, Equal Width & Ultra-Compact Actions</p>
+      </div>
+      <!-- Bento Preset Dropdown in Modal Header -->
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-slate-400 font-mono-code uppercase font-bold">New Header Dropdown:</span>
+        <div class="group relative flex items-center bg-white border border-slate-300 hover:border-[#0037b0] rounded-xl px-3 h-[38px] shadow-sm hover:shadow-[0_0_15px_rgba(0,55,176,0.18)] transition-all cursor-pointer">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#0037b0] inline-block shrink-0 shadow-[0_0_6px_rgba(0,55,176,0.4)] mr-1.5"></span>
+          <span class="font-mono-code text-[10px] text-slate-500 group-hover:text-[#0037b0] uppercase font-bold tracking-wider mr-2">PRESET:</span>
+          <span class="font-mono-code text-[12px] font-bold text-slate-900 tracking-wide mr-2">SWAYAM DEENDAYAL YOJANA</span>
+          <span class="material-symbols-outlined text-[18px] text-slate-400 group-hover:text-[#0037b0]">expand_more</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- BENCHMARK: The Green Card (User Approved Reference) -->
+    <div class="bg-white border-2 border-emerald-400 rounded-2xl p-5 shadow-sm space-y-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-emerald-600">check_circle</span>
+          <span class="text-sm font-bold text-slate-900">BENCHMARK: Green (Present / Verified) Card</span>
+          <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold font-mono-code">100% APPROVED BY USER</span>
+        </div>
+        <span class="text-xs text-slate-400 font-mono-code">Exact Dimensions: ~54px Height • 2-Row Layout</span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 max-w-4xl">
+        <!-- Green Card 1 -->
+        <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 flex flex-col justify-between gap-1.5 h-[58px]">
+          <div class="flex items-center justify-between gap-2 min-w-0">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="material-symbols-outlined text-emerald-600 text-[16px] shrink-0">task_alt</span>
+              <span class="text-[12px] font-semibold text-slate-800 truncate">PHOTO</span>
+            </div>
+            <span class="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-900 font-mono-code text-[9px] font-bold shrink-0">Verified</span>
+          </div>
+          <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-slate-500 pl-5">
+            <div class="flex items-center gap-2">
+              <span class="px-1.5 py-0.2 rounded bg-blue-50 text-[#0037b0] font-bold uppercase text-[9px]">PDF</span>
+              <span>16 KB</span>
+            </div>
+            <div class="flex items-center gap-1 text-slate-600 font-medium">
+              <span class="material-symbols-outlined text-[13px] text-slate-400">date_range</span>
+              <span>Created: 19-11-2026</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Green Card 2 -->
+        <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 flex flex-col justify-between gap-1.5 h-[58px]">
+          <div class="flex items-center justify-between gap-2 min-w-0">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="material-symbols-outlined text-emerald-600 text-[16px] shrink-0">task_alt</span>
+              <span class="text-[12px] font-semibold text-slate-800 truncate">VISHAL (1) 223 KB CONVERTED PDF.pdf</span>
+            </div>
+            <span class="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-900 font-mono-code text-[9px] font-bold shrink-0">Verified</span>
+          </div>
+          <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-slate-500 pl-5">
+            <div class="flex items-center gap-2">
+              <span class="px-1.5 py-0.2 rounded bg-blue-50 text-[#0037b0] font-bold uppercase text-[9px]">PDF</span>
+              <span>223 KB</span>
+            </div>
+            <div class="flex items-center gap-1 text-slate-600 font-medium">
+              <span class="material-symbols-outlined text-[13px] text-slate-400">date_range</span>
+              <span>Created: 19-11-2026</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SAMPLE 1: Strict Mirror Micro-Pill -->
+    <div id="sample-1" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-[#0037b0] text-white flex items-center justify-center text-xs font-bold font-mono-code">1</span>
+          <h2 class="text-sm font-bold text-slate-900">SAMPLE 1: "Strict Mirror Micro-Pill" (100% Geometric Clone)</h2>
+          <span class="px-2 py-0.5 rounded bg-blue-100 text-[#0037b0] text-[10px] font-bold font-mono-code">Recommended</span>
+        </div>
+        <span class="text-xs text-slate-400 font-mono-code">Exact 58px Height • Micro Date Input (78px) + Compact Import</span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 max-w-4xl">
+        <!-- Card 1 -->
+        <div class="p-2.5 rounded-lg bg-white border border-rose-200 hover:border-rose-400 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between gap-1.5 h-[58px]">
+          <div class="flex items-center justify-between gap-2 min-w-0">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="material-symbols-outlined text-rose-500 text-[16px] shrink-0 font-bold">error_outline</span>
+              <span class="text-[12px] font-bold text-slate-900 truncate">10TH MARKSHEET</span>
+              <span class="px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 font-mono-code text-[9px] font-bold uppercase shrink-0">10M</span>
+            </div>
+            <span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 font-mono-code text-[9px] font-bold shrink-0">Missing</span>
+          </div>
+          <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-slate-500 pl-5">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[9px]">PDF</span>
+              <span class="text-[9px] text-slate-500">≤ 256 KB</span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 shadow-2xs h-[22px]">
+                <span class="material-symbols-outlined text-slate-400 text-[12px]">calendar_today</span>
+                <input type="date" value="2026-11-28" class="bg-transparent text-slate-800 font-mono-code text-[9px] font-semibold focus:outline-none cursor-pointer w-[78px] h-[16px]">
+              </div>
+              <button type="button" class="px-2 py-0.5 rounded bg-[#0037b0] hover:bg-blue-800 text-white font-mono-code text-[10px] font-bold shadow-2xs flex items-center gap-1 h-[22px] transition-all cursor-pointer active:scale-95 shrink-0">
+                <span class="material-symbols-outlined text-[12px]">download</span>
+                <span>Import</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="p-2.5 rounded-lg bg-white border border-rose-200 hover:border-rose-400 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between gap-1.5 h-[58px]">
+          <div class="flex items-center justify-between gap-2 min-w-0">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="material-symbols-outlined text-rose-500 text-[16px] shrink-0 font-bold">error_outline</span>
+              <span class="text-[12px] font-bold text-slate-900 truncate">CASTE CERTIFICATE</span>
+              <span class="px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 font-mono-code text-[9px] font-bold uppercase shrink-0">CST</span>
+            </div>
+            <span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 font-mono-code text-[9px] font-bold shrink-0">Missing</span>
+          </div>
+          <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-slate-500 pl-5">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[9px]">PDF</span>
+              <span class="text-[9px] text-slate-500">≤ 256 KB</span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 shadow-2xs h-[22px]">
+                <span class="material-symbols-outlined text-slate-400 text-[12px]">calendar_today</span>
+                <input type="date" placeholder="dd-mm-yyyy" class="bg-transparent text-slate-800 font-mono-code text-[9px] font-semibold focus:outline-none cursor-pointer w-[78px] h-[16px]">
+              </div>
+              <button type="button" class="px-2 py-0.5 rounded bg-[#0037b0] hover:bg-blue-800 text-white font-mono-code text-[10px] font-bold shadow-2xs flex items-center gap-1 h-[22px] transition-all cursor-pointer active:scale-95 shrink-0">
+                <span class="material-symbols-outlined text-[12px]">download</span>
+                <span>Import</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SAMPLE 2: Unified Connected Bento Capsule -->
+    <div id="sample-2" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-slate-700 text-white flex items-center justify-center text-xs font-bold font-mono-code">2</span>
+          <h2 class="text-sm font-bold text-slate-900">SAMPLE 2: "Connected Bento Capsule" (Fused Date + Import)</h2>
+          <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-bold font-mono-code">Ultra Neat</span>
+        </div>
+        <span class="text-xs text-slate-400 font-mono-code">Date & Import welded into 1 dual-segment capsule</span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 max-w-4xl">
+        <!-- Card 1 -->
+        <div class="p-2.5 rounded-lg bg-white border border-rose-200 hover:border-rose-400 shadow-2xs transition-all flex flex-col justify-between gap-1.5 h-[58px]">
+          <div class="flex items-center justify-between gap-2 min-w-0">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="material-symbols-outlined text-rose-500 text-[16px] shrink-0 font-bold">error_outline</span>
+              <span class="text-[12px] font-bold text-slate-900 truncate">10TH MARKSHEET</span>
+              <span class="px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 font-mono-code text-[9px] font-bold uppercase shrink-0">10M</span>
+            </div>
+            <span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 font-mono-code text-[9px] font-bold shrink-0">Missing</span>
+          </div>
+          <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-slate-500 pl-5">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[9px]">PDF</span>
+              <span class="text-[9px] text-slate-500">≤ 256 KB</span>
+            </div>
+            <!-- Welded Capsule: Date Input + Import Button -->
+            <div class="inline-flex rounded-md shadow-2xs border border-slate-200 overflow-hidden h-[22px]">
+              <div class="flex items-center px-1.5 bg-slate-50 border-r border-slate-200">
+                <span class="material-symbols-outlined text-slate-400 text-[11px] mr-1">event</span>
+                <input type="date" value="2026-11-28" class="bg-transparent text-slate-800 font-mono-code text-[9px] font-semibold focus:outline-none cursor-pointer w-[74px]">
+              </div>
+              <button type="button" class="px-2 bg-[#0037b0] hover:bg-blue-800 text-white font-mono-code text-[9px] font-bold flex items-center gap-0.5 cursor-pointer">
+                <span class="material-symbols-outlined text-[11px]">download</span>
+                <span>Import</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="p-2.5 rounded-lg bg-white border border-rose-200 hover:border-rose-400 shadow-2xs transition-all flex flex-col justify-between gap-1.5 h-[58px]">
+          <div class="flex items-center justify-between gap-2 min-w-0">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="material-symbols-outlined text-rose-500 text-[16px] shrink-0 font-bold">error_outline</span>
+              <span class="text-[12px] font-bold text-slate-900 truncate">CASTE CERTIFICATE</span>
+              <span class="px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 font-mono-code text-[9px] font-bold uppercase shrink-0">CST</span>
+            </div>
+            <span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 font-mono-code text-[9px] font-bold shrink-0">Missing</span>
+          </div>
+          <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-slate-500 pl-5">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[9px]">PDF</span>
+              <span class="text-[9px] text-slate-500">≤ 256 KB</span>
+            </div>
+            <!-- Welded Capsule: Date Input + Import Button -->
+            <div class="inline-flex rounded-md shadow-2xs border border-slate-200 overflow-hidden h-[22px]">
+              <div class="flex items-center px-1.5 bg-slate-50 border-r border-slate-200">
+                <span class="material-symbols-outlined text-slate-400 text-[11px] mr-1">event</span>
+                <input type="date" class="bg-transparent text-slate-800 font-mono-code text-[9px] font-semibold focus:outline-none cursor-pointer w-[74px]">
+              </div>
+              <button type="button" class="px-2 bg-[#0037b0] hover:bg-blue-800 text-white font-mono-code text-[9px] font-bold flex items-center gap-0.5 cursor-pointer">
+                <span class="material-symbols-outlined text-[11px]">download</span>
+                <span>Import</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SAMPLE 3: Status Badge Integrated Date -->
+    <div id="sample-3" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-slate-700 text-white flex items-center justify-center text-xs font-bold font-mono-code">3</span>
+          <h2 class="text-sm font-bold text-slate-900">SAMPLE 3: "Status Date Badge" (Date in Top Badge + Solo Import)</h2>
+          <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-bold font-mono-code">Zero Bottom Crowding</span>
+        </div>
+        <span class="text-xs text-slate-400 font-mono-code">Top pill holds date, bottom has clean solo Import</span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 max-w-4xl">
+        <!-- Card 1 -->
+        <div class="p-2.5 rounded-lg bg-white border border-rose-200 hover:border-rose-400 shadow-2xs transition-all flex flex-col justify-between gap-1.5 h-[58px]">
+          <div class="flex items-center justify-between gap-2 min-w-0">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="material-symbols-outlined text-rose-500 text-[16px] shrink-0 font-bold">error_outline</span>
+              <span class="text-[12px] font-bold text-slate-900 truncate">10TH MARKSHEET</span>
+              <span class="px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 font-mono-code text-[9px] font-bold uppercase shrink-0">10M</span>
+            </div>
+            <!-- Clickable date pill on top right -->
+            <label class="px-1.5 py-0.2 rounded bg-rose-100 hover:bg-rose-200 text-rose-900 font-mono-code text-[9px] font-bold flex items-center gap-1 cursor-pointer transition-colors shrink-0" title="Click to change follow-up date">
+              <span>📅 28-Nov</span>
+              <input type="date" value="2026-11-28" class="sr-only">
+            </label>
+          </div>
+          <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-slate-500 pl-5">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[9px]">PDF</span>
+              <span class="text-[9px] text-slate-500">≤ 256 KB</span>
+            </div>
+            <button type="button" class="px-2.5 py-0.5 rounded bg-[#0037b0] hover:bg-blue-800 text-white font-mono-code text-[10px] font-bold shadow-2xs flex items-center gap-1 h-[22px] cursor-pointer">
+              <span class="material-symbols-outlined text-[12px]">download</span>
+              <span>Import File</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="p-2.5 rounded-lg bg-white border border-rose-200 hover:border-rose-400 shadow-2xs transition-all flex flex-col justify-between gap-1.5 h-[58px]">
+          <div class="flex items-center justify-between gap-2 min-w-0">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="material-symbols-outlined text-rose-500 text-[16px] shrink-0 font-bold">error_outline</span>
+              <span class="text-[12px] font-bold text-slate-900 truncate">CASTE CERTIFICATE</span>
+              <span class="px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 font-mono-code text-[9px] font-bold uppercase shrink-0">CST</span>
+            </div>
+            <!-- Clickable date pill on top right -->
+            <label class="px-1.5 py-0.2 rounded bg-rose-100 hover:bg-rose-200 text-rose-900 font-mono-code text-[9px] font-bold flex items-center gap-1 cursor-pointer transition-colors shrink-0" title="Click to set follow-up date">
+              <span>+ Set Date</span>
+              <input type="date" class="sr-only">
+            </label>
+          </div>
+          <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-slate-500 pl-5">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[9px]">PDF</span>
+              <span class="text-[9px] text-slate-500">≤ 256 KB</span>
+            </div>
+            <button type="button" class="px-2.5 py-0.5 rounded bg-[#0037b0] hover:bg-blue-800 text-white font-mono-code text-[10px] font-bold shadow-2xs flex items-center gap-1 h-[22px] cursor-pointer">
+              <span class="material-symbols-outlined text-[12px]">download</span>
+              <span>Import File</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SAMPLE 4: Left Accent Border Rail (Bento Workstation Style) -->
+    <div id="sample-4" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-slate-700 text-white flex items-center justify-center text-xs font-bold font-mono-code">4</span>
+          <h2 class="text-sm font-bold text-slate-900">SAMPLE 4: "Bento Left Accent Rail" (Rose 3px Stripe)</h2>
+          <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-bold font-mono-code">High Distinction</span>
+        </div>
+        <span class="text-xs text-slate-400 font-mono-code">Solid 3px rose rail on left, clean micro actions</span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 max-w-4xl">
+        <!-- Card 1 -->
+        <div class="p-2.5 rounded-lg bg-white border border-slate-200 border-l-[3.5px] border-l-rose-500 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between gap-1.5 h-[58px]">
+          <div class="flex items-center justify-between gap-2 min-w-0">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="text-[12px] font-bold text-slate-900 truncate">10TH MARKSHEET</span>
+              <span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-mono-code text-[9px] font-bold uppercase shrink-0">10M</span>
+            </div>
+            <span class="px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 border border-rose-200 font-mono-code text-[9px] font-bold shrink-0">Missing</span>
+          </div>
+          <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-slate-500">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[9px]">PDF</span>
+              <span class="text-[9px] text-slate-500">≤ 256 KB</span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 shadow-2xs h-[22px]">
+                <span class="material-symbols-outlined text-slate-400 text-[12px]">calendar_today</span>
+                <input type="date" value="2026-11-28" class="bg-transparent text-slate-800 font-mono-code text-[9px] font-semibold focus:outline-none cursor-pointer w-[76px] h-[16px]">
+              </div>
+              <button type="button" class="px-2 py-0.5 rounded bg-[#0037b0] hover:bg-blue-800 text-white font-mono-code text-[10px] font-bold shadow-2xs flex items-center gap-1 h-[22px] cursor-pointer">
+                <span class="material-symbols-outlined text-[12px]">download</span>
+                <span>Import</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="p-2.5 rounded-lg bg-white border border-slate-200 border-l-[3.5px] border-l-rose-500 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between gap-1.5 h-[58px]">
+          <div class="flex items-center justify-between gap-2 min-w-0">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="text-[12px] font-bold text-slate-900 truncate">CASTE CERTIFICATE</span>
+              <span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-mono-code text-[9px] font-bold uppercase shrink-0">CST</span>
+            </div>
+            <span class="px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 border border-rose-200 font-mono-code text-[9px] font-bold shrink-0">Missing</span>
+          </div>
+          <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-slate-500">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[9px]">PDF</span>
+              <span class="text-[9px] text-slate-500">≤ 256 KB</span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 shadow-2xs h-[22px]">
+                <span class="material-symbols-outlined text-slate-400 text-[12px]">calendar_today</span>
+                <input type="date" class="bg-transparent text-slate-800 font-mono-code text-[9px] font-semibold focus:outline-none cursor-pointer w-[76px] h-[16px]">
+              </div>
+              <button type="button" class="px-2 py-0.5 rounded bg-[#0037b0] hover:bg-blue-800 text-white font-mono-code text-[10px] font-bold shadow-2xs flex items-center gap-1 h-[22px] cursor-pointer">
+                <span class="material-symbols-outlined text-[12px]">download</span>
+                <span>Import</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SAMPLE 5: Ghost Micro Toolbar (Minimal Icon Buttons) -->
+    <div id="sample-5" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-slate-700 text-white flex items-center justify-center text-xs font-bold font-mono-code">5</span>
+          <h2 class="text-sm font-bold text-slate-900">SAMPLE 5: "Ghost Micro Strip" (Icon Calendar Trigger + Compact Import)</h2>
+          <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-bold font-mono-code">Lightest Footprint</span>
+        </div>
+        <span class="text-xs text-slate-400 font-mono-code">Direct calendar icon popup button without fixed input box</span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 max-w-4xl">
+        <!-- Card 1 -->
+        <div class="p-2.5 rounded-lg bg-white border border-rose-200 hover:border-rose-400 shadow-2xs transition-all flex flex-col justify-between gap-1.5 h-[58px]">
+          <div class="flex items-center justify-between gap-2 min-w-0">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="material-symbols-outlined text-rose-500 text-[16px] shrink-0 font-bold">error_outline</span>
+              <span class="text-[12px] font-bold text-slate-900 truncate">10TH MARKSHEET</span>
+              <span class="px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 font-mono-code text-[9px] font-bold uppercase shrink-0">10M</span>
+            </div>
+            <span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 font-mono-code text-[9px] font-bold shrink-0">Missing</span>
+          </div>
+          <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-slate-500 pl-5">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[9px]">PDF</span>
+              <span class="text-[9px] text-slate-500">≤ 256 KB</span>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <!-- Compact Calendar Trigger Button with relative input -->
+              <label class="px-2 py-0.5 rounded border border-slate-200 hover:border-[#0037b0] hover:text-[#0037b0] text-slate-600 font-mono-code text-[9px] font-bold flex items-center gap-1 cursor-pointer transition-colors h-[22px] shadow-2xs" title="Click to schedule follow-up">
+                <span class="material-symbols-outlined text-[12px]">calendar_month</span>
+                <span>28-Nov</span>
+                <input type="date" value="2026-11-28" class="sr-only">
+              </label>
+              <!-- Compact Import Button -->
+              <button type="button" class="px-2 py-0.5 rounded bg-[#0037b0] hover:bg-blue-800 text-white font-mono-code text-[10px] font-bold shadow-2xs flex items-center gap-1 h-[22px] cursor-pointer">
+                <span class="material-symbols-outlined text-[12px]">download</span>
+                <span>Import</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="p-2.5 rounded-lg bg-white border border-rose-200 hover:border-rose-400 shadow-2xs transition-all flex flex-col justify-between gap-1.5 h-[58px]">
+          <div class="flex items-center justify-between gap-2 min-w-0">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="material-symbols-outlined text-rose-500 text-[16px] shrink-0 font-bold">error_outline</span>
+              <span class="text-[12px] font-bold text-slate-900 truncate">CASTE CERTIFICATE</span>
+              <span class="px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 font-mono-code text-[9px] font-bold uppercase shrink-0">CST</span>
+            </div>
+            <span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 font-mono-code text-[9px] font-bold shrink-0">Missing</span>
+          </div>
+          <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-slate-500 pl-5">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[9px]">PDF</span>
+              <span class="text-[9px] text-slate-500">≤ 256 KB</span>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <label class="px-2 py-0.5 rounded border border-dashed border-slate-300 hover:border-[#0037b0] hover:text-[#0037b0] text-slate-400 font-mono-code text-[9px] font-bold flex items-center gap-1 cursor-pointer transition-colors h-[22px]" title="Click to schedule follow-up">
+                <span class="material-symbols-outlined text-[12px]">calendar_month</span>
+                <span>+ Date</span>
+                <input type="date" class="sr-only">
+              </label>
+              <button type="button" class="px-2 py-0.5 rounded bg-[#0037b0] hover:bg-blue-800 text-white font-mono-code text-[10px] font-bold shadow-2xs flex items-center gap-1 h-[22px] cursor-pointer">
+                <span class="material-symbols-outlined text-[12px]">download</span>
+                <span>Import</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
