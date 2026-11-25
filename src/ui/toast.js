@@ -40,6 +40,25 @@ class UnifiedToastManager {
   }
 
   /**
+   * Helper convenience methods
+   */
+  success(title, subtitle = '', duration = null) {
+    this.show(title, subtitle, 'success', duration);
+  }
+
+  error(title, subtitle = '', duration = null) {
+    this.show(title, subtitle, 'error', duration);
+  }
+
+  warning(title, subtitle = '', duration = null) {
+    this.show(title, subtitle, 'warning', duration);
+  }
+
+  info(title, subtitle = '', duration = null) {
+    this.show(title, subtitle, 'info', duration);
+  }
+
+  /**
    * Display a clean, non-blocking toast
    * @param {string} title
    * @param {string} [subtitle=""]

@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>DocMitra Offline Admin Keygen v1.4.4</title>
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            surface: '#f4f6fb',
+            card: '#ffffff',
+            primary: '#0037b0',
+            'primary-hover': '#1d4ed8',
+            emerald: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              600: '#059669',
+              700: '#047857',
+            },
+            crimson: '#dc2626',
+            slate: {
+              850: '#0f172a',
+              900: '#0b1c30',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body { background-color: #f4f6fb; color: #0b1c30; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    .bento-card {
+      background: #ffffff;
+      border: 1px solid rgba(196, 197, 215, 0.45);
+      border-radius: 1rem;
+      box-shadow: 0 2px 12px -2px rgba(11, 28, 48, 0.04);
+    }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-blue-100 pb-10">
+
+  <!-- Toast Container -->
+  <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[#0b1c30] text-white px-5 py-2.5 rounded-full text-xs font-semibold shadow-xl flex items-center gap-2 transition-all duration-300 opacity-0 pointer-events-none -translate-y-2">
+    <span class="material-symbols-outlined text-[16px] text-emerald-400">check_circle</span>
+    <span id="toastMsg">Action completed</span>
+  </div>
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200/80 sticky top-0 z-40 shadow-xs">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-[#0037b0] text-white flex items-center justify-center shadow-xs">
+          <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-display font-bold text-base text-[#0b1c30] tracking-tight">DocMitra Admin Keygen</h1>
+            <span class="px-2 py-0.5 rounded-full bg-blue-50 text-[#0037b0] text-[10px] font-mono font-bold border border-blue-200">v1.4.4</span>
+          </div>
+          <p class="text-[11px] text-slate-500">100% Offline Cryptographic Key Generator</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-[11px] font-semibold">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="hidden sm:inline">Offline WebCrypto Active</span>
+          <span class="sm:hidden">Offline</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-4xl mx-auto w-full px-4 pt-6 space-y-6">
+
+    <!-- STEP 1: PASTE USER REQUEST CODE -->
+    <div class="bento-card p-5 sm:p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-blue-50 text-[#0037b0] text-xs font-bold flex items-center justify-center">1</span>
+          <h2 class="font-display font-bold text-sm text-[#0b1c30]">Paste User Request Code</h2>
+        </div>
+        <span class="text-[11px] text-slate-400 font-mono">From Client Activation Screen</span>
+      </div>
+
+      <div class="space-y-3">
+        <div class="relative">
+          <textarea id="requestCodeInput" rows="3" placeholder="Paste Request Code here (e.g. DM-REQ-eyJoIjoiRE0tSFct...)" oninput="handleRequestCodeInput(this.value)" class="w-full text-xs font-mono p-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-[#0037b0] focus:ring-1 focus:ring-blue-100 outline-none transition-all placeholder:text-slate-400"></textarea>
+          <button onclick="pasteFromClipboard()" class="absolute right-2.5 bottom-2.5 px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold text-[#0037b0] shadow-2xs flex items-center gap-1 transition-colors">
+            <span class="material-symbols-outlined text-[14px]">content_paste</span>
+            <span>Paste</span>
+          </button>
+        </div>
+
+        <!-- Decoded Info Preview Card -->
+        <div id="decodedPreviewBox" class="p-4 bg-blue-50/60 border border-blue-100 rounded-xl hidden space-y-2 text-xs">
+          <div class="font-semibold text-[#0037b0] flex items-center gap-1">
+            <span class="material-symbols-outlined text-[16px]">verified</span>
+            <span>Request Code Successfully Decoded</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+            <div class="bg-white p-2.5 rounded-lg border border-blue-100">
+              <span class="text-[10px] text-slate-400 block font-semibold uppercase">User Name</span>
+              <span id="prevUserName" class="font-semibold text-slate-800 text-xs">-</span>
+            </div>
+            <div class="bg-white p-2.5 rounded-lg border border-blue-100">
+              <span class="text-[10px] text-slate-400 block font-semibold uppercase">Motherboard HWID</span>
+              <span id="prevHwid" class="font-mono font-bold text-slate-800 text-[11px]">-</span>
+            </div>
+            <div class="bg-white p-2.5 rounded-lg border border-blue-100">
+              <span class="text-[10px] text-slate-400 block font-semibold uppercase">Contact / Phone</span>
+              <span id="prevContact" class="font-medium text-slate-700 text-xs">-</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Manual HWID / Name fallback -->
+        <div class="pt-1">
+          <details class="text-xs text-slate-500 cursor-pointer">
+            <summary class="font-semibold text-[#0037b0] hover:underline select-none">Or manually enter Hardware ID &amp; Name</summary>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 pt-3 border-t border-slate-100">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">User Full Name *</label>
+                <input type="text" id="manualUserName" placeholder="Rajesh Patil" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-[#0037b0]">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Motherboard HWID *</label>
+                <input type="text" id="manualHwid" placeholder="DM-HW-XXXX-XXXX-XXXX" class="w-full font-mono text-xs uppercase px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-[#0037b0]">
+              </div>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: LICENSE DURATION & MODULE PERMISSION TOGGLES -->
+    <div class="bento-card p-5 sm:p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-blue-50 text-[#0037b0] text-xs font-bold flex items-center justify-center">2</span>
+          <h2 class="font-display font-bold text-sm text-[#0b1c30]">Configure License &amp; Module Locks</h2>
+        </div>
+        <span class="text-[11px] text-slate-400">Strict Feature Boundary Control</span>
+      </div>
+
+      <div class="space-y-4">
+        <!-- Duration Selector -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1">
+            <span class="material-symbols-outlined text-[15px] text-[#0037b0]">calendar_month</span>
+            <span>License Duration</span>
+          </label>
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            <button type="button" onclick="selectDuration('7D', this)" class="dur-btn active py-2.5 px-3 rounded-xl border border-blue-600 bg-blue-50 text-[#0037b0] text-xs font-bold text-center transition-all">
+              7 Days<br><span class="text-[10px] font-normal opacity-80">(Tester Trial)</span>
+            </button>
+            <button type="button" onclick="selectDuration('15D', this)" class="dur-btn py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 text-xs font-bold text-center transition-all">
+              15 Days<br><span class="text-[10px] font-normal opacity-70">(Extended)</span>
+            </button>
+            <button type="button" onclick="selectDuration('30D', this)" class="dur-btn py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 text-xs font-bold text-center transition-all">
+              30 Days<br><span class="text-[10px] font-normal opacity-70">(1 Month)</span>
+            </button>
+            <button type="button" onclick="selectDuration('1Y', this)" class="dur-btn py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 text-xs font-bold text-center transition-all">
+              1 Year<br><span class="text-[10px] font-normal opacity-70">(Annual Pro)</span>
+            </button>
+            <button type="button" onclick="selectDuration('LFT', this)" class="dur-btn py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 text-xs font-bold text-center transition-all col-span-2 sm:col-span-1">
+              🌟 Lifetime<br><span class="text-[10px] font-normal opacity-70">(Unlimited)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Module Lock Toggles (Default for Testers) -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="block text-xs font-semibold text-slate-700 flex items-center gap-1">
+              <span class="material-symbols-outlined text-[15px] text-[#0037b0]">lock_open</span>
+              <span>Module Access Control</span>
+            </label>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="applyTesterPreset()" class="text-[11px] font-semibold text-[#0037b0] hover:underline">Tester Preset (Renamer + Desk)</button>
+              <span class="text-slate-300">|</span>
+              <button type="button" onclick="unlockAllModules()" class="text-[11px] font-semibold text-slate-500 hover:underline">Unlock All</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            <!-- Bulk Renamer -->
+            <label class="flex items-center justify-between p-3 rounded-xl border border-emerald-200 bg-emerald-50/50 cursor-pointer select-none">
+              <div class="flex items-center gap-2.5">
+                <input type="checkbox" id="modRenamer" checked class="w-4 h-4 rounded text-emerald-600 focus:ring-0">
+                <span class="font-semibold text-slate-800">Bulk Renamer</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">UNLOCKED</span>
+            </label>
+
+            <!-- Follow-up Desk -->
+            <label class="flex items-center justify-between p-3 rounded-xl border border-emerald-200 bg-emerald-50/50 cursor-pointer select-none">
+              <div class="flex items-center gap-2.5">
+                <input type="checkbox" id="modDesk" checked class="w-4 h-4 rounded text-emerald-600 focus:ring-0">
+                <span class="font-semibold text-slate-800">Follow-up Desk</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">UNLOCKED</span>
+            </label>
+
+            <!-- PDF Studio (Locked by default) -->
+            <label class="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/70 cursor-pointer select-none" id="labelModPdf">
+              <div class="flex items-center gap-2.5">
+                <input type="checkbox" id="modPdf" onchange="updateLockBadges()" class="w-4 h-4 rounded text-[#0037b0] focus:ring-0">
+                <span class="font-semibold text-slate-700">PDF Studio</span>
+              </div>
+              <span id="badgeModPdf" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600">🔒 LOCKED</span>
+            </label>
+
+            <!-- Image Studio (Locked by default) -->
+            <label class="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/70 cursor-pointer select-none" id="labelModImage">
+              <div class="flex items-center gap-2.5">
+                <input type="checkbox" id="modImage" onchange="updateLockBadges()" class="w-4 h-4 rounded text-[#0037b0] focus:ring-0">
+                <span class="font-semibold text-slate-700">Image Studio</span>
+              </div>
+              <span id="badgeModImage" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600">🔒 LOCKED</span>
+            </label>
+
+            <!-- Print Studio (Locked by default) -->
+            <label class="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/70 cursor-pointer select-none sm:col-span-2" id="labelModPrint">
+              <div class="flex items-center gap-2.5">
+                <input type="checkbox" id="modPrint" onchange="updateLockBadges()" class="w-4 h-4 rounded text-[#0037b0] focus:ring-0">
+                <span class="font-semibold text-slate-700">Print Studio</span>
+              </div>
+              <span id="badgeModPrint" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600">🔒 LOCKED</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- GENERATE BUTTON -->
+        <button onclick="generateActivationKey()" class="w-full py-3.5 bg-[#0037b0] hover:bg-[#1d4ed8] active:scale-[0.99] text-white font-semibold rounded-xl text-sm shadow-md transition-all flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined text-[20px]">vpn_key</span>
+          <span>Generate Cryptographic Activation Key</span>
+        </button>
+      </div>
+
+      <!-- STEP 3: ACTIVATION KEY RESULT BOX -->
+      <div id="resultBox" class="mt-4 p-4 sm:p-5 bg-emerald-50 border border-emerald-200 rounded-xl hidden space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-800">
+            <span class="material-symbols-outlined text-[18px] text-emerald-600">verified</span>
+            <span>Activation Key Generated Successfully!</span>
+          </div>
+          <span id="resultPlanBadge" class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold text-[10px]">7 Days Trial</span>
+        </div>
+
+        <div id="keyDisplay" class="p-3.5 bg-white border border-emerald-300 rounded-lg font-mono font-bold text-sm sm:text-base text-[#0b1c30] text-center tracking-wider select-all break-all shadow-inner">
+          DM-ACT-...
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <button onclick="copyGeneratedKey()" class="py-2.5 px-3 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold text-[#0b1c30] flex items-center justify-center gap-1.5 shadow-2xs transition-colors">
+            <span class="material-symbols-outlined text-[16px]">content_copy</span>
+            <span>Copy Key</span>
+          </button>
+          <button onclick="shareViaWhatsApp()" class="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 shadow-2xs transition-colors">
+            <span class="material-symbols-outlined text-[16px]">chat</span>
+            <span>Share via WhatsApp</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOCAL HISTORY LOG -->
+    <div class="bento-card p-5 sm:p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-[#0037b0] text-[20px]">history</span>
+          <h2 class="font-display font-bold text-sm text-[#0b1c30]">Generated Keys History (Offline localStorage)</h2>
+        </div>
+        <button onclick="exportHistoryJson()" class="text-xs font-semibold text-[#0037b0] hover:underline flex items-center gap-1">
+          <span class="material-symbols-outlined text-[14px]">download</span>
+          <span>Export JSON</span>
+        </button>
+      </div>
+
+      <div class="overflow-x-auto rounded-lg border border-slate-200">
+        <table class="w-full text-left text-xs">
+          <thead>
+            <tr class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+              <th class="p-2.5">Date</th>
+              <th class="p-2.5">Tester / User</th>
+              <th class="p-2.5">HWID</th>
+              <th class="p-2.5">Duration</th>
+              <th class="p-2.5">Modules</th>
+              <th class="p-2.5">Activation Key</th>
+              <th class="p-2.5 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody" class="divide-y divide-slate-100 bg-white">
+            <tr>
+              <td colspan="7" class="p-5 text-center text-slate-400">No keys generated yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    const SECRET_KEY = "DOCMITRA_ULTRA_SECURE_HMAC_KEY_2026_PROD";
+    let selectedDuration = "7D";
+    let currentDecodedRequest = null;
+
+    // Toast Helper
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-2');
+      t.classList.add('opacity-100', 'translate-y-0');
+      setTimeout(() => {
+        t.classList.remove('opacity-100', 'translate-y-0');
+        t.classList.add('opacity-0', 'pointer-events-none', '-translate-y-2');
+      }, 2500);
+    }
+
+    // Duration Selector
+    function selectDuration(dur, btn) {
+      selectedDuration = dur;
+      document.querySelectorAll('.dur-btn').forEach(b => {
+        b.className = 'dur-btn py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 text-xs font-bold text-center transition-all';
+      });
+      btn.className = 'dur-btn active py-2.5 px-3 rounded-xl border border-blue-600 bg-blue-50 text-[#0037b0] text-xs font-bold text-center transition-all';
+    }
+
+    // Presets
+    function applyTesterPreset() {
+      document.getElementById('modRenamer').checked = true;
+      document.getElementById('modDesk').checked = true;
+      document.getElementById('modPdf').checked = false;
+      document.getElementById('modImage').checked = false;
+      document.getElementById('modPrint').checked = false;
+      updateLockBadges();
+      showToast('Tester Preset Applied (Renamer + Desk unlocked)');
+    }
+
+    function unlockAllModules() {
+      document.getElementById('modRenamer').checked = true;
+      document.getElementById('modDesk').checked = true;
+      document.getElementById('modPdf').checked = true;
+      document.getElementById('modImage').checked = true;
+      document.getElementById('modPrint').checked = true;
+      updateLockBadges();
+      showToast('All 5 modules unlocked');
+    }
+
+    function updateLockBadges() {
+      ['Pdf', 'Image', 'Print'].forEach(mod => {
+        const checked = document.getElementById('mod' + mod).checked;
+        const badge = document.getElementById('badgeMod' + mod);
+        const label = document.getElementById('labelMod' + mod);
+        if (checked) {
+          badge.textContent = 'UNLOCKED';
+          badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800';
+          label.className = 'flex items-center justify-between p-3 rounded-xl border border-emerald-200 bg-emerald-50/50 cursor-pointer select-none';
+        } else {
+          badge.textContent = '🔒 LOCKED';
+          badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600';
+          label.className = 'flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/70 cursor-pointer select-none';
+        }
+      });
+    }
+
+    // Paste Request Code
+    async function pasteFromClipboard() {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          document.getElementById('requestCodeInput').value = text.trim();
+          handleRequestCodeInput(text.trim());
+          showToast('Request Code Pasted! 📋');
+        }
+      } catch (e) {
+        showToast('Clipboard access denied, please paste manually');
+      }
+    }
+
+    // Decode Request Code
+    function handleRequestCodeInput(raw) {
+      raw = raw.trim();
+      currentDecodedRequest = null;
+      if (!raw) {
+        document.getElementById('decodedPreviewBox').classList.add('hidden');
+        return;
+      }
+
+      try {
+        let b64 = raw;
+        if (raw.startsWith('DM-REQ-')) {
+          b64 = raw.substring(7);
+        }
+        const jsonStr = atob(b64);
+        const obj = JSON.parse(jsonStr);
+
+        if (obj.h && obj.u) {
+          currentDecodedRequest = {
+            hwid: obj.h.toUpperCase(),
+            userName: obj.u,
+            contact: obj.p || '-'
+          };
+          document.getElementById('prevUserName').textContent = obj.u;
+          document.getElementById('prevHwid').textContent = obj.h.toUpperCase();
+          document.getElementById('prevContact').textContent = obj.p || 'Not provided';
+          document.getElementById('decodedPreviewBox').classList.remove('hidden');
+          return;
+        }
+      } catch (e) {}
+
+      // If manual plain format DM-REQ:HWID:Name:Phone
+      if (raw.includes(':')) {
+        const parts = raw.replace(/^DM-REQ:?/, '').split(':');
+        if (parts.length >= 2) {
+          currentDecodedRequest = {
+            hwid: parts[0].trim().toUpperCase(),
+            userName: parts[1].trim(),
+            contact: parts[2] ? parts[2].trim() : '-'
+          };
+          document.getElementById('prevUserName').textContent = currentDecodedRequest.userName;
+          document.getElementById('prevHwid').textContent = currentDecodedRequest.hwid;
+          document.getElementById('prevContact').textContent = currentDecodedRequest.contact;
+          document.getElementById('decodedPreviewBox').classList.remove('hidden');
+          return;
+        }
+      }
+
+      document.getElementById('decodedPreviewBox').classList.add('hidden');
+    }
+
+    // Module Code String Generator
+    function getModuleCode() {
+      const r = document.getElementById('modRenamer').checked;
+      const f = document.getElementById('modDesk').checked;
+      const p = document.getElementById('modPdf').checked;
+      const i = document.getElementById('modImage').checked;
+      const pr = document.getElementById('modPrint').checked;
+
+      if (r && f && p && i && pr) return 'ALL';
+      let code = '';
+      if (r) code += 'R';
+      if (f) code += 'F';
+      if (p) code += 'P';
+      if (i) code += 'I';
+      if (pr) code += 'S';
+      return code || 'R';
+    }
+
+    // Expiry Date Calculator (YYYYMMDD)
+    function calculateExpiryDate(dur) {
+      if (dur === 'LFT') return 'LIFETIME';
+      const now = new Date();
+      let days = 7;
+      if (dur === '15D') days = 15;
+      else if (dur === '30D') days = 30;
+      else if (dur === '1Y') days = 365;
+
+      const target = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+      const yyyy = target.getFullYear();
+      const mm = String(target.getMonth() + 1).padStart(2, '0');
+      const dd = String(target.getDate()).padStart(2, '0');
+      return `${yyyy}${mm}${dd}`;
+    }
+
+    // Generate Cryptographic Activation Key
+    async function generateActivationKey() {
+      let hwid = '';
+      let userName = '';
+      let contact = '-';
+
+      if (currentDecodedRequest) {
+        hwid = currentDecodedRequest.hwid;
+        userName = currentDecodedRequest.userName;
+        contact = currentDecodedRequest.contact;
+      } else {
+        hwid = document.getElementById('manualHwid').value.trim().toUpperCase();
+        userName = document.getElementById('manualUserName').value.trim();
+      }
+
+      if (!hwid || !userName) {
+        alert('कृपया User Request Code पेस्ट करा किंवा User Name व HWID प्रविष्ट करा!');
+        return;
+      }
+
+      if (!hwid.startsWith('DM-HW-') && !hwid.startsWith('DM-SYS-')) {
+        hwid = 'DM-HW-' + hwid;
+      }
+
+      const modCode = getModuleCode();
+      const expiry = calculateExpiryDate(selectedDuration);
+
+      // Payload for HMAC Signature: hwid:userName:modCode:expiry
+      const payload = `${hwid}:${userName}:${modCode}:${expiry}`;
+
+      // Web Crypto HMAC-SHA256
+      const enc = new TextEncoder();
+      const keyObj = await crypto.subtle.importKey(
+        "raw",
+        enc.encode(SECRET_KEY),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"]
+      );
+      const signature = await crypto.subtle.sign("HMAC", keyObj, enc.encode(payload));
+      const hashArray = Array.from(new Uint8Array(signature));
+      const hexSig = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase().substring(0, 16);
+
+      // Formatted Compact Activation Key: DM-ACT-<MOD>-<EXPIRY>-XXXX-XXXX-XXXX-XXXX
+      const formattedSig = `${hexSig.substring(0,4)}-${hexSig.substring(4,8)}-${hexSig.substring(8,12)}-${hexSig.substring(12,16)}`;
+      const activationKey = `DM-ACT-${modCode}-${expiry}-${formattedSig}`;
+
+      document.getElementById('keyDisplay').textContent = activationKey;
+      document.getElementById('resultPlanBadge').textContent = `${selectedDuration} (${modCode})`;
+      document.getElementById('resultBox').classList.remove('hidden');
+      showToast('Activation Key Generated! ⚡');
+
+      // Save to History Log
+      saveToHistory({
+        date: new Date().toLocaleDateString('en-GB') + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+        userName,
+        hwid,
+        duration: selectedDuration,
+        expiry,
+        modules: modCode,
+        key: activationKey,
+        contact
+      });
+    }
+
+    function copyGeneratedKey() {
+      const k = document.getElementById('keyDisplay').textContent.trim();
+      navigator.clipboard.writeText(k);
+      showToast('Activation Key Copied! 📋');
+    }
+
+    function shareViaWhatsApp() {
+      const key = document.getElementById('keyDisplay').textContent.trim();
+      let name = currentDecodedRequest ? currentDecodedRequest.userName : (document.getElementById('manualUserName').value.trim() || 'User');
+      let hwid = currentDecodedRequest ? currentDecodedRequest.hwid : document.getElementById('manualHwid').value.trim();
+
+      const modNames = [];
+      if (document.getElementById('modRenamer').checked) modNames.push('Bulk Renamer');
+      if (document.getElementById('modDesk').checked) modNames.push('Follow-up Desk');
+      if (document.getElementById('modPdf').checked) modNames.push('PDF Studio');
+      if (document.getElementById('modImage').checked) modNames.push('Image Studio');
+      if (document.getElementById('modPrint').checked) modNames.push('Print Studio');
+
+      const text = `नमस्कार ${name} जी,\n\nतुमच्या DocMitra Offline Suite चा अधिकृत Activation Key खालीलप्रमाणे आहे:\n\n🔑 *Activation Key:*\n\`${key}\`\n\n💻 *Motherboard HWID:* \`${hwid}\`\n⏱️ *Duration:* ${selectedDuration}\n📦 *Permitted Modules:* ${modNames.join(', ')}\n\n⚙️ *Activation Instructions:*\n1. DocMitra ॲप उघडा.\n2. Activation Lock Screen मध्ये 'Paste Activation Key' दाबा.\n3. 'Verify & Unlock' बटण दाबून ॲप तात्काळ चालू करा.\n\nधन्यवाद!\n— DocMitra Team`;
+      
+      const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank');
+    }
+
+    // History Storage
+    function getHistory() {
+      try {
+        return JSON.parse(localStorage.getItem('docmitra_keygen_history') || '[]');
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveToHistory(item) {
+      const list = getHistory();
+      list.unshift(item);
+      if (list.length > 100) list.pop();
+      localStorage.setItem('docmitra_keygen_history', JSON.stringify(list));
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const list = getHistory();
+      const tbody = document.getElementById('historyTableBody');
+      if (!list || list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-5 text-center text-slate-400">No keys generated yet.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map(item => `
+        <tr class="hover:bg-slate-50 transition-colors">
+          <td class="p-2.5 whitespace-nowrap text-slate-500">${item.date}</td>
+          <td class="p-2.5 font-semibold text-slate-800">${item.userName}</td>
+          <td class="p-2.5 font-mono text-[11px] text-slate-600">${item.hwid}</td>
+          <td class="p-2.5 whitespace-nowrap">
+            <span class="px-2 py-0.5 rounded font-bold text-[10px] bg-blue-50 text-[#0037b0]">${item.duration}</span>
+          </td>
+          <td class="p-2.5 font-mono text-[11px] text-emerald-700 font-bold">${item.modules}</td>
+          <td class="p-2.5 font-mono text-[11px] text-slate-800 select-all">${item.key}</td>
+          <td class="p-2.5 text-right whitespace-nowrap">
+            <button onclick="navigator.clipboard.writeText('${item.key}'); showToast('Key Copied! 📋')" class="p-1 text-slate-400 hover:text-[#0037b0]" title="Copy Key">
+              <span class="material-symbols-outlined text-[15px]">content_copy</span>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function exportHistoryJson() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(getHistory(), null, 2));
+      const dl = document.createElement('a');
+      dl.setAttribute("href", dataStr);
+      dl.setAttribute("download", `docmitra_keygen_history_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(dl);
+      dl.click();
+      dl.remove();
+    }
+
+    // Init
+    window.addEventListener('DOMContentLoaded', () => {
+      renderHistory();
+    });
+  </script>
+</body>
+</html>

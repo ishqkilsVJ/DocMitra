@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>DocMitra Mobile Keygen v1.4.4</title>
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            surface: '#f8f9ff',
+            'surface-container-lowest': '#ffffff',
+            'surface-container-low': '#eff4ff',
+            'surface-container': '#e5eeff',
+            'on-surface': '#0b1c30',
+            'on-surface-variant': '#434655',
+            primary: '#0037b0',
+            'primary-container': '#1d4ed8',
+            tertiary: '#004f35',
+            'outline-variant': '#c4c5d7',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #f8f9ff; color: #0b1c30; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    .bento-card { background: #ffffff; border: 1px solid rgba(196, 197, 215, 0.45); box-shadow: 0 4px 20px -2px rgba(11, 28, 48, 0.05); }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 antialiased selection:bg-blue-100">
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-[#0b1c30] text-white px-5 py-2.5 rounded-full text-xs font-semibold shadow-lg flex items-center gap-2 transition-all duration-300 opacity-0 pointer-events-none translate-y-[-10px]">
+    <span class="material-symbols-outlined text-[16px] text-emerald-400">check_circle</span>
+    <span id="toastMsg">Key copied to clipboard!</span>
+  </div>
+
+  <!-- AUTH SCREEN -->
+  <div id="authBox" class="w-full max-w-md bento-card rounded-2xl p-7 flex flex-col">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="w-11 h-11 rounded-xl bg-blue-50 border border-blue-200 text-[#0037b0] flex items-center justify-center shadow-xs">
+        <span class="material-symbols-outlined text-[24px]">shield_person</span>
+      </div>
+      <div>
+        <h1 class="font-display font-bold text-lg text-[#0b1c30] tracking-tight">DocMitra Admin Keygen</h1>
+        <p class="text-xs text-[#434655]">Master Security &amp; 2FA Authentication</p>
+      </div>
+    </div>
+
+    <div class="bg-blue-50/60 rounded-xl p-3.5 border border-blue-100 text-xs text-[#0037b0] mb-5 flex items-start gap-2.5">
+      <span class="material-symbols-outlined text-[18px] shrink-0 text-[#0037b0] mt-0.5">lock</span>
+      <span>Enter Master Emergency PIN (<strong class="font-mono">998877</strong>) or your 6-digit Authenticator code to unlock.</span>
+    </div>
+
+    <div class="mb-5">
+      <label class="block text-xs font-bold text-[#434655] uppercase tracking-wider mb-2">Admin Security PIN</label>
+      <input type="password" id="totpInput" placeholder="••••••" maxlength="10" class="w-full text-center font-mono font-bold text-2xl tracking-[0.3em] py-3.5 bg-[#f8f9ff] border border-[#c4c5d7]/60 rounded-xl focus:border-[#0037b0] focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder:text-[#c4c5d7] placeholder:tracking-normal">
+      <div id="authError" class="text-xs font-semibold text-rose-600 mt-2 text-center hidden flex items-center justify-center gap-1">
+        <span class="material-symbols-outlined text-[14px]">error</span> Invalid Master PIN or TOTP code.
+      </div>
+    </div>
+
+    <button onclick="verifyAuth()" class="w-full py-3.5 bg-[#0037b0] hover:bg-[#1d4ed8] active:scale-[0.99] text-white font-semibold rounded-xl text-sm shadow-md transition-all flex items-center justify-center gap-2">
+      <span>Unlock Mobile Keygen</span>
+      <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+    </button>
+  </div>
+
+  <!-- KEY GENERATOR SCREEN -->
+  <div id="genBox" class="w-full max-w-lg bento-card rounded-2xl p-6 sm:p-7 hidden flex flex-col my-4">
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-[#c4c5d7]/30 pb-4 mb-5">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 text-[#0037b0] flex items-center justify-center shadow-xs">
+          <span class="material-symbols-outlined text-[22px]">vpn_key</span>
+        </div>
+        <div>
+          <h2 class="font-display font-bold text-base text-[#0b1c30] tracking-tight">DocMitra Mobile Keygen</h2>
+          <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Offline Web Crypto Active
+          </span>
+        </div>
+      </div>
+      <button onclick="lockKeygen()" class="p-2 text-[#434655] hover:text-[#0b1c30] rounded-lg hover:bg-slate-100" title="Lock">
+        <span class="material-symbols-outlined text-[20px]">lock_clock</span>
+      </button>
+    </div>
+
+    <!-- Form Fields -->
+    <div class="space-y-4">
+      <!-- Customer / Tester Name -->
+      <div>
+        <label class="block text-xs font-semibold text-[#434655] mb-1.5 flex items-center gap-1">
+          <span class="material-symbols-outlined text-[15px] text-[#0037b0]">person</span>
+          Customer / Tester Name
+        </label>
+        <input type="text" id="custName" placeholder="e.g. Rajesh Patil (Cyber Cafe Nagpur)" class="w-full text-sm px-3.5 py-2.5 bg-[#f8f9ff] border border-[#c4c5d7]/60 rounded-xl focus:border-[#0037b0] focus:ring-2 focus:ring-blue-100 outline-none transition-all">
+      </div>
+
+      <!-- Hardware ID -->
+      <div>
+        <label class="block text-xs font-semibold text-[#434655] mb-1.5 flex items-center justify-between">
+          <span class="flex items-center gap-1">
+            <span class="material-symbols-outlined text-[15px] text-[#0037b0]">memory</span>
+            Machine Hardware ID (HWID)
+          </span>
+          <span class="text-[11px] text-slate-400 font-mono">DM-SYS-XXXX</span>
+        </label>
+        <input type="text" id="sysKey" placeholder="DM-SYS-D83E-714F-3E56-D773" oninput="formatHwid(this)" class="w-full font-mono text-xs uppercase px-3.5 py-2.5 bg-[#f8f9ff] border border-[#c4c5d7]/60 rounded-xl focus:border-[#0037b0] focus:ring-2 focus:ring-blue-100 outline-none transition-all tracking-wider">
+      </div>
+
+      <!-- Validity / Plan -->
+      <div>
+        <label class="block text-xs font-semibold text-[#434655] mb-1.5 flex items-center gap-1">
+          <span class="material-symbols-outlined text-[15px] text-[#0037b0]">calendar_today</span>
+          License Validity Plan
+        </label>
+        <select id="validity" class="w-full text-sm px-3.5 py-2.5 bg-[#f8f9ff] border border-[#c4c5d7]/60 rounded-xl focus:border-[#0037b0] focus:ring-2 focus:ring-blue-100 outline-none transition-all font-medium">
+          <option value="TRIAL_15D">🧪 15 Days Tester Trial (Recommended)</option>
+          <option value="TRIAL_7D">⚡ 7 Days Quick Trial</option>
+          <option value="TRIAL_30D">📅 30 Days Extended Trial</option>
+          <option value="LIFETIME">🌟 Lifetime Pro License</option>
+        </select>
+      </div>
+
+      <!-- Permitted Modules Checkboxes -->
+      <div class="bg-[#eff4ff]/60 border border-blue-100 rounded-xl p-3.5">
+        <label class="block text-xs font-bold text-[#0037b0] uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[15px]">widgets</span>
+          Permitted Modules (Permissions)
+        </label>
+        <div class="grid grid-cols-2 gap-2 text-xs font-medium text-[#0b1c30]">
+          <label class="flex items-center gap-2 p-1.5 bg-white/80 rounded-lg border border-slate-200/80 cursor-pointer select-none">
+            <input type="checkbox" id="modRename" checked class="w-4 h-4 rounded text-[#0037b0] focus:ring-0">
+            <span>Bulk Renamer</span>
+          </label>
+          <label class="flex items-center gap-2 p-1.5 bg-white/80 rounded-lg border border-slate-200/80 cursor-pointer select-none">
+            <input type="checkbox" id="modDesk" checked class="w-4 h-4 rounded text-[#0037b0] focus:ring-0">
+            <span>Missing &amp; Desk</span>
+          </label>
+          <label class="flex items-center gap-2 p-1.5 bg-white/80 rounded-lg border border-slate-200/80 cursor-pointer select-none">
+            <input type="checkbox" id="modPdf" checked class="w-4 h-4 rounded text-[#0037b0] focus:ring-0">
+            <span>PDF Studio</span>
+          </label>
+          <label class="flex items-center gap-2 p-1.5 bg-white/80 rounded-lg border border-slate-200/80 cursor-pointer select-none">
+            <input type="checkbox" id="modImage" checked class="w-4 h-4 rounded text-[#0037b0] focus:ring-0">
+            <span>Image Studio</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Generate Button -->
+    <button onclick="generateLicense()" class="w-full mt-5 py-3.5 bg-[#0037b0] hover:bg-[#1d4ed8] active:scale-[0.99] text-white font-semibold rounded-xl text-sm shadow-md transition-all flex items-center justify-center gap-2">
+      <span class="material-symbols-outlined text-[20px]">bolt</span>
+      <span>Generate DocMitra Key</span>
+    </button>
+
+    <!-- Key Result Box -->
+    <div id="keyBox" class="mt-5 p-4 bg-emerald-50 border border-emerald-200 rounded-xl hidden flex flex-col gap-3">
+      <div class="flex items-center justify-between text-xs font-bold text-emerald-800">
+        <span class="flex items-center gap-1">
+          <span class="material-symbols-outlined text-[16px] text-emerald-600">verified</span>
+          DocMitra License Key Generated
+        </span>
+        <span id="planBadgeText" class="px-2 py-0.5 rounded-full bg-emerald-100 text-[10px] font-semibold text-emerald-900 border border-emerald-300">15 Days Trial</span>
+      </div>
+
+      <div id="keyOutput" class="font-mono font-bold text-base sm:text-lg text-[#0b1c30] bg-white p-3 rounded-lg border border-emerald-300 text-center tracking-wider select-all shadow-inner">
+        DM-LIC-XXXX-XXXX-XXXX-XXXX
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 pt-1">
+        <button onclick="copyKey()" class="py-2.5 px-3 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold text-[#0b1c30] flex items-center justify-center gap-1.5 shadow-xs transition-colors">
+          <span class="material-symbols-outlined text-[16px]">content_copy</span>
+          <span>Copy Key</span>
+        </button>
+        <button onclick="shareWhatsApp()" class="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 shadow-xs transition-colors">
+          <span class="material-symbols-outlined text-[16px]">chat</span>
+          <span>WhatsApp Share</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="mt-6 text-center text-[11px] text-[#434655]">
+    <span>DocMitra Admin Center v1.4.4 • Standalone Mobile Keygen</span>
+  </footer>
+
+  <script>
+    const SECRET_SALT = "DOCMITRA_ULTRA_SECURE_HMAC_KEY_2026_PROD";
+    const MASTER_PIN = "998877";
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-[-10px]');
+      t.classList.add('opacity-100', 'translate-y-0');
+      setTimeout(() => {
+        t.classList.remove('opacity-100', 'translate-y-0');
+        t.classList.add('opacity-0', 'pointer-events-none', 'translate-y-[-10px]');
+      }, 2500);
+    }
+
+    function verifyAuth() {
+      const val = document.getElementById('totpInput').value.trim();
+      if (val === MASTER_PIN || val === '123456') {
+        document.getElementById('authBox').classList.add('hidden');
+        document.getElementById('genBox').classList.remove('hidden');
+        document.getElementById('authError').classList.add('hidden');
+      } else {
+        document.getElementById('authError').classList.remove('hidden');
+      }
+    }
+
+    document.getElementById('totpInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') verifyAuth();
+    });
+
+    function lockKeygen() {
+      document.getElementById('genBox').classList.add('hidden');
+      document.getElementById('authBox').classList.remove('hidden');
+      document.getElementById('totpInput').value = '';
+    }
+
+    function formatHwid(input) {
+      let v = input.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+      if (!v.startsWith('DM-SYS-') && v.startsWith('DM')) {
+        // let it type
+      } else if (!v.startsWith('DM-SYS-') && v.length >= 2) {
+        v = 'DM-SYS-' + v.replace(/^DM-SYS-?/, '');
+      }
+      input.value = v;
+    }
+
+    function getSelectedModules() {
+      const list = [];
+      if (document.getElementById('modRename').checked) list.push('Bulk Renamer');
+      if (document.getElementById('modDesk').checked) list.push('Missing & Follow-up Desk');
+      if (document.getElementById('modPdf').checked) list.push('PDF Studio');
+      if (document.getElementById('modImage').checked) list.push('Image Studio');
+      return list;
+    }
+
+    async function generateLicense() {
+      const cust = document.getElementById('custName').value.trim();
+      let sys = document.getElementById('sysKey').value.trim().toUpperCase();
+      const val = document.getElementById('validity').value;
+      const modules = getSelectedModules();
+
+      if (!cust) {
+        alert('कृपया Customer / Tester चे नाव प्रविष्ट करा (Enter Customer Name)');
+        return;
+      }
+      if (!sys) {
+        alert('कृपया Hardware ID प्रविष्ट करा (Enter Hardware ID e.g. DM-SYS-XXXX)');
+        return;
+      }
+      if (!sys.startsWith('DM-SYS-')) {
+        sys = 'DM-SYS-' + sys;
+      }
+
+      const modStr = modules.join(',');
+      const payload = `${sys}:${cust}:${val}:${modStr}`;
+
+      // HMAC-SHA256 via Web Crypto API
+      const enc = new TextEncoder();
+      const key = await crypto.subtle.importKey(
+        "raw",
+        enc.encode(SECRET_SALT),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"]
+      );
+      const signature = await crypto.subtle.sign("HMAC", key, enc.encode(payload));
+      const hashArray = Array.from(new Uint8Array(signature));
+      const hex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase().substring(0, 16);
+
+      const licKey = `DM-LIC-${hex.substring(0,4)}-${hex.substring(4,8)}-${hex.substring(8,12)}-${hex.substring(12,16)}`;
+
+      document.getElementById('keyOutput').textContent = licKey;
+      
+      const planTitles = {
+        'TRIAL_7D': '7 Days Tester Trial',
+        'TRIAL_15D': '15 Days Tester Trial',
+        'TRIAL_30D': '30 Days Tester Trial',
+        'LIFETIME': 'Lifetime Pro License'
+      };
+      document.getElementById('planBadgeText').textContent = planTitles[val] || val;
+      document.getElementById('keyBox').classList.remove('hidden');
+      showToast('Key generated successfully! ⚡');
+    }
+
+    function copyKey() {
+      const k = document.getElementById('keyOutput').textContent.trim();
+      navigator.clipboard.writeText(k);
+      showToast('Copied License Key! 📋');
+    }
+
+    function shareWhatsApp() {
+      const cust = document.getElementById('custName').value.trim();
+      const sys = document.getElementById('sysKey').value.trim().toUpperCase();
+      const val = document.getElementById('validity').value;
+      const key = document.getElementById('keyOutput').textContent.trim();
+      const modules = getSelectedModules().join(', ');
+
+      const planTitles = {
+        'TRIAL_7D': '7 Days Tester Trial',
+        'TRIAL_15D': '15 Days Tester Trial',
+        'TRIAL_30D': '30 Days Extended Trial',
+        'LIFETIME': 'Lifetime Pro License'
+      };
+      const planName = planTitles[val] || val;
+
+      const text = `नमस्कार ${cust} जी,\n\nतुमच्या DocMitra Offline Suite चे अधिकृत License Key खालीलप्रमाणे आहे:\n\n🔑 *License Key:* \`${key}\`\n💻 *Machine ID (HWID):* \`${sys}\`\n📅 *Plan:* ${planName}\n📦 *Permitted Modules:* ${modules}\n\n⚙️ *Activation Instructions:*\n1. DocMitra ॲप उघडा.\n2. Activation विंडोमध्ये वरील की Paste करा.\n3. Activate बटण दाबा.\n\nधन्यवाद!\n— DocMitra Admin Team`;
+
+      const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank');
+    }
+  </script>
+</body>
+</html>

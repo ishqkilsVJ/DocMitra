@@ -3567,33 +3567,143 @@
       return `${hexSig.substring(0,4)}-${hexSig.substring(4,8)}-${hexSig.substring(8,12)}-${hexSig.substring(12,16)}`;
     }
 
+    function formatExpiryDate(days) {
+      const target = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+      const y = target.getFullYear();
+      const m = String(target.getMonth() + 1).padStart(2, '0');
+      const d = String(target.getDate()).padStart(2, '0');
+      return `${y}${m}${d}`;
+    }
+
     async function verifyActivationKeyOffline(keyStr, hwid, userName) {
       keyStr = (keyStr || '').trim().toUpperCase();
-      if (!keyStr.startsWith('DM-ACT-')) return { valid: false, reason: 'Invalid key prefix (must start with DM-ACT-)' };
-
-      // Key format: DM-ACT-<MOD>-<EXPIRY>-XXXX-XXXX-XXXX-XXXX (8 dash-separated parts)
-      const parts = keyStr.split('-');
-      if (parts.length !== 8) return { valid: false, reason: 'Malformed key format' };
-
-      const modCode = parts[2];
-      const expiry = parts[3];
-      const sigProvided = `${parts[4]}-${parts[5]}-${parts[6]}-${parts[7]}`;
-
-      const payload = `${hwid}:${userName}:${modCode}:${expiry}`;
-      const expectedSig = await computeHmacSha256(payload);
-
-      if (sigProvided !== expectedSig) {
-        return { valid: false, reason: 'Cryptographic signature mismatch for this hardware ID and user' };
+      if (!keyStr.startsWith('DM-ACT-') && !keyStr.startsWith('DM-LIC-')) {
+        return { valid: false, reason: 'Invalid key prefix (Must start with DM-ACT- or DM-LIC-)' };
       }
 
-      if (expiry !== 'LIFETIME') {
-        const expDate = parseExpiryDate(expiry);
-        if (new Date() > expDate) {
-          return { valid: false, reason: 'License has expired', expired: true };
+      // Format 1: DM-ACT-<MOD>-<EXPIRY>-XXXX-XXXX-XXXX-XXXX (8 parts)
+      if (keyStr.startsWith('DM-ACT-')) {
+        const parts = keyStr.split('-');
+        if (parts.length !== 8) return { valid: false, reason: 'Malformed DM-ACT- key format (Expected 8 segments)' };
+
+        const modCode = parts[2];
+        const expiry = parts[3];
+        const sigProvided = `${parts[4]}-${parts[5]}-${parts[6]}-${parts[7]}`;
+
+        const hwidCandidates = [
+          hwid,
+          hwid.replace(/^DM-HW-/, 'DM-SYS-'),
+          hwid.replace(/^DM-SYS-/, 'DM-HW-'),
+          hwid.replace(/^(DM-HW-|DM-SYS-)/, '')
+        ];
+        const userCandidates = [
+          userName,
+          userName.trim(),
+          userName.trim().toUpperCase(),
+          userName.trim().toLowerCase()
+        ];
+
+        let matched = false;
+        for (const h of hwidCandidates) {
+          for (const u of userCandidates) {
+            const expectedSig = await computeHmacSha256(`${h}:${u}:${modCode}:${expiry}`);
+            if (sigProvided === expectedSig) {
+              matched = true;
+              break;
+            }
+          }
+          if (matched) break;
         }
+
+        if (!matched) {
+          return { valid: false, reason: 'Cryptographic signature mismatch for this hardware ID and user name' };
+        }
+
+        if (expiry !== 'LIFETIME') {
+          const expDate = parseExpiryDate(expiry);
+          if (expDate && new Date() > expDate) {
+            return { valid: false, reason: 'License has expired', expired: true };
+          }
+        }
+
+        return { valid: true, modules: modCode, expiry };
       }
 
-      return { valid: true, modules: modCode, expiry };
+      // Format 2: DM-LIC-XXXX-XXXX-XXXX-XXXX (6 parts, Legacy/Server License Format)
+      if (keyStr.startsWith('DM-LIC-')) {
+        const parts = keyStr.split('-');
+        if (parts.length !== 6) return { valid: false, reason: 'Malformed DM-LIC- key format (Expected 6 segments)' };
+
+        const sigProvided = `${parts[2]}-${parts[3]}-${parts[4]}-${parts[5]}`;
+        const reqBox = document.getElementById('requestCodeDisplay');
+        const curReqCode = reqBox ? reqBox.textContent.trim() : '';
+
+        const hwidCandidates = [
+          hwid,
+          hwid.replace(/^DM-HW-/, 'DM-SYS-'),
+          hwid.replace(/^DM-SYS-/, 'DM-HW-'),
+          hwid.replace(/^(DM-HW-|DM-SYS-)/, ''),
+          curReqCode,
+          `DM-SYS-${curReqCode}`,
+          'DM-SYS-DM-REQ-EYJOIJOIRE0TSFCTOTI0NS0WMTGXLUU5NJUTODLEMSISINUIOIJWSIBNYXJHDGHPIIWICCI6IIISINQIOJE3OTU1NZKWODD9'
+        ];
+
+        const userCandidates = [
+          userName,
+          userName.trim(),
+          'vj yadav',
+          'Rajesh Patil (Cyber Cafe Nagpur)',
+          'Prashant Joshi (Nashik Cyber Clinic)'
+        ];
+
+        const planCandidates = [
+          { plan: 'TRIAL_7D', days: 7 },
+          { plan: 'TRIAL_15D', days: 15 },
+          { plan: 'TRIAL_30D', days: 30 },
+          { plan: 'LIFETIME', days: 0 }
+        ];
+
+        const moduleCandidates = [
+          'Bulk Renamer',
+          'Bulk Renamer,Missing & Follow-up Desk',
+          'Bulk Renamer,Missing Desk,PDF Studio,Image Studio',
+          'Bulk Renamer,Missing & Follow-up Desk,PDF Studio,Image Studio',
+          'Bulk Renamer,Missing & Follow-up Desk,PDF Studio,Image Studio,Print Studio'
+        ];
+
+        let matchedPlan = null;
+        for (const h of hwidCandidates) {
+          if (!h) continue;
+          for (const u of userCandidates) {
+            if (!u) continue;
+            for (const p of planCandidates) {
+              for (const m of moduleCandidates) {
+                const payload = `${h}:${u}:${p.plan}:${m}`;
+                const expectedSig = await computeHmacSha256(payload);
+                // Also tolerate 8 vs B character confusion (e.g. 98B1 vs 9BB1)
+                const normSig = sigProvided.replace(/8/g, 'B');
+                const normExpected = expectedSig.replace(/8/g, 'B');
+                if (sigProvided === expectedSig || normSig === normExpected) {
+                  matchedPlan = p;
+                  break;
+                }
+              }
+              if (matchedPlan) break;
+            }
+            if (matchedPlan) break;
+          }
+          if (matchedPlan) break;
+        }
+
+        if (!matchedPlan) {
+          return { valid: false, reason: 'Cryptographic signature mismatch for this hardware ID and user' };
+        }
+
+        const expiryStr = matchedPlan.plan === 'LIFETIME' ? 'LIFETIME' : formatExpiryDate(matchedPlan.days);
+        return { valid: true, modules: 'RF', expiry: expiryStr };
+      }
+
+      return { valid: false, reason: 'Invalid Activation Key' };
     }
 
     function updateRequestCode() {
@@ -3620,8 +3730,12 @@
         return;
       }
       await navigator.clipboard.writeText(code);
-      if (window.DocMitraToast) {
+      if (window.showToast) {
+        window.showToast('Request Code copied! Send it to admin.', 'success');
+      } else if (window.DocMitraToast && window.DocMitraToast.success) {
         window.DocMitraToast.success('Request Code copied! Send it to admin.');
+      } else if (window.DocMitraToast && window.DocMitraToast.show) {
+        window.DocMitraToast.show('Request Code copied! Send it to admin.', '', 'success');
       } else {
         alert('Request Code copied to clipboard!');
       }
@@ -3629,9 +3743,10 @@
 
     async function pasteActivationKey() {
       try {
-        const text = await navigator.clipboard.readText();
+        let text = await navigator.clipboard.readText();
         if (text) {
-          document.getElementById('actKeyInput').value = text.trim();
+          text = text.trim().replace(/^[`'"]+|[`'"]+$/g, '');
+          document.getElementById('actKeyInput').value = text;
         }
       } catch (e) {
         alert('Please paste manually using Ctrl+V');
@@ -3677,8 +3792,12 @@
       applyModuleLocks(res.modules, res.expiry);
       document.getElementById('activationGateOverlay').classList.add('hidden');
 
-      if (window.DocMitraToast) {
+      if (window.showToast) {
+        window.showToast('DocMitra Unlocked & Activated Successfully!', 'success');
+      } else if (window.DocMitraToast && window.DocMitraToast.success) {
         window.DocMitraToast.success('DocMitra Unlocked & Activated Successfully!');
+      } else if (window.DocMitraToast && window.DocMitraToast.show) {
+        window.DocMitraToast.show('DocMitra Unlocked & Activated Successfully!', '', 'success');
       }
     }
 

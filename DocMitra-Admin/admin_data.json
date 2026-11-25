@@ -1,0 +1,387 @@
+{
+  "monthlyTarget": {
+    "targetLicenses": 25,
+    "targetRevenue": 60000,
+    "currentMonth": "November 2026"
+  },
+  "partners": [
+    {
+      "id": 1,
+      "name": "Partner 1 (Lead / Founder)",
+      "role": "Software Architecture & Tech Lead",
+      "sharePercent": 25,
+      "investment": 0,
+      "paidAmount": 0
+    },
+    {
+      "id": 2,
+      "name": "Partner 2 (Media & Marketing)",
+      "role": "Instagram / Social Media Ads",
+      "sharePercent": 25,
+      "investment": 0,
+      "paidAmount": 0
+    },
+    {
+      "id": 3,
+      "name": "Partner 3 (Operations Admin)",
+      "role": "Customer Verification & Operations",
+      "sharePercent": 25,
+      "investment": 0,
+      "paidAmount": 0
+    },
+    {
+      "id": 4,
+      "name": "Partner 4 (Sales & Distribution)",
+      "role": "College & Cyber Cafe Onboarding",
+      "sharePercent": 25,
+      "investment": 0,
+      "paidAmount": 0
+    }
+  ],
+  "licenses": [
+    {
+      "id": "LIC-1795579125152",
+      "customerName": "VJ Marathi",
+      "hwid": "DM-HW-9245-0181-E965-89D1",
+      "plan": "TRIAL_7D",
+      "planTitle": "7 Days Tester Trial",
+      "modules": [
+        "Bulk Renamer",
+        "Missing & Follow-up Desk"
+      ],
+      "moduleCode": "RF",
+      "issuedAt": "2026-11-25 09:28:45",
+      "expiresAt": "2026-12-02 09:28:45",
+      "licenseKey": "DM-ACT-RF-20261202-895D-BDB7-E2AB-FC10",
+      "legacyKey": "DM-LIC-9BB1-451F-B1DE-1B29",
+      "status": "ACTIVE",
+      "notes": "Decoded from Machine Request Code"
+    },
+    {
+      "id": "LIC-1795573641314",
+      "customerName": "Prashant Joshi (Nashik Cyber Clinic)",
+      "hwid": "DM-SYS-8822-AA11-BB44-CC77",
+      "plan": "TRIAL_15D",
+      "planTitle": "15 Days Tester Trial",
+      "modules": [
+        "Bulk Renamer",
+        "Missing & Follow-up Desk",
+        "PDF Studio",
+        "Image Studio"
+      ],
+      "issuedAt": "2026-11-25 07:57:21",
+      "expiresAt": "2026-12-17 07:57:21",
+      "licenseKey": "DM-LIC-B470-E4EE-994D-9004",
+      "status": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "id": "LIC-1001",
+      "customerName": "Dr. APJ Abdul Kalam College Ledger",
+      "hwid": "DM-SYS-D83E-714F-3E56-D773",
+      "plan": "LIFETIME",
+      "planTitle": "Lifetime Pro License",
+      "modules": [
+        "Bulk Renamer",
+        "Missing & Follow-up Desk",
+        "PDF Studio",
+        "Image Studio"
+      ],
+      "issuedAt": "2026-10-26 07:50:31",
+      "expiresAt": "LIFETIME",
+      "licenseKey": "DM-LIC-42A6-D5F7-AFA9-AAB0",
+      "status": "ACTIVE",
+      "notes": "Production College Lab setup"
+    },
+    {
+      "id": "LIC-1002",
+      "customerName": "Rajesh Patil (Cyber Cafe Nagpur)",
+      "hwid": "DM-SYS-9A2C-4E1B-8F0D-55A1",
+      "plan": "TRIAL_15D",
+      "planTitle": "15 Days Tester Trial",
+      "modules": [
+        "Bulk Renamer",
+        "Missing & Follow-up Desk"
+      ],
+      "issuedAt": "2026-11-23 07:50:31",
+      "expiresAt": "2026-12-08 07:50:31",
+      "licenseKey": "DM-LIC-0C72-24F9-0A8B-197D",
+      "status": "ACTIVE",
+      "notes": "Nagpur Cyber Cafe beta feedback"
+    },
+    {
+      "id": "LIC-1003",
+      "customerName": "Suresh Deshmukh (MahaDBT Operator)",
+      "hwid": "DM-SYS-3B7D-89F1-2C4A-99E2",
+      "plan": "TRIAL_7D",
+      "planTitle": "7 Days Tester Trial",
+      "modules": [
+        "Bulk Renamer",
+        "Missing & Follow-up Desk",
+        "PDF Studio"
+      ],
+      "issuedAt": "2026-11-24 07:50:31",
+      "expiresAt": "2026-12-01 07:50:31",
+      "licenseKey": "DM-LIC-C053-721B-28D4-0CD2",
+      "status": "ACTIVE",
+      "notes": "MahaDBT bulk admission testing"
+    },
+    {
+      "id": "LIC-1004",
+      "customerName": "Akash Shinde (Pune Cyber World)",
+      "hwid": "DM-SYS-5F1A-66C3-00B9-44F8",
+      "plan": "TRIAL_7D",
+      "planTitle": "7 Days Tester Trial",
+      "modules": [
+        "Bulk Renamer"
+      ],
+      "issuedAt": "2026-11-13 07:50:31",
+      "expiresAt": "2026-11-20 07:50:31",
+      "licenseKey": "DM-LIC-8851-543B-E0AB-FF4B",
+      "status": "EXPIRED",
+      "notes": "Trial period completed"
+    },
+    {
+      "id": "LIC-1005",
+      "customerName": "Vikram Sawant (Suspicious Clone)",
+      "hwid": "DM-SYS-77E0-22D4-9A8C-1133",
+      "plan": "TRIAL_30D",
+      "planTitle": "30 Days Tester Trial",
+      "modules": [
+        "Bulk Renamer",
+        "Missing & Follow-up Desk",
+        "PDF Studio",
+        "Image Studio"
+      ],
+      "issuedAt": "2026-11-17 07:50:31",
+      "expiresAt": "2026-12-17 07:50:31",
+      "licenseKey": "DM-LIC-AADC-9416-DF77-103D",
+      "status": "REVOKED",
+      "notes": "Suspicious multi-device cloning attempt detected"
+    }
+  ],
+  "customers": [
+    {
+      "id": "LIC-1795579125152",
+      "customerName": "VJ Marathi",
+      "hwid": "DM-HW-9245-0181-E965-89D1",
+      "plan": "TRIAL_7D",
+      "planTitle": "7 Days Tester Trial",
+      "modules": [
+        "Bulk Renamer",
+        "Missing & Follow-up Desk"
+      ],
+      "moduleCode": "RF",
+      "issuedAt": "2026-11-25 09:28:45",
+      "expiresAt": "2026-12-02 09:28:45",
+      "licenseKey": "DM-ACT-RF-20261202-895D-BDB7-E2AB-FC10",
+      "legacyKey": "DM-LIC-9BB1-451F-B1DE-1B29",
+      "status": "ACTIVE",
+      "notes": "Decoded from Machine Request Code"
+    },
+    {
+      "id": "LIC-1795573641314",
+      "customerName": "Prashant Joshi (Nashik Cyber Clinic)",
+      "hwid": "DM-SYS-8822-AA11-BB44-CC77",
+      "plan": "TRIAL_15D",
+      "planTitle": "15 Days Tester Trial",
+      "modules": [
+        "Bulk Renamer",
+        "Missing & Follow-up Desk",
+        "PDF Studio",
+        "Image Studio"
+      ],
+      "issuedAt": "2026-11-25 07:57:21",
+      "expiresAt": "2026-12-17 07:57:21",
+      "licenseKey": "DM-LIC-B470-E4EE-994D-9004",
+      "status": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "id": "LIC-1001",
+      "customerName": "Dr. APJ Abdul Kalam College Ledger",
+      "hwid": "DM-SYS-D83E-714F-3E56-D773",
+      "plan": "LIFETIME",
+      "planTitle": "Lifetime Pro License",
+      "modules": [
+        "Bulk Renamer",
+        "Missing & Follow-up Desk",
+        "PDF Studio",
+        "Image Studio"
+      ],
+      "issuedAt": "2026-10-26 07:50:31",
+      "expiresAt": "LIFETIME",
+      "licenseKey": "DM-LIC-42A6-D5F7-AFA9-AAB0",
+      "status": "ACTIVE",
+      "notes": "Production College Lab setup"
+    },
+    {
+      "id": "LIC-1002",
+      "customerName": "Rajesh Patil (Cyber Cafe Nagpur)",
+      "hwid": "DM-SYS-9A2C-4E1B-8F0D-55A1",
+      "plan": "TRIAL_15D",
+      "planTitle": "15 Days Tester Trial",
+      "modules": [
+        "Bulk Renamer",
+        "Missing & Follow-up Desk"
+      ],
+      "issuedAt": "2026-11-23 07:50:31",
+      "expiresAt": "2026-12-08 07:50:31",
+      "licenseKey": "DM-LIC-0C72-24F9-0A8B-197D",
+      "status": "ACTIVE",
+      "notes": "Nagpur Cyber Cafe beta feedback"
+    },
+    {
+      "id": "LIC-1003",
+      "customerName": "Suresh Deshmukh (MahaDBT Operator)",
+      "hwid": "DM-SYS-3B7D-89F1-2C4A-99E2",
+      "plan": "TRIAL_7D",
+      "planTitle": "7 Days Tester Trial",
+      "modules": [
+        "Bulk Renamer",
+        "Missing & Follow-up Desk",
+        "PDF Studio"
+      ],
+      "issuedAt": "2026-11-24 07:50:31",
+      "expiresAt": "2026-12-01 07:50:31",
+      "licenseKey": "DM-LIC-C053-721B-28D4-0CD2",
+      "status": "ACTIVE",
+      "notes": "MahaDBT bulk admission testing"
+    },
+    {
+      "id": "LIC-1004",
+      "customerName": "Akash Shinde (Pune Cyber World)",
+      "hwid": "DM-SYS-5F1A-66C3-00B9-44F8",
+      "plan": "TRIAL_7D",
+      "planTitle": "7 Days Tester Trial",
+      "modules": [
+        "Bulk Renamer"
+      ],
+      "issuedAt": "2026-11-13 07:50:31",
+      "expiresAt": "2026-11-20 07:50:31",
+      "licenseKey": "DM-LIC-8851-543B-E0AB-FF4B",
+      "status": "EXPIRED",
+      "notes": "Trial period completed"
+    },
+    {
+      "id": "LIC-1005",
+      "customerName": "Vikram Sawant (Suspicious Clone)",
+      "hwid": "DM-SYS-77E0-22D4-9A8C-1133",
+      "plan": "TRIAL_30D",
+      "planTitle": "30 Days Tester Trial",
+      "modules": [
+        "Bulk Renamer",
+        "Missing & Follow-up Desk",
+        "PDF Studio",
+        "Image Studio"
+      ],
+      "issuedAt": "2026-11-17 07:50:31",
+      "expiresAt": "2026-12-17 07:50:31",
+      "licenseKey": "DM-LIC-AADC-9416-DF77-103D",
+      "status": "REVOKED",
+      "notes": "Suspicious multi-device cloning attempt detected"
+    }
+  ],
+  "expenses": [
+    {
+      "id": "EXP-1795020232",
+      "date": "18-Nov-2026",
+      "category": "Miscellaneous",
+      "title": "Server infrastructure & testing hardware",
+      "amount": 5000,
+      "spentBy": "Partner 1 (Lead / Founder)",
+      "receiptNo": "REC-9081",
+      "notes": "Production offline testing"
+    }
+  ],
+  "auditLogs": [
+    {
+      "id": "LOG-1795579125152",
+      "timestamp": "2026-11-25 09:28:45",
+      "action": "KEY_GENERATED",
+      "customerName": "vj yadav",
+      "hwid": "DM-SYS-DM-REQ-EYJOIJOIRE0TSFCTOTI0NS0WMTGXLUU5NJUTODLEMSISINUIOIJWSIBNYXJHDGHPIIWICCI6IIISINQIOJE3OTU1NZKWODD9",
+      "details": "Issued 7 Days Tester Trial (DM-LIC-9BB1-451F-B1DE-1B29)"
+    },
+    {
+      "id": "LOG-1795573670426",
+      "timestamp": "2026-11-25 07:57:50",
+      "action": "EXTENDED_7D",
+      "customerName": "Prashant Joshi (Nashik Cyber Clinic)",
+      "hwid": "DM-SYS-8822-AA11-BB44-CC77",
+      "details": "Extended +7 days to 2026-12-17 07:57:21"
+    },
+    {
+      "id": "LOG-1795573641314",
+      "timestamp": "2026-11-25 07:57:21",
+      "action": "KEY_GENERATED",
+      "customerName": "Prashant Joshi (Nashik Cyber Clinic)",
+      "hwid": "DM-SYS-8822-AA11-BB44-CC77",
+      "details": "Issued 15 Days Tester Trial (DM-LIC-B470-E4EE-994D-9004)"
+    },
+    {
+      "id": "LOG-1795573484411",
+      "timestamp": "2026-11-25 07:54:44",
+      "action": "REVOKED",
+      "customerName": "Automated Tester Lab",
+      "hwid": "DM-SYS-9999-8888-7777-6666",
+      "details": "License status toggled to REVOKED"
+    },
+    {
+      "id": "LOG-1795573484400",
+      "timestamp": "2026-11-25 07:54:44",
+      "action": "HWID_RESET",
+      "customerName": "Automated Tester Lab",
+      "hwid": "DM-SYS-9999-8888-7777-6666",
+      "details": "Reset HWID from DM-SYS-1111-2222-3333-4444 to DM-SYS-9999-8888-7777-6666. Re-signed key: DM-LIC-1921-4E22-CCA3-4C6B"
+    },
+    {
+      "id": "LOG-1795573484400",
+      "timestamp": "2026-11-25 07:54:44",
+      "action": "EXTENDED_7D",
+      "customerName": "Automated Tester Lab",
+      "hwid": "DM-SYS-1111-2222-3333-4444",
+      "details": "Extended +7 days to 2026-12-17 07:54:44"
+    },
+    {
+      "id": "LOG-1795573484277",
+      "timestamp": "2026-11-25 07:54:44",
+      "action": "KEY_GENERATED",
+      "customerName": "Automated Tester Lab",
+      "hwid": "DM-SYS-1111-2222-3333-4444",
+      "details": "Issued 15 Days Tester Trial (DM-LIC-23BC-5583-4DE5-B238)"
+    },
+    {
+      "id": "LOG-101",
+      "timestamp": "2026-10-26 07:50:31",
+      "action": "KEY_GENERATED",
+      "customerName": "Dr. APJ Abdul Kalam College Ledger",
+      "hwid": "DM-SYS-D83E-714F-3E56-D773",
+      "details": "Issued Lifetime Pro key (DM-LIC-42A6-D5F7-AFA9-AAB0)"
+    },
+    {
+      "id": "LOG-102",
+      "timestamp": "2026-11-23 07:50:31",
+      "action": "KEY_GENERATED",
+      "customerName": "Rajesh Patil (Cyber Cafe Nagpur)",
+      "hwid": "DM-SYS-9A2C-4E1B-8F0D-55A1",
+      "details": "Issued 15 Days Tester Trial (DM-LIC-0C72-24F9-0A8B-197D)"
+    },
+    {
+      "id": "LOG-103",
+      "timestamp": "2026-11-24 07:50:31",
+      "action": "KEY_GENERATED",
+      "customerName": "Suresh Deshmukh (MahaDBT Operator)",
+      "hwid": "DM-SYS-3B7D-89F1-2C4A-99E2",
+      "details": "Issued 7 Days Tester Trial (DM-LIC-C053-721B-28D4-0CD2)"
+    },
+    {
+      "id": "LOG-104",
+      "timestamp": "2026-11-22 07:50:31",
+      "action": "REVOKED",
+      "customerName": "Vikram Sawant (Suspicious Clone)",
+      "hwid": "DM-SYS-77E0-22D4-9A8C-1133",
+      "details": "Manually revoked license key (DM-LIC-AADC-9416-DF77-103D) due to security policy"
+    }
+  ]
+}

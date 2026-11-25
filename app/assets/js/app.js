@@ -57,6 +57,18 @@ var e = [
 		let e = document.getElementById("toast-container");
 		e ? (e.classList.contains("bottom-12") || e.classList.contains("bottom-6")) && (e.className = "fixed top-20 right-6 z-[9999] flex flex-col gap-2 pointer-events-none max-w-[420px] select-none") : (e = document.createElement("div"), e.id = "toast-container", e.className = "fixed top-20 right-6 z-[9999] flex flex-col gap-2 pointer-events-none max-w-[420px] select-none", e.setAttribute("aria-live", "polite"), document.body.appendChild(e)), this.container = e;
 	}
+	success(e, t = "", n = null) {
+		this.show(e, t, "success", n);
+	}
+	error(e, t = "", n = null) {
+		this.show(e, t, "error", n);
+	}
+	warning(e, t = "", n = null) {
+		this.show(e, t, "warning", n);
+	}
+	info(e, t = "", n = null) {
+		this.show(e, t, "info", n);
+	}
 	show(e, t = "", n = "info", r = null, i = null) {
 		if (this._ensureContainer(), !this.container) return;
 		let a = (e || "").trim(), o = (t || "").trim(), s = `${n}:${a}`, c = r;
