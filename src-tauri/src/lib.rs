@@ -219,6 +219,26 @@ fn list_native_directory(path: String) -> Result<DirectoryResult, String> {
     })
 }
 
+fn strip_windows_file_locks(p: &Path) {
+    if !p.exists() {
+        return;
+    }
+    // 1. Clear Read-Only attribute if set
+    if let Ok(meta) = fs::metadata(p) {
+        let mut perms = meta.permissions();
+        if perms.readonly() {
+            perms.set_readonly(false);
+            let _ = fs::set_permissions(p, perms);
+        }
+    }
+    // 2. Strip Windows Mark-of-the-Web (Zone.Identifier Alternate Data Stream)
+    #[cfg(windows)]
+    {
+        let zone_path = format!("{}:Zone.Identifier", p.to_string_lossy());
+        let _ = fs::remove_file(&zone_path);
+    }
+}
+
 #[tauri::command]
 fn rename_native_folder(old_path: String, new_name: String) -> Result<RenameResult, String> {
     rename_native_file(old_path, new_name)
@@ -238,6 +258,8 @@ fn rename_native_file(old_path: String, new_name: String) -> Result<RenameResult
             error: Some("Original file or folder does not exist on disk".to_string()),
         });
     }
+
+    strip_windows_file_locks(&p);
 
     let mut trimmed = new_name.trim().to_string();
     if trimmed.is_empty() || trimmed.contains(&['<', '>', ':', '"', '/', '\\', '|', '?', '*']) {
@@ -517,8 +539,12 @@ fn write_binary_file(path: String, bytes: Vec<u8>) -> Result<bool, String> {
             let _ = fs::create_dir_all(parent);
         }
     }
+    strip_windows_file_locks(&p);
     match fs::write(&p, bytes) {
-        Ok(_) => Ok(true),
+        Ok(_) => {
+            strip_windows_file_locks(&p);
+            Ok(true)
+        },
         Err(e) => Err(format!("Failed to write file bytes: {}", e)),
     }
 }

@@ -782,7 +782,9 @@ export class RenamerUIManager {
     const btnZoomIn = colPreview.querySelector('button[title*="Zoom In"]');
     const btnZoomOut = colPreview.querySelector('button[title*="Zoom Out"]');
     const btnReset = colPreview.querySelector('button[title*="Reset Zoom"]');
-    const btnRotate = colPreview.querySelector('#btnRenamerRotatePreview') || colPreview.querySelector('button[title*="Rotate"]');
+    const btnRotateCCW = colPreview.querySelector('#btnRotateCCW');
+    const btnRotateCW = colPreview.querySelector('#btnRotateCW') || colPreview.querySelector('#btnRenamerRotatePreview');
+    const btnRotateFlip = colPreview.querySelector('#btnRotateFlip');
     const zoomSlider = colPreview.querySelector('input[type="range"]');
     const btnFitA4 = colPreview.querySelector('button[title*="Fit to A4 Width"]');
     const btnPan = colPreview.querySelector('button[title*="Pan Hand"]');
@@ -823,60 +825,79 @@ export class RenamerUIManager {
       });
     }
 
-    if (btnRotate) {
-      btnRotate.addEventListener('click', async () => {
-        const currentFile = this.state.files[this.state.currentIndex];
-        if (!currentFile) {
-          this.state.rotation = (this.state.rotation + 90) % 360;
-          this._applyPreviewTransform();
-          return;
-        }
+    const handleMultiWayRotation = async (deltaDegrees, targetBtn) => {
+      const currentFile = this.state.files[this.state.currentIndex];
+      if (!currentFile) {
+        this.state.rotation = ((this.state.rotation || 0) + deltaDegrees + 360) % 360;
+        this._applyPreviewTransform();
+        return;
+      }
 
-        const origContent = btnRotate.innerHTML;
-        btnRotate.disabled = true;
-        btnRotate.innerHTML = '<span class="material-symbols-outlined text-[15px] animate-spin">refresh</span><span>Saving...</span>';
+      const origContent = targetBtn ? targetBtn.innerHTML : null;
+      if (targetBtn) {
+        targetBtn.disabled = true;
+        targetBtn.innerHTML = '<span class="material-symbols-outlined text-[15px] animate-spin">refresh</span>';
+      }
 
-        try {
-          const res = await rotateFilePhysicallyOnDisk({
-            filePath: currentFile.path,
-            ext: currentFile.ext || (currentFile.name ? currentFile.name.split('.').pop() : ''),
-            bytes: currentFile.bytes,
-            degrees: 90
-          });
+      try {
+        const sourceBytes = currentFile._pdfBytes || currentFile.bytes;
+        const res = await rotateFilePhysicallyOnDisk({
+          filePath: currentFile.path,
+          ext: currentFile.ext || (currentFile.name ? currentFile.name.split('.').pop() : ''),
+          bytes: sourceBytes,
+          degrees: deltaDegrees
+        });
 
-          if (res.success && res.newBytes) {
-            currentFile.bytes = res.newBytes;
-            if (currentFile.url) {
-              try { URL.revokeObjectURL(currentFile.url); } catch (_) {}
-            }
-            const cleanExt = (currentFile.ext || currentFile.name.split('.').pop() || '').toLowerCase();
-            const mime = cleanExt.includes('pdf')
-              ? 'application/pdf'
-              : cleanExt.includes('png')
-                ? 'image/png'
-                : 'image/jpeg';
-            currentFile.url = URL.createObjectURL(new Blob([res.newBytes], { type: mime }));
-            currentFile.rotation = 0;
-            this.state.rotation = 0;
-            this._applyPreviewTransform();
-            this.renderPreview();
-            toast.show('Document Rotated', `${currentFile.name} rotated 90° clockwise and saved to disk.`, 'success');
-          } else {
-            currentFile.rotation = ((currentFile.rotation || 0) + 90) % 360;
-            this.state.rotation = currentFile.rotation;
-            this._applyPreviewTransform();
-            toast.show('Preview Rotated', res.error || 'Rotated in viewport.', 'info');
+        if (res.success && res.newBytes) {
+          // CRITICAL: Update BOTH bytes and cached _pdfBytes so preview reloads rotated bytes!
+          currentFile.bytes = res.newBytes;
+          currentFile._pdfBytes = res.newBytes;
+          currentFile._blobUrl = null;
+
+          if (currentFile.url) {
+            try { URL.revokeObjectURL(currentFile.url); } catch (_) {}
           }
-        } catch (err) {
-          console.error('[DocMitra Renamer] Rotation failed:', err);
-          currentFile.rotation = ((currentFile.rotation || 0) + 90) % 360;
+          const cleanExt = (currentFile.ext || currentFile.name.split('.').pop() || '').toLowerCase();
+          const mime = cleanExt.includes('pdf')
+            ? 'application/pdf'
+            : cleanExt.includes('png')
+              ? 'image/png'
+              : 'image/jpeg';
+          currentFile.url = URL.createObjectURL(new Blob([res.newBytes], { type: mime }));
+          currentFile._blobUrl = currentFile.url;
+          currentFile.rotation = 0;
+          this.state.rotation = 0;
+          this._applyPreviewTransform();
+          this.renderCurrentPreview();
+          const signStr = deltaDegrees > 0 ? `+${deltaDegrees}` : `${deltaDegrees}`;
+          toast.show('Document Rotated', `${currentFile.name} rotated ${signStr}° and saved to disk.`, 'success');
+        } else {
+          currentFile.rotation = ((currentFile.rotation || 0) + deltaDegrees + 360) % 360;
           this.state.rotation = currentFile.rotation;
           this._applyPreviewTransform();
-        } finally {
-          btnRotate.disabled = false;
-          btnRotate.innerHTML = origContent;
+          toast.show('Preview Rotated', res.error || 'Rotated in viewport.', 'info');
         }
-      });
+      } catch (err) {
+        console.error('[DocMitra Renamer] Rotation failed:', err);
+        currentFile.rotation = ((currentFile.rotation || 0) + deltaDegrees + 360) % 360;
+        this.state.rotation = currentFile.rotation;
+        this._applyPreviewTransform();
+      } finally {
+        if (targetBtn && origContent) {
+          targetBtn.disabled = false;
+          targetBtn.innerHTML = origContent;
+        }
+      }
+    };
+
+    if (btnRotateCCW) {
+      btnRotateCCW.addEventListener('click', () => handleMultiWayRotation(-90, btnRotateCCW));
+    }
+    if (btnRotateCW) {
+      btnRotateCW.addEventListener('click', () => handleMultiWayRotation(90, btnRotateCW));
+    }
+    if (btnRotateFlip) {
+      btnRotateFlip.addEventListener('click', () => handleMultiWayRotation(180, btnRotateFlip));
     }
 
     if (btnFitA4) {
@@ -2338,39 +2359,127 @@ export class RenamerUIManager {
     const topStatusSection = document.createElement('div');
     topStatusSection.className = 'flex flex-col gap-2 shrink-0 select-none';
 
-    // 1.1 Preset Selector in Administrative Bento Theme with Glowing Hover Effect
-    const schemeBox = document.createElement('div');
-    schemeBox.className = 'group flex items-center justify-between bg-surface-container-lowest border border-outline-variant/60 hover:border-primary/80 rounded-xl px-3 py-2 shadow-2xs hover:shadow-[0_0_15px_rgba(0,55,176,0.18)] transition-all duration-200 cursor-pointer';
+    // 1.1 Custom Bento PRESET Dropdown (Replacing native <select>)
+    const presetCard = document.createElement('div');
+    presetCard.id = 'customPresetCard';
+    presetCard.className = 'group relative flex items-center justify-between bg-surface-container-lowest border border-outline-variant/60 hover:border-primary/80 rounded-xl px-3 h-[38px] shadow-2xs hover:shadow-[0_0_15px_rgba(0,55,176,0.18)] transition-all duration-200 cursor-pointer select-none';
+    presetCard.title = 'Click to switch active document preset';
 
-    const schemeLabel = document.createElement('span');
-    schemeLabel.className = 'font-mono-code text-[10px] text-secondary group-hover:text-primary uppercase font-bold tracking-wider shrink-0 flex items-center gap-1.5 transition-colors';
-    schemeLabel.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-primary inline-block shrink-0 shadow-[0_0_6px_rgba(0,55,176,0.4)]"></span>PRESET:';
-    schemeBox.appendChild(schemeLabel);
+    // Left content: dot + PRESET: + active name
+    const leftContent = document.createElement('div');
+    leftContent.className = 'flex items-center gap-1.5 min-w-0 flex-1 mr-2';
 
-    const presetSelect = document.createElement('select');
-    presetSelect.id = 'selectQuickPreset';
-    presetSelect.className = 'bg-transparent font-mono-code text-[12px] font-bold text-on-surface focus:outline-none cursor-pointer pr-1 text-right flex-1 ml-2 tracking-wide';
-    presetSelect.title = 'Switch active document preset';
+    const dot = document.createElement('span');
+    dot.className = 'w-1.5 h-1.5 rounded-full bg-primary inline-block shrink-0 shadow-[0_0_6px_rgba(0,55,176,0.4)]';
+    leftContent.appendChild(dot);
 
-    const availablePresets = this.state.documentPresets ? Object.keys(this.state.documentPresets) : ['MAHA DBT', 'SWAYAM DEENDAYAL YOJANA', 'CET CELL', 'EDUCATIONAL DOCUMENTS'];
-    availablePresets.forEach(p => {
-      const opt = document.createElement('option');
-      opt.value = p;
-      opt.textContent = p;
-      opt.className = 'bg-surface-container-lowest text-on-surface font-mono-code text-[12px] py-1';
-      if (p === (this.state.activePreset || 'MAHA DBT')) opt.selected = true;
-      presetSelect.appendChild(opt);
-    });
+    const presetLabel = document.createElement('span');
+    presetLabel.className = 'font-mono-code text-[10px] text-secondary group-hover:text-primary uppercase font-bold tracking-wider shrink-0 transition-colors';
+    presetLabel.textContent = 'PRESET:';
+    leftContent.appendChild(presetLabel);
 
-    presetSelect.addEventListener('change', (e) => {
-      e.stopPropagation();
-      this.handleSwitchActivePreset(e.target.value);
-      if (this.state.isMissingModalOpen) {
-        this.updateMissingModal();
+    const activeName = document.createElement('span');
+    activeName.id = 'customPresetActiveName';
+    activeName.className = 'font-mono-code text-[12px] font-bold text-on-surface truncate text-left tracking-wide flex-1';
+    activeName.textContent = this.state.activePreset || 'MAHA DBT';
+    leftContent.appendChild(activeName);
+    presetCard.appendChild(leftContent);
+
+    // Right content: chevron
+    const chevron = document.createElement('span');
+    chevron.id = 'customPresetChevron';
+    chevron.className = 'material-symbols-outlined text-[18px] text-secondary group-hover:text-primary transition-transform duration-200 shrink-0';
+    chevron.textContent = 'expand_more';
+    presetCard.appendChild(chevron);
+
+    // Hidden native select for backwards compatibility / tests
+    const hiddenSelect = document.createElement('select');
+    hiddenSelect.id = 'selectQuickPreset';
+    hiddenSelect.className = 'hidden';
+    presetCard.appendChild(hiddenSelect);
+
+    // Floating elevated menu (z-9999)
+    const floatingMenu = document.createElement('div');
+    floatingMenu.id = 'customPresetMenu';
+    floatingMenu.className = 'hidden absolute top-[calc(100%+6px)] left-0 w-full min-w-[240px] bg-surface-container-lowest border border-outline-variant/60 rounded-xl shadow-xl z-[9999] py-1.5 overflow-hidden backdrop-blur-md transition-all duration-150';
+
+    const rawPresets = this.state.documentPresets ? Object.keys(this.state.documentPresets) : ['MAHA DBT', 'SWAYAM DEENDAYAL YOJANA', 'CET CELL', 'EDUCATIONAL DOCUMENTS'];
+    const availablePresets = Array.from(new Set([...rawPresets, 'MAHA DBT', 'SWAYAM DEENDAYAL YOJANA', 'CET CELL', 'EDUCATIONAL DOCUMENTS']));
+
+    const renderMenuItems = () => {
+      floatingMenu.innerHTML = '';
+      hiddenSelect.innerHTML = '';
+
+      availablePresets.forEach(presetName => {
+        const opt = document.createElement('option');
+        opt.value = presetName;
+        opt.textContent = presetName;
+        if (presetName === (this.state.activePreset || 'MAHA DBT')) opt.selected = true;
+        hiddenSelect.appendChild(opt);
+
+        const item = document.createElement('div');
+        const isActive = presetName === (this.state.activePreset || 'MAHA DBT');
+        item.className = `flex items-center justify-between px-3 py-2 text-[12px] font-mono-code font-semibold cursor-pointer transition-colors rounded-lg mx-1 ${
+          isActive
+            ? 'bg-primary/10 text-primary font-bold'
+            : 'text-on-surface hover:bg-surface-container-high/60 hover:text-primary'
+        }`;
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'truncate mr-2';
+        nameSpan.textContent = presetName;
+        item.appendChild(nameSpan);
+
+        if (isActive) {
+          const checkIcon = document.createElement('span');
+          checkIcon.className = 'material-symbols-outlined text-[16px] text-primary shrink-0';
+          checkIcon.textContent = 'check';
+          item.appendChild(checkIcon);
+        }
+
+        item.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          this.handleSwitchActivePreset(presetName);
+          activeName.textContent = presetName;
+          hiddenSelect.value = presetName;
+          hiddenSelect.dispatchEvent(new Event('change', { bubbles: true }));
+          floatingMenu.classList.add('hidden');
+          chevron.classList.remove('rotate-180');
+          renderMenuItems();
+          if (this.state.isMissingModalOpen) {
+            this.updateMissingModal();
+          }
+        });
+
+        floatingMenu.appendChild(item);
+      });
+    };
+
+    renderMenuItems();
+
+    presetCard.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const isHidden = floatingMenu.classList.contains('hidden');
+      if (isHidden) {
+        document.querySelectorAll('#customPresetMenu:not(.hidden)').forEach(m => m.classList.add('hidden'));
+        floatingMenu.classList.remove('hidden');
+        chevron.classList.add('rotate-180');
+      } else {
+        floatingMenu.classList.add('hidden');
+        chevron.classList.remove('rotate-180');
       }
     });
-    schemeBox.appendChild(presetSelect);
-    topStatusSection.appendChild(schemeBox);
+
+    const handleOutsideClick = (ev) => {
+      if (!presetCard.contains(ev.target)) {
+        floatingMenu.classList.add('hidden');
+        chevron.classList.remove('rotate-180');
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+
+    presetCard.appendChild(floatingMenu);
+    topStatusSection.appendChild(presetCard);
 
     // 1.2 Two Side-by-Side Summary Cards (Exact Sample 1 / Modal Style)
     const cardsGrid = document.createElement('div');
@@ -3527,12 +3636,9 @@ export class RenamerUIManager {
           f.isScanning = false;
         }
 
-        // Live row-by-row update: telemetry, queue badges, and preview
+        // Live row-by-row update: telemetry and queue badges
         this.updateTelemetry();
         this.renderQueue();
-        if (this.state.files[this.state.currentIndex] === f) {
-          this.renderCurrentPreview();
-        }
 
         // Yield to browser UI paint
         await new Promise(r => setTimeout(r, 40));
@@ -5711,6 +5817,10 @@ export class RenamerUIManager {
     }
   }
 
+  renderPreview() {
+    return this.renderCurrentPreview();
+  }
+
   renderCurrentPreview() {
     const previewCol = document.getElementById('col-preview');
     if (!previewCol) return;
@@ -5817,6 +5927,13 @@ export class RenamerUIManager {
       stage.appendChild(topBadge);
     }
 
+    const getActiveStage = () => {
+      if (compareLabel) return stage;
+      const live = document.getElementById('previewContainerStage');
+      if (live && live.isConnected) return live;
+      return stage;
+    };
+
     const isImage = /\.(jpe?g|png|webp|bmp|gif)$/i.test(file.name);
     const isPdf = /\.pdf$/i.test(file.name);
 
@@ -5828,9 +5945,10 @@ export class RenamerUIManager {
       const applyBlob = (blobUrl) => {
         file._blobUrl = blobUrl;
         img.src = blobUrl;
-        if (!stage.contains(img)) {
-          stage.innerHTML = '';
-          stage.appendChild(img);
+        const targetStage = getActiveStage();
+        if (!targetStage.contains(img)) {
+          targetStage.innerHTML = '';
+          targetStage.appendChild(img);
         }
       };
 
@@ -5840,7 +5958,7 @@ export class RenamerUIManager {
         try {
           applyBlob(URL.createObjectURL(file.fileObj));
         } catch (_) {
-          this._renderDocumentInfoFallback(stage, file);
+          this._renderDocumentInfoFallback(getActiveStage(), file);
         }
       } else {
         const tauriInvoke = getTauriInvoke();
@@ -5857,20 +5975,20 @@ export class RenamerUIManager {
               const previewUrl = resolveFilePreviewUrl(file);
               if (previewUrl) {
                 img.src = previewUrl;
-                img.onload = () => { stage.innerHTML = ''; stage.appendChild(img); };
-                img.onerror = () => this._renderDocumentInfoFallback(stage, file);
+                img.onload = () => { const targetStage = getActiveStage(); targetStage.innerHTML = ''; targetStage.appendChild(img); };
+                img.onerror = () => this._renderDocumentInfoFallback(getActiveStage(), file);
               } else {
-                this._renderDocumentInfoFallback(stage, file);
+                this._renderDocumentInfoFallback(getActiveStage(), file);
               }
             });
         } else {
           const previewUrl = resolveFilePreviewUrl(file);
           if (previewUrl) {
             img.src = previewUrl;
-            img.onload = () => { stage.innerHTML = ''; stage.appendChild(img); };
-            img.onerror = () => this._renderDocumentInfoFallback(stage, file);
+            img.onload = () => { const targetStage = getActiveStage(); targetStage.innerHTML = ''; targetStage.appendChild(img); };
+            img.onerror = () => this._renderDocumentInfoFallback(getActiveStage(), file);
           } else {
-            this._renderDocumentInfoFallback(stage, file);
+            this._renderDocumentInfoFallback(getActiveStage(), file);
           }
         }
       }
@@ -5885,17 +6003,19 @@ export class RenamerUIManager {
           return;
         }
         try {
-          stage.innerHTML = '';
-          stage.appendChild(canvas);
+          const targetStage = getActiveStage();
+          targetStage.innerHTML = '';
+          targetStage.appendChild(canvas);
           const bufferCopy = (bytes instanceof Uint8Array) ? bytes.slice(0) : new Uint8Array(bytes);
           this.state.activePdfDoc = await window.pdfjsLib.getDocument({ data: bufferCopy }).promise;
           this.state.activePdfUrl = file.path || file.name;
           this.state.totalPdfPages = this.state.activePdfDoc.numPages || 1;
           this.state.currentPdfPage = 1;
+          this._updatePdfPageIndicator();
           await this._renderPdfPage(1, canvas);
         } catch (pdfErr) {
           console.warn('PDF render error:', pdfErr);
-          this._renderDocumentInfoFallback(stage, file);
+          this._renderDocumentInfoFallback(getActiveStage(), file);
         }
       };
 
@@ -5907,7 +6027,7 @@ export class RenamerUIManager {
             file._pdfBytes = new Uint8Array(buf);
             renderFromBytes(file._pdfBytes);
           })
-          .catch(() => this._renderDocumentInfoFallback(stage, file));
+          .catch(() => this._renderDocumentInfoFallback(getActiveStage(), file));
       } else {
         const tauriInvoke = getTauriInvoke();
         if (file.path && tauriInvoke) {
@@ -5927,9 +6047,9 @@ export class RenamerUIManager {
                     file._pdfBytes = new Uint8Array(buf);
                     renderFromBytes(file._pdfBytes);
                   })
-                  .catch(() => this._renderDocumentInfoFallback(stage, file));
+                  .catch(() => this._renderDocumentInfoFallback(getActiveStage(), file));
               } else {
-                this._renderDocumentInfoFallback(stage, file);
+                this._renderDocumentInfoFallback(getActiveStage(), file);
               }
             });
         } else {
@@ -5941,14 +6061,14 @@ export class RenamerUIManager {
                 file._pdfBytes = new Uint8Array(buf);
                 renderFromBytes(file._pdfBytes);
               })
-              .catch(() => this._renderDocumentInfoFallback(stage, file));
+              .catch(() => this._renderDocumentInfoFallback(getActiveStage(), file));
           } else {
-            this._renderDocumentInfoFallback(stage, file);
+            this._renderDocumentInfoFallback(getActiveStage(), file);
           }
         }
       }
     } else {
-      this._renderDocumentInfoFallback(stage, file);
+      this._renderDocumentInfoFallback(getActiveStage(), file);
     }
 
     return stage;

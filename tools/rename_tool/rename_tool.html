@@ -169,13 +169,30 @@
                 class="w-7 h-7 rounded bg-surface-container text-primary flex items-center justify-center shadow-xs"
                 title="Fit to A4 Width" type="button"><span
                   class="material-symbols-outlined text-[16px]">fit_screen</span></button>
-              <button
-                id="btnRenamerRotatePreview"
-                class="h-7 px-2 rounded-lg bg-surface-container hover:bg-primary hover:text-white text-on-surface flex items-center gap-1 font-mono-code text-[11px] font-bold border border-outline-variant/40 shadow-2xs hover:shadow-primary/20 transition-all cursor-pointer select-none"
-                title="Rotate Document 90° Clockwise (Saves physically to disk)" type="button">
-                <span class="material-symbols-outlined text-[15px]">rotate_right</span>
-                <span>Rotate 90°</span>
-              </button>
+              <!-- 3-Way Unlimited Rotation Toolkit -->
+              <div class="flex items-center gap-1">
+                <button
+                  id="btnRotateCCW"
+                  class="h-7 px-2 rounded-lg bg-surface-container hover:bg-primary hover:text-white text-on-surface flex items-center gap-0.5 font-mono-code text-[11px] font-bold border border-outline-variant/40 shadow-2xs hover:shadow-primary/20 transition-all cursor-pointer select-none"
+                  title="Rotate Counter-Clockwise (-90°)" type="button">
+                  <span class="material-symbols-outlined text-[15px]">rotate_left</span>
+                  <span>-90°</span>
+                </button>
+                <button
+                  id="btnRotateCW"
+                  class="h-7 px-2 rounded-lg bg-surface-container hover:bg-primary hover:text-white text-on-surface flex items-center gap-0.5 font-mono-code text-[11px] font-bold border border-outline-variant/40 shadow-2xs hover:shadow-primary/20 transition-all cursor-pointer select-none"
+                  title="Rotate Clockwise (+90°)" type="button">
+                  <span class="material-symbols-outlined text-[15px]">rotate_right</span>
+                  <span>+90°</span>
+                </button>
+                <button
+                  id="btnRotateFlip"
+                  class="h-7 px-2 rounded-lg bg-surface-container hover:bg-primary hover:text-white text-on-surface flex items-center gap-0.5 font-mono-code text-[11px] font-bold border border-outline-variant/40 shadow-2xs hover:shadow-primary/20 transition-all cursor-pointer select-none"
+                  title="Flip Upside-Down (180° Flip)" type="button">
+                  <span class="material-symbols-outlined text-[15px]">flip</span>
+                  <span>180° Flip</span>
+                </button>
+              </div>
               <button
                 class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
                 title="Split Compare" type="button"><span

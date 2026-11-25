@@ -105,6 +105,25 @@ def unique_destination(desired_name: str, current_name: str, existing_names: Set
 
 import stat
 
+def strip_file_locks(file_path: str) -> None:
+    """
+    Strips Windows read-only flags and Alternate Data Stream (:Zone.Identifier)
+    unlocking Windows File Explorer preview pane immediately.
+    """
+    if not file_path or not os.path.exists(file_path):
+        return
+    try:
+        os.chmod(file_path, stat.S_IWRITE)
+    except Exception:
+        pass
+    if os.name == 'nt':
+        zone_stream = f"{file_path}:Zone.Identifier"
+        if os.path.exists(zone_stream):
+            try:
+                os.remove(zone_stream)
+            except Exception:
+                pass
+
 def rotate_pdf_on_disk(file_path: str, angle: int) -> Tuple[bool, str, Optional[Tuple[float, float]]]:
     """
     Rotate all pages of a PDF file clockwise by angle (90, 180, 270) using pypdf.
@@ -140,14 +159,10 @@ def rotate_pdf_on_disk(file_path: str, angle: int) -> Tuple[bool, str, Optional[
         except Exception:
             pass
 
-        # Windows read-only guard: ensure write permission on destination before replacement
-        if os.path.exists(file_path):
-            try:
-                os.chmod(file_path, stat.S_IWRITE)
-            except Exception:
-                pass
-
+        # Windows read-only & Zone.Identifier guard: unlock destination before and after replacement
+        strip_file_locks(file_path)
         os.replace(temp_path, file_path)
+        strip_file_locks(file_path)
 
         # Verify output dimensions of first page
         reader_check = PdfReader(file_path)
@@ -196,14 +211,10 @@ def rotate_image_on_disk(file_path: str, angle: int) -> Tuple[bool, str, Optiona
             else:
                 rotated.save(temp_path, format=fmt)
 
-        # Windows read-only guard: ensure write permission on destination before replacement
-        if os.path.exists(file_path):
-            try:
-                os.chmod(file_path, stat.S_IWRITE)
-            except Exception:
-                pass
-
+        # Windows read-only & Zone.Identifier guard: unlock destination before and after replacement
+        strip_file_locks(file_path)
         os.replace(temp_path, file_path)
+        strip_file_locks(file_path)
         with Image.open(file_path) as check_img:
             return True, "", check_img.size
     except Exception as e:
@@ -360,10 +371,14 @@ def safe_rename_file(old_path: str, new_name: str, student_name: str = '', rotat
         new_name = unique_destination(new_name, os.path.basename(old_path), existing_in_dir, student_name)
         new_path = os.path.join(parent, new_name)
 
+    # Strip Windows file locks / Zone.Identifier before and after renaming
+    strip_file_locks(old_path)
     try:
         os.rename(old_path, new_path)
+        strip_file_locks(new_path)
         if rotation and (rotation % 360 != 0):
             rot_res = rotate_file_on_disk(new_path, rotation)
+            strip_file_locks(new_path)
             if not rot_res.get('success'):
                 return {'success': False, 'error': f"Rename succeeded but rotation failed: {rot_res.get('error')}"}
         return {

@@ -28,50 +28,53 @@ export function rotatePdfBytes(pdfBytes, degrees = 90) {
     const pageObjRegex = /(\d+\s+\d+\s+obj\s*<<[\s\S]*?\/Type\s*\/Page(?!\w)[\s\S]*?>>\s*endobj)/g;
     let modifiedCount = 0;
 
-    if (pageObjRegex.test(fullStr)) {
-      const modified = fullStr.replace(pageObjRegex, (pageObj) => {
-        modifiedCount++;
-        if (/\/Rotate\s+(\d+)/.test(pageObj)) {
-          const curRot = parseInt(RegExp.$1, 10) || 0;
-          const nextRot = (curRot + deg) % 360;
-          return pageObj.replace(/\/Rotate\s+\d+/, `/Rotate ${nextRot}`);
-        } else {
-          return pageObj.replace(/\/Type\s*\/Page(?!\w)/, `/Type /Page /Rotate ${deg}`);
-        }
-      });
-
-      if (modifiedCount > 0) {
-        const outBuf = new Uint8Array(modified.length);
-        for (let i = 0; i < modified.length; i++) {
-          outBuf[i] = modified.charCodeAt(i) & 0xFF;
-        }
-        return outBuf;
+    const modified = fullStr.replace(pageObjRegex, (pageObj) => {
+      modifiedCount++;
+      const match = pageObj.match(/\/Rotate\s+(\d+)/);
+      if (match) {
+        const curRot = parseInt(match[1], 10) || 0;
+        const nextRot = (curRot + deg) % 360;
+        return pageObj.replace(/\/Rotate\s+\d+/, `/Rotate ${nextRot}`);
+      } else {
+        return pageObj.replace(/\/Type\s*\/Page(?!\w)/, `/Type /Page /Rotate ${deg}`);
       }
-    }
+    });
 
-    // Fallback: Check if /Pages dictionary has /Rotate or append /Rotate to individual pages
-    const pagesDictRegex = /(\d+\s+\d+\s+obj\s*<<[\s\S]*?\/Type\s*\/Pages(?!\w)[\s\S]*?>>\s*endobj)/g;
-    if (pagesDictRegex.test(fullStr)) {
-      const modified = fullStr.replace(pagesDictRegex, (pagesObj) => {
-        if (/\/Rotate\s+(\d+)/.test(pagesObj)) {
-          const curRot = parseInt(RegExp.$1, 10) || 0;
-          const nextRot = (curRot + deg) % 360;
-          return pagesObj.replace(/\/Rotate\s+\d+/, `/Rotate ${nextRot}`);
-        } else {
-          return pagesObj.replace(/\/Type\s*\/Pages(?!\w)/, `/Type /Pages /Rotate ${deg}`);
-        }
-      });
+    if (modifiedCount > 0) {
       const outBuf = new Uint8Array(modified.length);
       for (let i = 0; i < modified.length; i++) {
         outBuf[i] = modified.charCodeAt(i) & 0xFF;
       }
       return outBuf;
     }
+
+    // Fallback: Check if /Pages dictionary has /Rotate or append /Rotate to individual pages
+    const pagesDictRegex = /(\d+\s+\d+\s+obj\s*<<[\s\S]*?\/Type\s*\/Pages(?!\w)[\s\S]*?>>\s*endobj)/g;
+    let pagesModifiedCount = 0;
+    const modifiedPages = fullStr.replace(pagesDictRegex, (pagesObj) => {
+      pagesModifiedCount++;
+      const match = pagesObj.match(/\/Rotate\s+(\d+)/);
+      if (match) {
+        const curRot = parseInt(match[1], 10) || 0;
+        const nextRot = (curRot + deg) % 360;
+        return pagesObj.replace(/\/Rotate\s+\d+/, `/Rotate ${nextRot}`);
+      } else {
+        return pagesObj.replace(/\/Type\s*\/Pages(?!\w)/, `/Type /Pages /Rotate ${deg}`);
+      }
+    });
+
+    if (pagesModifiedCount > 0) {
+      const outBuf = new Uint8Array(modifiedPages.length);
+      for (let i = 0; i < modifiedPages.length; i++) {
+        outBuf[i] = modifiedPages.charCodeAt(i) & 0xFF;
+      }
+      return outBuf;
+    }
+    return null;
   } catch (err) {
     console.warn('[RotationEngine] PDF in-place rotation failed:', err);
+    return null;
   }
-
-  return pdfBytes;
 }
 
 /**
@@ -150,6 +153,9 @@ export async function rotateFilePhysicallyOnDisk({ filePath, ext, bytes, degrees
 
     if (cleanExt === 'pdf') {
       rotatedBytes = rotatePdfBytes(sourceBytes, degrees);
+      if (!rotatedBytes) {
+        return { success: false, error: 'PDF structure does not support in-place byte rotation' };
+      }
     } else if (['jpg', 'jpeg', 'png', 'webp', 'bmp'].includes(cleanExt)) {
       const mime = cleanExt === 'png' ? 'image/png' : 'image/jpeg';
       rotatedBytes = await rotateImageBytes(sourceBytes, mime, degrees);
