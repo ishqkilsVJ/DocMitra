@@ -778,6 +778,7 @@ var w = {
 	"INCOME CERTIFICATE": "Income Certificate",
 	"DOMICILE CERTIFICATE": "Domicile Certificate",
 	"NATIONALITY CERTIFICATE": "Nationality Certificate",
+	"DOMICILE AND NATIONALITY CERTIFICATE": "Domicile and Nationality Certificate",
 	"RATION CARD": "Ration Card",
 	"BANK PASSBOOK": "Bank Passbook",
 	"PASSBOOK BANK": "Bank Passbook",
@@ -965,6 +966,15 @@ var O = {
 			"tahsildar income",
 			"form 16"
 		]],
+		["DOMICILE AND NATIONALITY CERTIFICATE", [
+			"domicile and nationality certificate",
+			"domicile nationality",
+			"nationality domicile",
+			"domicile and nationality",
+			"domnat",
+			"natdom",
+			"dn"
+		]],
 		["DOMICILE CERTIFICATE", [
 			"domicile certificate",
 			"adhiwas",
@@ -1087,6 +1097,15 @@ var O = {
 			"validity",
 			"cvc",
 			"tribe validity"
+		]],
+		["DOMICILE AND NATIONALITY CERTIFICATE", [
+			"domicile and nationality certificate",
+			"domicile nationality",
+			"nationality domicile",
+			"domicile and nationality",
+			"domnat",
+			"natdom",
+			"dn"
 		]],
 		["DOMICILE CERTIFICATE", [
 			"domicile certificate",
@@ -1229,6 +1248,15 @@ var O = {
 			"tc",
 			"transfer certificate"
 		]],
+		["DOMICILE AND NATIONALITY CERTIFICATE", [
+			"domicile and nationality certificate",
+			"domicile nationality",
+			"nationality domicile",
+			"domicile and nationality",
+			"domnat",
+			"natdom",
+			"dn"
+		]],
 		["DOMICILE CERTIFICATE", [
 			"domicile certificate",
 			"adhiwas",
@@ -1367,6 +1395,15 @@ var O = {
 			"utpanna dakhla",
 			"tahsildar income",
 			"form 16"
+		]],
+		["DOMICILE AND NATIONALITY CERTIFICATE", [
+			"domicile and nationality certificate",
+			"domicile nationality",
+			"nationality domicile",
+			"domicile and nationality",
+			"domnat",
+			"natdom",
+			"dn"
 		]],
 		["DOMICILE CERTIFICATE", [
 			"domicile certificate",
@@ -1749,6 +1786,20 @@ var A = [
 			"nationality proof"
 		],
 		outputName: "NATIONALITY CERTIFICATE"
+	},
+	{
+		id: "domicile-nationality-certificate",
+		displayName: "Domicile & Nationality",
+		primaryShortcut: "DOMNAT",
+		alternateKeywords: [
+			"domicile and nationality certificate",
+			"domicile nationality",
+			"nationality domicile",
+			"domicile and nationality",
+			"dn",
+			"natdom"
+		],
+		outputName: "DOMICILE AND NATIONALITY CERTIFICATE"
 	},
 	{
 		id: "ration-card",
@@ -2629,6 +2680,18 @@ var ne = [
 			/\btahsildar\s*income\b/i,
 			/\bform\s*16\b/i,
 			/\btahsildar\b/i
+		]
+	},
+	{
+		id: "domicile-nationality-certificate",
+		outputName: "DOMICILE AND NATIONALITY CERTIFICATE",
+		shortcut: "DOMNAT",
+		patterns: [
+			/\bdomnat\b/i,
+			/\bnatdom\b/i,
+			/\bdomicile\s*(and|&)\s*nationality\b/i,
+			/\bnationality\s*(and|&)\s*domicile\b/i,
+			/\bage\s*nationality\s*(and|&)\s*domicile\b/i
 		]
 	},
 	{
@@ -3541,6 +3604,28 @@ var ue = [
 		]
 	},
 	{
+		canonical: "DOMICILE AND NATIONALITY CERTIFICATE",
+		code: "DOMNAT",
+		patterns: [
+			/\bdomicile\s*(and|&)\s*nationality\b/i,
+			/\bnationality\s*(and|&)\s*domicile\b/i,
+			/\bage,?\s*nationality\s*(and|&)\s*domicile\b/i,
+			/\bअधिवास\s*(आणि|व)\s*राष्ट्रीयत्व\b/i
+		],
+		primaryKeywords: [
+			"domicile and nationality",
+			"nationality and domicile",
+			"age nationality and domicile",
+			"domnat"
+		],
+		secondaryKeywords: [
+			"executive magistrate",
+			"tahsildar",
+			"state of maharashtra",
+			"ordinary resident"
+		]
+	},
+	{
 		canonical: "DOMICILE CERTIFICATE",
 		code: "DOM",
 		patterns: [
@@ -4284,6 +4369,25 @@ function be(e, t = "", n = null, r = null) {
 				"kcast",
 				"kast"
 			]
+		},
+		{
+			type: "DOMICILE AND NATIONALITY CERTIFICATE",
+			code: "DOMNAT",
+			tokens: [
+				"domicile and nationality",
+				"domicile nationality",
+				"nationality domicile",
+				"domicile and nationality certificate",
+				"domnat",
+				"natdom",
+				"dn"
+			],
+			primary: [
+				"domicile and nationality",
+				"domnat",
+				"natdom"
+			],
+			minScore: 90
 		},
 		{
 			type: "DOMICILE CERTIFICATE",
@@ -6355,6 +6459,7 @@ function ct(e) {
 		"INC",
 		"DOM",
 		"NAT",
+		"DOMNAT",
 		"BNK",
 		"RAT",
 		"EWS"
@@ -6388,7 +6493,7 @@ var lt = A.map((e) => ({
 	canonical: e.outputName,
 	keywords: Array.isArray(e.alternateKeywords) ? [...e.alternateKeywords] : []
 })), ut = new Map(lt.map((e) => [e.code, e])), dt = {
-	"MAHA DBT": (/* @__PURE__ */ "PIC.SIG.ADR.10M.10P.10MP.12M.12P.12MP.12LC.PYM.CST.VAL.NCL.INC.DOM.NAT.RAT.BNK.CAP.BON.FEE.ATT.HST.GAP.SDC.PDC.DTH".split(".")).map((e) => {
+	"MAHA DBT": (/* @__PURE__ */ "PIC.SIG.ADR.10M.10P.12M.12P.12LC.PYM.CST.VAL.NCL.INC.DOM.NAT.RAT.BNK.CAP.BON.FEE.ATT.HST.GAP.SDC.PDC.DTH".split(".")).map((e) => {
 		let t = ut.get(e);
 		return {
 			name: t.canonical,
@@ -6401,9 +6506,9 @@ var lt = A.map((e) => ({
 		"SIG",
 		"ADR",
 		"10M",
-		"10MP",
+		"10P",
 		"12M",
-		"12MP",
+		"12P",
 		"12LC",
 		"PYM",
 		"CST",
@@ -6427,7 +6532,32 @@ var lt = A.map((e) => ({
 			keywords: [...t.keywords]
 		};
 	}),
-	"CET CELL": (/* @__PURE__ */ "PIC.SIG.ADR.APR.CETAF.CETSC.CAP.SRF.10M.10P.10MP.12M.12P.12MP.12LC.DOM.NAT.CST.VAL.NCL.EWS.INC.GAP.MIG.MED.BRT".split(".")).map((e) => {
+	"CET CELL": [
+		"PIC",
+		"SIG",
+		"ADR",
+		"APR",
+		"CETAF",
+		"CETSC",
+		"CAP",
+		"SRF",
+		"10M",
+		"10P",
+		"12M",
+		"12P",
+		"12LC",
+		"DOM",
+		"NAT",
+		"CST",
+		"VAL",
+		"NCL",
+		"EWS",
+		"INC",
+		"GAP",
+		"MIG",
+		"MED",
+		"BRT"
+	].map((e) => {
 		let t = ut.get(e);
 		return {
 			name: t.canonical,
@@ -6435,7 +6565,7 @@ var lt = A.map((e) => ({
 			keywords: [...t.keywords]
 		};
 	}),
-	"EDUCATIONAL DOCUMENTS": (/* @__PURE__ */ "PIC.SIG.ADR.10M.10P.10MP.12M.12P.12MP.12LC.PYM.CST.VAL.NCL.INC.DOM.NAT.RAT.BNK.CAP.BON.FEE.ATT.HST.GAP.SDC.PDC.DTH.NHC.DIS.APR.CETAF.CETSC.SRF.EWS.MIG.MED.BRT.PAN.VOT.DL.11M.1YM.2YM.3YM.4YM.DPC.DEG.REG.INT.CHR.GAZ.MIN".split(".")).map((e) => {
+	"EDUCATIONAL DOCUMENTS": (/* @__PURE__ */ "PIC.SIG.ADR.10M.10P.12M.12P.12LC.PYM.CST.VAL.NCL.INC.DOM.NAT.RAT.BNK.CAP.BON.FEE.ATT.HST.GAP.SDC.PDC.DTH.NHC.DIS.APR.CETAF.CETSC.SRF.EWS.MIG.MED.BRT.PAN.VOT.DL.11M.1YM.2YM.3YM.4YM.DPC.DEG.REG.INT.CHR.GAZ.MIN".split(".")).map((e) => {
 		let t = ut.get(e);
 		return {
 			name: t.canonical,
@@ -8139,7 +8269,14 @@ var lt = A.map((e) => ({
 		} catch (e) {
 			console.warn("[DocMitra Renamer] Failed to parse custom shortcuts:", e);
 		}
-		this.state.documentPresets && typeof this.state.documentPresets == "object" && (this.state.documentPresets.SWAYAM && !this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] && (this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] = this.state.documentPresets.SWAYAM, delete this.state.documentPresets.SWAYAM), this.state.documentPresets.EDUCATIONAL && !this.state.documentPresets["EDUCATIONAL DOCUMENTS"] && (this.state.documentPresets["EDUCATIONAL DOCUMENTS"] = this.state.documentPresets.EDUCATIONAL, delete this.state.documentPresets.EDUCATIONAL)), this.state.documentPresets && Object.keys(this.state.documentPresets).length !== 0 || (this.state.documentPresets = JSON.parse(JSON.stringify(dt)), this.savePresetsAndSettings());
+		if (this.state.documentPresets && typeof this.state.documentPresets == "object" && (this.state.documentPresets.SWAYAM && !this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] && (this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] = this.state.documentPresets.SWAYAM, delete this.state.documentPresets.SWAYAM), this.state.documentPresets.EDUCATIONAL && !this.state.documentPresets["EDUCATIONAL DOCUMENTS"] && (this.state.documentPresets["EDUCATIONAL DOCUMENTS"] = this.state.documentPresets.EDUCATIONAL, delete this.state.documentPresets.EDUCATIONAL)), !this.state.documentPresets || Object.keys(this.state.documentPresets).length === 0) this.state.documentPresets = JSON.parse(JSON.stringify(dt)), this.savePresetsAndSettings();
+		else for (let e of Object.keys(this.state.documentPresets)) {
+			let t = this.state.documentPresets[e];
+			Array.isArray(t) && (this.state.documentPresets[e] = t.filter((e) => {
+				let t = (e.name || e.label || e || "").toUpperCase().trim();
+				return t !== "10TH MARKSHEET AND PASSING CERTIFICATE" && t !== "12TH MARKSHEET AND PASSING CERTIFICATE";
+			}));
+		}
 		let t = !1, n = (e) => {
 			if (!e || typeof e != "string") return e;
 			let t = e.trim().toUpperCase();

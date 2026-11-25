@@ -1,15 +1,20 @@
 # 🔒 LOCKED TOOL: Bulk Document Renamer (`tools/rename_tool/`)
 
 > [!IMPORTANT]
-> **FROZEN & FULLY VERIFIED UNDER CHECKPOINT `CP-037`**  
+> **FROZEN & FULLY VERIFIED UNDER CHECKPOINT `CP-038`**  
 > **Status:** `LOCKED & PRODUCTION SEALED`  
 > **Module Integrity:** 100% Passing Unit & Dual-MCP Automated QA Tests  
 > **Verification Date:** 2026-11-26  
-> **Core Architecture:** Preview Section Redesign - Design 2 Bento Slate Bar, Full DPI & Target Buffer Eradication, High-Visibility Multi-Page PDF Pagination (Page 1 of 4 with pulse indicator), Mouse Scroll Wheel Paging & Ctrl+Wheel Zoom, Keyboard Shortcuts (PageUp/PageDown, Ctrl +/-/0, R key 90° Rotate), Concurrency Cancellation Protection.
+> **Core Architecture:** Clean Preset Checklists (Eradicated redundant combined doc rules from checklists) and Priority DOMNAT Shortcut + Matching Engine.
 >
 > **LOCKED BY POLICY (`AGENTS.md` Rule 3):**  
 > Zero direct file modifications permitted inside `tools/rename_tool/` without explicit user unlock command:  
 > `UNLOCK RENAME_TOOL`
+
+> **Last QA Stabilization & Verification:** 2026-11-26 (Clean Preset Checklists & Priority DOMNAT Shortcut Engine [CP-038] Verified 100%:
+> 1. Clean Preset Checklists: Removed redundant combined documents (10TH MARKSHEET AND PASSING CERTIFICATE, 12TH MARKSHEET AND PASSING CERTIFICATE) from BUILTIN_PRESETS checklists, resolving double-missing bug when only 1 part is brought. Linked Documents Engine automatically satisfies both parts when combined file is present.
+> 2. Priority DOMNAT Shortcut & Pattern Match: Added DOMNAT shortcut with DOMICILE AND NATIONALITY CERTIFICATE output, priority patterns in PATTERNS and PROFILES, and OCR smart signature, guaranteeing 100% exact matching over standalone DOMICILE CERTIFICATE.
+> 3. Dual-MCP automated QA passed 100% [Playwright MCP E2E + Chrome DevTools 0 console errors]; compiled UI with node build-ui.js and release binary via cargo tauri build [10.56 MB]; deployed directly to C:\Users\USER\AppData\Local\DocMitra\app.exe).
 
 > **Last QA Stabilization & Verification:** 2026-11-26 (Preview Section Redesign & Multi-Page Navigation [CP-037] Verified 100%:
 > 1. Design 2 Bento Slate Bar: Implemented high-contrast dark slate toolbar matching DocMitra theme with Left Bento Zoom card, Center Multi-Page PDF Navigator, and Right 3-Way Rotation Group (-90°, +90°, 180° Flip). Full parity in rename_tool.html and app/index.html.

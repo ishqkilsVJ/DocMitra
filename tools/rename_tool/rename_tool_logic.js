@@ -46,6 +46,7 @@ export const CANONICAL_NAMES = {
   "INCOME CERTIFICATE": "Income Certificate",
   "DOMICILE CERTIFICATE": "Domicile Certificate",
   "NATIONALITY CERTIFICATE": "Nationality Certificate",
+  "DOMICILE AND NATIONALITY CERTIFICATE": "Domicile and Nationality Certificate",
   "RATION CARD": "Ration Card",
   "BANK PASSBOOK": "Bank Passbook",
   "PASSBOOK BANK": "Bank Passbook",
@@ -200,6 +201,7 @@ export const DEFAULT_CHECKLISTS_DATA = {
     ["CASTE VALIDITY CERTIFICATE", ["caste validity certificate", "validity", "cvc", "tribe validity"]],
     ["NON CREAMY LAYER CERTIFICATE", ["non creamy layer", "ncl", "non criminal", "non-creamy"]],
     ["INCOME CERTIFICATE", ["income certificate", "utpanna dakhla", "tahsildar income", "form 16"]],
+    ["DOMICILE AND NATIONALITY CERTIFICATE", ["domicile and nationality certificate", "domicile nationality", "nationality domicile", "domicile and nationality", "domnat", "natdom", "dn"]],
     ["DOMICILE CERTIFICATE", ["domicile certificate", "adhiwas", "maharashtra domicile"]],
     ["NATIONALITY CERTIFICATE", ["nationality certificate", "rashtriyatva", "nationality proof"]],
     ["RATION CARD", ["ration card", "shidha patrika"]],
@@ -226,6 +228,7 @@ export const DEFAULT_CHECKLISTS_DATA = {
     ["PREVIOUS YEAR MARKSHEET", ["previous year marksheet", "last exam marksheet", "prev marksheet"]],
     ["CASTE CERTIFICATE", ["caste certificate", "cast", "jati pramanpatra"]],
     ["CASTE VALIDITY CERTIFICATE", ["caste validity certificate", "validity", "cvc", "tribe validity"]],
+    ["DOMICILE AND NATIONALITY CERTIFICATE", ["domicile and nationality certificate", "domicile nationality", "nationality domicile", "domicile and nationality", "domnat", "natdom", "dn"]],
     ["DOMICILE CERTIFICATE", ["domicile certificate", "adhiwas", "maharashtra domicile"]],
     ["INCOME CERTIFICATE", ["income certificate", "utpanna dakhla", "tahsildar income", "form 16"]],
     ["BANK PASSBOOK", ["bank passbook", "passbook", "bank account", "npci seeded"]],
@@ -254,6 +257,7 @@ export const DEFAULT_CHECKLISTS_DATA = {
     ["12TH PASSING CERTIFICATE", ["12th passing certificate", "hsc passing", "12 passing", "12 pasing"]],
     ["12TH MARKSHEET AND PASSING CERTIFICATE", ["12th marksheet and passing certificate", "12th combined", "hsc marksheet passing"]],
     ["12TH LC", ["12th lc", "12 lc", "12 l", "leaving certificate", "school leaving", "tc", "transfer certificate"]],
+    ["DOMICILE AND NATIONALITY CERTIFICATE", ["domicile and nationality certificate", "domicile nationality", "nationality domicile", "domicile and nationality", "domnat", "natdom", "dn"]],
     ["DOMICILE CERTIFICATE", ["domicile certificate", "adhiwas", "maharashtra domicile"]],
     ["NATIONALITY CERTIFICATE", ["nationality certificate", "rashtriyatva", "nationality proof"]],
     ["CASTE CERTIFICATE", ["caste certificate", "cast", "jati pramanpatra"]],
@@ -282,6 +286,7 @@ export const DEFAULT_CHECKLISTS_DATA = {
     ["CASTE VALIDITY CERTIFICATE", ["caste validity certificate", "validity", "cvc", "tribe validity"]],
     ["NON CREAMY LAYER CERTIFICATE", ["non creamy layer", "ncl", "non criminal", "non-creamy"]],
     ["INCOME CERTIFICATE", ["income certificate", "utpanna dakhla", "tahsildar income", "form 16"]],
+    ["DOMICILE AND NATIONALITY CERTIFICATE", ["domicile and nationality certificate", "domicile nationality", "nationality domicile", "domicile and nationality", "domnat", "natdom", "dn"]],
     ["DOMICILE CERTIFICATE", ["domicile certificate", "adhiwas", "maharashtra domicile"]],
     ["NATIONALITY CERTIFICATE", ["nationality certificate", "rashtriyatva", "nationality proof"]],
     ["RATION CARD", ["ration card", "shidha patrika"]],
@@ -350,6 +355,7 @@ export const DEFAULT_SHORTCUT_DICTIONARY = [
   { id: "income-certificate", displayName: "Income Certificate", primaryShortcut: "INC", alternateKeywords: ["income certificate", "utpanna dakhla", "tahsildar income", "form 16"], outputName: "INCOME CERTIFICATE" },
   { id: "domicile-certificate", displayName: "Domicile Certificate", primaryShortcut: "DOM", alternateKeywords: ["domicile certificate", "adhiwas", "maharashtra domicile"], outputName: "DOMICILE CERTIFICATE" },
   { id: "nationality-certificate", displayName: "Nationality Certificate", primaryShortcut: "NAT", alternateKeywords: ["nationality certificate", "rashtriyatva", "nationality proof"], outputName: "NATIONALITY CERTIFICATE" },
+  { id: "domicile-nationality-certificate", displayName: "Domicile & Nationality", primaryShortcut: "DOMNAT", alternateKeywords: ["domicile and nationality certificate", "domicile nationality", "nationality domicile", "domicile and nationality", "dn", "natdom"], outputName: "DOMICILE AND NATIONALITY CERTIFICATE" },
   { id: "ration-card", displayName: "Ration Card", primaryShortcut: "RAT", alternateKeywords: ["ration card", "shidha patrika"], outputName: "RATION CARD" },
   { id: "bank-passbook", displayName: "Bank Passbook", primaryShortcut: "BNK", alternateKeywords: ["bank passbook", "passbook", "bank account", "npci seeded"], outputName: "BANK PASSBOOK" },
   { id: "cap-allotment", displayName: "CAP Allotment Letter", primaryShortcut: "CAP", alternateKeywords: ["cap allotment letter", "admission confirmation letter", "allotment"], outputName: "CAP ALLOTMENT LETTER" },
@@ -883,6 +889,18 @@ export const DOCUMENT_PATTERNS = [
       /\btahsildar\s*income\b/i,
       /\bform\s*16\b/i,
       /\btahsildar\b/i
+    ]
+  },
+  {
+    id: "domicile-nationality-certificate",
+    outputName: "DOMICILE AND NATIONALITY CERTIFICATE",
+    shortcut: "DOMNAT",
+    patterns: [
+      /\bdomnat\b/i,
+      /\bnatdom\b/i,
+      /\bdomicile\s*(and|&)\s*nationality\b/i,
+      /\bnationality\s*(and|&)\s*domicile\b/i,
+      /\bage\s*nationality\s*(and|&)\s*domicile\b/i
     ]
   },
   {
@@ -2206,6 +2224,18 @@ export const SMART_DOC_SIGNATURES = [
     secondaryKeywords: ['rupees', 'lakhs', 'financial year', 'head of family']
   },
   {
+    canonical: 'DOMICILE AND NATIONALITY CERTIFICATE',
+    code: 'DOMNAT',
+    patterns: [
+      /\bdomicile\s*(and|&)\s*nationality\b/i,
+      /\bnationality\s*(and|&)\s*domicile\b/i,
+      /\bage,?\s*nationality\s*(and|&)\s*domicile\b/i,
+      /\bअधिवास\s*(आणि|व)\s*राष्ट्रीयत्व\b/i
+    ],
+    primaryKeywords: ['domicile and nationality', 'nationality and domicile', 'age nationality and domicile', 'domnat'],
+    secondaryKeywords: ['executive magistrate', 'tahsildar', 'state of maharashtra', 'ordinary resident']
+  },
+  {
     canonical: 'DOMICILE CERTIFICATE',
     code: 'DOM',
     patterns: [
@@ -3082,6 +3112,7 @@ export function matchFilenameSmart(filename, studentName = '', groups = null, pr
     { type: 'AADHAAR CARD', code: 'ADR', tokens: ['aadhaar', 'adhar', 'aadhar', 'adr', 'uid', 'uidai', 'adhaar', 'adhar card', 'aadhar card'], primary: ['aadhaar', 'adhar', 'aadhar', 'adr'] },
     { type: 'CASTE VALIDITY CERTIFICATE', code: 'VAL', tokens: ['caste validity', 'validity', 'val', 'vld', 'cvc', 'padtalni', 'tribe validity', 'cast validity', 'kast validity', 'cast validiti', 'caste validiti', 'validiti'], primary: ['validity', 'padtalni', 'validiti', 'val', 'cvc'] },
     { type: 'CASTE CERTIFICATE', code: 'CST', patterns: [/\b(cst|cas|caste|kcast|kast)\b/i], tokens: ['caste certificate', 'caste cert', 'cst', 'cas', 'caste', 'jati', 'jati pramanpatra', 'kcast', 'kast', 'sartificat', 'dakhla'], primary: ['caste', 'jati', 'cst', 'cas', 'kcast', 'kast'] },
+    { type: 'DOMICILE AND NATIONALITY CERTIFICATE', code: 'DOMNAT', tokens: ['domicile and nationality', 'domicile nationality', 'nationality domicile', 'domicile and nationality certificate', 'domnat', 'natdom', 'dn'], primary: ['domicile and nationality', 'domnat', 'natdom'], minScore: 90 },
     { type: 'DOMICILE CERTIFICATE', code: 'DOM', tokens: ['domicile', 'dom', 'adivasi', 'rahavasi', 'residential certificate', 'residence', 'adhiwas', 'domisail', 'domicil', 'rehivasi', 'dakhla'], primary: ['domicile', 'dom', 'adivasi', 'rahavasi', 'domisail', 'rehivasi'] },
     { type: 'NATIONALITY CERTIFICATE', code: 'NAT', tokens: ['nationality', 'nat', 'rashtriyatva', 'nationality proof'], primary: ['nationality', 'nat', 'rashtriyatva'] },
     { type: 'INCOME CERTIFICATE', code: 'INC', patterns: [/\b(income|inc|utpanna|incom)\b/i, /\bin\s*\(\d+\)/i, /\bin\./i, /\binc\b/i], tokens: ['income certificate', 'income cert', 'inc', 'in', 'utpanna', 'tahsildar', 'utpanna dakhla', 'form 16', 'incom', 'dakhla'], primary: ['income', 'inc', 'utpanna', 'incom'] },

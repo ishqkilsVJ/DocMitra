@@ -166,7 +166,7 @@ export function getShortcutBadgeColor(code) {
   if (['ADR', 'PAN', 'PIC', 'SIG', 'VOT', 'DL', 'UID', 'APR'].includes(c)) return 'bg-blue-600 text-white font-extrabold';
   if (['10M', '10P', '10MP', '11M', '12M', '12P', '12LC', '12MP', '1YM', '2YM', '3YM', '4YM', 'PYM', 'DPC', 'DEG', 'REG', 'INT', 'CHR', 'ATM', 'BNF', 'BRT'].includes(c)) return 'bg-emerald-700 text-white font-extrabold';
   if (['CST', 'VAL', 'NCL', 'VLD'].includes(c)) return 'bg-purple-700 text-white font-extrabold';
-  if (['INC', 'DOM', 'NAT', 'BNK', 'RAT', 'EWS'].includes(c)) return 'bg-amber-600 text-white font-extrabold';
+  if (['INC', 'DOM', 'NAT', 'DOMNAT', 'BNK', 'RAT', 'EWS'].includes(c)) return 'bg-amber-600 text-white font-extrabold';
   if (['SDC', 'PDC', 'GAP', 'SLF', 'PAR', 'NHC', 'DIS', 'PWD', 'MED', 'GAZ', 'MIN', 'DTH', 'CETAF', 'CETSC', 'SRF', 'CAP', 'BON', 'FEE', 'ATT', 'HST'].includes(c)) return 'bg-slate-700 text-white font-extrabold';
   return 'bg-primary text-on-primary font-extrabold';
 }
@@ -185,7 +185,7 @@ export const MASTER_DOCUMENTS_MAP = new Map(
 
 export const BUILTIN_PRESETS = {
   "MAHA DBT": [
-    "PIC", "SIG", "ADR", "10M", "10P", "10MP", "12M", "12P", "12MP", "12LC",
+    "PIC", "SIG", "ADR", "10M", "10P", "12M", "12P", "12LC",
     "PYM", "CST", "VAL", "NCL", "INC", "DOM", "NAT", "RAT", "BNK", "CAP",
     "BON", "FEE", "ATT", "HST", "GAP", "SDC", "PDC", "DTH"
   ].map(code => {
@@ -193,7 +193,7 @@ export const BUILTIN_PRESETS = {
     return { name: doc.canonical, code: doc.code, keywords: [...doc.keywords] };
   }),
   "SWAYAM DEENDAYAL YOJANA": [
-    "PIC", "SIG", "ADR", "10M", "10MP", "12M", "12MP", "12LC", "PYM", "CST",
+    "PIC", "SIG", "ADR", "10M", "10P", "12M", "12P", "12LC", "PYM", "CST",
     "VAL", "DOM", "INC", "BNK", "BON", "CAP", "ATT", "HST", "NHC", "SDC",
     "PDC", "DIS"
   ].map(code => {
@@ -202,14 +202,14 @@ export const BUILTIN_PRESETS = {
   }),
   "CET CELL": [
     "PIC", "SIG", "ADR", "APR", "CETAF", "CETSC", "CAP", "SRF", "10M", "10P",
-    "10MP", "12M", "12P", "12MP", "12LC", "DOM", "NAT", "CST", "VAL", "NCL",
+    "12M", "12P", "12LC", "DOM", "NAT", "CST", "VAL", "NCL",
     "EWS", "INC", "GAP", "MIG", "MED", "BRT"
   ].map(code => {
     const doc = MASTER_DOCUMENTS_MAP.get(code);
     return { name: doc.canonical, code: doc.code, keywords: [...doc.keywords] };
   }),
   "EDUCATIONAL DOCUMENTS": [
-    "PIC", "SIG", "ADR", "10M", "10P", "10MP", "12M", "12P", "12MP", "12LC",
+    "PIC", "SIG", "ADR", "10M", "10P", "12M", "12P", "12LC",
     "PYM", "CST", "VAL", "NCL", "INC", "DOM", "NAT", "RAT", "BNK", "CAP",
     "BON", "FEE", "ATT", "HST", "GAP", "SDC", "PDC", "DTH", "NHC", "DIS",
     "APR", "CETAF", "CETSC", "SRF", "EWS", "MIG", "MED", "BRT", "PAN", "VOT",
@@ -3997,6 +3997,20 @@ export class RenamerUIManager {
       // Initialize with factory defaults from BUILTIN_PRESETS (MAHA DBT, SWAYAM DEENDAYAL YOJANA, CET CELL, EDUCATIONAL DOCUMENTS)
       this.state.documentPresets = JSON.parse(JSON.stringify(BUILTIN_PRESETS));
       this.savePresetsAndSettings();
+    } else {
+      // Sanitize stored preset checklists: remove redundant combined items (10MP, 12MP)
+      for (const presetKey of Object.keys(this.state.documentPresets)) {
+        const list = this.state.documentPresets[presetKey];
+        if (Array.isArray(list)) {
+          this.state.documentPresets[presetKey] = list.filter(d => {
+            const name = (d.name || d.label || d || '').toUpperCase().trim();
+            if (name === '10TH MARKSHEET AND PASSING CERTIFICATE' || name === '12TH MARKSHEET AND PASSING CERTIFICATE') {
+              return false;
+            }
+            return true;
+          });
+        }
+      }
     }
 
     // 4. Auto-migrate legacy shortcut codes with underscores (e.g., PIC_2 -> PIC2)
