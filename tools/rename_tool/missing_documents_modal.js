@@ -171,21 +171,31 @@ export class MissingDocumentsModal {
           </div>
         </div>
 
-        <!-- Bento PRESET Dropdown & Esc Close Button -->
-        <div class="flex items-center gap-2.5">
-          <div class="group relative flex items-center bg-surface-container-lowest border border-outline-variant/60 hover:border-primary/80 rounded-xl px-3 py-1.5 shadow-2xs hover:shadow-[0_0_15px_rgba(0,55,176,0.18)] transition-all duration-200 cursor-pointer">
-            <span class="w-1.5 h-1.5 rounded-full bg-primary inline-block shrink-0 shadow-[0_0_6px_rgba(0,55,176,0.4)] mr-1.5"></span>
-            <span class="font-mono-code text-[10px] text-secondary group-hover:text-primary uppercase font-bold tracking-wider mr-2">PRESET:</span>
-            <select id="missingModalSchemeSelect" class="bg-transparent font-mono-code text-[12px] font-bold text-on-surface focus:outline-none cursor-pointer pr-1">
-              ${presetsList.map(p => `
-                <option value="${escapeHtml(p)}" class="bg-surface-container text-on-surface" ${p === activePreset ? 'selected' : ''}>${escapeHtml(p)}</option>
-              `).join('')}
-            </select>
+        <!-- Bento PRESET Dropdown (100% Identical to Main Workstation) -->
+        <div class="flex items-center">
+          <div id="modalPresetCard" class="group relative flex items-center justify-between bg-surface-container-lowest border border-outline-variant/60 hover:border-primary/80 rounded-xl px-3 h-[38px] shadow-2xs hover:shadow-[0_0_15px_rgba(0,55,176,0.18)] transition-all duration-200 cursor-pointer select-none" title="Click to switch active document preset">
+            <div class="flex items-center gap-1.5 min-w-0 mr-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-primary inline-block shrink-0 shadow-[0_0_6px_rgba(0,55,176,0.4)]"></span>
+              <span class="font-mono-code text-[10px] text-secondary group-hover:text-primary uppercase font-bold tracking-wider shrink-0 transition-colors">PRESET:</span>
+              <span id="modalPresetActiveName" class="font-mono-code text-[12px] font-bold text-on-surface truncate tracking-wide">${escapeHtml(activePreset)}</span>
+            </div>
+            <span id="modalPresetChevron" class="material-symbols-outlined text-[18px] text-secondary group-hover:text-primary transition-transform duration-200 shrink-0">expand_more</span>
+
+            <!-- Elevated Floating Menu (z-[9999]) with Active Checkmarks -->
+            <div id="modalPresetMenu" class="hidden absolute top-[calc(100%+6px)] right-0 w-[240px] bg-surface-container-lowest border border-outline-variant/60 rounded-xl shadow-xl z-[9999] py-1.5 overflow-hidden backdrop-blur-md transition-all duration-150">
+              ${presetsList.map(p => {
+                const isActive = p === activePreset;
+                return `
+                  <div class="modal-preset-item flex items-center justify-between px-3 py-2 text-[12px] font-mono-code font-semibold cursor-pointer transition-colors rounded-lg mx-1 ${
+                    isActive ? 'bg-primary/10 text-primary font-bold' : 'text-on-surface hover:bg-surface-container-high/60 hover:text-primary'
+                  }" data-preset="${escapeHtml(p)}">
+                    <span class="truncate mr-2">${escapeHtml(p)}</span>
+                    ${isActive ? '<span class="material-symbols-outlined text-[16px] text-primary shrink-0">check</span>' : ''}
+                  </div>
+                `;
+              }).join('')}
+            </div>
           </div>
-          <button id="btnMissingModalClose" type="button" class="px-3 py-1.5 rounded-xl bg-surface-container-lowest hover:bg-rose-50 hover:text-rose-600 text-secondary font-mono-code text-[11px] font-bold transition-all flex items-center gap-1.5 border border-outline-variant/60 hover:border-rose-300 shadow-2xs cursor-pointer active:scale-95" title="Return to Main Dashboard (Esc)">
-            <span>Esc Close</span>
-            <span class="material-symbols-outlined text-[15px]">close</span>
-          </button>
         </div>
       </header>
 
@@ -298,20 +308,19 @@ export class MissingDocumentsModal {
                 const spec = getExpectedFileSpec(ruleName, rule);
 
                 return `
-                  <div class="p-2.5 rounded-lg bg-surface-container-lowest border border-rose-200/90 shadow-xs flex flex-col justify-between gap-1.5 hover:border-rose-400 transition-colors">
-                    <!-- Top Row: Icon + Title + Shortcode Chip & Red Missing Badge (Design 1 Strict Mirror) -->
+                  <div class="p-2.5 rounded-lg bg-surface-container-lowest border border-outline-variant/30 border-l-[3.5px] border-l-rose-500 shadow-2xs hover:shadow-xs flex flex-col justify-between gap-1.5 h-[58px] transition-all">
+                    <!-- Top Row: Title + Shortcode Chip (Left) & Missing Badge (Right) (Sample 4: Bento Left Accent Rail) -->
                     <div class="flex items-center justify-between gap-2 min-w-0">
                       <div class="flex items-center gap-1.5 min-w-0">
-                        <span class="material-symbols-outlined text-rose-600 text-[16px] shrink-0 font-bold">error_outline</span>
                         <span class="font-headline-sm text-[12px] font-bold text-on-surface truncate" title="${escapeHtml(ruleName)}">${escapeHtml(ruleName)}</span>
-                        ${ruleTag ? `<span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-700 font-mono-code text-[9px] font-bold uppercase shrink-0">${escapeHtml(ruleTag)}</span>` : ''}
+                        ${ruleTag ? `<span class="px-1.5 py-0.2 rounded bg-surface-container text-secondary font-mono-code text-[9px] font-bold uppercase shrink-0">${escapeHtml(ruleTag)}</span>` : ''}
                       </div>
-                      <span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 font-mono-code text-[9px] font-bold shrink-0">Missing</span>
+                      <span class="px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 border border-rose-200 font-mono-code text-[9px] font-bold shrink-0">Missing</span>
                     </div>
 
-                    <!-- Bottom Row: Specific File Format (PDF or JPG) + Target Buffer on Left; Follow-up Date + Royal Blue Import on Right -->
-                    <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-secondary pl-5">
-                      <div class="flex items-center gap-2">
+                    <!-- Bottom Row: Specific File Format (PDF or JPG) + Target Buffer on Left; Compact Date + Royal Blue Import on Right -->
+                    <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-secondary">
+                      <div class="flex items-center gap-1.5">
                         <!-- File Type Badge (Specific PDF or JPG) -->
                         <span class="px-1.5 py-0.2 rounded ${spec.isJpg ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'} font-bold uppercase text-[9px]">
                           ${escapeHtml(spec.ext)}
@@ -322,13 +331,13 @@ export class MissingDocumentsModal {
 
                       <!-- Compact Follow-up Date + Royal Blue Import Button -->
                       <div class="flex items-center gap-1.5 shrink-0">
-                        <div class="flex items-center gap-1 bg-surface-container-low border border-outline-variant/40 rounded px-1.5 py-0.5 shadow-2xs" title="Set follow-up promise date">
-                          <span class="material-symbols-outlined text-secondary text-[13px]">calendar_today</span>
-                          <input type="date" value="${escapeHtml(currentFollowup)}" data-doc="${escapeHtml(ruleName)}" class="missing-followup-input bg-transparent text-on-surface font-mono-code text-[9px] font-bold focus:outline-none cursor-pointer w-[92px]">
+                        <div class="flex items-center gap-1 bg-surface-container-low border border-outline-variant/40 rounded px-1.5 py-0.5 shadow-2xs h-[22px]" title="Set follow-up promise date">
+                          <span class="material-symbols-outlined text-secondary text-[12px]">calendar_today</span>
+                          <input type="date" value="${escapeHtml(currentFollowup)}" data-doc="${escapeHtml(ruleName)}" class="missing-followup-input bg-transparent text-on-surface font-mono-code text-[9px] font-semibold focus:outline-none cursor-pointer w-[76px] h-[16px]">
                         </div>
 
-                        <button type="button" data-doc="${escapeHtml(ruleName)}" class="btn-missing-import-file px-2.5 py-0.5 rounded bg-primary hover:bg-primary/90 text-white font-mono-code text-[10px] font-bold shadow-xs flex items-center gap-1 transition-all cursor-pointer active:scale-95 shrink-0" title="Import external file into student folder">
-                          <span class="material-symbols-outlined text-[13px]">download</span>
+                        <button type="button" data-doc="${escapeHtml(ruleName)}" class="btn-missing-import-file px-2 py-0.5 rounded bg-primary hover:bg-primary/90 text-white font-mono-code text-[10px] font-bold shadow-2xs flex items-center gap-1 h-[22px] transition-all cursor-pointer active:scale-95 shrink-0" title="Import external file into student folder">
+                          <span class="material-symbols-outlined text-[12px]">download</span>
                           <span>Import</span>
                         </button>
                       </div>
@@ -421,21 +430,50 @@ export class MissingDocumentsModal {
     `;
 
     // Bind event listeners
-    const btnClose = this.contentEl.querySelector('#btnMissingModalClose');
-    if (btnClose) {
-      btnClose.onclick = () => this.close();
-    }
-
     const btnDone = this.contentEl.querySelector('#btnMissingModalDone');
     if (btnDone) {
       btnDone.onclick = () => this.close();
     }
 
-    const selectScheme = this.contentEl.querySelector('#missingModalSchemeSelect');
-    if (selectScheme) {
-      selectScheme.onchange = (e) => {
-        this.onPresetChange(e.target.value);
+    // Modal Header Bento PRESET Dropdown wiring
+    const modalPresetCard = this.contentEl.querySelector('#modalPresetCard');
+    const modalPresetMenu = this.contentEl.querySelector('#modalPresetMenu');
+    const modalPresetChevron = this.contentEl.querySelector('#modalPresetChevron');
+
+    if (modalPresetCard && modalPresetMenu) {
+      modalPresetCard.onclick = (e) => {
+        e.stopPropagation();
+        const isHidden = modalPresetMenu.classList.contains('hidden');
+        if (isHidden) {
+          modalPresetMenu.classList.remove('hidden');
+          if (modalPresetChevron) modalPresetChevron.classList.add('rotate-180');
+        } else {
+          modalPresetMenu.classList.add('hidden');
+          if (modalPresetChevron) modalPresetChevron.classList.remove('rotate-180');
+        }
       };
+
+      const presetItems = modalPresetMenu.querySelectorAll('.modal-preset-item');
+      presetItems.forEach(item => {
+        item.onclick = (e) => {
+          e.stopPropagation();
+          const targetPreset = item.getAttribute('data-preset');
+          modalPresetMenu.classList.add('hidden');
+          if (modalPresetChevron) modalPresetChevron.classList.remove('rotate-180');
+          if (targetPreset && targetPreset !== activePreset) {
+            this.onPresetChange(targetPreset);
+          }
+        };
+      });
+
+      // Dismiss menu on outside click
+      const handleOutsideModalClick = (e) => {
+        if (!modalPresetCard.contains(e.target)) {
+          modalPresetMenu.classList.add('hidden');
+          if (modalPresetChevron) modalPresetChevron.classList.remove('rotate-180');
+        }
+      };
+      document.addEventListener('click', handleOutsideModalClick, { once: true });
     }
 
     // Inline Student / Folder Name Edit Listeners
