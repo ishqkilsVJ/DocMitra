@@ -471,9 +471,15 @@
               </button>
               <button
                 class="px-space-md py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-label-md transition-all flex items-center gap-1.5 border border-slate-700 cursor-pointer shadow-sm"
-                id="btnMoveToDuplicates" title="Move duplicate documents to 'Duplicate Files' subfolder (Safe — never deleted) (Del)" type="button">
+                id="btnMoveToDuplicates" title="Bulk move extra duplicate copies to 'Duplicate Files' subfolder (Safe — never deleted)" type="button">
                 <span class="material-symbols-outlined text-[16px] text-amber-400">drive_file_move</span>
-                <span id="moveDuplicatesLabel">Move to Duplicates (Del)</span>
+                <span id="moveDuplicatesLabel">Move Duplicates</span>
+              </button>
+              <button
+                class="px-space-md py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-label-md transition-all flex items-center gap-1.5 border border-slate-700 cursor-pointer shadow-sm"
+                id="btnUndoSafeMove" title="Undo and restore moved file(s) from 'Duplicate Files' folder" type="button">
+                <span class="material-symbols-outlined text-[16px] text-emerald-400">history</span>
+                <span>Undo Move</span>
               </button>
               <button
                 class="px-space-md py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-label-md transition-all flex items-center gap-1.5 border border-slate-700 cursor-pointer shadow-sm"
@@ -563,16 +569,14 @@
               <div class="p-5 flex-1 overflow-hidden min-h-0 flex flex-col gap-4">
                 <!-- Tab 1: Document Presets -->
                 <div id="tabContentPresets" class="flex flex-col gap-3 flex-1 min-h-0">
-                  <!-- Active Preset Selector & Management Bar -->
+                  <!-- Preset Selector & Management Bar (Bento PRESET Dropdown) -->
                   <div
                     class="p-3 bg-surface-container-low rounded-xl border border-outline-variant/30 flex flex-wrap items-center justify-between gap-3 shrink-0">
-                    <div class="flex items-center gap-2 max-w-sm flex-1 min-w-[200px]">
-                      <label for="selectActivePreset" class="text-[12px] font-bold text-on-surface shrink-0">Active
-                        Preset:</label>
-                      <select id="selectActivePreset"
-                        class="h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 font-label-md font-semibold text-primary outline-none focus:ring-1 focus:ring-primary w-full truncate text-ellipsis">
-                        <!-- Dynamically populated: MAHA DBT, SWAYAM DEENDAYAL YOJANA, custom presets -->
-                      </select>
+                    <div class="flex items-center gap-2 max-w-sm flex-1 min-w-[220px]">
+                      <div id="settingsPresetContainer" class="flex items-center">
+                        <!-- Dynamically populated by buildSettingsPresetDropdown() with Bento PRESET Card -->
+                        <select id="selectActivePreset" class="hidden"></select>
+                      </div>
                     </div>
                     <div class="flex items-center gap-1.5 shrink-0 flex-wrap">
                       <button id="btnNewPreset" type="button"
@@ -883,14 +887,6 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                  <!-- Move Duplicates 1-Click Button (Only visible if extra duplicates exist) -->
-                  <button id="btnModalMoveDuplicates" type="button"
-                          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold border transition-all cursor-pointer bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200 hidden"
-                          title="Safely move extra duplicate copies to 'Duplicate Files' folder (keeps 1 master copy)">
-                    <span class="material-symbols-outlined text-[15px]">drive_file_move</span>
-                    <span id="modalMoveDuplicatesLabel">Move Duplicates (0)</span>
-                  </button>
-
                   <!-- Power Utilities Collapsible Toggle -->
                   <button id="btnTogglePowerUtilities" type="button"
                           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold border transition-all cursor-pointer bg-white text-slate-700 border-slate-200 hover:bg-slate-100">
@@ -978,10 +974,19 @@
 
               <!-- 5. FOOTER -->
               <footer class="px-5 py-3 bg-slate-50/70 border-t border-slate-200/80 flex items-center justify-between shrink-0">
-                <button id="btnCancelCrossCheck" type="button"
-                        class="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs transition-colors cursor-pointer">
-                  Cancel (Esc)
-                </button>
+                <div class="flex items-center gap-2.5">
+                  <button id="btnCancelCrossCheck" type="button"
+                          class="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs transition-colors cursor-pointer">
+                    Cancel (Esc)
+                  </button>
+                  <!-- Move Duplicates 1-Click Button (Only visible if extra duplicates exist) -->
+                  <button id="btnModalMoveDuplicates" type="button"
+                          class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold border transition-all cursor-pointer bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200 shadow-2xs hidden"
+                          title="Safely move extra duplicate copies to 'Duplicate Files' folder (keeps 1 master copy)">
+                    <span class="material-symbols-outlined text-[15px]">drive_file_move</span>
+                    <span id="modalMoveDuplicatesLabel">Move Duplicates (0)</span>
+                  </button>
+                </div>
                 <button id="btnConfirmBatchRename" type="button"
                         class="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-semibold text-white transition-all shadow-sm bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
@@ -3921,7 +3926,7 @@
   <!-- UI Shell Script (Modular UI Scripting) -->
   <script src="assets/js/libs/pdf.min.js"></script>
   <script src="assets/js/libs/pdf-lib.min.js"></script>
-  <script type="module" src="assets/js/app.js?v=20261126_02"></script>
+  <script type="module" src="assets/js/app.js?v=20261126_03"></script>
 </body>
 
 </html>

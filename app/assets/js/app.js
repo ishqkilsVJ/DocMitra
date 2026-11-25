@@ -6599,50 +6599,52 @@ var ut = j.map((e) => ({
 		l && l.addEventListener("click", () => {
 			this.getExtraDuplicateFiles().length > 0 ? this.handleMoveAllDuplicates() : this.handleMoveFileToDuplicates();
 		});
-		let u = document.getElementById("btnRescanFiles");
-		u && u.addEventListener("click", () => this.handleRescanFiles());
-		let d = document.getElementById("btnSortQueue");
-		d && d.addEventListener("click", () => this.handleSortDocuments());
-		let f = document.getElementById("btnSaveBatch");
-		f && f.addEventListener("click", () => this.handleSaveBatch());
-		let p = document.getElementById("btnSmartScanBatch");
-		p && p.addEventListener("click", () => this.handleSmartScanBatch());
-		let m = document.getElementById("btnRenameMatched");
-		m && m.addEventListener("click", () => this.openCrossCheckModal());
-		let h = document.getElementById("btnCloseAddDocModal");
-		h && h.addEventListener("click", () => this.closeAddDocumentModal());
-		let g = document.getElementById("btnCancelAddDoc");
+		let u = document.getElementById("btnUndoSafeMove");
+		u && u.addEventListener("click", () => this.handleUndoSafeMove());
+		let d = document.getElementById("btnRescanFiles");
+		d && d.addEventListener("click", () => this.handleRescanFiles());
+		let f = document.getElementById("btnSortQueue");
+		f && f.addEventListener("click", () => this.handleSortDocuments());
+		let p = document.getElementById("btnSaveBatch");
+		p && p.addEventListener("click", () => this.handleSaveBatch());
+		let m = document.getElementById("btnSmartScanBatch");
+		m && m.addEventListener("click", () => this.handleSmartScanBatch());
+		let h = document.getElementById("btnRenameMatched");
+		h && h.addEventListener("click", () => this.openCrossCheckModal());
+		let g = document.getElementById("btnCloseAddDocModal");
 		g && g.addEventListener("click", () => this.closeAddDocumentModal());
-		let _ = document.getElementById("btnSaveAddDoc");
-		_ && _.addEventListener("click", () => this.handleSaveDocumentType());
-		let v = document.getElementById("btnRenameSettings");
-		v && v.addEventListener("click", () => this.handleOpenSettingsModal("presets"));
-		let y = document.getElementById("btnCloseRenameSettings");
-		y && y.addEventListener("click", () => this.handleCloseSettingsModal());
-		let b = document.getElementById("btnDoneRenameSettings");
+		let _ = document.getElementById("btnCancelAddDoc");
+		_ && _.addEventListener("click", () => this.closeAddDocumentModal());
+		let v = document.getElementById("btnSaveAddDoc");
+		v && v.addEventListener("click", () => this.handleSaveDocumentType());
+		let y = document.getElementById("btnRenameSettings");
+		y && y.addEventListener("click", () => this.handleOpenSettingsModal("presets"));
+		let b = document.getElementById("btnCloseRenameSettings");
 		b && b.addEventListener("click", () => this.handleCloseSettingsModal());
-		let x = document.getElementById("tabBtnPresets");
-		x && x.addEventListener("click", () => this.renderSettingsModal("presets"));
-		let S = document.getElementById("tabBtnShortcuts");
-		S && S.addEventListener("click", () => this.renderSettingsModal("shortcuts"));
-		let C = document.getElementById("selectActivePreset");
-		C && C.addEventListener("change", (e) => this.handleSwitchActivePreset(e.target.value));
-		let w = document.getElementById("btnNewPreset");
-		w && w.addEventListener("click", () => this.handleNewPreset());
-		let T = document.getElementById("btnCopyPreset");
-		T && T.addEventListener("click", () => this.handleCopyPreset());
-		let E = document.getElementById("btnRenamePreset");
-		E && E.addEventListener("click", () => this.handleRenamePreset());
-		let D = document.getElementById("btnDeletePreset");
-		D && D.addEventListener("click", () => this.handleDeletePreset());
-		let O = document.getElementById("btnResetPresetsDefault");
-		O && O.addEventListener("click", () => this.handleResetPresetsDefault());
-		let k = document.getElementById("btnAddDocToPreset");
-		k && k.addEventListener("click", () => this.openAddDocumentModal());
-		let A = document.getElementById("btnAddNewShortcut");
-		A && A.addEventListener("click", () => this.openAddDocumentModal(null, !0));
-		let j = document.getElementById("btnAddDocOrShortcut");
-		j && j.addEventListener("click", () => {
+		let x = document.getElementById("btnDoneRenameSettings");
+		x && x.addEventListener("click", () => this.handleCloseSettingsModal());
+		let S = document.getElementById("tabBtnPresets");
+		S && S.addEventListener("click", () => this.renderSettingsModal("presets"));
+		let C = document.getElementById("tabBtnShortcuts");
+		C && C.addEventListener("click", () => this.renderSettingsModal("shortcuts"));
+		let w = document.getElementById("selectActivePreset");
+		w && w.addEventListener("change", (e) => this.handleSwitchActivePreset(e.target.value));
+		let T = document.getElementById("btnNewPreset");
+		T && T.addEventListener("click", () => this.handleNewPreset());
+		let E = document.getElementById("btnCopyPreset");
+		E && E.addEventListener("click", () => this.handleCopyPreset());
+		let D = document.getElementById("btnRenamePreset");
+		D && D.addEventListener("click", () => this.handleRenamePreset());
+		let O = document.getElementById("btnDeletePreset");
+		O && O.addEventListener("click", () => this.handleDeletePreset());
+		let k = document.getElementById("btnResetPresetsDefault");
+		k && k.addEventListener("click", () => this.handleResetPresetsDefault());
+		let A = document.getElementById("btnAddDocToPreset");
+		A && A.addEventListener("click", () => this.openAddDocumentModal());
+		let j = document.getElementById("btnAddNewShortcut");
+		j && j.addEventListener("click", () => this.openAddDocumentModal(null, !0));
+		let ee = document.getElementById("btnAddDocOrShortcut");
+		ee && ee.addEventListener("click", () => {
 			let e = this.state.settingsActiveTab === "shortcuts" || document.getElementById("tabContentShortcuts") && !document.getElementById("tabContentShortcuts").classList.contains("hidden");
 			this.openAddDocumentModal(null, e);
 		}), document.addEventListener("keydown", (e) => {
@@ -6657,15 +6659,15 @@ var ut = j.map((e) => ({
 		}), document.addEventListener("click", (e) => {
 			e.target.closest(".keyword-popover-container") || document.querySelectorAll(".keyword-popover-card:not(.hidden)").forEach((e) => e.classList.add("hidden"));
 		});
-		let ee = document.getElementById("inputSearchPresetDocs");
-		ee && ee.addEventListener("input", (e) => {
+		let te = document.getElementById("inputSearchPresetDocs");
+		te && te.addEventListener("input", (e) => {
 			this._presetDocsSearchQuery = e.target.value.trim().toLowerCase(), this.renderPresetDocsTable();
 		});
-		let te = document.getElementById("inputSearchShortcuts");
-		te && te.addEventListener("input", (e) => {
+		let M = document.getElementById("inputSearchShortcuts");
+		M && M.addEventListener("input", (e) => {
 			this._shortcutsSearchQuery = e.target.value.trim().toLowerCase(), this.renderShortcutsTable();
 		}), this._initCrossCheckEvents();
-		let M = () => {
+		let N = () => {
 			document.querySelectorAll("#casingRadiosGroup label").forEach((e) => {
 				let t = e.querySelector("input");
 				e.className = t && t.checked ? "flex items-center cursor-pointer text-white bg-primary font-mono-code text-[11px] px-2 py-0.5 rounded shadow-xs select-none font-bold transition-all casing-pill-active" : "flex items-center cursor-pointer text-secondary hover:text-on-surface font-mono-code text-[11px] px-2 py-0.5 rounded transition-all select-none";
@@ -6675,26 +6677,26 @@ var ut = j.map((e) => ({
 			e.value === (this.state.style || "upper") && (e.checked = !0), e.addEventListener("change", (e) => {
 				if (e.target.checked) {
 					let t = e.target.value;
-					this.state.style = t, localStorage.setItem("docmitra_casing_style", t), M();
+					this.state.style = t, localStorage.setItem("docmitra_casing_style", t), N();
 					for (let e of this.state.files) !e.isRenamed && !e.isKept && (e.userEditedName = L(e.userEditedName || I(e.name), t));
 					this._recalculateTargetNames(), this.renderQueue(), this.renderCurrentPreview();
 					let n = this.state.files.filter((e) => !e.isRenamed && !e.isKept).length, i = t.toUpperCase() === "UPPER" ? "UPPERCASE" : t.toUpperCase() === "LOWER" ? "LOWERCASE" : "TITLE CASE";
 					r.show("Case Style Changed", `Applied ${i} to ${n} pending files`, "info");
 				}
 			});
-		}), M();
-		let N = document.getElementById("btnClearWorkspace");
-		N && N.addEventListener("click", () => this.handleClearQueue());
-		let ne = document.getElementById("btnClearQueue");
+		}), N();
+		let ne = document.getElementById("btnClearWorkspace");
 		ne && ne.addEventListener("click", () => this.handleClearQueue());
-		let re = document.getElementById("btnEmptySelectFolder");
-		re && re.addEventListener("click", () => this.handleSelectFolder());
-		let P = document.getElementById("btnEmptyAddFiles");
-		P && P.addEventListener("click", () => this.handleAddFiles());
-		let F = document.querySelector("#col-queue input");
-		F && (F.addEventListener("keydown", (e) => {
+		let re = document.getElementById("btnClearQueue");
+		re && re.addEventListener("click", () => this.handleClearQueue());
+		let P = document.getElementById("btnEmptySelectFolder");
+		P && P.addEventListener("click", () => this.handleSelectFolder());
+		let F = document.getElementById("btnEmptyAddFiles");
+		F && F.addEventListener("click", () => this.handleAddFiles());
+		let ie = document.querySelector("#col-queue input");
+		ie && (ie.addEventListener("keydown", (e) => {
 			(e.key === "Tab" || e.key === "Enter") && (e.preventDefault(), r.show("Intake Folder Needed", "Press \"Select Folder\" (F2) to choose admission documents.", "info")), /[\\/:*?"<>|]/.test(e.key) && (e.preventDefault(), r.show("Character Not Allowed", `Windows filenames cannot contain ${e.key}`, "warning"));
-		}), F.addEventListener("input", (e) => {
+		}), ie.addEventListener("input", (e) => {
 			/[\\/:*?"<>|]/.test(e.target.value) && (e.target.value = e.target.value.replace(/[\\/:*?"<>|]/g, ""), r.show("Character Not Allowed", "Illegal characters removed", "warning"));
 		})), document.querySelectorAll("#col-queue .grid-cols-3 button").forEach((e) => {
 			e.addEventListener("click", () => {
@@ -6736,7 +6738,9 @@ var ut = j.map((e) => ({
 				else if (e.key === "F5") e.preventDefault(), this.handleRescanFiles();
 				else if (e.key === "Delete") {
 					if (e.target && e.target.tagName === "INPUT" && e.target.id !== "inputRenameTarget") return;
-					e.preventDefault(), this.getExtraDuplicateFiles().length > 0 ? this.handleMoveAllDuplicates() : this.handleMoveFileToDuplicates();
+					e.preventDefault();
+					let t = this.state.files[this.state.currentIndex];
+					t && this.handleMoveFileToDuplicates(t);
 				} else (e.ctrlKey || e.metaKey) && e.key === "ArrowLeft" ? (e.preventDefault(), this.handlePrevFolder()) : (e.ctrlKey || e.metaKey) && e.key === "ArrowRight" ? (e.preventDefault(), this.handleNextFolder()) : (e.ctrlKey || e.metaKey) && (e.key === "z" || e.key === "Z") && !e.shiftKey && e.target.tagName !== "INPUT" ? (e.preventDefault(), this.handleUndo()) : (e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S") && (e.preventDefault(), this.handleSaveBatch());
 			}
 		});
@@ -7153,8 +7157,10 @@ var ut = j.map((e) => ({
 		let f = document.getElementById("btnMoveToDuplicates"), m = document.getElementById("moveDuplicatesLabel");
 		if (f) {
 			let e = this.getExtraDuplicateFiles();
-			e.length > 0 ? (m && (m.textContent = `Move Duplicates (${e.length})`), f.classList.add("bg-rose-950/80", "hover:bg-rose-900", "border-rose-700/80", "text-rose-200"), f.classList.remove("bg-slate-800", "hover:bg-slate-700", "border-slate-700", "text-slate-200"), f.title = `Safely move ${e.length} extra duplicate copies to "Duplicate Files" (keeps 1 master copy) (Del)`) : (m && (m.textContent = "Move to Duplicates (Del)"), f.classList.remove("bg-rose-950/80", "hover:bg-rose-900", "border-rose-700/80", "text-rose-200"), f.classList.add("bg-slate-800", "hover:bg-slate-700", "border-slate-700", "text-slate-200"), f.title = "Move current document to \"Duplicate Files\" subfolder (Safe — never deleted) (Del)");
+			e.length > 0 ? (m && (m.textContent = `Move Duplicates (${e.length})`), f.classList.add("bg-rose-950/80", "hover:bg-rose-900", "border-rose-700/80", "text-rose-200"), f.classList.remove("bg-slate-800", "hover:bg-slate-700", "border-slate-700", "text-slate-200"), f.title = `Bulk move ${e.length} extra duplicate copies to "Duplicate Files" subfolder`) : (m && (m.textContent = "Move Duplicates"), f.classList.remove("bg-rose-950/80", "hover:bg-rose-900", "border-rose-700/80", "text-rose-200"), f.classList.add("bg-slate-800", "hover:bg-slate-700", "border-slate-700", "text-slate-200"), f.title = "No extra duplicate copies found");
 		}
+		let h = document.getElementById("btnUndoSafeMove");
+		h && (this._recentMoves && this._recentMoves.length > 0 ? (h.classList.remove("opacity-40", "cursor-not-allowed"), h.classList.add("opacity-100", "cursor-pointer"), h.disabled = !1, h.title = "Undo last move (Restore moved document from \"Duplicate Files\")") : (h.classList.add("opacity-40", "cursor-not-allowed"), h.classList.remove("opacity-100", "cursor-pointer"), h.disabled = !0, h.title = "No recently moved files to undo"));
 	}
 	renderQueue() {
 		let e = document.getElementById("col-queue");
@@ -7261,7 +7267,7 @@ var ut = j.map((e) => ({
 			C.className = "relative flex items-center w-full shadow-sm";
 			let w = document.createElement("input");
 			w.id = "inputRenameTarget", w.type = "text", w.autocomplete = "new-password", w.setAttribute("autocomplete", "new-password"), w.setAttribute("autocorrect", "off"), w.setAttribute("autocapitalize", "off"), w.setAttribute("spellcheck", "false"), w.setAttribute("name", `docmitra_rename_${Date.now()}`), w.className = "w-full h-10 px-3 rounded-lg bg-surface-container-lowest font-mono-code text-[13px] text-on-surface font-semibold border-2 border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-xs", w.value = L(n.userEditedName === void 0 ? n.targetName ? I(n.targetName) : I(n.name) : n.userEditedName, this.state.style || "upper"), w.addEventListener("keydown", (e) => {
-				if (e.key === "Delete") e.preventDefault(), this.getExtraDuplicateFiles().length > 0 ? this.handleMoveAllDuplicates() : this.handleMoveFileToDuplicates(n);
+				if (e.key === "Delete") e.preventDefault(), this.handleMoveFileToDuplicates(n);
 				else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) e.preventDefault(), this.handleRenameSingleFile(n);
 				else if (e.key === "Tab" && !e.shiftKey) {
 					e.preventDefault();
@@ -7440,6 +7446,59 @@ var ut = j.map((e) => ({
 			e.contains(t.target) || (s.classList.add("hidden"), a.classList.remove("rotate-180"));
 		}), e.appendChild(s), e;
 	}
+	buildSettingsPresetDropdown() {
+		let e = document.getElementById("settingsPresetContainer");
+		if (!e) return;
+		e.innerHTML = "";
+		let t = document.createElement("div");
+		t.id = "settingsPresetCard", t.className = "group relative flex items-center justify-between bg-surface-container-lowest border border-outline-variant/60 hover:border-primary/80 rounded-xl px-3 h-[38px] shadow-2xs hover:shadow-[0_0_15px_rgba(0,55,176,0.18)] transition-all duration-200 cursor-pointer select-none min-w-[220px]", t.title = "Click to switch active document preset";
+		let n = document.createElement("div");
+		n.className = "flex items-center gap-1.5 min-w-0 flex-1 mr-2";
+		let r = document.createElement("span");
+		r.className = "w-1.5 h-1.5 rounded-full bg-primary inline-block shrink-0 shadow-[0_0_6px_rgba(0,55,176,0.4)]", n.appendChild(r);
+		let i = document.createElement("span");
+		i.className = "font-mono-code text-[10px] text-secondary group-hover:text-primary uppercase font-bold tracking-wider shrink-0 transition-colors", i.textContent = "PRESET:", n.appendChild(i);
+		let a = document.createElement("span");
+		a.id = "settingsPresetActiveName", a.className = "font-mono-code text-[12px] font-bold text-on-surface truncate text-left tracking-wide flex-1", a.textContent = this.state.activePreset || "MAHA DBT", n.appendChild(a), t.appendChild(n);
+		let o = document.createElement("span");
+		o.id = "settingsPresetChevron", o.className = "material-symbols-outlined text-[18px] text-secondary group-hover:text-primary transition-transform duration-200 shrink-0", o.textContent = "expand_more", t.appendChild(o);
+		let s = document.createElement("select");
+		s.id = "selectActivePreset", s.className = "hidden", t.appendChild(s);
+		let c = document.createElement("div");
+		c.id = "settingsPresetMenu", c.className = "hidden absolute top-[calc(100%+6px)] left-0 w-full min-w-[240px] bg-surface-container-lowest border border-outline-variant/60 rounded-xl shadow-xl z-[9999] py-1.5 overflow-hidden backdrop-blur-md transition-all duration-150";
+		let l = this.state.documentPresets ? Object.keys(this.state.documentPresets) : [
+			"MAHA DBT",
+			"SWAYAM DEENDAYAL YOJANA",
+			"CET CELL",
+			"EDUCATIONAL DOCUMENTS"
+		], u = Array.from(/* @__PURE__ */ new Set([
+			...l,
+			"MAHA DBT",
+			"SWAYAM DEENDAYAL YOJANA",
+			"CET CELL",
+			"EDUCATIONAL DOCUMENTS"
+		])), d = () => {
+			c.innerHTML = "", s.innerHTML = "", u.forEach((e) => {
+				let t = document.createElement("option");
+				t.value = e, t.textContent = e, e === (this.state.activePreset || "MAHA DBT") && (t.selected = !0), s.appendChild(t);
+				let n = document.createElement("div"), r = e === (this.state.activePreset || "MAHA DBT");
+				n.className = `flex items-center justify-between px-3 py-2 text-[12px] font-mono-code font-semibold cursor-pointer transition-colors rounded-lg mx-1 ${r ? "bg-primary/10 text-primary font-bold" : "text-on-surface hover:bg-surface-container-high/60 hover:text-primary"}`;
+				let i = document.createElement("span");
+				if (i.className = "truncate mr-2", i.textContent = e, n.appendChild(i), r) {
+					let e = document.createElement("span");
+					e.className = "material-symbols-outlined text-[16px] text-primary shrink-0", e.textContent = "check", n.appendChild(e);
+				}
+				n.addEventListener("click", (t) => {
+					t.stopPropagation(), this.handleSwitchActivePreset(e), a.textContent = e, s.value = e, s.dispatchEvent(new Event("change", { bubbles: !0 })), c.classList.add("hidden"), o.classList.remove("rotate-180"), d(), this.renderPresetDocsTable();
+				}), c.appendChild(n);
+			});
+		};
+		d(), t.addEventListener("click", (e) => {
+			e.stopPropagation(), c.classList.contains("hidden") ? (document.querySelectorAll("#settingsPresetMenu:not(.hidden), #customPresetMenu:not(.hidden)").forEach((e) => e.classList.add("hidden")), c.classList.remove("hidden"), o.classList.add("rotate-180")) : (c.classList.add("hidden"), o.classList.remove("rotate-180"));
+		}), document.addEventListener("click", (e) => {
+			t.contains(e.target) || (c.classList.add("hidden"), o.classList.remove("rotate-180"));
+		}), t.appendChild(c), e.appendChild(t);
+	}
 	renderUtilityPanel(e) {
 		for (; e.firstChild;) e.removeChild(e.firstChild);
 		if (this.state.files.length === 0) {
@@ -7535,16 +7594,16 @@ var ut = j.map((e) => ({
 				keywords: e.keywords
 			}), s.add(t));
 		}
-		let c = [], l = !1;
+		let c = [];
 		if (i) {
 			let e = i.toLowerCase(), t = o.filter((t) => t.code.toLowerCase() === e), n = o.filter((t) => t.code.toLowerCase().startsWith(e) && t.code.toLowerCase() !== e), r = o.filter((t) => !t.code.toLowerCase().startsWith(e) && (Array.isArray(t.keywords) ? t.keywords : []).some((t) => t.toLowerCase().includes(e))), a = o.filter((t) => t.code.toLowerCase().startsWith(e) || (Array.isArray(t.keywords) ? t.keywords : []).some((t) => t.toLowerCase().includes(e)) ? !1 : (t.label || "").toLowerCase().includes(e) || (t.canonical || "").toLowerCase().includes(e)), s = [
 				...t,
 				...n,
 				...r,
 				...a
-			], u = /* @__PURE__ */ new Set(), d = [];
-			for (let e of s) u.has(e.code) || (u.add(e.code), d.push(e));
-			d.length > 0 ? (c = d.slice(0, 5), l = !1) : (c = o.slice(0, 5), l = !0);
+			], l = /* @__PURE__ */ new Set(), u = [];
+			for (let e of s) l.has(e.code) || (l.add(e.code), u.push(e));
+			c = u.length > 0 ? u.slice(0, 5) : o.slice(0, 5);
 		} else {
 			let e = this.getActivePresetDocuments(), t = new Set(this.state.files.map((e) => (e.docType || "").toUpperCase()).filter(Boolean)), n = e.filter((e) => !t.has(e.name.toUpperCase())), r = [];
 			for (let e of n) {
@@ -7557,7 +7616,7 @@ var ut = j.map((e) => ({
 			}
 			c = r.slice(0, 5);
 		}
-		if (c.forEach((e) => {
+		c.forEach((e) => {
 			let n = document.createElement("div");
 			n.className = "flex items-center justify-between p-2 rounded-lg bg-surface-container-lowest border border-outline-variant/30 hover:border-primary/50 hover:bg-surface-container-low transition-all cursor-pointer shadow-xs group", n.title = `Click or type ${e.code} to rename`;
 			let r = document.createElement("div");
@@ -7570,10 +7629,7 @@ var ut = j.map((e) => ({
 			l.className = "material-symbols-outlined text-[16px] text-secondary group-hover:text-primary transition-colors shrink-0", l.textContent = "arrow_forward", n.appendChild(l), n.addEventListener("click", (t) => {
 				t.stopPropagation(), this.applyShortcutToCurrentFile(e.code);
 			}), t.appendChild(n);
-		}), l) {
-			let e = document.createElement("div");
-			e.className = "text-[11px] text-secondary italic px-1 pt-1", e.textContent = `No shortcode matches — saving as custom text (Showing top suggestions for "${i}")`, t.prepend(e);
-		}
+		});
 	}
 	resolveShortcut(e) {
 		if (!e) return null;
@@ -7822,7 +7878,11 @@ var ut = j.map((e) => ({
 				return;
 			}
 		} else t.targetName = s, t.userEditedName = f, t.hasUserEdited = !0, t.isMatched = !0, t.status = "ready", t.smartConfidence = 100, t.smartDocType = t.docType || t.smartDocType || f, d ? r.show("Duplicate Auto-Numbered", `Saved as: ${f}`, "info") : r.show("Name Confirmed", f, "info");
-		this.state.files.length > 0 && (this.state.currentIndex = (this.state.currentIndex + 1) % this.state.files.length), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this._computeDuplicateHashesAsync();
+		if (this.state.files.length > 0) {
+			let e = this.state.currentIndex, t = (e + 1) % this.state.files.length;
+			this.state.currentIndex = t, e === this.state.files.length - 1 && t === 0 && (this.handleSortDocuments("asc"), this.state.currentIndex = 0, r.show("Queue Auto-Sorted", "Cycle complete: documents sorted 1–0 & A–Z", "info"));
+		}
+		this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this._computeDuplicateHashesAsync();
 	}
 	async handleRenameSingleFile(e) {
 		let t = e || this.state.files[this.state.currentIndex];
@@ -8174,12 +8234,7 @@ var ut = j.map((e) => ({
 	}
 	renderSettingsModal(e = "presets") {
 		let t = document.getElementById("tabContentPresets"), n = document.getElementById("tabContentShortcuts"), r = document.getElementById("tabBtnPresets"), i = document.getElementById("tabBtnShortcuts");
-		e === "presets" ? (t?.classList.remove("hidden"), n?.classList.add("hidden"), r?.classList.add("text-primary", "border-primary", "font-bold"), r?.classList.remove("text-secondary", "border-transparent", "font-medium"), i?.classList.remove("text-primary", "border-primary", "font-bold"), i?.classList.add("text-secondary", "border-transparent", "font-medium")) : (t?.classList.add("hidden"), n?.classList.remove("hidden"), i?.classList.add("text-primary", "border-primary", "font-bold"), i?.classList.remove("text-secondary", "border-transparent", "font-medium"), r?.classList.remove("text-primary", "border-primary", "font-bold"), r?.classList.add("text-secondary", "border-transparent", "font-medium"));
-		let a = document.getElementById("selectActivePreset");
-		a && this.state.documentPresets && (a.innerHTML = "", Object.keys(this.state.documentPresets).forEach((e) => {
-			let t = document.createElement("option");
-			t.value = e, t.textContent = e.length > 14 ? e.slice(0, 12) + "..." : e, t.title = e, e === this.state.activePreset && (t.selected = !0), a.appendChild(t);
-		}), a.title = `Active Preset: ${this.state.activePreset}`), this.renderPresetDocsTable(), this.renderShortcutsTable();
+		e === "presets" ? (t?.classList.remove("hidden"), n?.classList.add("hidden"), r?.classList.add("text-primary", "border-primary", "font-bold"), r?.classList.remove("text-secondary", "border-transparent", "font-medium"), i?.classList.remove("text-primary", "border-primary", "font-bold"), i?.classList.add("text-secondary", "border-transparent", "font-medium")) : (t?.classList.add("hidden"), n?.classList.remove("hidden"), i?.classList.add("text-primary", "border-primary", "font-bold"), i?.classList.remove("text-secondary", "border-transparent", "font-medium"), r?.classList.remove("text-primary", "border-primary", "font-bold"), r?.classList.add("text-secondary", "border-transparent", "font-medium")), this.buildSettingsPresetDropdown(), this.renderPresetDocsTable(), this.renderShortcutsTable();
 	}
 	renderPresetDocsTable() {
 		let e = this.getActivePresetDocuments(), t = document.getElementById("presetDocCountBadge"), n = document.getElementById("presetDocsTableBody");
@@ -9326,20 +9381,26 @@ var ut = j.map((e) => ({
 			for (let e of k) if (e.combined && a.has(e.combined.toUpperCase()) && (t === e.part1.toUpperCase() || t === e.part2.toUpperCase())) return !1;
 			return !0;
 		}), s = this.state.files.map((e) => {
-			let t = e.docType || e.targetName || e.name, n = !1;
-			for (let e of k) if (e.combined && (t || "").toUpperCase() === e.combined.toUpperCase()) {
-				n = !0;
+			let n = e.docType || e.targetName || e.name, r = !1;
+			for (let e of k) if (e.combined && (n || "").toUpperCase() === e.combined.toUpperCase()) {
+				r = !0;
 				break;
 			}
-			let r = e.ext || F(e.name) || "pdf", i = e.dateModified || e.lastModified || e.modified || Date.now(), a = e.dateCreated || e.ctime || e.birthtime || i;
+			let i = e.ext || F(e.name) || "pdf", a = e.dateModified || e.lastModified || e.modified || Date.now(), o = e.dateCreated || e.ctime || e.birthtime || a, s = e.path || e.filePath || e.nativePath || (t ? `${t.replace(/[\\/]+$/, "")}\\${e.name}` : e.name);
 			return {
 				name: e.name,
-				docType: t,
+				docType: n,
 				size: e.size || 0,
-				ext: r.toUpperCase().replace(".", ""),
-				dateModified: i,
-				dateCreated: a,
-				isCombined: n
+				ext: i.toUpperCase().replace(".", ""),
+				dateModified: a,
+				dateCreated: o,
+				isCombined: r,
+				path: s,
+				nativePath: s,
+				rotation: e.rotation || 0,
+				_blobUrl: e._blobUrl || null,
+				_pdfBytes: e._pdfBytes || null,
+				fileObj: e.fileObj || e.file || null
 			};
 		}), c = {};
 		o.forEach((t) => {

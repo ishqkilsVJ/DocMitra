@@ -1,21 +1,20 @@
 # 🔒 LOCKED TOOL: Bulk Document Renamer (`tools/rename_tool/`)
 
 > [!IMPORTANT]
-> **OFFICIALLY LOCKED & SEALED UNDER CP-033 VERIFICATION**
-> All user-requested cleanups and enhancements are 100% completed, tested, and verified:
-> 1. Cleaned Up Unnecessary Descriptions (Choice 1-A): Removed verbose sub-captions/taglines across 4 modals:
->    - Missing Documents & Follow-up Desk: Removed header tagline `"Maharashtra Admission & Verification Workflow • 100% Offline Localhost"` and readiness paragraph `"All present files verified against canonical MahaDBT schema with safe buffers < 256 KB."`.
->    - Cross-Check Matched Documents: Removed header subtitle `"Verify old and suggested new filenames before executing atomic batch rename"`.
->    - Rename Tool Settings: Removed header subtitle `"Manage Document Presets, Checklists, and Keyboard Shortcuts"`.
->    - Add / Edit Document Type: Removed header subtitle `"Define document name, short code(s), keywords, and preset assignments"`.
-> 2. Removed Footer Filler Notes (Choice 2-B):
->    - Missing Documents Desk: Removed helper notice `"Imported files automatically move to the active folder..."`; footer cleanly holds only the `Back to Renamer` button.
->    - Cross-Check Modal: Removed bottom table sub-line `"Perfect files are unchecked by default..."` and keyboard hint text, maximizing high-density table view.
-> 3. Cleaned Form Sub-Labels (Choice 3-A):
->    - Add / Edit Document Type: Removed `"Canonical title"` and `"Click preset to toggle in Missing Documents"`.
->    - Preserved 100% intact: Required validation hint `* (Required)`, Renamer `"Press Tab or Enter to save & next"`, and Column 3 dynamic messages.
-> 4. Dual-MCP Automated QA passed 100% (Playwright MCP E2E + Chrome DevTools MCP with 0 console errors).
-> 5. Built and deployed directly to `C:\Users\USER\AppData\Local\DocMitra\app.exe`.
+> **STATUS: LOCKED & SEALED UNDER CP-034 VERIFICATION**  
+> Module: `tools/rename_tool/`  
+> Last Verified Milestone: `CP-034` (Final 100% 7 Core Production Enhancements & Workstation Stabilization)  
+> All files inside `tools/rename_tool/` are strictly locked. No modifications permitted without explicit user instruction containing: `UNLOCK RENAME_TOOL`.
+
+> **Last QA Stabilization & Verification:** 2026-11-26 (Final 100% 7 Core Production Enhancements [CP-034] Verified 100%: 
+> 1. Cycle-Completion Auto-Sort: Automatically triggers natural sort (1-0, A-Z) when looping from last document back to first document; manual Sort A-Z button preserved.
+> 2. Single-File Del Key Move: Pressing Del key on keyboard safely moves only the 1 active document shown in the Hero Card to 'Duplicate Files/'; bottom toolbar 'Move Duplicates' button remains dedicated to bulk batch moving all duplicate copies.
+> 3. Clean Smart Suggestions: Completely removed redundant 'No shortcode matches...' banner from Column 3 for a distraction-free suggestions list.
+> 4. Bento PRESET Dropdown Parity in Settings: Replaced native select with custom Bento PRESET card (#settingsPresetCard) with royal blue indicator dot, active label, and floating z-9999 menu matching main workstation.
+> 5. Present Documents In-Modal Quick Preview Fix: Resolved 'No PDF file path available' bug by passing file path, nativePath, rotation, and binary bytes into Document Desk presentDocs; preview renders canvas / blob instantly.
+> 6. Cross-Check Modal 'Move Duplicates' Moved to Footer: Relocated #btnModalMoveDuplicates from top controls bar down to modal footer next to Cancel (Esc) and Confirm & Rename.
+> 7. Dedicated 'Undo Move' Toolbar Button: Added permanent #btnUndoSafeMove next to Move Duplicates in bottom execution toolbar with real-time enable/disable reactive state;
+> Dual-MCP automated QA passed 100% [Playwright MCP E2E + Chrome DevTools 0 console errors]; compiled UI with node build-ui.js and release binary via cargo tauri build [10.55 MB]; deployed directly to C:\Users\USER\AppData\Local\DocMitra\app.exe).
 
 > **Last QA Stabilization & Verification:** 2026-11-26 (Clean Up Empty & Unnecessary Descriptions [CP-033] Verified 100%: Cleaned all redundant sub-captions and filler footer notes across 4 modals; preserved functional controls and mandatory labels; Dual-MCP QA passed 100%; deployed to app.exe).
 > All user-requested enhancements are 100% completed, tested, and verified:

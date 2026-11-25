@@ -412,7 +412,7 @@ export class RenamerUIManager {
       btnUndo.addEventListener('click', () => this.handleUndo());
     }
 
-    // Move to Duplicates Button (Del)
+    // Move to Duplicates Button (Bulk duplicate move)
     const btnMoveDup = document.getElementById('btnMoveToDuplicates');
     if (btnMoveDup) {
       btnMoveDup.addEventListener('click', () => {
@@ -423,6 +423,12 @@ export class RenamerUIManager {
           this.handleMoveFileToDuplicates();
         }
       });
+    }
+
+    // Undo Move Button (Restore moved files from Duplicate Files)
+    const btnUndoMove = document.getElementById('btnUndoSafeMove');
+    if (btnUndoMove) {
+      btnUndoMove.addEventListener('click', () => this.handleUndoSafeMove());
     }
 
     // Re-Scan Files (F5)
@@ -728,18 +734,16 @@ export class RenamerUIManager {
         return;
       }
 
-      // Delete: Move duplicate documents (or active document) to "Duplicate Files" subfolder (Safe — never deleted)
+      // Delete: Move ONLY the active hero card document to "Duplicate Files" subfolder (Single file move)
       if (e.key === 'Delete') {
         if (e.target && e.target.tagName === 'INPUT' && e.target.id !== 'inputRenameTarget') {
           // Other text inputs keep normal Delete key
           return;
         }
         e.preventDefault();
-        const extraDups = this.getExtraDuplicateFiles();
-        if (extraDups.length > 0) {
-          this.handleMoveAllDuplicates();
-        } else {
-          this.handleMoveFileToDuplicates();
+        const activeFile = this.state.files[this.state.currentIndex];
+        if (activeFile) {
+          this.handleMoveFileToDuplicates(activeFile);
         }
         return;
       }
@@ -1641,7 +1645,7 @@ export class RenamerUIManager {
       smartMatchedBtn.disabled = this.state.files.length === 0;
     }
 
-    // Move to Duplicates Button Dynamic Counter & Appearance
+    // Move to Duplicates Button Dynamic Counter & Appearance (Bulk Duplicate Move)
     const btnMoveDup = document.getElementById('btnMoveToDuplicates');
     const moveDupLabel = document.getElementById('moveDuplicatesLabel');
     if (btnMoveDup) {
@@ -1650,12 +1654,29 @@ export class RenamerUIManager {
         if (moveDupLabel) moveDupLabel.textContent = `Move Duplicates (${extraDups.length})`;
         btnMoveDup.classList.add('bg-rose-950/80', 'hover:bg-rose-900', 'border-rose-700/80', 'text-rose-200');
         btnMoveDup.classList.remove('bg-slate-800', 'hover:bg-slate-700', 'border-slate-700', 'text-slate-200');
-        btnMoveDup.title = `Safely move ${extraDups.length} extra duplicate copies to "Duplicate Files" (keeps 1 master copy) (Del)`;
+        btnMoveDup.title = `Bulk move ${extraDups.length} extra duplicate copies to "Duplicate Files" subfolder`;
       } else {
-        if (moveDupLabel) moveDupLabel.textContent = 'Move to Duplicates (Del)';
+        if (moveDupLabel) moveDupLabel.textContent = 'Move Duplicates';
         btnMoveDup.classList.remove('bg-rose-950/80', 'hover:bg-rose-900', 'border-rose-700/80', 'text-rose-200');
         btnMoveDup.classList.add('bg-slate-800', 'hover:bg-slate-700', 'border-slate-700', 'text-slate-200');
-        btnMoveDup.title = `Move current document to "Duplicate Files" subfolder (Safe — never deleted) (Del)`;
+        btnMoveDup.title = `No extra duplicate copies found`;
+      }
+    }
+
+    // Undo Move Button Dynamic State
+    const btnUndoMove = document.getElementById('btnUndoSafeMove');
+    if (btnUndoMove) {
+      const hasMoves = this._recentMoves && this._recentMoves.length > 0;
+      if (hasMoves) {
+        btnUndoMove.classList.remove('opacity-40', 'cursor-not-allowed');
+        btnUndoMove.classList.add('opacity-100', 'cursor-pointer');
+        btnUndoMove.disabled = false;
+        btnUndoMove.title = `Undo last move (Restore moved document from "Duplicate Files")`;
+      } else {
+        btnUndoMove.classList.add('opacity-40', 'cursor-not-allowed');
+        btnUndoMove.classList.remove('opacity-100', 'cursor-pointer');
+        btnUndoMove.disabled = true;
+        btnUndoMove.title = 'No recently moved files to undo';
       }
     }
   }
@@ -1917,15 +1938,10 @@ export class RenamerUIManager {
 
       // Live keystroke filtering for illegal characters
       targetInput.addEventListener('keydown', (e) => {
-        // Delete key inside target input: intercept and safe-move duplicates (or current file)
+        // Delete key inside target input: move ONLY active document to "Duplicate Files"
         if (e.key === 'Delete') {
           e.preventDefault();
-          const extraDups = this.getExtraDuplicateFiles();
-          if (extraDups.length > 0) {
-            this.handleMoveAllDuplicates();
-          } else {
-            this.handleMoveFileToDuplicates(currentFile);
-          }
+          this.handleMoveFileToDuplicates(currentFile);
           return;
         }
 
@@ -2390,6 +2406,134 @@ export class RenamerUIManager {
   }
 
   /**
+   * Build Bento PRESET Dropdown Component for Settings Modal (Exact Parity with Main Screen & Missing Desk)
+   */
+  buildSettingsPresetDropdown() {
+    const container = document.getElementById('settingsPresetContainer');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const presetCard = document.createElement('div');
+    presetCard.id = 'settingsPresetCard';
+    presetCard.className = 'group relative flex items-center justify-between bg-surface-container-lowest border border-outline-variant/60 hover:border-primary/80 rounded-xl px-3 h-[38px] shadow-2xs hover:shadow-[0_0_15px_rgba(0,55,176,0.18)] transition-all duration-200 cursor-pointer select-none min-w-[220px]';
+    presetCard.title = 'Click to switch active document preset';
+
+    // Left content: dot + PRESET: + active name
+    const leftContent = document.createElement('div');
+    leftContent.className = 'flex items-center gap-1.5 min-w-0 flex-1 mr-2';
+
+    const dot = document.createElement('span');
+    dot.className = 'w-1.5 h-1.5 rounded-full bg-primary inline-block shrink-0 shadow-[0_0_6px_rgba(0,55,176,0.4)]';
+    leftContent.appendChild(dot);
+
+    const presetLabel = document.createElement('span');
+    presetLabel.className = 'font-mono-code text-[10px] text-secondary group-hover:text-primary uppercase font-bold tracking-wider shrink-0 transition-colors';
+    presetLabel.textContent = 'PRESET:';
+    leftContent.appendChild(presetLabel);
+
+    const activeName = document.createElement('span');
+    activeName.id = 'settingsPresetActiveName';
+    activeName.className = 'font-mono-code text-[12px] font-bold text-on-surface truncate text-left tracking-wide flex-1';
+    activeName.textContent = this.state.activePreset || 'MAHA DBT';
+    leftContent.appendChild(activeName);
+    presetCard.appendChild(leftContent);
+
+    // Right content: chevron
+    const chevron = document.createElement('span');
+    chevron.id = 'settingsPresetChevron';
+    chevron.className = 'material-symbols-outlined text-[18px] text-secondary group-hover:text-primary transition-transform duration-200 shrink-0';
+    chevron.textContent = 'expand_more';
+    presetCard.appendChild(chevron);
+
+    // Hidden native select for backwards compatibility / tests / change handlers
+    const hiddenSelect = document.createElement('select');
+    hiddenSelect.id = 'selectActivePreset';
+    hiddenSelect.className = 'hidden';
+    presetCard.appendChild(hiddenSelect);
+
+    // Floating elevated menu (z-[9999])
+    const floatingMenu = document.createElement('div');
+    floatingMenu.id = 'settingsPresetMenu';
+    floatingMenu.className = 'hidden absolute top-[calc(100%+6px)] left-0 w-full min-w-[240px] bg-surface-container-lowest border border-outline-variant/60 rounded-xl shadow-xl z-[9999] py-1.5 overflow-hidden backdrop-blur-md transition-all duration-150';
+
+    const rawPresets = this.state.documentPresets ? Object.keys(this.state.documentPresets) : ['MAHA DBT', 'SWAYAM DEENDAYAL YOJANA', 'CET CELL', 'EDUCATIONAL DOCUMENTS'];
+    const availablePresets = Array.from(new Set([...rawPresets, 'MAHA DBT', 'SWAYAM DEENDAYAL YOJANA', 'CET CELL', 'EDUCATIONAL DOCUMENTS']));
+
+    const renderMenuItems = () => {
+      floatingMenu.innerHTML = '';
+      hiddenSelect.innerHTML = '';
+
+      availablePresets.forEach(presetName => {
+        const opt = document.createElement('option');
+        opt.value = presetName;
+        opt.textContent = presetName;
+        if (presetName === (this.state.activePreset || 'MAHA DBT')) opt.selected = true;
+        hiddenSelect.appendChild(opt);
+
+        const item = document.createElement('div');
+        const isActive = presetName === (this.state.activePreset || 'MAHA DBT');
+        item.className = `flex items-center justify-between px-3 py-2 text-[12px] font-mono-code font-semibold cursor-pointer transition-colors rounded-lg mx-1 ${
+          isActive
+            ? 'bg-primary/10 text-primary font-bold'
+            : 'text-on-surface hover:bg-surface-container-high/60 hover:text-primary'
+        }`;
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'truncate mr-2';
+        nameSpan.textContent = presetName;
+        item.appendChild(nameSpan);
+
+        if (isActive) {
+          const checkIcon = document.createElement('span');
+          checkIcon.className = 'material-symbols-outlined text-[16px] text-primary shrink-0';
+          checkIcon.textContent = 'check';
+          item.appendChild(checkIcon);
+        }
+
+        item.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          this.handleSwitchActivePreset(presetName);
+          activeName.textContent = presetName;
+          hiddenSelect.value = presetName;
+          hiddenSelect.dispatchEvent(new Event('change', { bubbles: true }));
+          floatingMenu.classList.add('hidden');
+          chevron.classList.remove('rotate-180');
+          renderMenuItems();
+          this.renderPresetDocsTable();
+        });
+
+        floatingMenu.appendChild(item);
+      });
+    };
+
+    renderMenuItems();
+
+    presetCard.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const isHidden = floatingMenu.classList.contains('hidden');
+      if (isHidden) {
+        document.querySelectorAll('#settingsPresetMenu:not(.hidden), #customPresetMenu:not(.hidden)').forEach(m => m.classList.add('hidden'));
+        floatingMenu.classList.remove('hidden');
+        chevron.classList.add('rotate-180');
+      } else {
+        floatingMenu.classList.add('hidden');
+        chevron.classList.remove('rotate-180');
+      }
+    });
+
+    const handleOutsideClick = (ev) => {
+      if (!presetCard.contains(ev.target)) {
+        floatingMenu.classList.add('hidden');
+        chevron.classList.remove('rotate-180');
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+
+    presetCard.appendChild(floatingMenu);
+    container.appendChild(presetCard);
+  }
+
+  /**
    * Column 3 (Right Utility Panel): Scheme Preset Selector + 2 Summary Cards (Completed & Missing) + ↗ Document Desk Button + Top Core Shortcuts Card (Sample 1 Bento Master)
    */
   renderUtilityPanel(container) {
@@ -2717,13 +2861,6 @@ export class RenamerUIManager {
 
       scContainer.appendChild(chip);
     });
-
-    if (zeroMatches) {
-      const noMatchMsg = document.createElement('div');
-      noMatchMsg.className = 'text-[11px] text-secondary italic px-1 pt-1';
-      noMatchMsg.textContent = `No shortcode matches — saving as custom text (Showing top suggestions for "${q}")`;
-      scContainer.prepend(noMatchMsg);
-    }
   }
 
   resolveShortcut(shortcutCode) {
@@ -3262,7 +3399,16 @@ export class RenamerUIManager {
 
     // Advance to next file (Circular wrap-around queue navigation: 1..N..1)
     if (this.state.files.length > 0) {
-      this.state.currentIndex = (this.state.currentIndex + 1) % this.state.files.length;
+      const prevIdx = this.state.currentIndex;
+      const nextIdx = (prevIdx + 1) % this.state.files.length;
+      this.state.currentIndex = nextIdx;
+
+      // When user completes full cycle (from last document back to first document)
+      if (prevIdx === this.state.files.length - 1 && nextIdx === 0) {
+        this.handleSortDocuments('asc');
+        this.state.currentIndex = 0;
+        toast.show('Queue Auto-Sorted', 'Cycle complete: documents sorted 1–0 & A–Z', 'info');
+      }
     }
 
     this.updateTelemetry();
@@ -4019,24 +4165,8 @@ export class RenamerUIManager {
       btnTabPresets?.classList.add('text-secondary', 'border-transparent', 'font-medium');
     }
 
-    // 1. Populate Active Preset Selector
-    const select = document.getElementById('selectActivePreset');
-    if (select && this.state.documentPresets) {
-      select.innerHTML = '';
-      const presetKeys = Object.keys(this.state.documentPresets);
-      presetKeys.forEach(key => {
-        const opt = document.createElement('option');
-        opt.value = key;
-        // Truncate long preset names in the closed dropdown (max ~10-12 chars + ellipsis)
-        opt.textContent = key.length > 14 ? key.slice(0, 12) + '...' : key;
-        opt.title = key;
-        if (key === this.state.activePreset) {
-          opt.selected = true;
-        }
-        select.appendChild(opt);
-      });
-      select.title = `Active Preset: ${this.state.activePreset}`;
-    }
+    // 1. Populate Bento PRESET Dropdown in Settings Modal (Exact Parity)
+    this.buildSettingsPresetDropdown();
 
     // 2. Populate Documents in Active Preset Table
     this.renderPresetDocsTable();
@@ -6461,6 +6591,7 @@ export class RenamerUIManager {
       const fileExt = f.ext || ext(f.name) || 'pdf';
       const dateModified = f.dateModified || f.lastModified || f.modified || Date.now();
       const dateCreated = f.dateCreated || f.ctime || f.birthtime || dateModified;
+      const filePath = f.path || f.filePath || f.nativePath || (folderPath ? `${folderPath.replace(/[\\/]+$/, '')}\\${f.name}` : f.name);
       return {
         name: f.name,
         docType: docType,
@@ -6468,7 +6599,13 @@ export class RenamerUIManager {
         ext: fileExt.toUpperCase().replace('.', ''),
         dateModified: dateModified,
         dateCreated: dateCreated,
-        isCombined: isCombined
+        isCombined: isCombined,
+        path: filePath,
+        nativePath: filePath,
+        rotation: f.rotation || 0,
+        _blobUrl: f._blobUrl || null,
+        _pdfBytes: f._pdfBytes || null,
+        fileObj: f.fileObj || f.file || null
       };
     });
 
