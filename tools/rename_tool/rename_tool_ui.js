@@ -90,7 +90,6 @@ import {
   formatFriendlyDate,
   computeImportTargetName
 } from '../../src/services/followup-service.js';
-import { MissingDocumentsModal } from './missing_documents_modal.js';
 
 /**
  * Get Tauri invoke function across all Tauri v2 runtime variations
@@ -246,11 +245,9 @@ export class RenamerUIManager {
       activePdfDoc: null,
       activePdfUrl: null,
       isSmartScanning: false,
-      isMissingDocsCollapsed: true,
-      isMissingModalOpen: false
+      isMissingDocsCollapsed: true
     };
     this._scanAbortController = null;
-    this.missingModal = null;
 
     // Master Shortcuts & Rules List
     this.shortcuts21 = JSON.parse(JSON.stringify(DEFAULT_SHORTCUTS));
@@ -733,11 +730,6 @@ export class RenamerUIManager {
 
       // Escape: Dismiss active modal if open
       if (e.key === 'Escape') {
-        if (this.missingModal && this.missingModal.isOpen) {
-          e.preventDefault();
-          this.missingModal.close();
-          return;
-        }
         const modalRenameSettings = document.getElementById('modalRenameSettings');
         if (modalRenameSettings && !modalRenameSettings.classList.contains('hidden')) {
           e.preventDefault();
@@ -2373,22 +2365,6 @@ export class RenamerUIManager {
       missingHeader.appendChild(rightMissing);
       missingSection.appendChild(missingHeader);
 
-      // Trigger button per Option 1-A (under missingHeader):
-      const btnOpenDesk = document.createElement('button');
-      btnOpenDesk.type = 'button';
-      btnOpenDesk.id = 'btnOpenMissingDeskModal';
-      btnOpenDesk.className = 'w-full py-1.5 px-3 rounded-lg bg-primary hover:bg-primary/90 text-white font-mono-code text-[11px] font-bold shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-98 shrink-0';
-      btnOpenDesk.title = 'Open Dedicated Missing Documents & Follow-up Desk Modal';
-      btnOpenDesk.innerHTML = `
-        <span class="material-symbols-outlined text-[15px]">open_in_new</span>
-        <span>↗ Open Missing &amp; Follow-up Desk</span>
-      `;
-      btnOpenDesk.onclick = (e) => {
-        e.stopPropagation();
-        this.openMissingDocumentsModal();
-      };
-      missingSection.appendChild(btnOpenDesk);
-
       if (!this.state.isMissingDocsCollapsed) {
         const missingList = document.createElement('div');
         missingList.className = 'flex flex-col gap-1 shrink-0';
@@ -2557,7 +2533,94 @@ export class RenamerUIManager {
 
           btnImport.onclick = async (e) => {
             e.stopPropagation();
-            await this.handleImportMissingDocument(ruleName);
+            toast.show('Select File for Import', `Select document for ${ruleName}`, 'info');
+            try {
+              const res = await selectNativeFiles('All Supported Files (*.pdf;*.jpg;*.jpeg;*.png;*.docx)|*.pdf;*.jpg;*.jpeg;*.png;*.docx|All Files (*.*)|*.*', `Select File for ${ruleName}`);
+              if (!res.success || !res.files || res.files.length === 0) return;
+
+              const picked = res.files[0];
+              const fileExt = picked.ext || ext(picked.name);
+              const folderPath = this.state.folder?.path || '';
+              const studentName = this.state.studentName || this.state.folder?.name || '';
+
+              // Detection & Matching Pipeline: detect type/code -> match student name -> mark uncertain files as Needs Review
+              let detectedDocType = ruleName;
+              let isConfident = true;
+              let evalRes = null;
+
+              try {
+                evalRes = matchFilenameSmart(picked.name, studentName, this.state.settings?.groups);
+                if (evalRes && evalRes.docType) {
+                  if (ruleName && evalRes.docType.toUpperCase() === ruleName.toUpperCase()) {
+                    detectedDocType = ruleName;
+                    isConfident = evalRes.confidence >= 50;
+                  } else if (!ruleName) {
+                    detectedDocType = evalRes.docType;
+                    isConfident = evalRes.confidence >= 70;
+                  } else {
+                    detectedDocType = ruleName;
+                    isConfident = evalRes.confidence >= 30;
+                  }
+                } else {
+                  detectedDocType = ruleName;
+                  isConfident = false;
+                }
+              } catch (matchErr) {
+                console.warn('[DocMitra Import] Filename matching warning:', matchErr);
+                isConfident = false;
+              }
+
+              const targetBase = buildName(detectedDocType || ruleName || cleanName(picked.name), studentName, this.state.settings?.groups, this.state.style);
+              const cleanBase = targetBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+              const targetFilename = `${cleanBase}${fileExt}`;
+
+              let imported = null;
+              if (folderPath && picked.path) {
+                imported = await importNativeFile({
+                  sourcePath: picked.path,
+                  targetDir: folderPath,
+                  targetName: targetFilename,
+                  studentName: studentName
+                });
+              }
+
+              const finalName = (imported && imported.name) ? imported.name : targetFilename;
+              const finalPath = (imported && imported.path) ? imported.path : (folderPath ? `${folderPath}/${finalName}` : picked.path);
+              const finalSize = (imported && imported.size) ? imported.size : (picked.size || 0);
+
+              const newFileItem = {
+                id: `imported_${Date.now()}`,
+                name: finalName,
+                targetName: finalName,
+                suggestedName: finalName,
+                path: finalPath,
+                nativePath: finalPath,
+                size: finalSize,
+                ext: fileExt,
+                url: (imported && imported.url) ? imported.url : picked.url,
+                docType: detectedDocType || ruleName,
+                isMatched: isConfident,
+                isRenamed: false,
+                isKept: false,
+                rotation: 0,
+                isScanning: false,
+                smartConfidence: evalRes ? evalRes.confidence : (isConfident ? 90 : 40),
+                smartDocType: evalRes ? evalRes.docType : detectedDocType,
+                status: isConfident ? 'matched' : 'needs_review'
+              };
+
+              this.state.files.push(newFileItem);
+              this.updateTelemetry();
+              this.renderQueue();
+              this.renderCurrentPreview();
+              if (isConfident) {
+                toast.show('Document Imported', `Imported ${cleanName(finalName)} as ${detectedDocType}`, 'success');
+              } else {
+                toast.show('Imported — Needs Review', `Imported ${cleanName(finalName)}; please verify document type.`, 'warning');
+              }
+            } catch (err) {
+              toast.show('Import Error', err.message, 'error');
+            }
           };
           actionRow.appendChild(btnImport);
 
@@ -2595,22 +2658,6 @@ export class RenamerUIManager {
       });
       donePresetSelect.addEventListener('change', (e) => this.handleSwitchActivePreset(e.target.value));
       allDoneCard.appendChild(donePresetSelect);
-
-      const btnOpenDeskDone = document.createElement('button');
-      btnOpenDeskDone.type = 'button';
-      btnOpenDeskDone.id = 'btnOpenMissingDeskDone';
-      btnOpenDeskDone.className = 'w-full py-1.5 px-3 rounded-lg bg-emerald-700/20 hover:bg-emerald-700/30 text-emerald-900 dark:text-emerald-300 font-mono-code text-[11px] font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all mt-1.5';
-      btnOpenDeskDone.title = 'Open Dedicated Missing Documents & Follow-up Desk Modal';
-      btnOpenDeskDone.innerHTML = `
-        <span class="material-symbols-outlined text-[15px]">open_in_new</span>
-        <span>↗ Open Readiness &amp; Follow-up Desk</span>
-      `;
-      btnOpenDeskDone.onclick = (e) => {
-        e.stopPropagation();
-        this.openMissingDocumentsModal();
-      };
-      allDoneCard.appendChild(btnOpenDeskDone);
-
       container.appendChild(allDoneCard);
     }
 
@@ -6269,172 +6316,6 @@ export class RenamerUIManager {
     footer.className = 'text-center border-t pt-2 border-outline-variant/30 text-[10px] font-mono-code text-secondary';
     footer.textContent = 'Air-Gapped High-Precision Preview Stage';
     stage.appendChild(footer);
-  }
-
-  /**
-   * Unified native import handler for missing documents (used by both sidebar and MissingDocumentsModal)
-   */
-  async handleImportMissingDocument(ruleName) {
-    toast.show('Select File for Import', `Select document for ${ruleName}`, 'info');
-    try {
-      const res = await selectNativeFiles('All Supported Files (*.pdf;*.jpg;*.jpeg;*.png;*.docx)|*.pdf;*.jpg;*.jpeg;*.png;*.docx|All Files (*.*)|*.*', `Select File for ${ruleName}`);
-      if (!res.success || !res.files || res.files.length === 0) return;
-
-      const picked = res.files[0];
-      const fileExt = picked.ext || ext(picked.name);
-      const folderPath = this.state.folder?.path || '';
-      const includeFolder = this.state.settings?.includeFolderNameInFile !== false;
-      const studentName = includeFolder ? (this.state.studentName || this.state.folder?.name || '') : '';
-
-      const targetBase = buildName(ruleName || cleanName(picked.name), studentName, this.state.settings?.groups, this.state.style);
-      const cleanBase = targetBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
-      const targetFilename = `${cleanBase}${fileExt}`;
-
-      let imported = null;
-      if (folderPath && picked.path) {
-        imported = await importNativeFile({
-          sourcePath: picked.path,
-          targetDir: folderPath,
-          targetName: targetFilename,
-          studentName: studentName
-        });
-      }
-
-      const finalName = (imported && imported.name) ? imported.name : targetFilename;
-      const finalPath = (imported && imported.path) ? imported.path : (folderPath ? `${folderPath}/${finalName}` : picked.path);
-      const finalSize = (imported && imported.size) ? imported.size : (picked.size || 0);
-
-      const newFileItem = {
-        id: `imported_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-        name: finalName,
-        targetName: finalName,
-        suggestedName: finalName,
-        path: finalPath,
-        nativePath: finalPath,
-        size: finalSize,
-        ext: fileExt,
-        url: (imported && imported.url) ? imported.url : (picked.url || resolveFilePreviewUrl(picked)),
-        docType: ruleName,
-        isMatched: true,
-        isRenamed: false,
-        isKept: false,
-        rotation: 0,
-        isScanning: false,
-        smartConfidence: 100,
-        smartDocType: ruleName,
-        status: 'matched'
-      };
-
-      this.state.files.push(newFileItem);
-      this.updateTelemetry();
-      this.renderQueue();
-      this.renderCurrentPreview();
-      this.updateMissingModal();
-      toast.show('Document Imported', `Imported ${cleanName(finalName)} as ${ruleName}`, 'success');
-    } catch (err) {
-      console.error('[DocMitra Import] Import error:', err);
-      toast.show('Import Error', err.message || 'Failed to import document', 'error');
-    }
-  }
-
-  /**
-   * Opens the dedicated Missing Documents & Follow-up Desk modal
-   */
-  openMissingDocumentsModal() {
-    if (!this.missingModal) {
-      this.missingModal = new MissingDocumentsModal({
-        onImportFile: (ruleName) => this.handleImportMissingDocument(ruleName),
-        onSetFollowup: ({ docName, date }) => {
-          const student = this.state.studentName || this.state.folder?.name || 'Student';
-          addOrUpdateFollowUp({
-            folderName: student,
-            studentName: student,
-            documentName: docName,
-            promisedDate: date,
-            note: 'Missing document follow-up'
-          });
-          toast.show('Follow-up Scheduled', `${docName} promise date set for ${date}`, 'success');
-          this.updateMissingModal();
-          this.renderQueue();
-        },
-        onPresetChange: (newPreset) => {
-          this.handleSwitchActivePreset(newPreset);
-          this.updateMissingModal();
-        },
-        onClose: () => {
-          this.state.isMissingModalOpen = false;
-        }
-      });
-    }
-    this.state.isMissingModalOpen = true;
-    this.updateMissingModal();
-  }
-
-  /**
-   * Refreshes the active data in the Missing Documents modal
-   */
-  updateMissingModal() {
-    if (!this.missingModal || !this.state.isMissingModalOpen) return;
-
-    const studentName = this.state.studentName || this.state.folder?.name || 'Student';
-    const folderPath = this.state.folder?.path || '';
-    const activePreset = this.state.activePreset || 'MAHA DBT';
-    const presetsList = this.state.documentPresets ? Object.keys(this.state.documentPresets) : ['MAHA DBT', 'SWAYAM DEENDAYAL YOJANA', 'CET CELL', 'EDUCATIONAL DOCUMENTS'];
-
-    const activeRules = this.getActivePresetDocuments();
-    const presentDocsSet = new Set(
-      this.state.files.map(f => (f.docType || '').toUpperCase()).filter(Boolean)
-    );
-
-    const missingRules = activeRules.filter((rule) => {
-      const cleanRule = (rule.name || rule).toUpperCase();
-      if (presentDocsSet.has(cleanRule)) return false;
-      for (const link of DEFAULT_LINKED_RULES) {
-        if (link.combined && presentDocsSet.has(link.combined.toUpperCase())) {
-          if (cleanRule === link.part1.toUpperCase() || cleanRule === link.part2.toUpperCase()) {
-            return false;
-          }
-        }
-      }
-      return true;
-    });
-
-    const presentDocs = this.state.files.map(f => {
-      const docType = f.docType || f.targetName || f.name;
-      let isCombined = false;
-      for (const link of DEFAULT_LINKED_RULES) {
-        if (link.combined && (docType || '').toUpperCase() === link.combined.toUpperCase()) {
-          isCombined = true;
-          break;
-        }
-      }
-      return {
-        name: f.name,
-        docType: docType,
-        size: f.size || 0,
-        isCombined: isCombined
-      };
-    });
-
-    const followupMap = {};
-    missingRules.forEach(r => {
-      const ruleName = typeof r === 'string' ? r : (r.name || '');
-      const pending = getPendingFollowUp(studentName, ruleName);
-      if (pending && pending.promisedDate) {
-        followupMap[ruleName] = pending.promisedDate;
-      }
-    });
-
-    this.missingModal.open({
-      studentName,
-      folderPath,
-      activePreset,
-      presetsList,
-      missingRules,
-      presentDocs,
-      followupMap,
-      totalRequiredCount: activeRules.length
-    });
   }
 }
 

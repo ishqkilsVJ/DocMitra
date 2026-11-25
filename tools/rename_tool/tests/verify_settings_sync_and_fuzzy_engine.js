@@ -97,20 +97,20 @@ console.log('  ✓ File 1 target:', file1Actual);
 const file2Desired = 'AADHAAR CARD VIJAY RAMESH YADAV.pdf';
 const file2Actual = uniqueDestination(file2Desired, 'adhar_card_copy.pdf', usedDestinations, student);
 usedDestinations.add(file2Actual);
-assert.strictEqual(file2Actual, 'AADHAAR CARD 1 VIJAY RAMESH YADAV.pdf', 'Second file must receive " 1" before student name');
+assert.strictEqual(file2Actual, 'AADHAAR CARD 2 VIJAY RAMESH YADAV.pdf', 'Second file must receive " 2" before student name');
 console.log('  ✓ File 2 collision resolved with auto-numbering:', file2Actual);
 
 // File 3: Third copy also resolves to the same name
 const file3Desired = 'AADHAAR CARD VIJAY RAMESH YADAV.pdf';
 const file3Actual = uniqueDestination(file3Desired, 'aadhar_img_3.pdf', usedDestinations, student);
 usedDestinations.add(file3Actual);
-assert.strictEqual(file3Actual, 'AADHAAR CARD 2 VIJAY RAMESH YADAV.pdf', 'Third file must receive " 2" before student name');
+assert.strictEqual(file3Actual, 'AADHAAR CARD 3 VIJAY RAMESH YADAV.pdf', 'Third file must receive " 3" before student name');
 console.log('  ✓ File 3 collision resolved with auto-numbering:', file3Actual);
 
 // File 4: Collision without student name
 const noStudentUsed = new Set(['PHOTO.jpg']);
 const photoCopy = uniqueDestination('PHOTO.jpg', 'pic2.jpg', noStudentUsed, '');
-assert.strictEqual(photoCopy, 'PHOTO 1.jpg', 'Collision without student name must suffix counter at end starting from 1');
+assert.strictEqual(photoCopy, 'PHOTO 2.jpg', 'Collision without student name must suffix counter at end starting from 2');
 console.log('  ✓ Non-student collision resolved:', photoCopy);
 
 console.log('✅ CHECK 3 PASSED: Filename collision resolution verified 100%.\n');

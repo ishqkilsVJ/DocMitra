@@ -84,27 +84,11 @@ const dupFiles = [
 ];
 
 const dupMap = detectDuplicateFiles(dupFiles);
-const confirmedGroups = new Map();
+const filesToMove = [];
 dupFiles.forEach(f => {
   const info = dupMap.get(f.id || f.name);
-  if (info && info.status === 'confirmed') {
-    let base = cleanName(f.targetName || f.name || '').toLowerCase()
-      .replace(/[\s_\-]+(\d+|\(\d+\))(?=\s|$)/gi, '')
-      .replace(/[\s_\-]+/g, ' ')
-      .trim();
-    const groupKey = `base_${base}_${(f.ext || '').toLowerCase()}`;
-    if (!confirmedGroups.has(groupKey)) confirmedGroups.set(groupKey, []);
-    confirmedGroups.get(groupKey).push(f);
-  }
-});
-
-const filesToMove = [];
-confirmedGroups.forEach(group => {
-  if (group.length > 1) {
-    // Keep group[0] as master, move group[1..N]
-    for (let i = 1; i < group.length; i++) {
-      filesToMove.push(group[i]);
-    }
+  if (info && (info.status === 'confirmed' || info.status === 'probable') && !info.isMaster) {
+    filesToMove.push(f);
   }
 });
 

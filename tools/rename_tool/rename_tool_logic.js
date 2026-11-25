@@ -1512,7 +1512,7 @@ export function uniqueDestination(desired, currentName, usedNames, studentName =
   const suffix = ext(desired);
   const base = cleanName(desired);
   let stem = base;
-  let counter = 1;
+  let counter = 2; // Collision suffix starts from ' 2' for the second colliding file
   let studentSuffix = '';
 
   const sClean = (studentName || '').trim();
@@ -2964,8 +2964,8 @@ export function matchFilenameSmart(filename, studentName = '', groups = null, pr
       const docNameClean = docName.toLowerCase();
       const docNameNorm = normalizeIndianText(docNameClean);
       if (normalized === docNameClean || indianNormalized === docNameNorm ||
-          normalized.startsWith(docNameClean + ' ') || normalized.endsWith(' ' + docNameClean) || normalized.includes(' ' + docNameClean + ' ') ||
-          indianNormalized.startsWith(docNameNorm + ' ') || indianNormalized.endsWith(' ' + docNameNorm) || indianNormalized.includes(' ' + docNameNorm + ' ')) {
+        normalized.startsWith(docNameClean + ' ') || normalized.endsWith(' ' + docNameClean) || normalized.includes(' ' + docNameClean + ' ') ||
+        indianNormalized.startsWith(docNameNorm + ' ') || indianNormalized.endsWith(' ' + docNameNorm) || indianNormalized.includes(' ' + docNameNorm + ' ')) {
         return {
           docType: docName,
           canonical: CANONICAL_NAMES[docName] || docName,
@@ -3170,8 +3170,8 @@ export function matchFilenameSmart(filename, studentName = '', groups = null, pr
     // Safety Guard: Caste Certificate must strictly never match validity-related files
     if (prof.type === 'CASTE CERTIFICATE') {
       const hasValidity = /\b(validity|validiti|padtalni|padtalani|cvc|val)\b/i.test(normalized) ||
-                          /\b(validity|validiti|padtalni|cvc|val)\b/i.test(indianNormalized) ||
-                          combinedFileTokens.some(t => ['validity', 'validiti', 'padtalni', 'cvc'].includes(t));
+        /\b(validity|validiti|padtalni|cvc|val)\b/i.test(indianNormalized) ||
+        combinedFileTokens.some(t => ['validity', 'validiti', 'padtalni', 'cvc'].includes(t));
       if (hasValidity) {
         continue;
       }
@@ -3594,8 +3594,17 @@ export function detectDuplicateFiles(files) {
   // Initialize all to null
   files.forEach(f => {
     const key = f.id || f.name;
-    result.set(key, { status: null, reason: '' });
+    result.set(key, { status: null, isMaster: false, reason: '' });
   });
+
+  // Helper to find master index in a group: prefer unnumbered clean file, else index 0
+  const findMasterIdx = (group, getNameFn) => {
+    let idx = group.findIndex(item => {
+      const name = getNameFn(item);
+      return !/[\s_\-]+(\d+|\(\d+\))(?=\s|$)/i.test(name);
+    });
+    return idx >= 0 ? idx : 0;
+  };
 
   // 1. Group by exact file.size + extension
   const sizeExtGroups = new Map();
@@ -3609,16 +3618,26 @@ export function detectDuplicateFiles(files) {
     }
   });
 
-  // 2. Mark Size + Ext matches as 'probable' (50% Dup)
+  // 2. Mark Size + Ext matches as 'probable' (50% Dup) - Master copy stays clean (status: null)
   sizeExtGroups.forEach((group) => {
     if (group.length >= 2) {
-      group.forEach(f => {
-        result.set(f.id || f.name, { status: 'probable', reason: 'Same file size & extension' });
+      const masterIdx = findMasterIdx(group, f => cleanName(f.targetName || f.name || ''));
+      group.forEach((f, idx) => {
+        const key = f.id || f.name;
+        if (idx === masterIdx) {
+          const current = result.get(key);
+          if (current) current.isMaster = true;
+        } else {
+          const current = result.get(key);
+          if (!current || current.status !== 'confirmed') {
+            result.set(key, { status: 'probable', isMaster: false, reason: 'Same file size & extension' });
+          }
+        }
       });
     }
   });
 
-  // 3. Mark 100% Confirmed if SHA-256 hash matches
+  // 3. Mark 100% Confirmed if SHA-256 hash matches - Master copy stays clean (status: null)
   const hashGroups = new Map();
   files.forEach(f => {
     if (f.sha256) {
@@ -3628,8 +3647,18 @@ export function detectDuplicateFiles(files) {
   });
   hashGroups.forEach((group) => {
     if (group.length >= 2) {
-      group.forEach(f => {
-        result.set(f.id || f.name, { status: 'confirmed', reason: 'Identical SHA-256 content hash' });
+      const masterIdx = findMasterIdx(group, f => cleanName(f.targetName || f.name || ''));
+      group.forEach((f, idx) => {
+        const key = f.id || f.name;
+        if (idx === masterIdx) {
+          const current = result.get(key);
+          if (current) {
+            current.isMaster = true;
+            current.status = null; // Master is never marked duplicate
+          }
+        } else {
+          result.set(key, { status: 'confirmed', isMaster: false, reason: 'Identical SHA-256 content hash' });
+        }
       });
     }
   });
@@ -3659,8 +3688,18 @@ export function detectDuplicateFiles(files) {
         return items.some((other, oIdx) => idx !== oIdx && item.file.size > 0 && item.file.size === other.file.size);
       });
       if (hasSuffixDiff || hasSameSize) {
-        items.forEach(item => {
-          result.set(item.file.id || item.file.name, { status: 'confirmed', reason: 'Canonical base document collision' });
+        const masterIdx = findMasterIdx(items, item => item.originalName);
+        items.forEach((item, idx) => {
+          const key = item.file.id || item.file.name;
+          if (idx === masterIdx) {
+            const current = result.get(key);
+            if (current) {
+              current.isMaster = true;
+              current.status = null; // Master is never marked duplicate
+            }
+          } else {
+            result.set(key, { status: 'confirmed', isMaster: false, reason: 'Canonical base document collision' });
+          }
         });
       }
     }

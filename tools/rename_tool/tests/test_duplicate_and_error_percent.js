@@ -61,21 +61,22 @@ const testFiles = [
 
 const dupResults = detectDuplicateFiles(testFiles);
 
-// Suffix collision files -> 'confirmed'
-assert.strictEqual(dupResults.get('1').status, 'confirmed', '12TH LC should be confirmed duplicate');
+// Suffix collision files -> Master stays clean (null), extra copies -> 'confirmed'
+assert.strictEqual(dupResults.get('1').status, null, '12TH LC (master) should have status null (no duplicate badge)');
+assert.strictEqual(dupResults.get('1').isMaster, true, '12TH LC should be marked isMaster');
 assert.strictEqual(dupResults.get('2').status, 'confirmed', '12TH LC 2 should be confirmed duplicate');
 assert.strictEqual(dupResults.get('3').status, 'confirmed', '12TH LC 3 should be confirmed duplicate');
-console.log('✓ Suffix collision copies correctly flagged as "confirmed" (100% Duplicate)');
+console.log('✓ Suffix collision: master is clean and extra copies are flagged as "confirmed" (100% Duplicate)');
 
-// Size + Ext match -> 'probable'
-assert.strictEqual(dupResults.get('4').status, 'probable', 'Scan doc A should be probable duplicate (50%)');
+// Size + Ext match -> Master stays clean (null), extra copy -> 'probable'
+assert.strictEqual(dupResults.get('4').status, null, 'Scan doc A (master) should have status null');
 assert.strictEqual(dupResults.get('5').status, 'probable', 'Scan doc B should be probable duplicate (50%)');
-console.log('✓ Exact byte size + extension matches correctly flagged as "probable" (50% Dup)');
+console.log('✓ Exact byte size + extension: master is clean and extra copy is flagged as "probable" (50% Dup)');
 
-// Hash match -> 'confirmed'
-assert.strictEqual(dupResults.get('6').status, 'confirmed', 'Photo 1 should be confirmed duplicate');
+// Hash match -> Master stays clean (null), extra copy -> 'confirmed'
+assert.strictEqual(dupResults.get('6').status, null, 'Photo 1 (master) should have status null');
 assert.strictEqual(dupResults.get('7').status, 'confirmed', 'Photo copy should be confirmed duplicate');
-console.log('✓ SHA-256 hash matches correctly flagged as "confirmed" (100% Duplicate)');
+console.log('✓ SHA-256 hash match: master is clean and copy is flagged as "confirmed" (100% Duplicate)');
 
 // Unique file -> null
 assert.strictEqual(dupResults.get('8').status, null, 'Income cert should have no duplicate badge');
