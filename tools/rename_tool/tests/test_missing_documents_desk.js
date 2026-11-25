@@ -127,6 +127,94 @@ assert.strictEqual(uniqueTarget, '10TH PASSING CERTIFICATE 2 VIJAY RAMESH YADAV.
 
 console.log('✓ Test 4 Passed: Canonical import formula builds correctly with active styles and duplicate suffixing');
 
+// -----------------------------------------------------------------------------
+// Test 5: UI/UX Audit & Layout Verification (Readiness on Top, Clean Folder, Row Badges)
+// -----------------------------------------------------------------------------
+console.log('\n[TEST 5] UI/UX Layout & Metadata Badges Verification...');
+
+// Create a DOM-like container for render testing
+const renderedElements = {};
+const testModal = new MissingDocumentsModal({
+  container: {
+    appendChild: (child) => {}
+  }
+});
+
+testModal.contentEl = {
+  set innerHTML(html) {
+    this._html = html;
+  },
+  get innerHTML() {
+    return this._html || '';
+  },
+  querySelector: () => null,
+  querySelectorAll: () => []
+};
+
+testModal.render({
+  studentName: 'APARNA GORAKH NADEKAR',
+  folderPath: 'E:/Documents/Admissions/APARNA GORAKH NADEKAR.pdf',
+  activePreset: 'MAHA DBT',
+  presetsList: ['MAHA DBT', 'CET CELL'],
+  missingRules: [
+    { name: 'CASTE VALIDITY CERTIFICATE', code: 'CVC' },
+    { name: 'INCOME CERTIFICATE', code: 'INC' }
+  ],
+  presentDocs: [
+    {
+      name: '10TH MARKSHEET APARNA GORAKH NADEKAR.pdf',
+      docType: '10TH MARKSHEET',
+      size: 328704, // ~321 KB
+      ext: 'PDF',
+      dateModified: '2026-11-24T12:45:00.000Z',
+      isCombined: false
+    }
+  ],
+  followupMap: {
+    'INCOME CERTIFICATE': '2026-11-28'
+  },
+  totalRequiredCount: 3
+});
+
+const html = testModal.contentEl.innerHTML;
+
+// 1. Verify Application Readiness Status is placed BEFORE Missing Documents in DOM
+const readinessIdx = html.indexOf('Application Readiness Status');
+const missingDocsIdx = html.indexOf('Missing Documents');
+const presentDocsIdx = html.indexOf('Present Documents in Folder');
+
+assert(readinessIdx > 0, 'Application Readiness Status must be present');
+assert(missingDocsIdx > 0, 'Missing Documents section must be present');
+assert(presentDocsIdx > 0, 'Present Documents section must be present');
+assert(readinessIdx < missingDocsIdx, 'Application Readiness must be rendered ABOVE Missing Documents');
+assert(missingDocsIdx < presentDocsIdx, 'Missing Documents must be rendered ABOVE Present Documents');
+console.log('  ✓ Verified: Application Readiness is positioned at the top above Missing & Present sections');
+
+// 2. Verify Student Name is displayed inside Readiness card and header
+assert(html.includes('APARNA GORAKH NADEKAR'), 'Student Name must be clearly displayed');
+assert(html.includes('Student Name:'), 'Student Name label must be rendered in Readiness card');
+console.log('  ✓ Verified: Student Name is clearly displayed inside Application Readiness card');
+
+// 3. Verify clean folder name without raw file path or edit pencil
+assert(!html.includes('DIR:'), 'Raw DIR: prefix must be replaced with clean Folder:');
+assert(!html.includes('📁 E:/Documents/Admissions/APARNA GORAKH NADEKAR.pdf'), 'Raw file path must not be displayed');
+assert(html.includes('📁 APARNA GORAKH NADEKAR.pdf') || html.includes('📁 APARNA GORAKH NADEKAR'), 'Clean folder badge must be displayed');
+console.log('  ✓ Verified: Raw file paths and clunky edit buttons removed, clean folder name shown');
+
+// 4. Verify Date (DD-MM-YYYY), Size and File Type on Present Document row
+assert(html.includes('321 KB'), 'Present document must display formatted file size (321 KB)');
+assert(html.includes('PDF'), 'Present document must display file type badge (PDF)');
+assert(html.includes('24-11-2026'), 'Present document must display formatted date (24-11-2026)');
+console.log('  ✓ Verified: Present document rows display Date (DD-MM-YYYY), Size, and Type badge');
+
+// 5. Verify Type, Target Size and Follow-up on Missing Document row
+assert(html.includes('PDF / JPG'), 'Missing document must display expected file type badge (PDF / JPG)');
+assert(html.includes('Target ≤ 256 KB'), 'Missing document must display Target ≤ 256 KB buffer');
+assert(html.includes('Promised: 2026-11-28') || html.includes('2026-11-28'), 'Missing document must display promised follow-up date');
+console.log('  ✓ Verified: Missing document rows display Type, Target Size, and Follow-up Status');
+
+console.log('✓ Test 5 Passed: All 5 UI/UX Audit & Layout specifications validated 100%');
+
 console.log('\n===============================================================');
-console.log('🎉 ALL 4 UNIT & INTEGRATION TEST PHASES PASSED 100%!');
+console.log('🎉 ALL 5 UNIT & INTEGRATION TEST PHASES PASSED 100%!');
 console.log('===============================================================');

@@ -50,46 +50,77 @@ var e = [
 	}
 }, r = new class {
 	constructor() {
-		this.container = null, typeof document < "u" && this._ensureContainer();
+		this.container = null, this.activeToast = null, this.maxVisible = 1, this._pulseTimeout = null, typeof document < "u" && this._ensureContainer();
 	}
 	_ensureContainer() {
 		if (typeof document > "u") return;
 		let e = document.getElementById("toast-container");
-		e || (e = document.createElement("div"), e.id = "toast-container", e.setAttribute("aria-live", "polite"), document.body.appendChild(e)), this.container = e;
+		e ? (e.classList.contains("bottom-12") || e.classList.contains("bottom-6")) && (e.className = "fixed top-20 right-6 z-[9999] flex flex-col gap-2 pointer-events-none max-w-[420px] select-none") : (e = document.createElement("div"), e.id = "toast-container", e.className = "fixed top-20 right-6 z-[9999] flex flex-col gap-2 pointer-events-none max-w-[420px] select-none", e.setAttribute("aria-live", "polite"), document.body.appendChild(e)), this.container = e;
 	}
-	show(e, t = "Ready to connect", n = "info", r = 3e3, i = null) {
-		this._ensureContainer();
-		let a = document.createElement("div");
-		a.className = `toast-item toast-${n}`;
-		let o = document.createElement("span");
-		o.className = "material-symbols-outlined text-[20px] shrink-0", n === "success" ? (o.textContent = "check_circle", o.classList.add("text-emerald-400")) : n === "warning" ? (o.textContent = "warning", o.classList.add("text-amber-400")) : n === "error" ? (o.textContent = "error", o.classList.add("text-red-400")) : (o.textContent = "info", o.classList.add("text-blue-400")), a.appendChild(o);
-		let s = document.createElement("div");
-		s.className = "flex flex-col min-w-0";
-		let c = document.createElement("span");
-		if (c.className = "font-bold font-headline text-white text-[13px] leading-tight truncate", c.textContent = e, s.appendChild(c), t) {
-			let e = document.createElement("span");
-			e.className = "font-mono text-[11px] text-slate-300 mt-0.5 leading-tight", e.textContent = t, s.appendChild(e);
-		}
-		if (a.appendChild(s), i && typeof i.onClick == "function") {
-			let e = document.createElement("button");
-			e.type = "button", e.className = "ml-auto mr-1 px-2.5 py-1 rounded bg-white/20 hover:bg-white/30 active:scale-95 text-white font-bold text-[11px] transition-all cursor-pointer flex items-center gap-1 shadow-2xs", e.textContent = i.label || "Undo", e.addEventListener("click", (e) => {
-				e.stopPropagation(), d(), i.onClick();
-			}), a.appendChild(e);
-		}
-		let l = document.createElement("button");
-		l.type = "button", l.className = "ml-auto text-slate-400 hover:text-white transition-colors p-1 flex items-center justify-center", l.setAttribute("aria-label", "Dismiss notification");
+	show(e, t = "", n = "info", r = null, i = null) {
+		if (this._ensureContainer(), !this.container) return;
+		let a = (e || "").trim(), o = (t || "").trim(), s = `${n}:${a}`, c = r;
+		c ??= i && typeof i.onClick == "function" ? 0 : n === "warning" || n === "error" ? 3e3 : 1800, this.activeToast && this.activeToast.key === s && !i && !this.activeToast.action ? (this.activeToast.count += 1, this._updateInPlace(this.activeToast, a, o, c)) : (this.activeToast && this._removeToast(this.activeToast, !0), this._createToastCard(a, o, n, c, i, s));
+	}
+	_updateInPlace(e, t, n, r) {
+		e && e.el && (e.counterEl && (e.counterEl.textContent = `×${e.count}`, e.counterEl.classList.remove("hidden")), e.subtitleEl && n && (e.subtitleEl.textContent = n), e.el.classList.remove("toast-pulse"), e.el.offsetWidth, e.el.classList.add("toast-pulse"), e.timer &&= (clearTimeout(e.timer), null), r > 0 && (e.timer = setTimeout(() => {
+			this._removeToast(e);
+		}, r)));
+	}
+	_createToastCard(e, t, n, r, i, a) {
+		let o = document.createElement("div");
+		o.className = `toast-item toast-${n}`;
+		let s = document.createElement("span");
+		s.className = "material-symbols-outlined text-[20px] shrink-0", n === "success" ? (s.textContent = "check_circle", s.className += " text-emerald-400") : n === "warning" ? (s.textContent = "warning", s.className += " text-amber-400") : n === "error" ? (s.textContent = "error", s.className += " text-rose-400") : (s.textContent = "info", s.className += " text-blue-400"), o.appendChild(s);
+		let c = document.createElement("div");
+		c.className = "flex flex-col min-w-0 flex-1";
+		let l = document.createElement("div");
+		l.className = "flex items-center gap-1.5 flex-wrap";
 		let u = document.createElement("span");
-		u.className = "material-symbols-outlined text-[16px]", u.textContent = "close", l.appendChild(u);
-		let d = () => {
-			a.classList.add("toast-leaving"), setTimeout(() => {
-				a.parentNode && a.parentNode.removeChild(a);
-			}, 200);
+		u.className = "font-bold font-headline text-white text-[13px] leading-tight truncate", u.textContent = e, l.appendChild(u);
+		let d = document.createElement("span");
+		d.className = "toast-counter-badge hidden", d.textContent = "×1", l.appendChild(d), c.appendChild(l);
+		let f = null;
+		if (t && (f = document.createElement("span"), f.className = "font-mono text-[11px] text-slate-300 mt-0.5 leading-tight truncate max-w-[280px]", f.textContent = t, c.appendChild(f)), o.appendChild(c), i && typeof i.onClick == "function") {
+			let e = document.createElement("button");
+			e.type = "button", e.className = "ml-auto mr-1 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-[11px] font-mono transition-all cursor-pointer flex items-center gap-1 shadow-sm shrink-0", e.innerHTML = `
+        <span class="material-symbols-outlined text-[14px]">undo</span>
+        <span>${i.label || "Undo"}</span>
+      `, e.addEventListener("click", (e) => {
+				e.stopPropagation(), this._removeToast(h), i.onClick();
+			}), o.appendChild(e);
+		}
+		let p = document.createElement("button");
+		p.type = "button", p.className = "text-slate-400 hover:text-white transition-colors p-1 flex items-center justify-center shrink-0 cursor-pointer rounded hover:bg-slate-800/60", p.setAttribute("aria-label", "Dismiss notification");
+		let m = document.createElement("span");
+		m.className = "material-symbols-outlined text-[16px]", m.textContent = "close", p.appendChild(m), p.addEventListener("click", (e) => {
+			e.stopPropagation(), this._removeToast(h);
+		}), o.appendChild(p);
+		let h = {
+			key: a,
+			el: o,
+			counterEl: d,
+			subtitleEl: f,
+			count: 1,
+			timer: null,
+			action: i
 		};
-		l.addEventListener("click", (e) => {
-			e.stopPropagation(), d();
-		}), a.appendChild(l), this.container.appendChild(a), r > 0 && setTimeout(d, r);
+		r > 0 && (h.timer = setTimeout(() => {
+			this._removeToast(h);
+		}, r)), this.container.appendChild(o), this.activeToast = h;
 	}
-}(), i = class {
+	_removeToast(e, t = !1) {
+		e && e.el && (e.timer &&= (clearTimeout(e.timer), null), this.activeToast === e && (this.activeToast = null), t ? e.el.parentNode && e.el.parentNode.removeChild(e.el) : (e.el.classList.add("toast-leaving"), setTimeout(() => {
+			e.el && e.el.parentNode && e.el.parentNode.removeChild(e.el);
+		}, 180)));
+	}
+}();
+function i(e, t = "info", n = "", i = null, a = null) {
+	r.show(e, n, t, i, a);
+}
+typeof window < "u" && (window.DocMitraToast = r, window.showToast = i);
+// src/ui/modal.js
+var a = class {
 	constructor() {
 		this.overlay = document.getElementById("settings-modal-overlay"), this.modal = document.getElementById("settingsModal"), this.openBtn = document.getElementById("openSettingsBtn"), this.closeBtn = document.getElementById("closeSettingsBtn"), this.subnavBtns = document.querySelectorAll(".settings-subnav-btn"), this.sections = document.querySelectorAll(".settings-section"), this.isOpen = !1;
 	}
@@ -191,7 +222,7 @@ var e = [
 	}
 };
 // src/ui/placeholders.js
-function a() {
+function o() {
 	["[data-action=\"placeholder\"]"].forEach((e) => {
 		document.querySelectorAll(e).forEach((e) => {
 			e.addEventListener("click", (t) => {
@@ -259,27 +290,27 @@ function a() {
 	});
 }
 // src/services/native-bridge-service.js
-var o = "http://localhost:3000";
-function s() {
+var s = "http://localhost:3000";
+function c() {
 	if (typeof window < "u") {
 		if (window.__TAURI__?.core?.invoke) return window.__TAURI__.core.invoke;
 		if (window.__TAURI_INTERNALS__?.invoke) return window.__TAURI_INTERNALS__.invoke;
 	}
 	return null;
 }
-function c() {
-	return !!s();
+function l() {
+	return !!c();
 }
-async function l() {
-	if (c()) return !0;
+async function u() {
+	if (l()) return !0;
 	try {
-		return (await fetch(`${o}/api/license-status`, { signal: AbortSignal.timeout(2e3) })).ok;
+		return (await fetch(`${s}/api/license-status`, { signal: AbortSignal.timeout(2e3) })).ok;
 	} catch {
 		return !1;
 	}
 }
-async function u() {
-	let e = s();
+async function d() {
+	let e = c();
 	if (e) try {
 		let t = await e("pick_native_folder");
 		return t ? await e("list_native_directory", { path: t }) : {
@@ -321,7 +352,7 @@ async function u() {
 		console.warn("[NativeBridge] showDirectoryPicker error, trying backend:", e);
 	}
 	try {
-		let e = new AbortController(), t = setTimeout(() => e.abort(), 6e4), n = await fetch(`${o}/api/native-select-folder`, { signal: e.signal });
+		let e = new AbortController(), t = setTimeout(() => e.abort(), 6e4), n = await fetch(`${s}/api/native-select-folder`, { signal: e.signal });
 		if (clearTimeout(t), n.ok) {
 			let e = await n.json();
 			if (e.success || e.cancelled) return e;
@@ -354,8 +385,8 @@ async function u() {
 		}, t.click();
 	});
 }
-async function d(e = "All Files (*.*)|*.*", t = "Select Files") {
-	let n = s();
+async function f(e = "All Files (*.*)|*.*", t = "Select Files") {
+	let n = c();
 	if (n) try {
 		return await n("pick_native_files");
 	} catch (e) {
@@ -386,7 +417,7 @@ async function d(e = "All Files (*.*)|*.*", t = "Select Files") {
 		console.warn("[NativeBridge] showOpenFilePicker error, trying backend:", e);
 	}
 	try {
-		let n = await fetch(`${o}/api/native-select-files?filter=${encodeURIComponent(e)}&title=${encodeURIComponent(t)}`);
+		let n = await fetch(`${s}/api/native-select-files?filter=${encodeURIComponent(e)}&title=${encodeURIComponent(t)}`);
 		if (n.ok) {
 			let e = await n.json();
 			if (e.success || e.cancelled) return e;
@@ -416,15 +447,15 @@ async function d(e = "All Files (*.*)|*.*", t = "Select Files") {
 		}, t.click();
 	});
 }
-async function f(e) {
-	let t = s();
+async function p(e) {
+	let t = c();
 	if (t) try {
 		return await t("list_native_directory", { path: e });
 	} catch (e) {
 		console.warn("[NativeBridge] Tauri list_native_directory failed, trying backend:", e);
 	}
 	try {
-		let t = await fetch(`${o}/api/list-directory?path=${encodeURIComponent(e)}`);
+		let t = await fetch(`${s}/api/list-directory?path=${encodeURIComponent(e)}`);
 		return t.ok ? await t.json() : {
 			success: !1,
 			errorCode: "DM-104",
@@ -438,8 +469,8 @@ async function f(e) {
 		};
 	}
 }
-async function p(e, t, n = "", r = 0) {
-	let i = s();
+async function m(e, t, n = "", r = 0) {
+	let i = c();
 	if (i) try {
 		let a = await i("rename_native_file", {
 			oldPath: e,
@@ -462,7 +493,7 @@ async function p(e, t, n = "", r = 0) {
 		console.warn("[NativeBridge] Tauri rename_native_file failed, trying backend:", e);
 	}
 	try {
-		let i = await (await fetch(`${o}/api/native-rename`, {
+		let i = await (await fetch(`${s}/api/native-rename`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
@@ -487,8 +518,8 @@ async function p(e, t, n = "", r = 0) {
 		};
 	}
 }
-async function m(e, t) {
-	let n = s();
+async function h(e, t) {
+	let n = c();
 	if (n) try {
 		let r = await n("rename_native_folder", {
 			oldPath: e,
@@ -507,10 +538,10 @@ async function m(e, t) {
 	} catch (e) {
 		console.warn("[NativeBridge] Tauri rename_native_folder failed, trying fallback:", e);
 	}
-	return p(e, t);
+	return m(e, t);
 }
-async function h(e, t) {
-	let n = s();
+async function g(e, t) {
+	let n = c();
 	if (n) try {
 		let r = await n("move_native_file", {
 			sourcePath: e,
@@ -539,9 +570,9 @@ async function h(e, t) {
 		error: null
 	};
 }
-async function g({ sourcePath: e, targetDir: t, targetName: n = "", studentName: r = "" }) {
+async function _({ sourcePath: e, targetDir: t, targetName: n = "", studentName: r = "" }) {
 	try {
-		return await (await fetch(`${o}/api/native-import-file`, {
+		return await (await fetch(`${s}/api/native-import-file`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
@@ -558,15 +589,15 @@ async function g({ sourcePath: e, targetDir: t, targetName: n = "", studentName:
 		};
 	}
 }
-async function _(e) {
-	let t = s();
+async function v(e) {
+	let t = c();
 	if (t) try {
 		return { success: !!await t("open_in_explorer", { path: e }) };
 	} catch (e) {
 		console.warn("[NativeBridge] Tauri open_in_explorer failed:", e);
 	}
 	try {
-		let t = await fetch(`${o}/api/open-folder?path=${encodeURIComponent(e)}`);
+		let t = await fetch(`${s}/api/open-folder?path=${encodeURIComponent(e)}`);
 		return t.ok ? await t.json() : {
 			success: !1,
 			error: `Failed to open Explorer: ${t.status}`
@@ -579,7 +610,7 @@ async function _(e) {
 	}
 }
 // tools/rename_tool/rename_tool_logic.js
-var v = {
+var y = {
 	PHOTO: "Photo",
 	SIGNATURE: "Signature",
 	"AADHAAR CARD": "Aadhaar Card",
@@ -650,24 +681,24 @@ var v = {
 	"RESIDENTIAL DOCUMENT": "Residential Document",
 	"ATTEMPT CERTIFICATE": "Attempt Certificate"
 };
-function y(e, t) {
+function b(e, t) {
 	if (!e) return;
 	let n = e.trim().toUpperCase();
-	v[n] = t || e;
-}
-function b(e) {
-	if (!e) return;
-	let t = e.trim().toUpperCase();
-	delete v[t];
+	y[n] = t || e;
 }
 function x(e) {
+	if (!e) return;
+	let t = e.trim().toUpperCase();
+	delete y[t];
+}
+function S(e) {
 	if (e && Array.isArray(e)) for (let t of e) {
 		if (!t) continue;
 		let e = (typeof t == "string" ? t : t.name || t.canonical || "").trim();
-		e && (v[e.toUpperCase()] = e);
+		e && (y[e.toUpperCase()] = e);
 	}
 }
-var S = {
+var C = {
 	marskheet: "marksheet",
 	markshet: "marksheet",
 	markshit: "marksheet",
@@ -700,7 +731,7 @@ var S = {
 	phot: "photo",
 	foto: "photo",
 	woter: "voter"
-}, C = [
+}, w = [
 	{
 		id: "12th-marksheet-passing-link",
 		part1: "12TH MARKSHEET",
@@ -729,7 +760,7 @@ var S = {
 		combined: "12TH LC",
 		type: "alias"
 	}
-], w = {
+], T = {
 	"MAHA DBT": [
 		["PHOTO", [
 			"photo",
@@ -1402,8 +1433,8 @@ var S = {
 		]]
 	]
 };
-w["MAHA DBT FORM"] = w["MAHA DBT"], w.SWAYAM = w["SWAYAM DEENDAYAL YOJANA"], w["SWAYAM FORM"] = w["SWAYAM DEENDAYAL YOJANA"], w.EDUCATIONAL = w["EDUCATIONAL DOCUMENTS"];
-var T = [
+T["MAHA DBT FORM"] = T["MAHA DBT"], T.SWAYAM = T["SWAYAM DEENDAYAL YOJANA"], T["SWAYAM FORM"] = T["SWAYAM DEENDAYAL YOJANA"], T.EDUCATIONAL = T["EDUCATIONAL DOCUMENTS"];
+var E = [
 	{
 		id: "photo",
 		displayName: "PHOTO",
@@ -1989,17 +2020,17 @@ var T = [
 		outputName: "MINORITY CERTIFICATE"
 	}
 ];
-function E(e = null) {
-	return e ? T.map((t) => {
+function D(e = null) {
+	return e ? E.map((t) => {
 		let n = e[t.outputName];
 		return n && Array.isArray(n) && n.length > 0 ? {
 			...t,
 			primaryShortcut: n[0].toUpperCase(),
 			alternateKeywords: n.slice(1)
 		} : t;
-	}) : T;
+	}) : E;
 }
-var D = {
+var O = {
 	"10th": [
 		"ssc",
 		"10",
@@ -2241,7 +2272,7 @@ var D = {
 		"vasatigruh dakhla"
 	]
 };
-function O(e, t = []) {
+function k(e, t = []) {
 	if (!e || typeof e != "string") return "";
 	let n = e.toLowerCase().trim().replace(/[^a-z0-9\s_-]/g, " ").split(/[\s_-]+/).filter((e) => e.length > 0);
 	if (n.length === 0) return "";
@@ -2252,7 +2283,7 @@ function O(e, t = []) {
 			t.length >= 2 && r.add(t);
 		}
 	}
-	for (let [e, t] of Object.entries(D)) {
+	for (let [e, t] of Object.entries(O)) {
 		let a = RegExp(`\\b${e}\\b`, "i");
 		if (a.test(i)) for (let e of t) r.add(i.replace(a, e)), n.length <= 4 && r.add(e);
 	}
@@ -2267,11 +2298,11 @@ function O(e, t = []) {
 	let a = Array.from(r).map((e) => e.trim().toLowerCase().replace(/[^a-z0-9\s_-]/g, "").replace(/\s+/g, " ")).filter((e) => e.length >= 2);
 	return Array.from(new Set(a)).slice(0, 25).join(", ");
 }
-function k(e, t = null) {
+function A(e, t = null) {
 	if (!e || typeof e != "string") return null;
 	let n = e.toLowerCase().trim();
 	if (!n) return null;
-	let r = n.replace(/\s+/g, ""), i = E(t);
+	let r = n.replace(/\s+/g, ""), i = D(t);
 	for (let e of i) {
 		let t = e.primaryShortcut.toLowerCase();
 		if (n === t || r.length >= 2 && r.length <= 6 && r === t) return e.outputName;
@@ -2928,7 +2959,7 @@ function te(e, t, n = null) {
 		}
 	}
 }
-function A(e, t = null) {
+function j(e, t = null) {
 	if (!e || typeof e != "string") return {
 		docType: null,
 		confidence: 0,
@@ -2954,28 +2985,28 @@ function A(e, t = null) {
 		matchedPattern: null
 	};
 }
-function j(e) {
+function M(e) {
 	if (!e) return "";
 	let t = e.lastIndexOf(".");
 	return t > 0 ? e.slice(t) : "";
 }
-function M(e) {
+function N(e) {
 	return !e || typeof e != "string" ? "" : e.replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
 }
 function ne(e, t) {
-	let n = A(e, t);
-	return n && n.docType ? n.docType : k(e, t) || null;
+	let n = j(e, t);
+	return n && n.docType ? n.docType : A(e, t) || null;
 }
-function N(e, t = "preserve", n = null) {
+function P(e, t = "preserve", n = null) {
 	let r = e, i = t;
 	return n !== null && (r = t, i = n), r ? i === "upper" ? r.toUpperCase() : i === "lower" ? r.toLowerCase() : i === "title" ? r.toLowerCase().replace(/(^|[\s\-_])\S/g, (e) => e.toUpperCase()) : r : "";
 }
-function P(e, t, n, r = "preserve") {
+function F(e, t, n, r = "preserve") {
 	let i = "", a = (e || "").trim().toUpperCase();
-	if (v[a]) i = v[a];
+	if (y[a]) i = y[a];
 	else {
 		let t = ne(e, n);
-		i = t ? v[t.toUpperCase()] || t : M(e);
+		i = t ? y[t.toUpperCase()] || t : N(e);
 	}
 	let o = i;
 	if (t && t.trim()) {
@@ -2986,9 +3017,9 @@ function P(e, t, n, r = "preserve") {
 			o = RegExp(`(^|\\s)${t}(\\s|$)`, "i").test(n) ? i : `${i} ${e}`;
 		}
 	}
-	return N(o, r);
+	return P(o, r);
 }
-function F(e) {
+function I(e) {
 	if (!e || !e.trim()) return "File name cannot be empty.";
 	let t = e.trim();
 	if (e.endsWith(".") || e.endsWith(" ") || t.endsWith(".")) return "File name cannot end with a period or space.";
@@ -3020,11 +3051,11 @@ function F(e) {
 		"LPT9"
 	].includes(n) ? "This file name is reserved by Windows OS." : "";
 }
-function I(e, t, n, r = "") {
+function L(e, t, n, r = "") {
 	let i = /* @__PURE__ */ new Map();
 	if (n) for (let e of n) e && i.set(e.toLowerCase(), e);
 	if (!i.has(e.toLowerCase())) return e;
-	let a = j(e), o = M(e), s = o, c = 2, l = "", u = (r || "").trim();
+	let a = M(e), o = N(e), s = o, c = 2, l = "", u = (r || "").trim();
 	if (u) {
 		let e = u.toLowerCase(), t = o.toLowerCase();
 		if (t.endsWith(e)) {
@@ -3041,7 +3072,7 @@ function I(e, t, n, r = "") {
 	for (; i.has(f.toLowerCase());) c++, f = `${s} ${c}${l}${a}`;
 	return f;
 }
-var L = new class {
+var R = new class {
 	constructor(e = 10) {
 		this.history = [], this.maxHistory = e;
 	}
@@ -3095,7 +3126,7 @@ async function oe(e, t, n = null) {
 						path: t,
 						newPath: t
 					};
-				} else l = await p(s, a.next, e, o);
+				} else l = await m(s, a.next, e, o);
 				if (!l.success) throw Error(l.error || `Failed to rename ${a.old}`);
 				let u = l.name || a.next;
 				if (a.next = u, a.file) {
@@ -3119,7 +3150,7 @@ async function oe(e, t, n = null) {
 			if (!c) {
 				let t = a.next, n = await e.getFileHandle(t, { create: !1 }).catch(() => null);
 				if (n) {
-					let r = j(t), i = M(t).replace(/\s+\d+$/, ""), o = 1;
+					let r = M(t), i = N(t).replace(/\s+\d+$/, ""), o = 1;
 					for (t = `${i} ${o}${r}`, n = await e.getFileHandle(t, { create: !1 }).catch(() => null); n;) o++, t = `${i} ${o}${r}`, n = await e.getFileHandle(t, { create: !1 }).catch(() => null);
 					a.next = t;
 				}
@@ -3171,7 +3202,7 @@ async function se(e, t, n = null) {
 					path: n,
 					newPath: n
 				};
-			} else s = await p(o, t.old);
+			} else s = await m(o, t.old);
 			if (s && s.success) {
 				let e = s.path || t.nativePath || (a ? `${a}/${t.old}` : o.replace(/[^\\\/]+$/, t.old));
 				if (t.file) {
@@ -3508,7 +3539,7 @@ var ce = [
 function le({ canonical: e, code: t = "", primaryKeywords: n = [], secondaryKeywords: r = [] }) {
 	if (!e || typeof e != "string") return null;
 	let i = e.trim().toUpperCase(), a = (t || "").trim().toUpperCase() || i.slice(0, 3);
-	v[i] = i;
+	y[i] = i;
 	let o = (e) => e.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), s = [RegExp(`\\b${o(i)}\\b`, "i")];
 	a && a.length >= 2 && s.push(RegExp(`\\b${o(a)}\\b`, "i"));
 	for (let e of n) e && e.trim().length >= 3 && s.push(RegExp(`\\b${o(e.trim())}\\b`, "i"));
@@ -3554,7 +3585,7 @@ function de(e, t) {
 	let a = ue(n, r);
 	return Math.max(0, 1 - a / i);
 }
-function R(e) {
+function z(e) {
 	return !e || typeof e != "string" ? [] : e.replace(/\.[a-zA-Z0-9]+$/i, "").replace(/[^a-zA-Z0-9]+/g, " ").toLowerCase().split(/\s+/).filter((e) => e.length > 0);
 }
 var fe = [
@@ -3650,7 +3681,7 @@ function he(e, t) {
 	}
 	return !1;
 }
-function z(e) {
+function B(e) {
 	if (!e || typeof e != "string") return "";
 	let t = e.toLowerCase().trim();
 	return t = t.replace(/(\.[a-zA-Z0-9]+)+$/i, ""), t = t.replace(/\bkc([aeiou])/gi, "k$1"), t = t.replace(/\bkn([aeiou])/gi, "n$1"), t = t.replace(/\bps([aeiou])/gi, "s$1"), t = t.replace(/w/gi, "v"), t = t.replace(/ph/gi, "f"), t = t.replace(/sh/gi, "s"), t = t.replace(/ee+/gi, "i"), t = t.replace(/oo+/gi, "u"), t = t.replace(/\b(sartificat|sartifiket|sartifakit|sartificet|certi|cert|dakhla|pramanpatra|praman\s*patra)\b/gi, "certificate"), t = t.replace(/\b(domisail|domicile|domicil|adivas|adhiwas|rehivasi|rahavasi)\b/gi, "domicile"), t = t.replace(/\b(incom|incm|utpanna|utpann)\b/gi, "income"), t = t.replace(/\b(bonafaid|bonafied|bonfide|bona\s*fide)\b/gi, "bonafide"), t = t.replace(/\b(non\s*crimiler|non\s*criminal|noncreamy|non\s*creamy|ncl)\b/gi, "non creamy layer"), t = t.replace(/\b(markshit|markshet|marskheet|mark\s*sheet|scorecard|score\s*card)\b/gi, "marksheet"), t = t.replace(/\b(pasing|pass\s*cert|sanad)\b/gi, "passing"), t = t.replace(/\b(adhar|aadhar|aadhhar|adhaar|uid|uidai)\b/gi, "aadhaar"), t = t.replace(/\b(rasan|rashan|shidha|patrika)\b/gi, "ration"), t = t.replace(/\b(skool|clg|college)\b/gi, "school"), t = t.replace(/\b(lc|tc|leaving|transfer)\b/gi, "leaving certificate"), t = t.replace(/\b(foto|pic|image|photograph)\b/gi, "photo"), t = t.replace(/\b(signatur|sahi|signature|st\s*sign)\b/gi, "signature"), t = t.replace(/\b(validiti|validty)\b/gi, "validity"), t = t.replace(/\b(dahavi|dahawi|ssc|tenth)\b/gi, "10th"), t = t.replace(/\b(baravi|barawi|hsc|twelfth)\b/gi, "12th"), t.replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
@@ -3774,7 +3805,7 @@ function ve(e, t = "", n = null, r = null) {
 		isConfident: !1,
 		reason: "Empty filename"
 	};
-	let i = M(e).trim();
+	let i = N(e).trim();
 	if (!i) return {
 		docType: null,
 		canonical: null,
@@ -3783,7 +3814,7 @@ function ve(e, t = "", n = null, r = null) {
 		isConfident: !1,
 		reason: "Empty basename"
 	};
-	let a = z(i), o = ae(i, S), s = o.replace(/[_\-\.\+,\(\)\[\]]+/g, " ").replace(/\s+/g, " ").trim().toLowerCase(), c = R(o), l = R(a), u = Array.from(/* @__PURE__ */ new Set([...c, ...l])), d = me(u);
+	let a = B(i), o = ae(i, C), s = o.replace(/[_\-\.\+,\(\)\[\]]+/g, " ").replace(/\s+/g, " ").trim().toLowerCase(), c = z(o), l = z(a), u = Array.from(/* @__PURE__ */ new Set([...c, ...l])), d = me(u);
 	if (r) {
 		let e = Array.isArray(r) ? r : Object.values(r);
 		for (let t of e) {
@@ -3791,22 +3822,22 @@ function ve(e, t = "", n = null, r = null) {
 			let e = (typeof t == "string" ? t : t.name || t.canonical || (Array.isArray(t) ? t[0] : "")).trim().toUpperCase();
 			if (!e) continue;
 			let n = (t.code || Array.isArray(t) && t[2] || "").trim().toUpperCase(), r = t.keywords || Array.isArray(t) && t[1] || [], c = Array.isArray(r) ? r : typeof r == "string" ? r.split(",").map((e) => e.trim()) : [];
-			if (he(d, me(R(e)))) continue;
+			if (he(d, me(z(e)))) continue;
 			if (n) {
 				let t = RegExp(`(^|[^a-z0-9])${n}([^a-z0-9]|$)`, "i");
 				if (t.test(o) || t.test(i) || t.test(a)) return {
 					docType: e,
-					canonical: v[e] || e,
+					canonical: y[e] || e,
 					code: n,
 					confidence: 95,
 					isConfident: !0,
 					reason: `Preset shortcode match (${n})`
 				};
 			}
-			let l = e.toLowerCase(), u = z(l);
+			let l = e.toLowerCase(), u = B(l);
 			if (s === l || a === u || s.startsWith(l + " ") || s.endsWith(" " + l) || s.includes(" " + l + " ") || a.startsWith(u + " ") || a.endsWith(" " + u) || a.includes(" " + u + " ")) return {
 				docType: e,
-				canonical: v[e] || e,
+				canonical: y[e] || e,
 				code: n || null,
 				confidence: 100,
 				isConfident: !0,
@@ -3815,12 +3846,12 @@ function ve(e, t = "", n = null, r = null) {
 			for (let t of c) {
 				let r = t.toLowerCase().trim();
 				if (!r) continue;
-				let c = z(r);
+				let c = B(r);
 				if (r.length <= 3) {
 					let t = RegExp(`(^|[^a-z0-9])${r}([^a-z0-9]|$)`, "i");
 					if (t.test(o) || t.test(i) || t.test(a)) return {
 						docType: e,
-						canonical: v[e] || e,
+						canonical: y[e] || e,
 						code: n || null,
 						confidence: 95,
 						isConfident: !0,
@@ -3828,7 +3859,7 @@ function ve(e, t = "", n = null, r = null) {
 					};
 				} else if (s.includes(r) || a.includes(r) || a.includes(c)) return {
 					docType: e,
-					canonical: v[e] || e,
+					canonical: y[e] || e,
 					code: n || null,
 					confidence: 90,
 					isConfident: !0,
@@ -3837,11 +3868,11 @@ function ve(e, t = "", n = null, r = null) {
 			}
 		}
 	}
-	let f = A(o, n);
-	f.docType || (f = A(a, n)), f.docType || (f = A(i, n));
-	let p = k(o, n) || k(a, n) || k(i, n);
+	let f = j(o, n);
+	f.docType || (f = j(a, n)), f.docType || (f = j(i, n));
+	let p = A(o, n) || A(a, n) || A(i, n);
 	if (f && f.docType) {
-		let e = f.docType.toUpperCase(), n = v[e] || e, r = n.toUpperCase(), a = i.toUpperCase().replace(/\s+/g, " ").trim(), o = !1;
+		let e = f.docType.toUpperCase(), n = y[e] || e, r = n.toUpperCase(), a = i.toUpperCase().replace(/\s+/g, " ").trim(), o = !1;
 		if (t && t.trim()) {
 			let n = t.trim().toUpperCase().replace(/\s+/g, " ");
 			(a === `${r} ${n}` || a === `${e} ${n}`) && (o = !0);
@@ -3856,7 +3887,7 @@ function ve(e, t = "", n = null, r = null) {
 		};
 	}
 	if (p) {
-		let e = p.toUpperCase(), n = v[e] || e, r = n.toUpperCase(), a = i.toUpperCase().replace(/\s+/g, " ").trim(), o = !1;
+		let e = p.toUpperCase(), n = y[e] || e, r = n.toUpperCase(), a = i.toUpperCase().replace(/\s+/g, " ").trim(), o = !1;
 		if (t && t.trim()) {
 			let n = t.trim().toUpperCase().replace(/\s+/g, " ");
 			(a === `${r} ${n}` || a === `${e} ${n}`) && (o = !0);
@@ -4836,7 +4867,7 @@ function ve(e, t = "", n = null, r = null) {
 			let n = (t.code || Array.isArray(t) && t[2] || "").toUpperCase(), r = t.keywords || Array.isArray(t) && t[1] || [], i = Array.isArray(r) ? r : typeof r == "string" ? r.split(",").map((e) => e.trim()) : [], a = m.find((t) => t.type === e || t.code && n && t.code.toUpperCase() === n);
 			if (a) a.type = e, a.code = n, a.tokens = [e.toLowerCase(), ...i.map((e) => e.toLowerCase())];
 			else {
-				let t = R(e), r = me(t), a = r.size > 0 ? Array.from(r)[0] : null;
+				let t = z(e), r = me(t), a = r.size > 0 ? Array.from(r)[0] : null;
 				m.push({
 					type: e,
 					code: n,
@@ -4855,7 +4886,7 @@ function ve(e, t = "", n = null, r = null) {
 	}
 	let h = null, g = 0;
 	for (let e of m) {
-		if (he(d, e.standard ? /* @__PURE__ */ new Set([e.standard]) : me(R(e.type))) || e.type === "CASTE CERTIFICATE" && (/\b(validity|validiti|padtalni|padtalani|cvc|val)\b/i.test(s) || /\b(validity|validiti|padtalni|cvc|val)\b/i.test(a) || u.some((e) => [
+		if (he(d, e.standard ? /* @__PURE__ */ new Set([e.standard]) : me(z(e.type))) || e.type === "CASTE CERTIFICATE" && (/\b(validity|validiti|padtalni|padtalani|cvc|val)\b/i.test(s) || /\b(validity|validiti|padtalni|cvc|val)\b/i.test(a) || u.some((e) => [
 			"validity",
 			"validiti",
 			"padtalni",
@@ -4871,7 +4902,7 @@ function ve(e, t = "", n = null, r = null) {
 		if (e.tokens) for (let n of e.tokens) {
 			let e = n.toLowerCase().trim();
 			if (!e) continue;
-			let r = z(e);
+			let r = B(e);
 			if (e.length <= 3) {
 				let n = RegExp(`(^|[^a-z0-9])${e}([^a-z0-9]|$)`, "i");
 				if (n.test(s) || n.test(a)) {
@@ -4883,7 +4914,7 @@ function ve(e, t = "", n = null, r = null) {
 				break;
 			}
 		}
-		let n = R(e.type);
+		let n = z(e.type);
 		if (n.length > 0) {
 			let e = 0, r = 0;
 			for (let t of n) {
@@ -4907,7 +4938,7 @@ function ve(e, t = "", n = null, r = null) {
 						i = 1;
 						break;
 					}
-					let n = z(e), r = z(t);
+					let n = B(e), r = B(t);
 					(n === r || e === r || n === t) && (i = Math.max(i, .95));
 					let a = _e(e, t);
 					a > i && (i = a);
@@ -4925,19 +4956,19 @@ function ve(e, t = "", n = null, r = null) {
 				"receipt",
 				"form",
 				"letter"
-			].includes(n[0]) && u.some((e) => e === n[0] || _e(e, n[0]) >= .85 || z(e) === n[0]) && (t = Math.max(t, 85));
+			].includes(n[0]) && u.some((e) => e === n[0] || _e(e, n[0]) >= .85 || B(e) === n[0]) && (t = Math.max(t, 85));
 		}
 		if (e.primary && e.qualifier) {
-			let n = e.primary.some((e) => u.some((t) => t === e || _e(t, e) >= .85 || z(t) === e || de(t, e) >= .8)), r = e.qualifier.some((e) => {
+			let n = e.primary.some((e) => u.some((t) => t === e || _e(t, e) >= .85 || B(t) === e || de(t, e) >= .8)), r = e.qualifier.some((e) => {
 				let t = RegExp(`(^|[^a-z0-9])${e}([^a-z0-9]|$)`, "i");
 				return t.test(s) || t.test(a);
 			});
 			n && r ? t = Math.max(t, 90) : n && !r && !e.standard && (t = Math.max(t, 50));
-		} else e.primary && e.primary.some((e) => u.some((t) => t === e || _e(t, e) >= .85 || z(t) === e || de(t, e) >= .8)) && (t = Math.max(t, 85));
+		} else e.primary && e.primary.some((e) => u.some((t) => t === e || _e(t, e) >= .85 || B(t) === e || de(t, e) >= .8)) && (t = Math.max(t, 85));
 		t > g && (g = t, h = e);
 	}
 	if (t && t.trim() && g > 0 && t.trim().toLowerCase().split(/\s+/).filter((e) => e.length > 2).some((e) => s.includes(e) || a.includes(e)) && (g = Math.min(100, g + 5)), h && g >= 50) {
-		let e = h.type.toUpperCase(), n = v[e] || e, r = n.toUpperCase(), a = i.toUpperCase().replace(/\s+/g, " ").trim(), o = !1;
+		let e = h.type.toUpperCase(), n = y[e] || e, r = n.toUpperCase(), a = i.toUpperCase().replace(/\s+/g, " ").trim(), o = !1;
 		if (t && t.trim()) {
 			let n = t.trim().toUpperCase().replace(/\s+/g, " ");
 			(a === `${r} ${n}` || a === `${e} ${n}`) && (o = !0);
@@ -4962,33 +4993,33 @@ function ve(e, t = "", n = null, r = null) {
 		reason: "Below 50% threshold"
 	};
 }
-function B(e) {
+function V(e) {
 	return e ? String(e).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;") : "";
 }
 function ye(e, t, n = "") {
-	let r = M(e), i = M(t);
+	let r = N(e), i = N(t);
 	if (r === i) return {
-		oldHtml: B(r),
-		newHtml: B(i),
+		oldHtml: V(r),
+		newHtml: V(i),
 		isIdentical: !0,
 		changeType: "identical"
 	};
 	let a = r.toLowerCase() === i.toLowerCase(), o = (n || "").replace(/\.[a-zA-Z0-9]+$/i, "").trim(), s = r.split(/(\s+|[_\-]+)/), c = i.split(/(\s+|[_\-]+)/), l = new Set(r.toLowerCase().split(/[\s_\-]+/).filter(Boolean)), u = new Set(i.toLowerCase().split(/[\s_\-]+/).filter(Boolean)), d = new Set(o ? o.toLowerCase().split(/[\s_\-]+/).filter(Boolean) : []), f = s.map((e) => {
-		if (!e.trim() || /^[_\-]+$/.test(e)) return B(e);
+		if (!e.trim() || /^[_\-]+$/.test(e)) return V(e);
 		let t = e.toLowerCase();
-		return u.has(t) ? `<span class="text-secondary">${B(e)}</span>` : `<span class="diff-del">${B(e)}</span>`;
+		return u.has(t) ? `<span class="text-secondary">${V(e)}</span>` : `<span class="diff-del">${V(e)}</span>`;
 	}), p = [], m = o.toLowerCase(), h = i;
 	if (o && h.toLowerCase().includes(m)) {
 		let e = h.toLowerCase().indexOf(m), t = h.slice(0, e), n = h.slice(e, e + m.length), r = h.slice(e + m.length), i = (e) => e.split(/(\s+|[_\-]+)/).map((e) => {
-			if (!e.trim() || /^[_\-]+$/.test(e)) return B(e);
+			if (!e.trim() || /^[_\-]+$/.test(e)) return V(e);
 			let t = e.toLowerCase();
-			return l.has(t) ? `<span class="text-on-surface font-semibold">${B(e)}</span>` : `<span class="diff-add">${B(e)}</span>`;
+			return l.has(t) ? `<span class="text-on-surface font-semibold">${V(e)}</span>` : `<span class="diff-add">${V(e)}</span>`;
 		}).join("");
-		p.push(i(t)), p.push(`<span class="diff-student">${B(n)}</span>`), p.push(i(r));
+		p.push(i(t)), p.push(`<span class="diff-student">${V(n)}</span>`), p.push(i(r));
 	} else p = c.map((e) => {
-		if (!e.trim() || /^[_\-]+$/.test(e)) return B(e);
+		if (!e.trim() || /^[_\-]+$/.test(e)) return V(e);
 		let t = e.toLowerCase();
-		return d.has(t) ? `<span class="diff-student">${B(e)}</span>` : l.has(t) ? `<span class="text-on-surface font-semibold">${B(e)}</span>` : `<span class="diff-add">${B(e)}</span>`;
+		return d.has(t) ? `<span class="diff-student">${V(e)}</span>` : l.has(t) ? `<span class="text-on-surface font-semibold">${V(e)}</span>` : `<span class="diff-add">${V(e)}</span>`;
 	});
 	let g = "rename";
 	return a ? g = "casing" : o && i.toLowerCase().includes(m) && !r.toLowerCase().includes(m) && (g = "student"), {
@@ -5000,21 +5031,21 @@ function ye(e, t, n = "") {
 }
 function be(e, t, n = {}) {
 	let { order: r = "doc_student", separator: i = " ", includeStudent: a = !0, casing: o = "upper" } = n, s = (e || "").trim(), c = (t || "").trim(), l = [];
-	return l = a && c ? r === "student_doc" ? [c, s] : [s, c] : [s], N(l.filter(Boolean).join(i), o);
+	return l = a && c ? r === "student_doc" ? [c, s] : [s, c] : [s], P(l.filter(Boolean).join(i), o);
 }
 function xe(e) {
 	if (!e) return "";
-	let t = M(e);
+	let t = N(e);
 	return t = t.replace(/WhatsApp\s*Image\s*\d{4}[-_]\d{2}[-_]\d{2}\s*(at\s*[\d\.]+)?/gi, ""), t = t.replace(/(IMG|VID|DOC)[-_]\d{8}[-_]\d{4,6}/gi, ""), t = t.replace(/\bSCAN\s*\(\d+\)/gi, ""), t = t.replace(/\bSCAN[-_]?\d+/gi, ""), t = t.replace(/\(\s*\)/g, ""), t = t.replace(/[_\-]+/g, " "), t = t.replace(/\s+/g, " ").trim(), t;
 }
 function Se(e) {
 	if (!e) return "";
-	let t = M(e);
+	let t = N(e);
 	return t = t.replace(/[^a-zA-Z0-9\s\-_]/g, " "), t = t.replace(/\s+/g, " ").trim(), t;
 }
 function Ce(e, t, n = "") {
 	if (!e || !t) return 0;
-	let r = M(e).trim(), i = M(t).trim(), a = (n || "").trim();
+	let r = N(e).trim(), i = N(t).trim(), a = (n || "").trim();
 	if (a) {
 		let e = a.toLowerCase();
 		if (!r.toLowerCase().includes(e)) {
@@ -5048,14 +5079,14 @@ function we(e) {
 		return n >= 0 ? n : 0;
 	}, r = /* @__PURE__ */ new Map();
 	e.forEach((e) => {
-		let t = Number(e.size) || 0, n = (e.ext || j(e.name) || "").toLowerCase();
+		let t = Number(e.size) || 0, n = (e.ext || M(e.name) || "").toLowerCase();
 		if (t > 0 && n) {
 			let i = `${t}_${n}`;
 			r.has(i) || r.set(i, []), r.get(i).push(e);
 		}
 	}), r.forEach((e) => {
 		if (e.length >= 2) {
-			let r = n(e, (e) => M(e.targetName || e.name || ""));
+			let r = n(e, (e) => N(e.targetName || e.name || ""));
 			e.forEach((e, n) => {
 				let i = e.id || e.name;
 				if (n === r) {
@@ -5077,7 +5108,7 @@ function we(e) {
 		e.sha256 && (i.has(e.sha256) || i.set(e.sha256, []), i.get(e.sha256).push(e));
 	}), i.forEach((e) => {
 		if (e.length >= 2) {
-			let r = n(e, (e) => M(e.targetName || e.name || ""));
+			let r = n(e, (e) => N(e.targetName || e.name || ""));
 			e.forEach((e, n) => {
 				let i = e.id || e.name;
 				if (n === r) {
@@ -5093,7 +5124,7 @@ function we(e) {
 	});
 	let a = /* @__PURE__ */ new Map();
 	return e.forEach((e) => {
-		let t = M(e.targetName || e.name || ""), n = t.toLowerCase().replace(/[\s_\-]+(\d+|\(\d+\))(?=\s|$)/gi, "").replace(/[\s_\-]+/g, " ").trim(), r = `${n}|${(e.ext || j(e.name) || "").toLowerCase()}`;
+		let t = N(e.targetName || e.name || ""), n = t.toLowerCase().replace(/[\s_\-]+(\d+|\(\d+\))(?=\s|$)/gi, "").replace(/[\s_\-]+/g, " ").trim(), r = `${n}|${(e.ext || M(e.name) || "").toLowerCase()}`;
 		n.length >= 1 && (a.has(r) || a.set(r, []), a.get(r).push({
 			file: e,
 			originalName: t
@@ -5172,7 +5203,7 @@ var Te = {
 		combined: "12TH LC",
 		type: "alias"
 	}
-], De = "2026.11.passing_canonical_v2", V = {
+], De = "2026.11.passing_canonical_v2", H = {
 	"MAHA DBT FORM": [
 		["AADHAAR CARD", ["aadhaar card"]],
 		["PHOTO", ["photo"]],
@@ -5262,7 +5293,7 @@ var Te = {
 		"PASSBOOK BANK",
 		"BONAFIDE CERTIFICATE"
 	]
-}, H = {
+}, U = {
 	name: "BulkStudentRenamerSettingsDB",
 	version: 1,
 	store: "settings",
@@ -5493,7 +5524,7 @@ function je(e) {
 	} : e)]));
 }
 // src/services/storage-service.js
-var Me = "v3_exact_single", Ne = Ae(), Pe = {}, U = (e, t) => {
+var Me = "v3_exact_single", Ne = Ae(), Pe = {}, W = (e, t) => {
 	try {
 		if (typeof localStorage < "u" && localStorage.getItem) {
 			let t = localStorage.getItem(e);
@@ -5501,7 +5532,7 @@ var Me = "v3_exact_single", Ne = Ae(), Pe = {}, U = (e, t) => {
 		}
 	} catch {}
 	return Pe[e] === void 0 ? t : Pe[e];
-}, W = (e, t) => {
+}, G = (e, t) => {
 	try {
 		typeof localStorage < "u" && localStorage.setItem && localStorage.setItem(e, JSON.stringify(t));
 	} catch {}
@@ -5530,7 +5561,7 @@ var Me = "v3_exact_single", Ne = Ae(), Pe = {}, U = (e, t) => {
 	let n = e.filter((e) => e.name !== "12TH MARKSHEET AND PASSING"), r = n.findIndex((e) => e.name === "12TH PASSING CERTIFICATE");
 	return n.splice(r < 0 ? n.length : r + 1, 0, ...t), n;
 }, Re = (e) => {
-	let t = je(V), n = e || {}, r = {};
+	let t = je(H), n = e || {}, r = {};
 	return Object.keys(t).forEach((e) => {
 		let i = Array.isArray(n[e]) ? n[e].map(Ie) : [], a = new Map(i.map((e) => [e.name.toUpperCase(), e]));
 		t[e].forEach((e) => {
@@ -5543,13 +5574,13 @@ var Me = "v3_exact_single", Ne = Ae(), Pe = {}, U = (e, t) => {
 };
 function ze() {
 	let e = localStorage.getItem("dictVersion"), t, n;
-	e === Me ? (t = Fe(U("renameSettings", Ne)), n = U("renameProfiles", { Default: Ne })) : (t = Ne, n = { Default: Ne }, W("renameSettings", t), W("renameProfiles", n), localStorage.setItem("dictVersion", Me));
+	e === Me ? (t = Fe(W("renameSettings", Ne)), n = W("renameProfiles", { Default: Ne })) : (t = Ne, n = { Default: Ne }, G("renameSettings", t), G("renameProfiles", n), localStorage.setItem("dictVersion", Me));
 	let r = localStorage.getItem("checklistVersion"), i;
-	r === "2026.11.passing_canonical_v2" ? i = Re(U("checklists", null)) : (i = je(V), W("checklists", i), localStorage.setItem("checklistVersion", De));
+	r === "2026.11.passing_canonical_v2" ? i = Re(W("checklists", null)) : (i = je(H), G("checklists", i), localStorage.setItem("checklistVersion", De));
 	let a = {
 		...Te,
-		...U("spellingCorrections", {}) || {}
-	}, o = U("linkedRules", Ee);
+		...W("spellingCorrections", {}) || {}
+	}, o = W("linkedRules", Ee);
 	return {
 		groups: t,
 		checklists: i,
@@ -5563,16 +5594,16 @@ function ze() {
 function Be() {
 	return new Promise((e, t) => {
 		if (!("indexedDB" in window)) return t(/* @__PURE__ */ Error("IndexedDB unavailable"));
-		let n = indexedDB.open(H.name, H.version);
+		let n = indexedDB.open(U.name, U.version);
 		n.onupgradeneeded = () => {
-			n.result.objectStoreNames.contains(H.store) || n.result.createObjectStore(H.store);
+			n.result.objectStoreNames.contains(U.store) || n.result.createObjectStore(U.store);
 		}, n.onsuccess = () => e(n.result), n.onerror = () => t(n.error || /* @__PURE__ */ Error("IndexedDB open failed"));
 	});
 }
 function Ve(e) {
 	return Be().then((t) => new Promise((n, r) => {
-		let i = t.transaction(H.store, "readwrite");
-		i.objectStore(H.store).put(e, H.key), i.oncomplete = () => n(!0), i.onerror = () => r(i.error);
+		let i = t.transaction(U.store, "readwrite");
+		i.objectStore(U.store).put(e, U.key), i.oncomplete = () => n(!0), i.onerror = () => r(i.error);
 	}));
 }
 function He(e) {
@@ -5585,7 +5616,7 @@ function He(e) {
 		style: e.style,
 		savedAt: (/* @__PURE__ */ new Date()).toISOString()
 	};
-	W("renameSettings", t.groups), W("checklists", t.checklists), W("spellingCorrections", t.spelling), W("renameProfiles", t.profiles), W("linkedRules", t.linkedRules), localStorage.setItem("nameStyle", t.style), Ve(t).catch(() => {});
+	G("renameSettings", t.groups), G("checklists", t.checklists), G("spellingCorrections", t.spelling), G("renameProfiles", t.profiles), G("linkedRules", t.linkedRules), localStorage.setItem("nameStyle", t.style), Ve(t).catch(() => {});
 }
 async function Ue() {
 	try {
@@ -5594,10 +5625,10 @@ async function Ue() {
 	} catch (e) {
 		console.warn("[StorageService] Failed to load document presets from backend:", e);
 	}
-	return U("documentPresets", { forms: V });
+	return W("documentPresets", { forms: H });
 }
 async function We(e) {
-	W("documentPresets", e);
+	G("documentPresets", e);
 	try {
 		await fetch("http://localhost:3000/api/save-document-presets", {
 			method: "POST",
@@ -5610,7 +5641,7 @@ async function We(e) {
 }
 // src/services/followup-service.js
 var Ge = "studentDocumentFollowUps", Ke = [];
-function G() {
+function qe() {
 	try {
 		if (typeof localStorage < "u") {
 			let e = localStorage.getItem(Ge);
@@ -5621,7 +5652,7 @@ function G() {
 		return Ke;
 	}
 }
-function qe(e) {
+function Je(e) {
 	try {
 		Ke = e, typeof localStorage < "u" && localStorage.setItem(Ge, JSON.stringify(e));
 	} catch (e) {
@@ -5629,33 +5660,33 @@ function qe(e) {
 	}
 }
 function K({ folderName: e, studentName: t, documentName: n, promisedDate: r, note: i = "" }) {
-	let a = G(), o = (e || "").trim(), s = (n || "").trim().toUpperCase(), c = (t || e || "").trim(), l = a.findIndex((e) => e.folderName.toLowerCase() === o.toLowerCase() && e.documentName.toUpperCase() === s && e.status === "pending"), u = Date.now();
-	if (l >= 0) return a[l].promisedDate = r, a[l].note = i, a[l].updatedAt = u, qe(a), a[l];
+	let a = qe(), o = (e || "").trim(), s = (n || "").trim().toUpperCase(), c = (t || e || "").trim(), l = a.findIndex((e) => e.folderName.toLowerCase() === o.toLowerCase() && e.documentName.toUpperCase() === s && e.status === "pending"), u = Date.now();
+	if (l >= 0) return a[l].promisedDate = r, a[l].note = i, a[l].updatedAt = u, Je(a), a[l];
 	let d = {
 		id: `fu_${u}_${Math.random().toString(36).slice(2, 7)}`,
 		folderName: o,
 		studentName: c,
 		documentName: s,
-		promisedDate: r || Qe(),
+		promisedDate: r || $e(),
 		note: i || "",
 		status: "pending",
 		createdAt: u,
 		resolvedAt: null
 	};
-	return a.push(d), qe(a), d;
-}
-function Je(e, t) {
-	let n = G(), r = (e || "").trim().toLowerCase(), i = (t || "").trim().toUpperCase(), a = !1;
-	return n.forEach((e) => {
-		e.folderName.trim().toLowerCase() === r && e.documentName.trim().toUpperCase() === i && e.status === "pending" && (e.status = "resolved", e.resolvedAt = Date.now(), a = !0);
-	}), a && qe(n), a;
+	return a.push(d), Je(a), d;
 }
 function Ye(e, t) {
-	let n = G(), r = (e || "").trim().toLowerCase(), i = (t || "").trim().toUpperCase();
+	let n = qe(), r = (e || "").trim().toLowerCase(), i = (t || "").trim().toUpperCase(), a = !1;
+	return n.forEach((e) => {
+		e.folderName.trim().toLowerCase() === r && e.documentName.trim().toUpperCase() === i && e.status === "pending" && (e.status = "resolved", e.resolvedAt = Date.now(), a = !0);
+	}), a && Je(n), a;
+}
+function Xe(e, t) {
+	let n = qe(), r = (e || "").trim().toLowerCase(), i = (t || "").trim().toUpperCase();
 	return n.find((e) => e.folderName.trim().toLowerCase() === r && e.documentName.trim().toUpperCase() === i && e.status === "pending") || null;
 }
-function Xe(e, t = Ze()) {
-	let n = et(e, t);
+function Ze(e, t = Qe()) {
+	let n = tt(e, t);
 	return n < 0 ? "overdue" : n === 0 ? "today" : "upcoming";
 }
 function q(e) {
@@ -5667,29 +5698,37 @@ function q(e) {
 		year: "numeric"
 	}) : e;
 }
-function Ze() {
+function Qe() {
 	let e = /* @__PURE__ */ new Date();
 	return `${e.getFullYear()}-${String(e.getMonth() + 1).padStart(2, "0")}-${String(e.getDate()).padStart(2, "0")}`;
 }
-function Qe(e = 1) {
+function $e(e = 1) {
 	let t = /* @__PURE__ */ new Date();
 	return t.setDate(t.getDate() + e), `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
 }
-function $e() {
+function et() {
 	let e = /* @__PURE__ */ new Date(), t = (1 - e.getDay() + 7) % 7 || 7;
 	return e.setDate(e.getDate() + t), `${e.getFullYear()}-${String(e.getMonth() + 1).padStart(2, "0")}-${String(e.getDate()).padStart(2, "0")}`;
 }
-function et(e, t) {
+function tt(e, t) {
 	return e === t ? 0 : e < t ? -1 : 1;
 }
 // tools/rename_tool/missing_documents_modal.js
 function J(e) {
 	return e ? String(e).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;") : "";
 }
-function tt(e) {
+function nt(e) {
 	return !e || e <= 0 ? "0 KB" : `${Math.round(e / 1024)} KB`;
 }
-var nt = class {
+function rt(e) {
+	if (!e) {
+		let e = /* @__PURE__ */ new Date();
+		return `${String(e.getDate()).padStart(2, "0")}-${String(e.getMonth() + 1).padStart(2, "0")}-${e.getFullYear()}`;
+	}
+	let t = new Date(e);
+	return isNaN(t.getTime()) ? "24-11-2026" : `${String(t.getDate()).padStart(2, "0")}-${String(t.getMonth() + 1).padStart(2, "0")}-${t.getFullYear()}`;
+}
+var it = class {
 	constructor(e = {}) {
 		this.container = e.container || document.body, this.onImportFile = e.onImportFile || (() => {}), this.onSetFollowup = e.onSetFollowup || (() => {}), this.onPresetChange = e.onPresetChange || (() => {}), this.onClose = e.onClose || (() => {}), this.modalEl = null, this.contentEl = null, this.isOpen = !1, this.currentProps = null, this._handleKeydown = this._handleKeydown.bind(this);
 	}
@@ -5720,10 +5759,10 @@ var nt = class {
 			"CET CELL",
 			"SWAYAM DEENDAYAL YOJANA",
 			"EDUCATIONAL DOCUMENTS"
-		], missingRules: a = [], presentDocs: o = [], followupMap: s = {}, totalRequiredCount: c = 0 } = this.currentProps, l = a.length, u = o.length, d = c || u + l, f = d > 0 ? Math.round(u / d * 100) : 100, p = `${f}, 100`;
+		], missingRules: a = [], presentDocs: o = [], followupMap: s = {}, totalRequiredCount: c = 0 } = this.currentProps, l = a.length, u = o.length, d = c || u + l, f = d > 0 ? Math.round(u / d * 100) : 100, p = `${f}, 100`, m = (n || "").split(/[/\\]/).filter(Boolean).pop() || t || "Active Folder";
 		this.contentEl.innerHTML = `
       <!-- 1. TOP HEADER WITH CONTEXT & SCHEME SELECTOR -->
-      <header class="px-5 py-3.5 bg-surface-container-lowest border-b border-outline-variant/30 flex flex-col gap-2.5 shrink-0">
+      <header class="px-5 py-3 bg-surface-container-lowest border-b border-outline-variant/30 flex flex-col gap-2 shrink-0">
         <div class="flex items-center justify-between gap-3 flex-wrap">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center shadow-xs shrink-0">
@@ -5732,9 +5771,6 @@ var nt = class {
             <div>
               <div class="flex items-center gap-2 flex-wrap">
                 <h1 class="font-headline-md text-[17px] text-on-surface tracking-tight font-bold">Missing Documents &amp; Follow-up Desk</h1>
-                <span class="px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-mono-code text-[11px] font-semibold tracking-wide">
-                  ${J(t)}
-                </span>
               </div>
               <p class="font-label-sm text-[11px] text-secondary mt-0.5">Maharashtra Admission &amp; Verification Workflow • 100% Offline Localhost</p>
             </div>
@@ -5757,12 +5793,12 @@ var nt = class {
           </div>
         </div>
 
-        <!-- Directory Path Ribbon -->
-        <div class="bg-surface-container-low/70 border border-outline-variant/30 rounded-lg px-3 py-1.5 font-mono-code text-[12px] text-on-surface-variant flex items-center justify-between">
+        <!-- Sleek Folder Ribbon (Option 1-B: Compact clean folder name, zero raw path, zero pencil button) -->
+        <div class="bg-surface-container-low/70 border border-outline-variant/30 rounded-lg px-3 py-1 font-mono-code text-[11px] text-on-surface-variant flex items-center justify-between">
           <div class="flex items-center gap-2 truncate">
-            <span class="material-symbols-outlined text-primary text-[18px] shrink-0">folder</span>
-            <span class="font-semibold text-secondary text-[11px]">DIR:</span>
-            <span class="font-bold text-on-surface truncate" title="${J(n)}">📁 ${J(n || "No Folder Selected")}</span>
+            <span class="material-symbols-outlined text-primary text-[16px] shrink-0">folder</span>
+            <span class="font-semibold text-secondary text-[10px] uppercase tracking-wider">Folder:</span>
+            <span class="font-bold text-on-surface truncate" title="${J(m)}">📁 ${J(m)}</span>
           </div>
           <span class="px-2 py-0.5 rounded bg-surface-container-lowest text-emerald-800 font-mono-code text-[10px] font-bold shrink-0 border border-outline-variant/30">LOCAL FS CONNECTED</span>
         </div>
@@ -5770,62 +5806,11 @@ var nt = class {
 
       <!-- 2. MAIN WORKSTATION SCROLL BODY -->
       <div class="p-4 md:p-5 space-y-4 md:space-y-5 flex-1 overflow-y-auto custom-pan-scroll">
-        <!-- MISSING DOCUMENTS LIST -->
-        <div class="space-y-2.5">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="font-headline-sm text-[15px] text-on-surface font-bold">Missing Documents</span>
-              <span class="px-2.5 py-0.5 rounded-full ${l > 0 ? "bg-error text-white" : "bg-emerald-600 text-white"} font-mono-code text-[11px] font-bold shadow-2xs">
-                ${l > 0 ? `${l} Required` : "0 Missing"}
-              </span>
-            </div>
-            <span class="font-mono-code text-[11px] text-secondary">Target Buffer: ≤ 256 KB (MahaDBT Strict)</span>
-          </div>
 
-          <div class="space-y-2">
-            ${l === 0 ? `
-              <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center gap-2 text-emerald-800 dark:text-emerald-300 font-mono-code text-[12px] font-bold">
-                <span class="material-symbols-outlined text-[18px] text-emerald-600">check_circle</span>
-                <span>All ${d} required documents staged! Application is 100% verified.</span>
-              </div>
-            ` : a.map((e) => {
-			let t = typeof e == "string" ? e : e.name || "", n = e.tag || e.code || "", r = s[t] || "";
-			return `
-                <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-2.5 shadow-xs flex items-center justify-between gap-3 hover:bg-surface-container-low/40 transition-colors">
-                  <div class="flex items-center gap-3 min-w-0">
-                    <div class="w-3.5 h-3.5 rounded-full bg-error shrink-0 ring-4 ring-error/20"></div>
-                    <div class="min-w-0">
-                      <div class="flex items-center gap-2 flex-wrap">
-                        <h2 class="font-headline-sm text-[13px] md:text-[14px] text-on-surface font-bold truncate">${J(t)}</h2>
-                        ${n ? `<span class="px-2 py-0.5 rounded bg-error-container text-error font-mono-code text-[10px] font-bold uppercase">${J(n)}</span>` : ""}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="flex items-center gap-2 shrink-0">
-                    <!-- Follow-up Desk/Date trigger -->
-                    <div class="flex items-center gap-1.5 bg-surface-container-low border border-outline-variant/40 rounded-lg px-2.5 py-1 shadow-2xs">
-                      <span class="material-symbols-outlined text-primary text-[16px]">event</span>
-                      <span class="font-label-sm text-[11px] text-secondary uppercase font-semibold">Follow-up:</span>
-                      <input type="date" value="${J(r)}" data-doc="${J(t)}" class="missing-followup-input bg-transparent text-on-surface font-mono-code text-[11px] font-bold focus:outline-none cursor-pointer w-[115px]">
-                    </div>
-
-                    <!-- Import File Button -->
-                    <button type="button" data-doc="${J(t)}" class="btn-missing-import-file px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white font-mono-code text-[12px] font-bold shadow-sm flex items-center gap-1.5 transition-all cursor-pointer active:scale-95">
-                      <span class="material-symbols-outlined text-[16px]">download</span>
-                      <span>📥 Import File</span>
-                    </button>
-                  </div>
-                </div>
-              `;
-		}).join("")}
-          </div>
-        </div>
-
-        <!-- 3. RICH CIRCULAR PROGRESS GAUGE & METRICS CARD -->
+        <!-- 2.1 APPLICATION READINESS STATUS SUMMARY CARD (MOVED TO TOP PER REQUIREMENT 2 & OPTION 1-B) -->
         <div class="bg-surface-container-low border border-outline-variant/40 rounded-xl p-3.5 shadow-xs">
           <div class="flex items-center justify-between gap-4 flex-wrap">
-            <!-- Circular Ring Gauge -->
+            <!-- Circular Ring Gauge + Student Name & Status -->
             <div class="flex items-center gap-4">
               <div class="relative w-16 h-16 shrink-0 flex items-center justify-center">
                 <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
@@ -5841,12 +5826,17 @@ var nt = class {
               </div>
 
               <div class="flex flex-col gap-0.5">
-                <span class="font-label-sm text-[10px] text-secondary uppercase tracking-wider font-semibold">Application Readiness Status</span>
                 <div class="flex items-center gap-2">
+                  <span class="font-label-sm text-[10px] text-secondary uppercase tracking-wider font-semibold">Student Name:</span>
+                  <span class="px-2.5 py-0.5 rounded-md bg-surface-container-lowest text-primary font-headline-sm text-[13px] font-bold tracking-wide border border-outline-variant/30">
+                    ${J(t)}
+                  </span>
+                </div>
+                <div class="flex items-center gap-2 mt-1">
                   <span class="font-headline-md text-[15px] font-bold text-on-surface">${u} of ${d} Documents Staged</span>
                   <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 font-mono-code text-[11px] font-bold">${f}% Verified</span>
                 </div>
-                <span class="font-label-sm text-[11px] text-secondary">Portal compliance buffer threshold met for all indexed files.</span>
+                <span class="font-label-sm text-[11px] text-secondary">Maharashtra admission compliance threshold met for all verified documents.</span>
               </div>
             </div>
 
@@ -5877,7 +5867,73 @@ var nt = class {
           </div>
         </div>
 
-        <!-- 4. PRESENT / VERIFIED DOCUMENTS COLLAPSIBLE SECTION -->
+        <!-- 2.2 MISSING DOCUMENTS LIST (OPTION 3-A: Date, Size & File Type on Every Row) -->
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="font-headline-sm text-[15px] text-on-surface font-bold">Missing Documents</span>
+              <span class="px-2.5 py-0.5 rounded-full ${l > 0 ? "bg-error text-white" : "bg-emerald-600 text-white"} font-mono-code text-[11px] font-bold shadow-2xs">
+                ${l > 0 ? `${l} Required` : "0 Missing"}
+              </span>
+            </div>
+            <span class="font-mono-code text-[11px] text-secondary">Target Buffer: ≤ 256 KB (MahaDBT Strict)</span>
+          </div>
+
+          <div class="space-y-2">
+            ${l === 0 ? `
+              <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center gap-2 text-emerald-800 dark:text-emerald-300 font-mono-code text-[12px] font-bold">
+                <span class="material-symbols-outlined text-[18px] text-emerald-600">check_circle</span>
+                <span>All ${d} required documents staged! Application is 100% verified.</span>
+              </div>
+            ` : a.map((e) => {
+			let t = typeof e == "string" ? e : e.name || "", n = e.tag || e.code || "", r = s[t] || "";
+			return `
+                <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-2.5 shadow-xs flex items-center justify-between gap-3 hover:bg-surface-container-low/40 transition-colors">
+                  <div class="flex items-center gap-3 min-w-0 flex-1">
+                    <div class="w-3.5 h-3.5 rounded-full bg-error shrink-0 ring-4 ring-error/20"></div>
+                    <div class="min-w-0 flex-1">
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <h2 class="font-headline-sm text-[13px] md:text-[14px] text-on-surface font-bold break-words">${J(t)}</h2>
+                        ${n ? `<span class="px-2 py-0.5 rounded bg-error-container text-error font-mono-code text-[10px] font-bold uppercase shrink-0">${J(n)}</span>` : ""}
+                      </div>
+
+                      <!-- Missing Metadata Row (Option 3-A): Type, Target Size, Follow-up Status -->
+                      <div class="flex items-center gap-2 mt-1 flex-wrap">
+                        <span class="px-1.5 py-0.2 rounded bg-surface-container-high text-on-surface-variant font-mono-code text-[9px] font-bold uppercase border border-outline-variant/20">
+                          PDF / JPG
+                        </span>
+                        <span class="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono-code text-[9px] font-medium border border-slate-200 dark:border-slate-700">
+                          Target ≤ 256 KB
+                        </span>
+                        <span class="font-mono-code text-[10px] ${r ? "text-primary font-semibold" : "text-secondary"}">
+                          <span class="material-symbols-outlined text-[12px] align-middle">calendar_clock</span>
+                          ${r ? `Promised: ${J(r)}` : "Status: Pending"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-2 shrink-0">
+                    <!-- Follow-up Desk/Date trigger -->
+                    <div class="flex items-center gap-1.5 bg-surface-container-low border border-outline-variant/40 rounded-lg px-2.5 py-1 shadow-2xs">
+                      <span class="material-symbols-outlined text-primary text-[16px]">event</span>
+                      <span class="font-label-sm text-[11px] text-secondary uppercase font-semibold">Follow-up:</span>
+                      <input type="date" value="${J(r)}" data-doc="${J(t)}" class="missing-followup-input bg-transparent text-on-surface font-mono-code text-[11px] font-bold focus:outline-none cursor-pointer w-[115px]">
+                    </div>
+
+                    <!-- Import File Button -->
+                    <button type="button" data-doc="${J(t)}" class="btn-missing-import-file px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white font-mono-code text-[12px] font-bold shadow-sm flex items-center gap-1.5 transition-all cursor-pointer active:scale-95">
+                      <span class="material-symbols-outlined text-[16px]">download</span>
+                      <span>📥 Import File</span>
+                    </button>
+                  </div>
+                </div>
+              `;
+		}).join("")}
+          </div>
+        </div>
+
+        <!-- 2.3 PRESENT / VERIFIED DOCUMENTS SECTION (OPTION 2-B: DD-MM-YYYY Date, Size, Type Badges) -->
         <div class="space-y-2 pt-1">
           <details class="group" open>
             <summary class="flex items-center justify-between cursor-pointer py-2 select-none list-none bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-3.5 shadow-2xs hover:bg-surface-container-low transition-colors">
@@ -5894,17 +5950,34 @@ var nt = class {
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 max-h-[220px] overflow-y-auto custom-pan-scroll pr-1">
               ${o.length === 0 ? "\n                <div class=\"col-span-2 p-3 text-center text-secondary font-mono-code text-[11px]\">No verified documents loaded in this folder yet.</div>\n              " : o.map((e) => {
-			let t = e.docType || e.name || "Document", n = tt(e.size), r = e.isCombined || !1;
+			let t = e.docType || e.name || "Document", n = nt(e.size), r = e.isCombined || !1, i = (e.ext || (e.name ? e.name.split(".").pop() : "PDF")).toUpperCase().replace(".", ""), a = rt(e.dateModified || e.lastModified);
 			return `
-                  <div class="p-2 rounded-lg bg-surface-container-low border border-outline-variant/30 flex items-center justify-between">
-                    <div class="flex items-center gap-2 min-w-0">
-                      <span class="material-symbols-outlined text-emerald-600 text-[16px] shrink-0">task_alt</span>
-                      <span class="font-label-md text-[12px] font-semibold text-on-surface truncate" title="${J(t)}">${J(t)}</span>
+                  <div class="p-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 flex flex-col gap-1.5">
+                    <div class="flex items-center justify-between gap-2 min-w-0">
+                      <div class="flex items-center gap-1.5 min-w-0">
+                        <span class="material-symbols-outlined text-emerald-600 text-[16px] shrink-0">task_alt</span>
+                        <span class="font-label-md text-[12px] font-semibold text-on-surface break-words" title="${J(t)}">${J(t)}</span>
+                      </div>
+                      <span class="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-900 font-mono-code text-[9px] font-bold shrink-0">Verified</span>
                     </div>
-                    <div class="flex items-center gap-1.5 shrink-0">
-                      ${r ? "<span class=\"px-1.5 py-0.2 rounded-full bg-secondary-container text-on-secondary-container font-mono-code text-[9px] font-bold\">via Combined</span>" : ""}
-                      <span class="font-mono-code text-[10px] text-secondary">${J(n)}</span>
-                      <span class="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-900 font-mono-code text-[9px] font-bold">Verified</span>
+
+                    <!-- Metadata Row: Date (DD-MM-YYYY), Size, File Type Badge -->
+                    <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-secondary pl-5">
+                      <div class="flex items-center gap-2">
+                        <!-- File Type Badge -->
+                        <span class="px-1.5 py-0.2 rounded bg-primary/10 text-primary font-bold uppercase text-[9px]">
+                          ${J(i)}
+                        </span>
+                        <!-- File Size -->
+                        <span>${J(n)}</span>
+                        ${r ? "<span class=\"px-1.5 py-0.2 rounded-full bg-secondary-container text-on-secondary-container text-[9px] font-bold\">via Combined</span>" : ""}
+                      </div>
+
+                      <!-- Date Modified (DD-MM-YYYY) -->
+                      <div class="flex items-center gap-1 text-on-surface-variant font-medium">
+                        <span class="material-symbols-outlined text-[13px] text-secondary">calendar_today</span>
+                        <span>${J(a)}</span>
+                      </div>
                     </div>
                   </div>
                 `;
@@ -5914,7 +5987,7 @@ var nt = class {
         </div>
       </div>
 
-      <!-- 5. MODAL / DESK FOOTER -->
+      <!-- 3. MODAL / DESK FOOTER -->
       <footer class="px-5 py-3 bg-surface-container-low border-t border-outline-variant/30 flex items-center justify-between gap-3 rounded-b-2xl shrink-0">
         <div class="flex items-center gap-2 text-on-surface-variant max-w-xl">
           <span class="material-symbols-outlined text-primary text-[18px] shrink-0">info</span>
@@ -5930,12 +6003,12 @@ var nt = class {
         </div>
       </footer>
     `;
-		let m = this.contentEl.querySelector("#btnMissingModalClose");
-		m && (m.onclick = () => this.close());
-		let h = this.contentEl.querySelector("#btnMissingModalDone");
+		let h = this.contentEl.querySelector("#btnMissingModalClose");
 		h && (h.onclick = () => this.close());
-		let g = this.contentEl.querySelector("#missingModalSchemeSelect");
-		g && (g.onchange = (e) => {
+		let g = this.contentEl.querySelector("#btnMissingModalDone");
+		g && (g.onclick = () => this.close());
+		let _ = this.contentEl.querySelector("#missingModalSchemeSelect");
+		_ && (_.onchange = (e) => {
 			this.onPresetChange(e.target.value);
 		}), this.contentEl.querySelectorAll(".missing-followup-input").forEach((e) => {
 			e.onchange = (e) => {
@@ -5955,7 +6028,7 @@ var nt = class {
 	}
 };
 // tools/rename_tool/rename_tool_ui.js
-function rt() {
+function at() {
 	if (typeof window < "u") {
 		if (window.__TAURI__?.core?.invoke) return window.__TAURI__.core.invoke;
 		if (window.__TAURI_INTERNALS__?.invoke) return window.__TAURI_INTERNALS__.invoke;
@@ -5994,7 +6067,7 @@ function X(e) {
 	let t = e.toLowerCase().trim();
 	return !!(t === "thumbs.db" || t === "ehthumbs.db" || t === "desktop.ini" || t === ".ds_store" || t.startsWith(".") || t.startsWith("~$") || t.endsWith(".tmp"));
 }
-function it(e) {
+function ot(e) {
 	let t = (e || "").toUpperCase().trim();
 	return [
 		"ADR",
@@ -6062,13 +6135,13 @@ function it(e) {
 		"HST"
 	].includes(t) ? "bg-slate-700 text-white font-extrabold" : "bg-primary text-on-primary font-extrabold";
 }
-var at = T.map((e) => ({
+var st = E.map((e) => ({
 	code: e.primaryShortcut,
 	codes: [e.primaryShortcut],
 	label: e.outputName,
 	canonical: e.outputName,
 	keywords: Array.isArray(e.alternateKeywords) ? [...e.alternateKeywords] : []
-})), Z = new Map(at.map((e) => [e.code, e])), ot = {
+})), Z = new Map(st.map((e) => [e.code, e])), ct = {
 	"MAHA DBT": (/* @__PURE__ */ "PIC.SIG.ADR.10M.10P.10MP.12M.12P.12MP.12LC.PYM.CST.VAL.NCL.INC.DOM.NAT.RAT.BNK.CAP.BON.FEE.ATT.HST.GAP.SDC.PDC.DTH".split(".")).map((e) => {
 		let t = Z.get(e);
 		return {
@@ -6124,7 +6197,7 @@ var at = T.map((e) => ({
 			keywords: [...t.keywords]
 		};
 	})
-}, st = class {
+}, lt = class {
 	constructor() {
 		this.state = {
 			folder: null,
@@ -6152,7 +6225,7 @@ var at = T.map((e) => ({
 			isSmartScanning: !1,
 			isMissingDocsCollapsed: !0,
 			isMissingModalOpen: !1
-		}, this._scanAbortController = null, this.missingModal = null, this.shortcuts21 = JSON.parse(JSON.stringify(at)), this._presetDocsSearchQuery = "", this._shortcutsSearchQuery = "", this._sortOrder = "asc", this._recentMoves = [];
+		}, this._scanAbortController = null, this.missingModal = null, this.shortcuts21 = JSON.parse(JSON.stringify(st)), this._presetDocsSearchQuery = "", this._shortcutsSearchQuery = "", this._sortOrder = "asc", this._recentMoves = [];
 	}
 	init() {
 		this.state.settings = ze(), this.loadPresetsAndSettings();
@@ -6250,7 +6323,7 @@ var at = T.map((e) => ({
 				let e = o.value.trim(), t = this.state.studentName || this.state.folder?.name || "", s = this.state.folder && (this.state.folder.nativePath || this.state.folder.path) || "";
 				if (o.classList.add("hidden"), i && i.classList.add("hidden"), a.classList.remove("hidden"), n.classList.remove("hidden"), !e || e === t) return;
 				if (this.state.studentName = e, a.textContent = e, a.title = e, s) try {
-					let t = await m(s, e);
+					let t = await h(s, e);
 					if (t && t.success) {
 						let n = t.newPath || t.path;
 						if (n) {
@@ -6288,8 +6361,8 @@ var at = T.map((e) => ({
 		f && f.addEventListener("click", () => this.handleSaveBatch());
 		let p = document.getElementById("btnSmartScanBatch");
 		p && p.addEventListener("click", () => this.handleSmartScanBatch());
-		let h = document.getElementById("btnRenameMatched");
-		h && h.addEventListener("click", () => this.openCrossCheckModal());
+		let m = document.getElementById("btnRenameMatched");
+		m && m.addEventListener("click", () => this.openCrossCheckModal());
 		let g = document.getElementById("btnCloseAddDocModal");
 		g && g.addEventListener("click", () => this.closeAddDocumentModal());
 		let _ = document.getElementById("btnCancelAddDoc");
@@ -6318,12 +6391,12 @@ var at = T.map((e) => ({
 		O && O.addEventListener("click", () => this.handleDeletePreset());
 		let k = document.getElementById("btnResetPresetsDefault");
 		k && k.addEventListener("click", () => this.handleResetPresetsDefault());
-		let ee = document.getElementById("btnAddDocToPreset");
-		ee && ee.addEventListener("click", () => this.openAddDocumentModal());
-		let te = document.getElementById("btnAddNewShortcut");
-		te && te.addEventListener("click", () => this.openAddDocumentModal(null, !0));
-		let A = document.getElementById("btnAddDocOrShortcut");
-		A && A.addEventListener("click", () => {
+		let A = document.getElementById("btnAddDocToPreset");
+		A && A.addEventListener("click", () => this.openAddDocumentModal());
+		let ee = document.getElementById("btnAddNewShortcut");
+		ee && ee.addEventListener("click", () => this.openAddDocumentModal(null, !0));
+		let te = document.getElementById("btnAddDocOrShortcut");
+		te && te.addEventListener("click", () => {
 			let e = this.state.settingsActiveTab === "shortcuts" || document.getElementById("tabContentShortcuts") && !document.getElementById("tabContentShortcuts").classList.contains("hidden");
 			this.openAddDocumentModal(null, e);
 		}), document.addEventListener("keydown", (e) => {
@@ -6342,11 +6415,11 @@ var at = T.map((e) => ({
 		j && j.addEventListener("input", (e) => {
 			this._presetDocsSearchQuery = e.target.value.trim().toLowerCase(), this.renderPresetDocsTable();
 		});
-		let ne = document.getElementById("inputSearchShortcuts");
-		ne && ne.addEventListener("input", (e) => {
+		let M = document.getElementById("inputSearchShortcuts");
+		M && M.addEventListener("input", (e) => {
 			this._shortcutsSearchQuery = e.target.value.trim().toLowerCase(), this.renderShortcutsTable();
 		}), this._initCrossCheckEvents();
-		let P = () => {
+		let ne = () => {
 			document.querySelectorAll("#casingRadiosGroup label").forEach((e) => {
 				let t = e.querySelector("input");
 				e.className = t && t.checked ? "flex items-center cursor-pointer text-white bg-primary font-mono-code text-[11px] px-2 py-0.5 rounded shadow-xs select-none font-bold transition-all casing-pill-active" : "flex items-center cursor-pointer text-secondary hover:text-on-surface font-mono-code text-[11px] px-2 py-0.5 rounded transition-all select-none";
@@ -6356,26 +6429,26 @@ var at = T.map((e) => ({
 			e.value === (this.state.style || "upper") && (e.checked = !0), e.addEventListener("change", (e) => {
 				if (e.target.checked) {
 					let t = e.target.value;
-					this.state.style = t, localStorage.setItem("docmitra_casing_style", t), P();
-					for (let e of this.state.files) !e.isRenamed && !e.isKept && (e.userEditedName = N(e.userEditedName || M(e.name), t));
+					this.state.style = t, localStorage.setItem("docmitra_casing_style", t), ne();
+					for (let e of this.state.files) !e.isRenamed && !e.isKept && (e.userEditedName = P(e.userEditedName || N(e.name), t));
 					this._recalculateTargetNames(), this.renderQueue(), this.renderCurrentPreview();
 					let n = this.state.files.filter((e) => !e.isRenamed && !e.isKept).length, i = t.toUpperCase() === "UPPER" ? "UPPERCASE" : t.toUpperCase() === "LOWER" ? "LOWERCASE" : "TITLE CASE";
 					r.show("Case Style Changed", `Applied ${i} to ${n} pending files`, "info");
 				}
 			});
-		}), P();
+		}), ne();
 		let F = document.getElementById("btnClearWorkspace");
 		F && F.addEventListener("click", () => this.handleClearQueue());
 		let I = document.getElementById("btnClearQueue");
 		I && I.addEventListener("click", () => this.handleClearQueue());
 		let L = document.getElementById("btnEmptySelectFolder");
 		L && L.addEventListener("click", () => this.handleSelectFolder());
-		let re = document.getElementById("btnEmptyAddFiles");
-		re && re.addEventListener("click", () => this.handleAddFiles());
-		let ie = document.querySelector("#col-queue input");
-		ie && (ie.addEventListener("keydown", (e) => {
+		let R = document.getElementById("btnEmptyAddFiles");
+		R && R.addEventListener("click", () => this.handleAddFiles());
+		let re = document.querySelector("#col-queue input");
+		re && (re.addEventListener("keydown", (e) => {
 			(e.key === "Tab" || e.key === "Enter") && (e.preventDefault(), r.show("Intake Folder Needed", "Press \"Select Folder\" (F2) to choose admission documents.", "info")), /[\\/:*?"<>|]/.test(e.key) && (e.preventDefault(), r.show("Character Not Allowed", `Windows filenames cannot contain ${e.key}`, "warning"));
-		}), ie.addEventListener("input", (e) => {
+		}), re.addEventListener("input", (e) => {
 			/[\\/:*?"<>|]/.test(e.target.value) && (e.target.value = e.target.value.replace(/[\\/:*?"<>|]/g, ""), r.show("Character Not Allowed", "Illegal characters removed", "warning"));
 		})), document.querySelectorAll("#col-queue .grid-cols-3 button").forEach((e) => {
 			e.addEventListener("click", () => {
@@ -6499,7 +6572,7 @@ var at = T.map((e) => ({
 	_startBackgroundWatcher() {
 		setInterval(async () => {
 			if (this.state.watcherActive && this.state.folder?.path) try {
-				let e = await f(this.state.folder.path);
+				let e = await p(this.state.folder.path);
 				if (e.success && Array.isArray(e.files)) {
 					let t = e.files.filter((e) => !X(e.name)), n = new Set(this.state.files.map((e) => e.name)), r = new Set(t.map((e) => e.name)), i = !1;
 					if (n.size !== r.size) i = !0;
@@ -6531,7 +6604,7 @@ var at = T.map((e) => ({
 	async handleSelectFolder() {
 		r.show("Opening Folder Picker", "Navigating Windows Explorer...", "info");
 		try {
-			let e = await u();
+			let e = await d();
 			if (!e.success) {
 				e.cancelled || r.show("Folder Select Error", e.error || "Failed to select folder", "error");
 				return;
@@ -6559,7 +6632,7 @@ var at = T.map((e) => ({
 		this.state.currentSubfolderIndex = e;
 		let t = this.state.subfolders[e], n = typeof t == "string" ? t : t.path || "";
 		try {
-			let e = await f(n);
+			let e = await p(n);
 			e.success && (e.files = (e.files || []).filter((e) => !X(e.name)), this.loadFolderData(e));
 		} catch (e) {
 			r.show("Subfolder Error", e.message, "error");
@@ -6574,7 +6647,7 @@ var at = T.map((e) => ({
 	async handleAddFiles() {
 		r.show("Opening File Picker", "Select files to append in-place...", "info");
 		try {
-			let e = await d("All Supported Files (*.pdf;*.jpg;*.jpeg;*.png;*.docx)|*.pdf;*.jpg;*.jpeg;*.png;*.docx|All Files (*.*)|*.*", "Select Files to Add");
+			let e = await f("All Supported Files (*.pdf;*.jpg;*.jpeg;*.png;*.docx)|*.pdf;*.jpg;*.jpeg;*.png;*.docx|All Files (*.*)|*.*", "Select Files to Add");
 			if (!e.success) return;
 			let t = (e.files || []).filter((e) => !X(e.name));
 			if (t.length === 0) {
@@ -6583,12 +6656,12 @@ var at = T.map((e) => ({
 			}
 			this.state.folder?.path;
 			let n = new Set(this.state.files.map((e) => e.targetName)), i = t.map((e, t) => {
-				let r = e.ext || j(e.name), i = M(e.name), a = ve(e.name, this.state.studentName, this.state.settings?.groups, this.getAllPresetDocuments()), o = a.docType, s = a.confidence >= 50, c = i;
-				c = o ? P(o, this.state.studentName, this.state.settings?.groups, this.state.style) : P(i, this.state.studentName, null, this.state.style);
-				let l = I(c.endsWith(r) ? c : c + r, e.name, n, this.state.studentName);
+				let r = e.ext || M(e.name), i = N(e.name), a = ve(e.name, this.state.studentName, this.state.settings?.groups, this.getAllPresetDocuments()), o = a.docType, s = a.confidence >= 50, c = i;
+				c = o ? F(o, this.state.studentName, this.state.settings?.groups, this.state.style) : F(i, this.state.studentName, null, this.state.style);
+				let l = L(c.endsWith(r) ? c : c + r, e.name, n, this.state.studentName);
 				n.add(l);
 				let u = a.confidence;
-				return i.toUpperCase() === M(c).toUpperCase() && (u = 100), {
+				return i.toUpperCase() === N(c).toUpperCase() && (u = 100), {
 					id: `file_append_${Date.now()}_${t}`,
 					name: e.name,
 					path: e.path,
@@ -6615,7 +6688,7 @@ var at = T.map((e) => ({
 		}
 	}
 	handleOpenInExplorer() {
-		this.state.folder?.path ? (_(this.state.folder.path), r.show("Opening Windows Explorer", this.state.folder.path, "info")) : r.show("No Active Folder", "Please select a folder first.", "warning");
+		this.state.folder?.path ? (v(this.state.folder.path), r.show("Opening Windows Explorer", this.state.folder.path, "info")) : r.show("No Active Folder", "Please select a folder first.", "warning");
 	}
 	getEffectiveStudentName() {
 		let e = document.getElementById("chkIncludeFolderName");
@@ -6634,12 +6707,13 @@ var at = T.map((e) => ({
 		s && (s.value = a || i);
 		let c = (e.files || []).filter((e) => !X(e.name)), l = /* @__PURE__ */ new Set(), u = this.getEffectiveStudentName();
 		this.state.files = c.map((e, r) => {
-			let i = e.ext || j(e.name), a = M(e.name), o = t ? t.get(e.name) : null;
+			let i = e.ext || M(e.name), a = N(e.name), o = t ? t.get(e.name) : null;
 			if (o) return l.add(o.targetName), {
 				id: `file_${r}_${Date.now()}`,
 				name: e.name,
 				path: e.path || `${n}/${e.name}`,
 				size: e.size || 0,
+				dateModified: e.lastModified || e.fileObj?.lastModified || e.dateModified || e.modified || Date.now(),
 				ext: i,
 				fileObj: e.fileObj || null,
 				url: Y(e),
@@ -6652,15 +6726,16 @@ var at = T.map((e) => ({
 				isKept: o.isKept
 			};
 			let s = ve(e.name, u, this.state.settings?.groups, this.getAllPresetDocuments()), c = s.docType, d = s.confidence >= 50, f = a;
-			f = c ? P(c, u, this.state.settings?.groups, this.state.style) : P(a, u, null, this.state.style);
-			let p = I(f.endsWith(i) ? f : f + i, e.name, l, u);
+			f = c ? F(c, u, this.state.settings?.groups, this.state.style) : F(a, u, null, this.state.style);
+			let p = L(f.endsWith(i) ? f : f + i, e.name, l, u);
 			l.add(p);
 			let m = s.confidence;
-			return a.toUpperCase() === M(f).toUpperCase() && (m = 100), {
+			return a.toUpperCase() === N(f).toUpperCase() && (m = 100), {
 				id: `file_${r}_${Date.now()}`,
 				name: e.name,
 				path: e.path || `${n}/${e.name}`,
 				size: e.size || 0,
+				dateModified: e.lastModified || e.fileObj?.lastModified || e.dateModified || e.modified || Date.now(),
 				ext: i,
 				fileObj: e.fileObj || null,
 				url: Y(e),
@@ -6682,7 +6757,7 @@ var at = T.map((e) => ({
 		if (!this.state.files || this.state.files.length === 0) return;
 		let e = /* @__PURE__ */ new Map();
 		this.state.files.forEach((t) => {
-			let n = Number(t.size) || 0, r = (t.ext || j(t.name) || "").toLowerCase();
+			let n = Number(t.size) || 0, r = (t.ext || M(t.name) || "").toLowerCase();
 			if (n > 0 && r) {
 				let i = `${n}_${r}`;
 				e.has(i) || e.set(i, []), e.get(i).push(t);
@@ -6694,7 +6769,7 @@ var at = T.map((e) => ({
 				e.sha256 || t.push(e);
 			});
 		}), t.length === 0) return;
-		let n = rt(), r = !1;
+		let n = at(), r = !1;
 		for (let e of t) try {
 			let t = null;
 			if (e.fileObj && typeof e.fileObj.arrayBuffer == "function") t = await e.fileObj.arrayBuffer();
@@ -6722,9 +6797,9 @@ var at = T.map((e) => ({
 				let e = ve(i.name, n, this.state.settings?.groups, r);
 				e.confidence >= 50 && (i.docType = e.docType, i.smartDocType = e.docType, i.smartConfidence = e.confidence, i.isMatched = !0, i.status = e.confidence >= 80 ? "matched" : "needs_review");
 			}
-			i.docType && (i.docType = N(i.docType, this.state.style), i.smartDocType = N(i.smartDocType || i.docType, this.state.style)), i.hasUserEdited && i.userEditedName && (i.userEditedName = N(i.userEditedName, this.state.style));
-			let a = i.docType || M(i.name), o = i.ext || ("." + i.name.split(".").pop()).toLowerCase(), s = i.hasUserEdited && i.userEditedName ? i.userEditedName : P(a, n, this.state.settings?.groups, this.state.style), c = I(s.endsWith(o) ? s : `${s}${o}`, i.name, t, n);
-			t.add(c), i.targetName = c, M(i.name).toUpperCase() === M(s).toUpperCase() && (i.smartConfidence = 100);
+			i.docType && (i.docType = P(i.docType, this.state.style), i.smartDocType = P(i.smartDocType || i.docType, this.state.style)), i.hasUserEdited && i.userEditedName && (i.userEditedName = P(i.userEditedName, this.state.style));
+			let a = i.docType || N(i.name), o = i.ext || ("." + i.name.split(".").pop()).toLowerCase(), s = i.hasUserEdited && i.userEditedName ? i.userEditedName : F(a, n, this.state.settings?.groups, this.state.style), c = L(s.endsWith(o) ? s : `${s}${o}`, i.name, t, n);
+			t.add(c), i.targetName = c, N(i.name).toUpperCase() === N(s).toUpperCase() && (i.smartConfidence = 100);
 		}
 	}
 	updateTelemetry() {
@@ -6770,7 +6845,7 @@ var at = T.map((e) => ({
 						let t = document.createElement("span");
 						t.className = e.isLast ? "text-on-surface font-bold truncate select-text px-1 py-0.5 rounded" : "text-secondary hover:text-primary transition-colors cursor-pointer px-1 py-0.5 rounded hover:bg-surface-container", t.textContent = e.seg, t.title = e.isLast ? e.path : `Click to jump to parent folder: ${e.path}`, e.isLast || t.addEventListener("click", async (t) => {
 							t.stopPropagation(), r.show("Navigating Folder", `Opening ${e.path}...`, "info");
-							let n = await f(e.path);
+							let n = await p(e.path);
 							n && n.success ? (this.loadFolderData(n), r.show("Navigated to Folder", e.path, "success")) : r.show("Navigation Failed", n?.error || "Could not read directory", "error");
 						}), a.appendChild(t);
 					}
@@ -6799,10 +6874,10 @@ var at = T.map((e) => ({
 			let e = d.querySelector("span:not(.material-symbols-outlined)");
 			e && (e.textContent = "Bulk Rename"), d.disabled = this.state.files.length === 0;
 		}
-		let p = document.getElementById("btnMoveToDuplicates"), m = document.getElementById("moveDuplicatesLabel");
-		if (p) {
+		let f = document.getElementById("btnMoveToDuplicates"), m = document.getElementById("moveDuplicatesLabel");
+		if (f) {
 			let e = this.getExtraDuplicateFiles();
-			e.length > 0 ? (m && (m.textContent = `Move Duplicates (${e.length})`), p.classList.add("bg-rose-950/80", "hover:bg-rose-900", "border-rose-700/80", "text-rose-200"), p.classList.remove("bg-slate-800", "hover:bg-slate-700", "border-slate-700", "text-slate-200"), p.title = `Safely move ${e.length} extra duplicate copies to "Duplicate Files" (keeps 1 master copy) (Del)`) : (m && (m.textContent = "Move to Duplicates (Del)"), p.classList.remove("bg-rose-950/80", "hover:bg-rose-900", "border-rose-700/80", "text-rose-200"), p.classList.add("bg-slate-800", "hover:bg-slate-700", "border-slate-700", "text-slate-200"), p.title = "Move current document to \"Duplicate Files\" subfolder (Safe — never deleted) (Del)");
+			e.length > 0 ? (m && (m.textContent = `Move Duplicates (${e.length})`), f.classList.add("bg-rose-950/80", "hover:bg-rose-900", "border-rose-700/80", "text-rose-200"), f.classList.remove("bg-slate-800", "hover:bg-slate-700", "border-slate-700", "text-slate-200"), f.title = `Safely move ${e.length} extra duplicate copies to "Duplicate Files" (keeps 1 master copy) (Del)`) : (m && (m.textContent = "Move to Duplicates (Del)"), f.classList.remove("bg-rose-950/80", "hover:bg-rose-900", "border-rose-700/80", "text-rose-200"), f.classList.add("bg-slate-800", "hover:bg-slate-700", "border-slate-700", "text-slate-200"), f.title = "Move current document to \"Duplicate Files\" subfolder (Safe — never deleted) (Del)");
 		}
 	}
 	renderQueue() {
@@ -6874,7 +6949,7 @@ var at = T.map((e) => ({
 			l.className = "flex items-center gap-1.5";
 			let u = document.createElement("span");
 			u.id = "activeFileLiveBadge", n.status === "needs_review" ? (u.className = "confidence-badge confidence-badge-med", u.textContent = "🟡 Needs Review") : n.smartConfidence !== void 0 && n.smartConfidence >= 50 ? n.smartConfidence >= 80 ? (u.className = "confidence-badge confidence-badge-high", u.textContent = `🟢 ${n.smartConfidence}% ${n.smartDocType || n.docType || "DOCUMENT"}`) : (u.className = "confidence-badge confidence-badge-med", u.textContent = `🟡 ${n.smartConfidence}% ${n.smartDocType || n.docType || "DOCUMENT"}`) : n.isMatched && n.docType ? (u.className = "confidence-badge confidence-badge-high", u.textContent = `🟢 Matched: ${n.docType}`) : (u.className = "confidence-badge confidence-badge-low", u.textContent = "🔴 Unmatched"), l.appendChild(u);
-			let d = M(n.name), f = M(n.targetName || n.suggestedName || "");
+			let d = N(n.name), f = N(n.targetName || n.suggestedName || "");
 			if (f && d.toLowerCase() !== f.toLowerCase()) {
 				let e = de(d, f);
 				if (e >= .4 && e < .99) {
@@ -6890,8 +6965,8 @@ var at = T.map((e) => ({
 			let h = document.createElement("span");
 			h.className = "shrink-0 select-none text-secondary", h.textContent = "Original:", m.appendChild(h);
 			let g = document.createElement("strong");
-			g.className = "text-on-surface truncate min-w-0 flex-1 cursor-pointer hover:underline hover:text-primary transition-colors font-medium", g.title = "Click to reset input to original name", g.textContent = M(n.name), g.addEventListener("click", () => {
-				let e = M(n.name);
+			g.className = "text-on-surface truncate min-w-0 flex-1 cursor-pointer hover:underline hover:text-primary transition-colors font-medium", g.title = "Click to reset input to original name", g.textContent = N(n.name), g.addEventListener("click", () => {
+				let e = N(n.name);
 				delete n.userEditedName, n.hasUserEdited = !1, n.targetName = n.name, w.value = e, this.updateTelemetry(), this.renderCoreShortcuts(""), r.show("Input Reset", e, "info");
 			}), m.appendChild(g), p.appendChild(m);
 			let _ = document.createElement("div");
@@ -6909,17 +6984,17 @@ var at = T.map((e) => ({
 			let C = document.createElement("div");
 			C.className = "relative flex items-center w-full shadow-sm";
 			let w = document.createElement("input");
-			w.id = "inputRenameTarget", w.type = "text", w.autocomplete = "new-password", w.setAttribute("autocomplete", "new-password"), w.setAttribute("autocorrect", "off"), w.setAttribute("autocapitalize", "off"), w.setAttribute("spellcheck", "false"), w.setAttribute("name", `docmitra_rename_${Date.now()}`), w.className = "w-full h-10 px-3 rounded-lg bg-surface-container-lowest font-mono-code text-[13px] text-on-surface font-semibold border-2 border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-xs", w.value = N(n.userEditedName === void 0 ? n.targetName ? M(n.targetName) : M(n.name) : n.userEditedName, this.state.style || "upper"), w.addEventListener("keydown", (e) => {
+			w.id = "inputRenameTarget", w.type = "text", w.autocomplete = "new-password", w.setAttribute("autocomplete", "new-password"), w.setAttribute("autocorrect", "off"), w.setAttribute("autocapitalize", "off"), w.setAttribute("spellcheck", "false"), w.setAttribute("name", `docmitra_rename_${Date.now()}`), w.className = "w-full h-10 px-3 rounded-lg bg-surface-container-lowest font-mono-code text-[13px] text-on-surface font-semibold border-2 border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-xs", w.value = P(n.userEditedName === void 0 ? n.targetName ? N(n.targetName) : N(n.name) : n.userEditedName, this.state.style || "upper"), w.addEventListener("keydown", (e) => {
 				if (e.key === "Delete") e.preventDefault(), this.getExtraDuplicateFiles().length > 0 ? this.handleMoveAllDuplicates() : this.handleMoveFileToDuplicates(n);
 				else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) e.preventDefault(), this.handleRenameSingleFile(n);
 				else if (e.key === "Tab" && !e.shiftKey) {
 					e.preventDefault();
 					let t = w.value.trim(), r = this.resolveShortcut(t);
 					if (r) {
-						let e = P(r.canonical || r.label, this.getEffectiveStudentName(), this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
+						let e = F(r.canonical || r.label, this.getEffectiveStudentName(), this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
 						w.value = e, this.handleConfirmCurrentName(e);
 					} else {
-						let e = t || n.targetName || n.suggestedName || M(n.name);
+						let e = t || n.targetName || n.suggestedName || N(n.name);
 						this.handleConfirmCurrentName(e);
 					}
 				} else if (e.key === "Tab" && e.shiftKey) e.preventDefault(), this.handleNavigateBackward();
@@ -6927,17 +7002,17 @@ var at = T.map((e) => ({
 					e.preventDefault();
 					let t = w.value.trim(), r = this.resolveShortcut(t);
 					if (r) {
-						let e = P(r.canonical || r.label, this.getEffectiveStudentName(), this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
+						let e = F(r.canonical || r.label, this.getEffectiveStudentName(), this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
 						w.value = e, this.handleConfirmCurrentName(e);
 					} else {
-						let e = t || n.targetName || n.suggestedName || M(n.name);
+						let e = t || n.targetName || n.suggestedName || N(n.name);
 						this.handleConfirmCurrentName(e);
 					}
 				} else /[\\/:*?"<>|]/.test(e.key) && (e.preventDefault(), r.show("Character Not Allowed", `Windows filenames cannot contain ${e.key}`, "warning"));
 			}), w.addEventListener("input", (e) => {
 				let t = e.target.value;
 				/[\\/:*?"<>|]/.test(t) && (t = t.replace(/[\\/:*?"<>|]/g, ""), e.target.value = t, r.show("Character Not Allowed", "Illegal Windows filename characters removed", "warning")), n.hasUserEdited = !0, n.userEditedName = t;
-				let i = n.ext || j(n.name), a = t.replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim(), o = document.getElementById("activeFileLiveBadge");
+				let i = n.ext || M(n.name), a = t.replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim(), o = document.getElementById("activeFileLiveBadge");
 				if (!a) {
 					n.targetName = n.name, n.docType = null, n.isMatched = !1, o && (o.className = "confidence-badge confidence-badge-low", o.textContent = "🔴 Unmatched"), this.updateTelemetry(), this.renderCoreShortcuts("");
 					return;
@@ -6961,16 +7036,16 @@ var at = T.map((e) => ({
 				if (c) {
 					let e = c.canonical || c.label;
 					n.docType = e, n.isMatched = !0, o && (o.className = "confidence-badge confidence-badge-high", o.textContent = `🟢 Matched: ${e}`);
-					let t = P(e, this.getEffectiveStudentName(), this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
+					let t = F(e, this.getEffectiveStudentName(), this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
 					n.targetName = `${t}${i}`;
 				} else {
 					n.docType = a, n.isMatched = !1, o && (o.className = "confidence-badge confidence-badge-med", o.textContent = `✏️ Custom: ${a}`);
-					let e = P(a, this.state.studentName, null, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
+					let e = F(a, this.state.studentName, null, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
 					n.targetName = `${e}${i}`;
 				}
 				this.updateTelemetry();
 				let l = document.querySelector("#previewContainerStage .font-headline-sm");
-				l && (l.textContent = M(n.targetName)), this.renderCoreShortcuts(t);
+				l && (l.textContent = N(n.targetName)), this.renderCoreShortcuts(t);
 			}), C.appendChild(w), _.appendChild(C), p.appendChild(_), e.appendChild(p), t.appendChild(e), requestAnimationFrame(() => {
 				w.focus(), w.select(), e.scrollIntoView({
 					behavior: "smooth",
@@ -6993,7 +7068,7 @@ var at = T.map((e) => ({
 		let d = we(this.state.files);
 		this.state.files.forEach((e, t) => {
 			let n = t === this.state.currentIndex, r = !!e.isRenamed, i = document.createElement("article");
-			i.dataset.index = String(t), i.className = n ? "h-8 px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/50 ring-1 ring-primary/30 shadow-xs flex items-center justify-between gap-2 transition-all cursor-pointer shrink-0 font-semibold active-queue-item" : r ? "h-8 px-2.5 py-1 rounded-lg bg-surface-container-lowest/80 border border-emerald-500/30 shadow-xs flex items-center justify-between gap-2 hover:bg-surface-container-low transition-colors cursor-pointer shrink-0 text-secondary" : "h-8 px-2.5 py-1 rounded-lg bg-surface-container-lowest shadow-xs flex items-center justify-between gap-2 hover:bg-surface-container-low transition-colors border border-outline-variant/30 cursor-pointer shrink-0", i.title = `Original: ${M(e.name)}\nTarget: ${M(e.targetName || e.name)} (Click to jump & edit)`, i.addEventListener("click", () => {
+			i.dataset.index = String(t), i.className = n ? "h-8 px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/50 ring-1 ring-primary/30 shadow-xs flex items-center justify-between gap-2 transition-all cursor-pointer shrink-0 font-semibold active-queue-item" : r ? "h-8 px-2.5 py-1 rounded-lg bg-surface-container-lowest/80 border border-emerald-500/30 shadow-xs flex items-center justify-between gap-2 hover:bg-surface-container-low transition-colors cursor-pointer shrink-0 text-secondary" : "h-8 px-2.5 py-1 rounded-lg bg-surface-container-lowest shadow-xs flex items-center justify-between gap-2 hover:bg-surface-container-low transition-colors border border-outline-variant/30 cursor-pointer shrink-0", i.title = `Original: ${N(e.name)}\nTarget: ${N(e.targetName || e.name)} (Click to jump & edit)`, i.addEventListener("click", () => {
 				this.state.currentIndex = t, this.renderQueue(), this.renderCurrentPreview();
 			});
 			let a = document.createElement("div");
@@ -7001,7 +7076,7 @@ var at = T.map((e) => ({
 			let o = document.createElement("span");
 			o.className = r ? "w-4 h-4 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-mono-code font-bold text-[10px] flex items-center justify-center shrink-0 border border-emerald-300 dark:border-emerald-700" : n ? "w-4 h-4 rounded bg-primary text-on-primary font-mono-code font-bold text-[10px] flex items-center justify-center shrink-0 shadow-2xs" : "w-4 h-4 rounded bg-surface-container text-secondary font-mono-code font-bold text-[10px] flex items-center justify-center shrink-0", o.textContent = String(t + 1), a.appendChild(o);
 			let s = document.createElement("span");
-			s.className = n ? "font-mono-code text-[11px] text-primary font-bold truncate flex-1 min-w-0" : r ? "font-mono-code text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold truncate flex-1 min-w-0" : "font-mono-code text-[11px] text-on-surface font-medium truncate flex-1 min-w-0", s.textContent = M(r ? e.name : e.hasUserEdited && e.targetName ? e.targetName : N(M(e.name), this.state.style)), a.appendChild(s), i.appendChild(a), this.getShortCodeForDoc(e.smartDocType || e.docType);
+			s.className = n ? "font-mono-code text-[11px] text-primary font-bold truncate flex-1 min-w-0" : r ? "font-mono-code text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold truncate flex-1 min-w-0" : "font-mono-code text-[11px] text-on-surface font-medium truncate flex-1 min-w-0", s.textContent = N(r ? e.name : e.hasUserEdited && e.targetName ? e.targetName : P(N(e.name), this.state.style)), a.appendChild(s), i.appendChild(a), this.getShortCodeForDoc(e.smartDocType || e.docType);
 			let c = e.smartConfidence === void 0 ? e.isMatched ? 90 : 0 : e.smartConfidence, l = d.get(e.id || e.name), f = l ? l.status : null;
 			if (f === "confirmed") {
 				let e = document.createElement("span");
@@ -7067,7 +7142,7 @@ var at = T.map((e) => ({
 		let t = this.getActivePresetDocuments(), n = new Set(this.state.files.map((e) => (e.docType || "").toUpperCase()).filter(Boolean)), i = t.filter((e) => {
 			let t = e.name.toUpperCase();
 			if (n.has(t)) return !1;
-			for (let e of C) if (e.combined && n.has(e.combined.toUpperCase()) && (t === e.part1.toUpperCase() || t === e.part2.toUpperCase())) return !1;
+			for (let e of w) if (e.combined && n.has(e.combined.toUpperCase()) && (t === e.part1.toUpperCase() || t === e.part2.toUpperCase())) return !1;
 			return !0;
 		});
 		if (i.length > 0) {
@@ -7105,10 +7180,10 @@ var at = T.map((e) => ({
 					let s = document.createElement("span");
 					s.className = "w-1.5 h-1.5 rounded-full bg-error shrink-0", o.appendChild(s);
 					let c = this.state.style || "upper";
-					c === "lower" ? (i || "").toLowerCase() : c === "title" ? i && i.length <= 4 && /\d/.test(i) ? i.toUpperCase() : N(i || "", "title") : (i || "").toUpperCase();
-					let l = N(n, c), u = document.createElement("span");
+					c === "lower" ? (i || "").toLowerCase() : c === "title" ? i && i.length <= 4 && /\d/.test(i) ? i.toUpperCase() : P(i || "", "title") : (i || "").toUpperCase();
+					let l = P(n, c), u = document.createElement("span");
 					u.className = "font-mono-code text-[11px] font-bold text-on-surface truncate", u.textContent = l, o.appendChild(u);
-					let d = this.state.studentName || this.state.folder?.name || "Student", f = Ye(d, n);
+					let d = this.state.studentName || this.state.folder?.name || "Student", f = Xe(d, n);
 					if (f) {
 						let e = document.createElement("span");
 						e.className = "px-1.5 py-0.2 rounded font-mono-code text-[9px] bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold shrink-0 flex items-center gap-0.5", e.textContent = `📅 ${q(f.promisedDate)}`, o.appendChild(e);
@@ -7125,32 +7200,32 @@ var at = T.map((e) => ({
 					let _ = document.createElement("div");
 					_.className = "hidden absolute right-0 bottom-full mb-1 w-48 bg-surface-container-lowest rounded-lg shadow-lg border border-outline-variant/40 p-2 z-50 flex flex-col gap-1 text-[11px] font-mono-code";
 					let v = document.createElement("button");
-					v.type = "button", v.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", v.textContent = `Today (${q(Ze())})`, v.onclick = (e) => {
+					v.type = "button", v.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", v.textContent = `Today (${q(Qe())})`, v.onclick = (e) => {
 						e.stopPropagation(), K({
 							folderName: d,
 							studentName: d,
 							documentName: n,
-							promisedDate: Ze(),
+							promisedDate: Qe(),
 							note: `Missing ${n} during intake`
 						}), _.classList.add("hidden"), r.show("Follow-up Scheduled", `${n} promise date set for Today`, "success"), this.renderQueue();
 					}, _.appendChild(v);
 					let y = document.createElement("button");
-					y.type = "button", y.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", y.textContent = `Tomorrow (${q(Qe(1))})`, y.onclick = (e) => {
+					y.type = "button", y.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", y.textContent = `Tomorrow (${q($e(1))})`, y.onclick = (e) => {
 						e.stopPropagation(), K({
 							folderName: d,
 							studentName: d,
 							documentName: n,
-							promisedDate: Qe(1),
+							promisedDate: $e(1),
 							note: `Missing ${n} during intake`
 						}), _.classList.add("hidden"), r.show("Follow-up Scheduled", `${n} promise date set for Tomorrow`, "success"), this.renderQueue();
 					}, _.appendChild(y);
 					let b = document.createElement("button");
-					b.type = "button", b.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", b.textContent = `Monday (${q($e())})`, b.onclick = (e) => {
+					b.type = "button", b.className = "w-full text-left px-2 py-1 rounded hover:bg-surface-container text-on-surface cursor-pointer", b.textContent = `Monday (${q(et())})`, b.onclick = (e) => {
 						e.stopPropagation(), K({
 							folderName: d,
 							studentName: d,
 							documentName: n,
-							promisedDate: $e(),
+							promisedDate: et(),
 							note: `Missing ${n} during intake`
 						}), _.classList.add("hidden"), r.show("Follow-up Scheduled", `${n} promise date set for Monday`, "success"), this.renderQueue();
 					}, _.appendChild(b);
@@ -7208,7 +7283,7 @@ var at = T.map((e) => ({
 		if (!t) return;
 		for (; t.firstChild;) t.removeChild(t.firstChild);
 		if (this.state.files.length === 0) return;
-		let n = this.state.files[this.state.currentIndex], r = n ? M(n.name) : "", i = (e || "").trim();
+		let n = this.state.files[this.state.currentIndex], r = n ? N(n.name) : "", i = (e || "").trim();
 		!n?.hasUserEdited && i.toLowerCase() === r.toLowerCase() && (i = "");
 		let a = this.getAllPresetDocuments(), o = [], s = /* @__PURE__ */ new Set();
 		for (let e of this.shortcuts21 || []) {
@@ -7261,8 +7336,8 @@ var at = T.map((e) => ({
 			n.className = "flex items-center justify-between p-2 rounded-lg bg-surface-container-lowest border border-outline-variant/30 hover:border-primary/50 hover:bg-surface-container-low transition-all cursor-pointer shadow-xs group", n.title = `Click or type ${e.code} to rename`;
 			let r = document.createElement("div");
 			r.className = "flex items-center gap-2 min-w-0 flex-1";
-			let i = this.state.style || "upper", a = i === "lower" ? e.code.toLowerCase() : i === "title" ? e.code.length <= 4 && /\d/.test(e.code) ? e.code.toUpperCase() : N(e.code, "title") : e.code.toUpperCase(), o = N(e.label || e.canonical, i), s = document.createElement("span");
-			s.className = `px-2 py-0.5 rounded font-mono-code font-bold text-[11px] shrink-0 ${it(e.code)}`, s.textContent = a, r.appendChild(s);
+			let i = this.state.style || "upper", a = i === "lower" ? e.code.toLowerCase() : i === "title" ? e.code.length <= 4 && /\d/.test(e.code) ? e.code.toUpperCase() : P(e.code, "title") : e.code.toUpperCase(), o = P(e.label || e.canonical, i), s = document.createElement("span");
+			s.className = `px-2 py-0.5 rounded font-mono-code font-bold text-[11px] shrink-0 ${ot(e.code)}`, s.textContent = a, r.appendChild(s);
 			let c = document.createElement("span");
 			c.className = "text-[12px] font-semibold text-on-surface truncate flex-1", c.textContent = o, r.appendChild(c), n.appendChild(r);
 			let l = document.createElement("span");
@@ -7288,7 +7363,7 @@ var at = T.map((e) => ({
 			label: e.name,
 			keywords: e.keywords
 		};
-		for (let e of T || []) if (e.primaryShortcut && e.primaryShortcut.toUpperCase() === t) return {
+		for (let e of E || []) if (e.primaryShortcut && e.primaryShortcut.toUpperCase() === t) return {
 			code: e.primaryShortcut,
 			codes: [e.primaryShortcut],
 			canonical: e.outputName,
@@ -7300,7 +7375,7 @@ var at = T.map((e) => ({
 	applyShortcutToCurrentFile(e) {
 		let t = this.state.files[this.state.currentIndex];
 		if (!t) return;
-		let n = this.resolveShortcut(e), i = n ? (n.canonical || n.outputName || n.label || n.name).toUpperCase() : e.toUpperCase(), a = t.ext || ("." + t.name.split(".").pop()).toLowerCase(), o = P(i, this.getEffectiveStudentName(), this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
+		let n = this.resolveShortcut(e), i = n ? (n.canonical || n.outputName || n.label || n.name).toUpperCase() : e.toUpperCase(), a = t.ext || ("." + t.name.split(".").pop()).toLowerCase(), o = F(i, this.getEffectiveStudentName(), this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
 		t.targetName = `${o}${a}`, t.userEditedName = o, t.hasUserEdited = !0, t.isMatched = !0, t.docType = i, t.smartDocType = i, t.smartConfidence = 100, t.status = "ready";
 		let s = document.getElementById("inputRenameTarget");
 		s && (s.value = o, s.focus(), s.select()), r.show("Selected Document", `${e} → ${o}`, "info"), this.updateTelemetry(), this.renderQueue();
@@ -7314,8 +7389,8 @@ var at = T.map((e) => ({
 			return;
 		}
 		let e = this.state.folder?.nativePath || this.state.folder?.path;
-		if (e && l()) try {
-			let t = await f(e);
+		if (e && u()) try {
+			let t = await p(e);
 			if (t && t.success && Array.isArray(t.files)) {
 				let e = t.files.filter((e) => !X(e.name) && !e.name.toLowerCase().includes("duplicate files"));
 				t.files = e, this.loadFolderData(t), this._computeDuplicateHashesAsync(), r.show("Fresh Re-Scan Complete", `Reloaded ${e.length} files from disk. All reset to pending.`, "success");
@@ -7369,8 +7444,8 @@ var at = T.map((e) => ({
 		let t = this.state.folder?.nativePath || this.state.folder?.path || (e[0].path ? e[0].path.substring(0, Math.max(e[0].path.lastIndexOf("\\"), e[0].path.lastIndexOf("/"))) : ""), n = t ? `${t}\\Duplicate Files` : "Duplicate Files", i = [], a = new Set(e.map((e) => e.id || e.name));
 		for (let t of e) {
 			let e = "";
-			if (t.path && l()) try {
-				let r = await h(t.path, n);
+			if (t.path && u()) try {
+				let r = await g(t.path, n);
 				r && r.success && (e = r.new_path || r.path || `${n}\\${t.name}`);
 			} catch (e) {
 				console.warn("[DocMitra Renamer] Move error for", t.name, e);
@@ -7401,8 +7476,8 @@ var at = T.map((e) => ({
 			return;
 		}
 		let n = this.state.folder?.nativePath || this.state.folder?.path || (t.path ? t.path.substring(0, Math.max(t.path.lastIndexOf("\\"), t.path.lastIndexOf("/"))) : ""), i = n ? `${n}\\Duplicate Files` : "Duplicate Files", a = "";
-		if (t.path && l()) try {
-			let e = await h(t.path, i);
+		if (t.path && u()) try {
+			let e = await g(t.path, i);
 			if (!e || !e.success) {
 				r.show("Move Failed", e?.error || "Could not move file to Duplicate Files folder.", "error");
 				return;
@@ -7436,9 +7511,9 @@ var at = T.map((e) => ({
 		if (e.isBatch && Array.isArray(e.records)) {
 			let t = 0, n = [...e.records].sort((e, t) => (e.originalIndex ?? 0) - (t.originalIndex ?? 0));
 			for (let e of n) {
-				if (e.srcPath && e.movedPath && l()) try {
+				if (e.srcPath && e.movedPath && u()) try {
 					let t = e.srcPath.substring(0, Math.max(e.srcPath.lastIndexOf("\\"), e.srcPath.lastIndexOf("/")));
-					await h(e.movedPath, t);
+					await g(e.movedPath, t);
 				} catch (t) {
 					console.warn("[DocMitra Renamer] Restore error for", e.file?.name, t);
 				}
@@ -7450,8 +7525,8 @@ var at = T.map((e) => ({
 			i && !i.classList.contains("hidden") && this._renderCrossCheckRows(), r.show("Restored", `Restored ${t} file(s) from "Duplicate Files"`, "success");
 			return;
 		}
-		if (e.srcPath && e.movedPath && l()) try {
-			let t = e.srcPath.substring(0, Math.max(e.srcPath.lastIndexOf("\\"), e.srcPath.lastIndexOf("/"))), n = await h(e.movedPath, t);
+		if (e.srcPath && e.movedPath && u()) try {
+			let t = e.srcPath.substring(0, Math.max(e.srcPath.lastIndexOf("\\"), e.srcPath.lastIndexOf("/"))), n = await g(e.movedPath, t);
 			if (!n || !n.success) {
 				r.show("Restore Failed", n?.error || "Could not restore file from Duplicate Files.", "error");
 				return;
@@ -7471,7 +7546,7 @@ var at = T.map((e) => ({
 	async handleConfirmCurrentName(e) {
 		let t = this.state.files[this.state.currentIndex];
 		if (!t) return;
-		let n = t.ext || j(t.name), i = (e || "").trim();
+		let n = t.ext || M(t.name), i = (e || "").trim();
 		if (!i) {
 			r.show("Document Name Required", "Please provide a valid filename.", "warning");
 			return;
@@ -7479,18 +7554,18 @@ var at = T.map((e) => ({
 		let a = i.replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim(), o = this.resolveShortcut(a);
 		if (o) {
 			let e = o.canonical || o.label;
-			a = P(e, this.getEffectiveStudentName(), this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim(), t.docType = e, t.isMatched = !0;
+			a = F(e, this.getEffectiveStudentName(), this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim(), t.docType = e, t.isMatched = !0;
 		}
 		let s = `${a}${n}`, c = /* @__PURE__ */ new Set();
 		for (let e of this.state.files) e !== t && (e.isRenamed || e.isKept ? c.add(e.targetName || e.name) : e.name && c.add(e.name));
-		let l = this.getEffectiveStudentName(), u = I(s, t.name, c, l), d = u.toLowerCase() !== s.toLowerCase();
+		let l = this.getEffectiveStudentName(), u = L(s, t.name, c, l), d = u.toLowerCase() !== s.toLowerCase();
 		s = u;
-		let f = M(s), m = F(s);
-		if (m) {
-			r.show("Validation Error", `${f}: ${m}`, "error");
+		let f = N(s), p = I(s);
+		if (p) {
+			r.show("Validation Error", `${f}: ${p}`, "error");
 			return;
 		}
-		let h = this.state.folder && (this.state.folder.nativePath || this.state.folder.path) || "", g = t.nativePath || t.path || (h ? `${h}/${t.name}` : null), _ = M(t.name) !== f, v = t.rotation && t.rotation % 360 != 0, y = typeof window < "u" && (window.location?.search?.includes("test_mode=1") || window.__DOCMITRA_TEST_MODE__);
+		let h = this.state.folder && (this.state.folder.nativePath || this.state.folder.path) || "", g = t.nativePath || t.path || (h ? `${h}/${t.name}` : null), _ = N(t.name) !== f, v = t.rotation && t.rotation % 360 != 0, y = typeof window < "u" && (window.location?.search?.includes("test_mode=1") || window.__DOCMITRA_TEST_MODE__);
 		if (g && (_ || v)) {
 			let e = l || t.studentName || "", i = t.rotation || 0;
 			r.show("Renaming Document", `Renaming to ${f}...`, "info");
@@ -7500,7 +7575,7 @@ var at = T.map((e) => ({
 					success: !0,
 					name: s,
 					path: g.replace(/[^\\\/]+$/, s)
-				} : await p(g, s, e, i), !o.success) throw Error(o.error || `Failed to rename ${t.name}`);
+				} : await m(g, s, e, i), !o.success) throw Error(o.error || `Failed to rename ${t.name}`);
 				let c = o.name || s, l = o.path || o.newPath || g.replace(/[^\\\/]+$/, c), u = {
 					old: t.name,
 					next: c,
@@ -7509,13 +7584,13 @@ var at = T.map((e) => ({
 					studentName: e,
 					rotation: i
 				};
-				if (L.pushBatch(this.state.folder, [u]), t.name = c, t.targetName = c, t.userEditedName = M(c), t.path = l, t.nativePath = l, t.isRenamed = !0, t.status = "renamed", t.smartConfidence = 100, t.hasUserEdited = !0, t.rotation = 0, t._pdfBytes = null, t._blobUrl && typeof URL < "u" && URL.revokeObjectURL) {
+				if (R.pushBatch(this.state.folder, [u]), t.name = c, t.targetName = c, t.userEditedName = N(c), t.path = l, t.nativePath = l, t.isRenamed = !0, t.status = "renamed", t.smartConfidence = 100, t.hasUserEdited = !0, t.rotation = 0, t._pdfBytes = null, t._blobUrl && typeof URL < "u" && URL.revokeObjectURL) {
 					try {
 						URL.revokeObjectURL(t._blobUrl);
 					} catch {}
 					t._blobUrl = null;
 				}
-				t.url = `${typeof window < "u" && window.location?.origin && !window.location.origin.startsWith("file:") && !window.location.origin.includes("tauri") ? window.location.origin : "http://localhost:3000"}/api/serve-file?path=${encodeURIComponent(l)}`, d || c.toLowerCase() !== `${a}${n}`.toLowerCase() ? r.show("Duplicate Auto-Numbered", `Saved as: ${M(c)}`, "info") : r.show("Renamed Successfully", M(c), "success");
+				t.url = `${typeof window < "u" && window.location?.origin && !window.location.origin.startsWith("file:") && !window.location.origin.includes("tauri") ? window.location.origin : "http://localhost:3000"}/api/serve-file?path=${encodeURIComponent(l)}`, d || c.toLowerCase() !== `${a}${n}`.toLowerCase() ? r.show("Duplicate Auto-Numbered", `Saved as: ${N(c)}`, "info") : r.show("Renamed Successfully", N(c), "success");
 			} catch (e) {
 				r.show("Rename Error", e.message, "error");
 				return;
@@ -7529,7 +7604,7 @@ var at = T.map((e) => ({
 		if (!t.targetName || t.targetName === t.name) {
 			let e = document.getElementById("inputRenameTarget");
 			if (e && e.value.trim()) {
-				let n = t.ext || j(t.name), r = e.value.trim().replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
+				let n = t.ext || M(t.name), r = e.value.trim().replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
 				t.targetName = `${r}${n}`, t.userEditedName = r, t.hasUserEdited = !0, t.isMatched = !0, t.status = "ready", t.smartConfidence = 100, t.smartDocType = t.docType || t.smartDocType || r;
 			}
 		}
@@ -7537,9 +7612,9 @@ var at = T.map((e) => ({
 			r.show("Document Name Required", "Please enter a target name first.", "warning");
 			return;
 		}
-		let n = F(t.targetName);
+		let n = I(t.targetName);
 		if (n) {
-			r.show("Validation Error", `${M(t.name)}: ${n}`, "error");
+			r.show("Validation Error", `${N(t.name)}: ${n}`, "error");
 			return;
 		}
 		let i = this.state.folder && (this.state.folder.nativePath || this.state.folder.path) || "", a = t.nativePath || t.path || (i ? `${i}/${t.name}` : null);
@@ -7548,9 +7623,9 @@ var at = T.map((e) => ({
 			return;
 		}
 		let o = this.state.studentName || t.studentName || "", s = t.rotation || 0;
-		r.show("Renaming File", `Renaming to ${M(t.targetName)}...`, "info");
+		r.show("Renaming File", `Renaming to ${N(t.targetName)}...`, "info");
 		try {
-			let e = await p(a, t.targetName, o, s);
+			let e = await m(a, t.targetName, o, s);
 			if (!e.success) throw Error(e.error || `Failed to rename ${t.name}`);
 			let n = e.name || t.targetName, i = e.path || e.newPath || a.replace(/[^\\\/]+$/, n), c = {
 				old: t.name,
@@ -7560,13 +7635,13 @@ var at = T.map((e) => ({
 				studentName: o,
 				rotation: s
 			};
-			if (L.pushBatch(this.state.folder, [c]), t.name = n, t.targetName = n, t.userEditedName = M(n), t.isRenamed = !0, t.status = "renamed", t.path = i, t.nativePath = i, t.rotation = 0, t._pdfBytes = null, t._blobUrl && typeof URL < "u" && URL.revokeObjectURL) {
+			if (R.pushBatch(this.state.folder, [c]), t.name = n, t.targetName = n, t.userEditedName = N(n), t.isRenamed = !0, t.status = "renamed", t.path = i, t.nativePath = i, t.rotation = 0, t._pdfBytes = null, t._blobUrl && typeof URL < "u" && URL.revokeObjectURL) {
 				try {
 					URL.revokeObjectURL(t._blobUrl);
 				} catch {}
 				t._blobUrl = null;
 			}
-			t.url = `${typeof window < "u" && window.location?.origin && !window.location.origin.startsWith("file:") && !window.location.origin.includes("tauri") ? window.location.origin : "http://localhost:3000"}/api/serve-file?path=${encodeURIComponent(i)}`, r.show("Renamed Successfully", M(n), "success");
+			t.url = `${typeof window < "u" && window.location?.origin && !window.location.origin.startsWith("file:") && !window.location.origin.includes("tauri") ? window.location.origin : "http://localhost:3000"}/api/serve-file?path=${encodeURIComponent(i)}`, r.show("Renamed Successfully", N(n), "success");
 			let l = this.state.files.findIndex((e, t) => t > this.state.currentIndex && !e.isRenamed && !e.isKept);
 			l === -1 ? this.state.currentIndex < this.state.files.length - 1 && this.state.currentIndex++ : this.state.currentIndex = l, this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview();
 		} catch (e) {
@@ -7580,9 +7655,9 @@ var at = T.map((e) => ({
 			return;
 		}
 		for (let t of e) {
-			let e = F(t.targetName);
+			let e = I(t.targetName);
 			if (e) {
-				r.show("Validation Error", `${M(t.name)}: ${e}`, "error");
+				r.show("Validation Error", `${N(t.name)}: ${e}`, "error");
 				return;
 			}
 		}
@@ -7598,7 +7673,7 @@ var at = T.map((e) => ({
 		try {
 			await oe(this.state.folder, t, (e, t) => {
 				console.log(`[Rename Progress] ${e}%: ${t}`);
-			}), L.pushBatch(this.state.folder, t), e.forEach((e) => {
+			}), R.pushBatch(this.state.folder, t), e.forEach((e) => {
 				if (e.name = e.targetName, e.isRenamed = !0, e.status = "renamed", e.rotation = 0, e._pdfBytes = null, e._blobUrl && typeof URL < "u" && URL.revokeObjectURL) {
 					try {
 						URL.revokeObjectURL(e._blobUrl);
@@ -7614,11 +7689,11 @@ var at = T.map((e) => ({
 		}
 	}
 	async handleUndo() {
-		if (!L.canUndo()) {
+		if (!R.canUndo()) {
 			r.show("Undo Stack Empty", "No previous rename batch to undo.", "info");
 			return;
 		}
-		let e = L.pop();
+		let e = R.pop();
 		r.show("Reverting Changes", `Restoring ${e.plan.length} files...`, "info");
 		try {
 			await se(e.dir, e.plan, (e, t) => {
@@ -7695,7 +7770,7 @@ var at = T.map((e) => ({
 						let e = ve(r.name, this.state.studentName, this.state.settings?.groups, this.getActivePresetDocuments());
 						if (r.smartEvaluation = e, r.smartConfidence = e.confidence, r.smartDocType = e.docType, e.confidence >= 50 && e.docType) {
 							r.docType = e.docType, r.isMatched = !0, e.confidence >= 80 && o++;
-							let t = I(`${P(e.docType, this.state.studentName, this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim()}${r.ext || ("." + r.name.split(".").pop()).toLowerCase()}`, r.name, a, this.state.studentName);
+							let t = L(`${F(e.docType, this.state.studentName, this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim()}${r.ext || ("." + r.name.split(".").pop()).toLowerCase()}`, r.name, a, this.state.studentName);
 							a.add(t), r.targetName = t, r.status = e.confidence >= 80 ? "matched" : "needs_review";
 						} else r.isMatched = !1, r.docType = null, r.status = "unmatched";
 					} catch (e) {
@@ -7741,7 +7816,7 @@ var at = T.map((e) => ({
 		} catch (e) {
 			console.warn("[DocMitra Renamer] Failed to parse custom shortcuts:", e);
 		}
-		this.state.documentPresets && typeof this.state.documentPresets == "object" && (this.state.documentPresets.SWAYAM && !this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] && (this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] = this.state.documentPresets.SWAYAM, delete this.state.documentPresets.SWAYAM), this.state.documentPresets.EDUCATIONAL && !this.state.documentPresets["EDUCATIONAL DOCUMENTS"] && (this.state.documentPresets["EDUCATIONAL DOCUMENTS"] = this.state.documentPresets.EDUCATIONAL, delete this.state.documentPresets.EDUCATIONAL)), this.state.documentPresets && Object.keys(this.state.documentPresets).length !== 0 || (this.state.documentPresets = JSON.parse(JSON.stringify(ot)), this.savePresetsAndSettings());
+		this.state.documentPresets && typeof this.state.documentPresets == "object" && (this.state.documentPresets.SWAYAM && !this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] && (this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] = this.state.documentPresets.SWAYAM, delete this.state.documentPresets.SWAYAM), this.state.documentPresets.EDUCATIONAL && !this.state.documentPresets["EDUCATIONAL DOCUMENTS"] && (this.state.documentPresets["EDUCATIONAL DOCUMENTS"] = this.state.documentPresets.EDUCATIONAL, delete this.state.documentPresets.EDUCATIONAL)), this.state.documentPresets && Object.keys(this.state.documentPresets).length !== 0 || (this.state.documentPresets = JSON.parse(JSON.stringify(ct)), this.savePresetsAndSettings());
 		let t = !1, n = (e) => {
 			if (!e || typeof e != "string") return e;
 			let t = e.trim().toUpperCase();
@@ -7773,8 +7848,8 @@ var at = T.map((e) => ({
 		if (Array.isArray(this.shortcuts21)) for (let e of this.shortcuts21) e && e.code && (e.code = n(e.code)), e && Array.isArray(e.codes) && (e.codes = e.codes.map((e) => n(e)));
 		t && this.savePresetsAndSettings(), this.syncPresetsToShortcuts();
 		let r = this.getAllPresetDocuments();
-		x(r);
-		for (let e of r) e && e.code && e.name && (te(e.code, e.name, e.keywords), y(e.name, e.name));
+		S(r);
+		for (let e of r) e && e.code && e.name && (te(e.code, e.name, e.keywords), b(e.name, e.name));
 	}
 	savePresetsAndSettings() {
 		try {
@@ -7897,7 +7972,7 @@ var at = T.map((e) => ({
 			let a = e.indexOf(t);
 			i.innerHTML = `
         <td class="py-1 px-3 text-center text-secondary font-mono-code text-[11px]" style="width: 44px;">${r + 1}</td>
-        <td class="py-1 px-3 font-semibold text-on-surface truncate text-[12px]" style="width: 32%;" title="${B(t.name)}">${B(t.name)}</td>
+        <td class="py-1 px-3 font-semibold text-on-surface truncate text-[12px]" style="width: 32%;" title="${V(t.name)}">${V(t.name)}</td>
         <td class="py-1 px-3 text-secondary text-[11px] overflow-visible relative" style="width: 55%;">${this._renderKeywordsWithPopover(t.keywords)}</td>
         <td class="py-1 px-3 text-right whitespace-nowrap pr-4" style="width: 80px;">
           <div class="flex items-center justify-end gap-1">
@@ -7919,9 +7994,9 @@ var at = T.map((e) => ({
 	_renderKeywordsWithPopover(e) {
 		let t = Array.isArray(e) ? e : typeof e == "string" && e ? e.split(",").map((e) => e.trim()).filter(Boolean) : [];
 		if (!t || t.length === 0) return "<span class=\"italic opacity-50 text-[11px]\">-</span>";
-		let n = t.slice(0, 2), r = t.slice(2), i = n.map((e) => `<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface font-medium text-[11px] border border-outline-variant/30 shrink-0 truncate max-w-[120px]" title="${B(e)}">${B(e)}</span>`).join("");
+		let n = t.slice(0, 2), r = t.slice(2), i = n.map((e) => `<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface font-medium text-[11px] border border-outline-variant/30 shrink-0 truncate max-w-[120px]" title="${V(e)}">${V(e)}</span>`).join("");
 		if (r.length === 0) return `<div class="flex items-center gap-1.5 h-full overflow-hidden">${i}</div>`;
-		let a = r.map((e) => `<span class="px-1.5 py-0.5 rounded bg-surface-container text-secondary text-[10px] border border-outline-variant/30">${B(e)}</span>`).join("");
+		let a = r.map((e) => `<span class="px-1.5 py-0.5 rounded bg-surface-container text-secondary text-[10px] border border-outline-variant/30">${V(e)}</span>`).join("");
 		return `
       <div class="flex items-center gap-1.5 h-full overflow-visible">
         ${i}
@@ -7968,11 +8043,11 @@ var at = T.map((e) => ({
 		} else i.forEach((t, n) => {
 			let r = document.createElement("tr");
 			r.className = "row-compact-42 hover:bg-surface-container-low transition-colors group";
-			let i = Array.isArray(t.codes) && t.codes.length > 0 ? t.codes : t.code ? [t.code] : [], a = i.map((e) => `<span class="px-1.5 py-0.5 rounded font-mono-code font-bold text-[10px] ${it(e)}">${e}</span>`).join(" ");
+			let i = Array.isArray(t.codes) && t.codes.length > 0 ? t.codes : t.code ? [t.code] : [], a = i.map((e) => `<span class="px-1.5 py-0.5 rounded font-mono-code font-bold text-[10px] ${ot(e)}">${e}</span>`).join(" ");
 			r.innerHTML = `
         <td class="py-1 px-3 text-center text-secondary font-mono-code text-[11px]" style="width: 44px;">${n + 1}</td>
         <td class="py-1 px-3 whitespace-normal" style="width: 15%;"><div class="flex flex-wrap gap-1 max-h-[30px] overflow-hidden">${a}</div></td>
-        <td class="py-1 px-3 font-semibold text-on-surface truncate text-[12px]" style="width: 25%;" title="${B(t.canonical || t.label)}">${B(t.canonical || t.label)}</td>
+        <td class="py-1 px-3 font-semibold text-on-surface truncate text-[12px]" style="width: 25%;" title="${V(t.canonical || t.label)}">${V(t.canonical || t.label)}</td>
         <td class="py-1 px-3 text-secondary text-[11px] overflow-visible relative" style="width: 46%;">${this._renderKeywordsWithPopover(t.keywords)}</td>
         <td class="py-1 px-3 text-right whitespace-nowrap pr-4" style="width: 80px;">
           <div class="flex items-center justify-end gap-1">
@@ -8026,7 +8101,7 @@ var at = T.map((e) => ({
 		this.state.activePreset = t[0] || "MAHA DBT", this.savePresetsAndSettings(), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal("presets"), r.show("Preset Deleted", `Preset "${e}" deleted. Switched to ${this.state.activePreset}.`, "info");
 	}
 	handleResetPresetsDefault() {
-		window.confirm("Reset document presets to factory defaults? All custom presets will be removed and default 4 presets restored.") && (this.state.documentPresets = JSON.parse(JSON.stringify(ot)), this.state.activePreset = "MAHA DBT", this.state.customShortcuts = [], this.shortcuts21 = JSON.parse(JSON.stringify(at)), this.savePresetsAndSettings(), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal("presets"), r.show("Reset Complete", "Document presets restored to factory defaults.", "success"));
+		window.confirm("Reset document presets to factory defaults? All custom presets will be removed and default 4 presets restored.") && (this.state.documentPresets = JSON.parse(JSON.stringify(ct)), this.state.activePreset = "MAHA DBT", this.state.customShortcuts = [], this.shortcuts21 = JSON.parse(JSON.stringify(st)), this.savePresetsAndSettings(), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal("presets"), r.show("Reset Complete", "Document presets restored to factory defaults.", "success"));
 	}
 	handleRemoveDocFromPreset(e) {
 		let t = this.state.documentPresets[this.state.activePreset];
@@ -8110,7 +8185,7 @@ var at = T.map((e) => ({
 				o.type = "button", o.className = "hover:bg-white/20 rounded p-0.5 inline-flex items-center justify-center cursor-pointer text-white/80 hover:text-white transition-colors", o.title = `Remove ${n}`, o.innerHTML = "<span class=\"material-symbols-outlined text-[13px]\">close</span>", o.addEventListener("click", (e) => {
 					e.preventDefault(), e.stopPropagation(), this._currentShortcutCodes = this._currentShortcutCodes.filter((e) => e !== n), this.renderShortcutChips();
 					let t = document.getElementById("inputAddDocName"), r = document.getElementById("inputAddDocAliases");
-					!this._aliasesManuallyEdited && t?.value.trim() && (r && (r.value = O(t.value, this._currentShortcutCodes)), this.validateKeywordsInput());
+					!this._aliasesManuallyEdited && t?.value.trim() && (r && (r.value = k(t.value, this._currentShortcutCodes)), this.validateKeywordsInput());
 				}), i.appendChild(o), t.appendChild(i);
 			});
 		}
@@ -8119,12 +8194,12 @@ var at = T.map((e) => ({
 		let e = document.getElementById("containerPresetPills");
 		if (!e) return;
 		e.innerHTML = "";
-		let t = Object.keys(this.state.documentPresets || ot);
+		let t = Object.keys(this.state.documentPresets || ct);
 		t.length === 0 ? e.innerHTML = "<span class=\"text-secondary text-[11px] italic\">No presets available.</span>" : (t.forEach((t) => {
 			let n = this._selectedPresetKeys && this._selectedPresetKeys.has(t), r = document.createElement("button");
 			r.type = "button", r.className = n ? "inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-[#0037b0] text-white font-bold text-[11px] shadow-xs cursor-pointer transition-all border border-[#0037b0]" : "inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-surface text-secondary hover:text-on-surface font-medium text-[11px] cursor-pointer transition-all border border-outline-variant/50 hover:border-primary/50", r.innerHTML = `
         <span class="material-symbols-outlined text-[13px] ${n ? "font-bold" : "opacity-40"}">${n ? "check" : "add"}</span>
-        <span>${B(t)}</span>
+        <span>${V(t)}</span>
       `, r.addEventListener("click", (e) => {
 				e.preventDefault(), this._selectedPresetKeys ||= /* @__PURE__ */ new Set(), this._selectedPresetKeys.has(t) ? this._selectedPresetKeys.delete(t) : this._selectedPresetKeys.add(t), this.renderPresetPills();
 			}), e.appendChild(r);
@@ -8140,7 +8215,7 @@ var at = T.map((e) => ({
 			} else {
 				e.className = "p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-on-surface text-[11px] flex items-start gap-2 mt-1";
 				let n = e.querySelector(".material-symbols-outlined");
-				n && (n.className = "material-symbols-outlined text-[16px] text-primary shrink-0 mt-0.5"), t.innerHTML = `<strong>Dual Save:</strong> Will be added to <strong>Shortcuts &amp; Rename Rules</strong> AND simultaneously included in preset checklists for: <strong>${B(Array.from(this._selectedPresetKeys).join(", "))}</strong>.`;
+				n && (n.className = "material-symbols-outlined text-[16px] text-primary shrink-0 mt-0.5"), t.innerHTML = `<strong>Dual Save:</strong> Will be added to <strong>Shortcuts &amp; Rename Rules</strong> AND simultaneously included in preset checklists for: <strong>${V(Array.from(this._selectedPresetKeys).join(", "))}</strong>.`;
 			}
 		}
 	}
@@ -8170,12 +8245,12 @@ var at = T.map((e) => ({
 		} else this._editingDocIdx = null, this._editingShortcutCode = null, this._currentShortcutCodes = [], !t && this.state.activePreset && this._selectedPresetKeys.add(this.state.activePreset), l && (l.textContent = "Add Document Type"), a && (a.value = ""), o && (o.value = ""), s && (s.value = "");
 		this.renderShortcutChips(), this.renderPresetPills();
 		let d = () => {
-			let e = P(o?.value.trim() || "DOCUMENT", this.getEffectiveStudentName(), null, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
+			let e = F(o?.value.trim() || "DOCUMENT", this.getEffectiveStudentName(), null, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
 			c && (c.textContent = e);
 		};
 		o && (o.oninput = () => {
 			if (d(), !this._aliasesManuallyEdited) {
-				let e = O(o.value, this._currentShortcutCodes);
+				let e = k(o.value, this._currentShortcutCodes);
 				s && (s.value = e);
 			}
 			this.validateKeywordsInput();
@@ -8202,7 +8277,7 @@ var at = T.map((e) => ({
 				this._currentShortcutCodes.push(i), this.renderShortcutChips(i), r.show("Auto-Numbered Code", `Code "${e}" is assigned to "${n}". Auto-assigned "${i}".`, "info");
 			} else this._currentShortcutCodes.push(e), this.renderShortcutChips();
 			if (!this._aliasesManuallyEdited && o?.value.trim()) {
-				let e = O(o.value, this._currentShortcutCodes);
+				let e = k(o.value, this._currentShortcutCodes);
 				s && (s.value = e);
 			}
 			this.validateKeywordsInput(), a && (a.value = ""), a?.focus();
@@ -8222,7 +8297,7 @@ var at = T.map((e) => ({
 				r.show("Document Name Required", "Please enter Full Document Name first to generate smart keywords.", "info"), o?.focus();
 				return;
 			}
-			let n = O(t, this._currentShortcutCodes);
+			let n = k(t, this._currentShortcutCodes);
 			s && (s.value = n, this._aliasesManuallyEdited = !1, this.validateKeywordsInput(), r.show("Keywords Auto-Generated", "Smart Indian academic aliases generated.", "success"));
 		}), s && (s.oninput = () => {
 			this._aliasesManuallyEdited = !0, this.validateKeywordsInput();
@@ -8287,13 +8362,13 @@ var at = T.map((e) => ({
 				primaryKeywords: [a.toLowerCase(), e.toLowerCase()],
 				secondaryKeywords: c
 			});
-		}), y(a, a), te(d, a, c), Z.set(d, {
+		}), b(a, a), te(d, a, c), Z.set(d, {
 			code: d,
 			canonical: a,
 			label: a,
 			keywords: c
 		}), f && f !== a) {
-			b(f), y(f, a);
+			x(f), b(f, a);
 			for (let e of this.state.files) e.docType && e.docType.toUpperCase() === f && (e.docType = a, e.smartDocType = a);
 		}
 		let h = this._selectedPresetKeys || /* @__PURE__ */ new Set();
@@ -8317,7 +8392,7 @@ var at = T.map((e) => ({
 			}));
 		}
 		let g = this._fromShortcutsTab;
-		this.closeAddDocumentModal(), this.savePresetsAndSettings(), this.syncPresetsToShortcuts(), x(this.getAllPresetDocuments()), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal(g ? "shortcuts" : "presets"), h.size === 0 ? r.show("Shortcut Saved", `"${a}" saved purely as Keyboard Shortcut & Rename Rule.`, "success") : r.show("Document Type Saved", `"${a}" saved to Shortcuts & included in ${h.size} preset(s).`, "success");
+		this.closeAddDocumentModal(), this.savePresetsAndSettings(), this.syncPresetsToShortcuts(), S(this.getAllPresetDocuments()), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal(g ? "shortcuts" : "presets"), h.size === 0 ? r.show("Shortcut Saved", `"${a}" saved purely as Keyboard Shortcut & Rename Rule.`, "success") : r.show("Document Type Saved", `"${a}" saved to Shortcuts & included in ${h.size} preset(s).`, "success");
 	}
 	_initCrossCheckEvents() {
 		let e = document.getElementById("modalCrossCheck");
@@ -8464,16 +8539,16 @@ var at = T.map((e) => ({
 		if (this._crossCheckState && this._crossCheckState.overrides && this._crossCheckState.overrides.has(e.id)) return this._crossCheckState.overrides.get(e.id);
 		let t = e.docType || e.smartDocType || e.smartMatchedDoc;
 		if (t) return t;
-		let n = (this.state.studentName || "").replace(/\.[a-zA-Z0-9]+$/i, "").trim(), r = M(e.name);
+		let n = (this.state.studentName || "").replace(/\.[a-zA-Z0-9]+$/i, "").trim(), r = N(e.name);
 		if (n) {
 			let e = RegExp(`\\b${n.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&")}\\b`, "gi");
 			r = r.replace(e, "").trim();
 		}
-		return r || M(e.name);
+		return r || N(e.name);
 	}
 	_getCrossCheckTargetName(e) {
-		let t = (this.state.studentName || "").replace(/\.[a-zA-Z0-9]+$/i, "").trim(), n = e.ext || j(e.name) || "", r = this._getCrossCheckTargetBase(e), i = "";
-		return i = this._crossCheckState && this._crossCheckState.overrides && this._crossCheckState.overrides.has(e.id) ? N(r, this._crossCheckState.casing) : be(r, t, {
+		let t = (this.state.studentName || "").replace(/\.[a-zA-Z0-9]+$/i, "").trim(), n = e.ext || M(e.name) || "", r = this._getCrossCheckTargetBase(e), i = "";
+		return i = this._crossCheckState && this._crossCheckState.overrides && this._crossCheckState.overrides.has(e.id) ? P(r, this._crossCheckState.casing) : be(r, t, {
 			order: this._crossCheckState ? this._crossCheckState.order : "doc_student",
 			separator: this._crossCheckState ? this._crossCheckState.separator : " ",
 			includeStudent: !this._crossCheckState || this._crossCheckState.includeStudent,
@@ -8498,7 +8573,7 @@ var at = T.map((e) => ({
 			userToggled: /* @__PURE__ */ new Map(),
 			focusedIndex: 0
 		}, e.forEach((e) => {
-			let t = this._getCrossCheckTargetName(e), n = M(e.name) === M(t);
+			let t = this._getCrossCheckTargetName(e), n = N(e.name) === N(t);
 			this._crossCheckState.userToggled.set(e.id, !n);
 		}), t.querySelectorAll("[data-pattern-order]").forEach((e) => e.classList.toggle("active", e.dataset.patternOrder === "doc_student")), t.querySelectorAll("[data-pattern-case]").forEach((e) => e.classList.toggle("active", e.dataset.patternCase === this._crossCheckState.casing)), t.querySelectorAll("[data-pattern-filter]").forEach((e) => e.classList.toggle("active", e.dataset.patternFilter === "all"));
 		let n = document.getElementById("crossCheckStudentToggleLabel");
@@ -8510,7 +8585,7 @@ var at = T.map((e) => ({
 		if (!this._crossCheckState) return;
 		let t = this._getMatchedCrossCheckFiles();
 		e && t.forEach((e) => {
-			let t = this._getCrossCheckTargetName(e), n = M(e.name) === M(t);
+			let t = this._getCrossCheckTargetName(e), n = N(e.name) === N(t);
 			this._crossCheckState.userToggled.set(e.id, !n);
 		}), this._renderCrossCheckRows();
 	}
@@ -8521,7 +8596,7 @@ var at = T.map((e) => ({
 		let a = this._getMatchedCrossCheckFiles();
 		t && (t.textContent = String(a.length));
 		let o = this._crossCheckState ? this._crossCheckState.filter : "all", s = a.filter((e) => {
-			let t = (e.ext || j(e.name) || "").toLowerCase();
+			let t = (e.ext || M(e.name) || "").toLowerCase();
 			return o === "pdf" ? t === ".pdf" : o !== "images" || [
 				".jpg",
 				".jpeg",
@@ -8538,7 +8613,7 @@ var at = T.map((e) => ({
 		});
 		let u = document.getElementById("btnModalMoveDuplicates"), d = document.getElementById("modalMoveDuplicatesLabel");
 		u && (l > 0 ? (u.classList.remove("hidden"), d && (d.textContent = `Move Duplicates (${l})`)) : u.classList.add("hidden")), s.forEach((t, n) => {
-			let r = this._getCrossCheckTargetName(t), i = M(t.name) === M(r), a = this._crossCheckState.userToggled.has(t.id) ? this._crossCheckState.userToggled.get(t.id) : !i, o = this._crossCheckState.focusedIndex === n, s = ye(t.name, r, this.state.studentName), l = document.createElement("div");
+			let r = this._getCrossCheckTargetName(t), i = N(t.name) === N(r), a = this._crossCheckState.userToggled.has(t.id) ? this._crossCheckState.userToggled.get(t.id) : !i, o = this._crossCheckState.focusedIndex === n, s = ye(t.name, r, this.state.studentName), l = document.createElement("div");
 			l.dataset.fileId = t.id;
 			let u = "grid grid-cols-[32px_minmax(0,1fr)_22px_minmax(0,1.1fr)_104px] items-center gap-2 px-3 min-h-[38px] py-1.5 rounded-lg border transition-all cursor-pointer ";
 			u += o ? "border-blue-600 bg-blue-50/35 shadow-2xs" : i && !a ? "border-transparent bg-slate-50/45 hover:bg-slate-100/60" : "border-transparent hover:bg-slate-50 border-b-slate-100", l.className = u;
@@ -8551,7 +8626,7 @@ var at = T.map((e) => ({
 			let p = document.createElement("div");
 			p.className = "font-mono-code text-[12px] flex items-center justify-between gap-1.5 min-w-0";
 			let m = document.createElement("span");
-			m.className = "truncate flex-1 min-w-0", m.title = M(t.name), m.innerHTML = i ? `<span class="text-slate-400">${B(M(t.name))}</span>` : s.oldHtml, p.appendChild(m);
+			m.className = "truncate flex-1 min-w-0", m.title = N(t.name), m.innerHTML = i ? `<span class="text-slate-400">${V(N(t.name))}</span>` : s.oldHtml, p.appendChild(m);
 			let h = document.createElement("div");
 			h.className = "flex items-center gap-1 shrink-0";
 			let g = c.get(t.id || t.name), _ = g ? g.status : null;
@@ -8577,7 +8652,7 @@ var at = T.map((e) => ({
 			let y = document.createElement("div");
 			y.className = "flex items-center justify-center text-slate-300 font-bold select-none", y.innerHTML = "<svg class=\"w-3.5 h-3.5 text-slate-300\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M14 5l7 7m0 0l-7 7m7-7H3\"/></svg>", l.appendChild(y);
 			let b = document.createElement("div");
-			b.className = "font-mono-code text-[12px] truncate", b.title = M(r), b.innerHTML = i ? `<span class="text-slate-400 font-medium">${B(M(r))}</span>` : s.newHtml, l.appendChild(b);
+			b.className = "font-mono-code text-[12px] truncate", b.title = N(r), b.innerHTML = i ? `<span class="text-slate-400 font-medium">${V(N(r))}</span>` : s.newHtml, l.appendChild(b);
 			let x = document.createElement("div");
 			if (x.className = "flex justify-end", i) x.innerHTML = "\n          <span class=\"inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50/90 text-emerald-700 border border-emerald-200/90 whitespace-nowrap\">\n            <svg class=\"w-3 h-3\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M5 13l4 4L19 7\"/></svg>\n            <span>Perfect</span>\n          </span>\n        ";
 			else {
@@ -8642,9 +8717,9 @@ var at = T.map((e) => ({
 		}
 		let i = [];
 		for (let e of n) {
-			let t = this._getCrossCheckTargetName(e), n = F(t);
+			let t = this._getCrossCheckTargetName(e), n = I(t);
 			if (n) {
-				r.show("Validation Error", `${M(e.name)}: ${n}`, "error");
+				r.show("Validation Error", `${N(e.name)}: ${n}`, "error");
 				return;
 			}
 			i.push({
@@ -8659,7 +8734,7 @@ var at = T.map((e) => ({
 		try {
 			await oe(this.state.folder, i, (e, t) => {
 				console.log(`[Batch Rename Progress] ${e}%: ${t}`);
-			}), L.pushBatch(this.state.folder, i), i.forEach((e) => {
+			}), R.pushBatch(this.state.folder, i), i.forEach((e) => {
 				let t = e.file;
 				if (t.name = e.next, t.targetName = e.next, t.isRenamed = !0, t.status = "renamed", t.rotation = 0, t._pdfBytes = null, t._blobUrl && typeof URL < "u" && URL.revokeObjectURL) {
 					try {
@@ -8768,7 +8843,7 @@ var at = T.map((e) => ({
 				this._renderDocumentInfoFallback(n, e);
 			}
 			else {
-				let i = rt();
+				let i = at();
 				if (e.path && i) n.innerHTML = "<div class=\"flex items-center justify-center w-full h-full text-secondary text-[12px]\"><span class=\"material-symbols-outlined text-[20px] animate-spin text-primary mr-2\">sync</span><span>Loading document preview...</span></div>", i("read_binary_file", { path: e.path }).then((t) => {
 					let n = e.name.toLowerCase().endsWith(".png") ? "image/png" : e.name.toLowerCase().endsWith(".webp") ? "image/webp" : "image/jpeg", i = new Blob([new Uint8Array(t)], { type: n });
 					r(URL.createObjectURL(i));
@@ -8804,7 +8879,7 @@ var at = T.map((e) => ({
 				e._pdfBytes = new Uint8Array(t), r(e._pdfBytes);
 			}).catch(() => this._renderDocumentInfoFallback(n, e));
 			else {
-				let t = rt();
+				let t = at();
 				if (e.path && t) n.innerHTML = "<div class=\"flex items-center justify-center w-full h-full text-secondary text-[12px]\"><span class=\"material-symbols-outlined text-[20px] animate-spin text-primary mr-2\">sync</span><span>Loading PDF preview...</span></div>", t("read_binary_file", { path: e.path }).then((t) => {
 					e._pdfBytes = new Uint8Array(t), r(e._pdfBytes);
 				}).catch((t) => {
@@ -8887,7 +8962,7 @@ var at = T.map((e) => ({
 		o.className = "material-symbols-outlined text-[64px] text-primary opacity-40", o.textContent = "description", a.appendChild(o);
 		let s = document.createElement("div");
 		s.className = "font-mono-code text-[12px] text-secondary";
-		let c = t.ext || j(t.name) || "DOC";
+		let c = t.ext || M(t.name) || "DOC";
 		s.textContent = `Size: ${t.size ? (t.size / 1024).toFixed(1) : "0.0"} KB • Type: ${c.toUpperCase().replace(/^\./, "")}`, a.appendChild(s);
 		let l = document.createElement("div");
 		l.className = t.isMatched ? "px-3 py-1 rounded bg-tertiary-fixed text-on-tertiary-fixed font-bold font-mono-code text-[11px]" : "px-3 py-1 rounded bg-surface-variant text-on-surface-variant font-bold font-mono-code text-[11px]", l.textContent = t.isMatched ? `Matched: ${t.docType}` : "Unmatched File", a.appendChild(l), e.appendChild(a);
@@ -8897,24 +8972,26 @@ var at = T.map((e) => ({
 	async handleImportMissingDocument(e) {
 		r.show("Select File for Import", `Select document for ${e}`, "info");
 		try {
-			let t = await d("All Supported Files (*.pdf;*.jpg;*.jpeg;*.png;*.docx)|*.pdf;*.jpg;*.jpeg;*.png;*.docx|All Files (*.*)|*.*", `Select File for ${e}`);
+			let t = await f("All Supported Files (*.pdf;*.jpg;*.jpeg;*.png;*.docx)|*.pdf;*.jpg;*.jpeg;*.png;*.docx|All Files (*.*)|*.*", `Select File for ${e}`);
 			if (!t.success || !t.files || t.files.length === 0) return;
-			let n = t.files[0], i = n.ext || j(n.name), a = this.state.folder?.path || "", o = this.state.settings?.includeFolderNameInFile === !1 ? "" : this.state.studentName || this.state.folder?.name || "", s = `${P(e || M(n.name), o, this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim()}${i}`, c = null;
-			a && n.path && (c = await g({
+			let n = t.files[0], i = n.ext || M(n.name), a = this.state.folder?.path || "", o = this.state.settings?.includeFolderNameInFile === !1 ? "" : this.state.studentName || this.state.folder?.name || "", s = `${F(e || N(n.name), o, this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim()}${i}`, c = null;
+			a && n.path && (c = await _({
 				sourcePath: n.path,
 				targetDir: a,
 				targetName: s,
 				studentName: o
 			}));
-			let l = c && c.name ? c.name : s, u = c && c.path ? c.path : a ? `${a}/${l}` : n.path, f = c && c.size ? c.size : n.size || 0, p = {
+			let l = c && c.name ? c.name : s, u = c && c.path ? c.path : a ? `${a}/${l}` : n.path, d = c && c.size ? c.size : n.size || 0, p = {
 				id: `imported_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
 				name: l,
 				targetName: l,
 				suggestedName: l,
 				path: u,
 				nativePath: u,
-				size: f,
+				size: d,
 				ext: i,
+				dateModified: Date.now(),
+				lastModified: Date.now(),
 				url: c && c.url ? c.url : n.url || Y(n),
 				docType: e,
 				isMatched: !0,
@@ -8926,13 +9003,13 @@ var at = T.map((e) => ({
 				smartDocType: e,
 				status: "matched"
 			};
-			this.state.files.push(p), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.updateMissingModal(), r.show("Document Imported", `Imported ${M(l)} as ${e}`, "success");
+			this.state.files.push(p), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.updateMissingModal(), r.show("Document Imported", `Imported ${N(l)} as ${e}`, "success");
 		} catch (e) {
 			console.error("[DocMitra Import] Import error:", e), r.show("Import Error", e.message || "Failed to import document", "error");
 		}
 	}
 	openMissingDocumentsModal() {
-		this.missingModal ||= new nt({
+		this.missingModal ||= new it({
 			onImportFile: (e) => this.handleImportMissingDocument(e),
 			onSetFollowup: ({ docName: e, date: t }) => {
 				let n = this.state.studentName || this.state.folder?.name || "Student";
@@ -8962,23 +9039,26 @@ var at = T.map((e) => ({
 		], i = this.getActivePresetDocuments(), a = new Set(this.state.files.map((e) => (e.docType || "").toUpperCase()).filter(Boolean)), o = i.filter((e) => {
 			let t = (e.name || e).toUpperCase();
 			if (a.has(t)) return !1;
-			for (let e of C) if (e.combined && a.has(e.combined.toUpperCase()) && (t === e.part1.toUpperCase() || t === e.part2.toUpperCase())) return !1;
+			for (let e of w) if (e.combined && a.has(e.combined.toUpperCase()) && (t === e.part1.toUpperCase() || t === e.part2.toUpperCase())) return !1;
 			return !0;
 		}), s = this.state.files.map((e) => {
 			let t = e.docType || e.targetName || e.name, n = !1;
-			for (let e of C) if (e.combined && (t || "").toUpperCase() === e.combined.toUpperCase()) {
+			for (let e of w) if (e.combined && (t || "").toUpperCase() === e.combined.toUpperCase()) {
 				n = !0;
 				break;
 			}
+			let r = e.ext || M(e.name) || "pdf", i = e.dateModified || e.lastModified || e.modified || Date.now();
 			return {
 				name: e.name,
 				docType: t,
 				size: e.size || 0,
+				ext: r.toUpperCase().replace(".", ""),
+				dateModified: i,
 				isCombined: n
 			};
 		}), c = {};
 		o.forEach((t) => {
-			let n = typeof t == "string" ? t : t.name || "", r = Ye(e, n);
+			let n = typeof t == "string" ? t : t.name || "", r = Xe(e, n);
 			r && r.promisedDate && (c[n] = r.promisedDate);
 		}), this.missingModal.open({
 			studentName: e,
@@ -8992,12 +9072,12 @@ var at = T.map((e) => ({
 		});
 	}
 };
-function ct() {
-	let e = new st();
+function ut() {
+	let e = new lt();
 	return e.init(), typeof window < "u" && (window.docmitraRenamer = e), e;
 }
 // src/services/export-import-service.js
-function lt(e) {
+function dt(e) {
 	let t = {
 		format: "BulkStudentRenamerSettings",
 		version: 1,
@@ -9010,7 +9090,7 @@ function lt(e) {
 	}, n = new Blob([JSON.stringify(t, null, 2)], { type: "application/json" }), r = URL.createObjectURL(n), i = document.createElement("a");
 	i.href = r, i.download = `student-renamer-settings-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.json`, i.click(), setTimeout(() => URL.revokeObjectURL(r), 1e3);
 }
-function ut(e, t) {
+function ft(e, t) {
 	return new Promise((n, r) => {
 		if (!e) return r(/* @__PURE__ */ Error("No backup file selected."));
 		if (e.size > 5242880) return r(/* @__PURE__ */ Error("Backup file exceeds maximum allowed size (5 MB)."));
@@ -9033,7 +9113,7 @@ function ut(e, t) {
 	});
 }
 // src/ui/settings-ui.js
-var dt = class {
+var pt = class {
 	constructor() {
 		this.state = null, this.initialState = null, this.activeChecklist = "MAHA DBT FORM";
 	}
@@ -9062,7 +9142,7 @@ var dt = class {
 		let a = document.getElementById("btnExportSettingsJSON");
 		a && a.addEventListener("click", () => {
 			try {
-				lt(this.state), r.show("Settings Exported", "Configuration JSON file downloaded.", "success");
+				dt(this.state), r.show("Settings Exported", "Configuration JSON file downloaded.", "success");
 			} catch (e) {
 				r.show("Export Error", e.message, "error");
 			}
@@ -9071,7 +9151,7 @@ var dt = class {
 		o && s && (o.addEventListener("click", () => s.click()), s.addEventListener("change", async (e) => {
 			let t = e.target.files?.[0];
 			if (t) try {
-				await ut(t, this.state), He(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Import Successful", "System configuration restored and verified.", "success");
+				await ft(t, this.state), He(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Import Successful", "System configuration restored and verified.", "success");
 			} catch (e) {
 				r.show("Import Failed", e.message || "Invalid settings JSON format.", "error");
 			} finally {
@@ -9296,7 +9376,7 @@ var dt = class {
 		if (!e || !t) return;
 		for (; e.firstChild;) e.removeChild(e.firstChild);
 		for (; t.firstChild;) t.removeChild(t.firstChild);
-		let n = this.state.checklists || V;
+		let n = this.state.checklists || H;
 		Object.keys(n).forEach((t) => {
 			let n = document.createElement("button");
 			n.type = "button", n.className = t === this.activeChecklist ? "px-3 py-1.5 rounded-lg bg-primary text-on-primary font-label-sm font-bold shadow-xs cursor-pointer" : "px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm font-semibold cursor-pointer", n.textContent = t, n.addEventListener("click", () => {
@@ -9368,7 +9448,7 @@ var dt = class {
 		e && e.classList.add("hidden"), document.body.style.overflow = "";
 	}
 	handleReset() {
-		window.confirm("Reset all rules, shortcuts, and checklists to factory defaults?") && (this.state.groups = Ae(), this.state.checklists = JSON.parse(JSON.stringify(V)), He(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Factory Defaults Restored", "All default rules loaded.", "info"));
+		window.confirm("Reset all rules, shortcuts, and checklists to factory defaults?") && (this.state.groups = Ae(), this.state.checklists = JSON.parse(JSON.stringify(H)), He(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Factory Defaults Restored", "All default rules loaded.", "info"));
 	}
 	handleDiscard() {
 		this.state = JSON.parse(JSON.stringify(this.initialState)), this.renderAll(), r.show("Changes Discarded", "Reverted to previous configuration.", "info");
@@ -9376,12 +9456,12 @@ var dt = class {
 		e && e.classList.add("hidden"), document.body.style.overflow = "";
 	}
 };
-function ft() {
-	let e = new dt();
+function mt() {
+	let e = new pt();
 	return e.init(), e;
 }
 // tools/pdf_studio/pdf_studio_logic.js
-var pt = {
+var ht = {
 	A4_PORTRAIT: {
 		width: 595.28,
 		height: 841.89,
@@ -9393,7 +9473,7 @@ var pt = {
 		label: "A4 Landscape"
 	}
 };
-function mt(e) {
+function gt(e) {
 	let t = 2, n = e.length;
 	for (; t < n && e[t] === 255;) {
 		let r = e[t + 1];
@@ -9425,8 +9505,8 @@ function Q(e = [], t = "portrait", n = 0) {
 	for (let e = 0; e < c; e++) l.push(3 + e * 3);
 	r.push(i), s(a(`2 0 obj\n<< /Type /Pages /Kids [ ${l.map((e) => `${e} 0 R`).join(" ")} ] /Count ${c} >>\nendobj\n`));
 	for (let o = 0; o < c; o++) {
-		let c = e[o], l = 3 + o * 3, u = l + 1, d = l + 2, f = c.bytes, { width: p, height: m } = c.width && c.height ? c : mt(f), h = pt.A4_PORTRAIT.width, g = pt.A4_PORTRAIT.height;
-		(t === "landscape" || t === "fit" && p > m) && (h = pt.A4_LANDSCAPE.width, g = pt.A4_LANDSCAPE.height);
+		let c = e[o], l = 3 + o * 3, u = l + 1, d = l + 2, f = c.bytes, { width: p, height: m } = c.width && c.height ? c : gt(f), h = ht.A4_PORTRAIT.width, g = ht.A4_PORTRAIT.height;
+		(t === "landscape" || t === "fit" && p > m) && (h = ht.A4_LANDSCAPE.width, g = ht.A4_LANDSCAPE.height);
 		let _ = h - 36, v = g - 36, y = Math.min(_ / p, v / m), b = p * y, x = m * y, S = (h - b) / 2, C = (g - x) / 2, w = n ? ` /Rotate ${n}` : "";
 		r.push(i), s(a(`${l} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${h.toFixed(2)} ${g.toFixed(2)}]${w} /Contents ${u} 0 R /Resources << /XObject << /Im${o + 1} ${d} 0 R >> >> >>\nendobj\n`));
 		let T = `q ${b.toFixed(2)} 0 0 ${x.toFixed(2)} ${S.toFixed(2)} ${C.toFixed(2)} cm /Im${o + 1} Do Q\n`, E = T.length;
@@ -9437,13 +9517,13 @@ function Q(e = [], t = "portrait", n = 0) {
 	for (let e of r) s(a(`${String(e).padStart(10, "0")} 00000 n \n`));
 	return s(a(`trailer\n<< /Size ${d} /Root 1 0 R >>\nstartxref\n${u}\n%%EOF\n`)), new Blob(o, { type: "application/pdf" });
 }
-function ht(e) {
+function _t(e) {
 	let t = [], n = e.length, r = 0;
 	for (; r < n - 3;) if (e[r] === 255 && e[r + 1] === 216 && e[r + 2] === 255) {
 		let i = r;
 		for (r += 2; r < n - 1;) {
 			if (e[r] === 255 && e[r + 1] === 217) {
-				let n = r + 2, a = e.slice(i, n), o = mt(a);
+				let n = r + 2, a = e.slice(i, n), o = gt(a);
 				t.push({
 					bytes: a,
 					width: o.width,
@@ -9457,7 +9537,7 @@ function ht(e) {
 	return t;
 }
 function $(e) {
-	let t = ht(e);
+	let t = _t(e);
 	if (!t.length) return [];
 	if (t.length === 1) return t;
 	let n = Math.max(...t.map((e) => (e.width || 0) * (e.height || 0))), r = Math.max(...t.map((e) => e.bytes?.length || 0)), i = t.filter((e) => {
@@ -9469,7 +9549,7 @@ function $(e) {
 		return r === n ? (t.bytes?.length || 0) - (e.bytes?.length || 0) : r - n;
 	});
 }
-function gt(e, t = "Document.pdf") {
+function vt(e, t = "Document.pdf") {
 	let n = $(e), r = t.replace(/\.pdf$/i, "");
 	return n.length ? n.map((e, t) => {
 		let i = n.length === 1 ? `${r}.jpg` : `${r}_page_${t + 1}.jpg`, a = new Blob([e.bytes], { type: "image/jpeg" });
@@ -9483,7 +9563,7 @@ function gt(e, t = "Document.pdf") {
 		};
 	}) : [];
 }
-function _t(e, t = "Document.pdf") {
+function yt(e, t = "Document.pdf") {
 	let n = $(e), r = t.replace(/\.pdf$/i, "");
 	return n.length ? n.map((e, t) => {
 		let n = `${r}_page_${t + 1}.pdf`, i = Q([e], "portrait");
@@ -9495,7 +9575,7 @@ function _t(e, t = "Document.pdf") {
 		};
 	}) : [];
 }
-function vt(e = [], t = "portrait") {
+function bt(e = [], t = "portrait") {
 	let n = [];
 	for (let t of e) {
 		let e = $(t);
@@ -9504,7 +9584,7 @@ function vt(e = [], t = "portrait") {
 	if (!n.length) throw Error("No document images could be extracted to merge PDFs.");
 	return Q(n, t);
 }
-function yt(e, t = 90) {
+function xt(e, t = 90) {
 	let n = (t % 360 + 360) % 360;
 	if (n === 0) return new Blob([e], { type: "application/pdf" });
 	let r = $(e);
@@ -9523,13 +9603,13 @@ function yt(e, t = 90) {
 	}
 	throw Error("No pages found in PDF to rotate.");
 }
-function bt(e, t, n = "auto") {
+function St(e, t, n = "auto") {
 	if (!e) return "document.pdf";
 	let r = e.lastIndexOf("."), i = r === -1 ? e : e.slice(0, r), a = r === -1 ? "" : e.slice(r), o = i.replace(/[\s_-]+\d+\s*(?:KB|MB)$/i, "").trim();
 	return n === "MB" || n === "auto" && t >= 10485760 ? `${o} ${Math.max(1, Math.round(Number(t || 0) / 1048576))} MB${a}` : `${o} ${Math.max(1, Math.round(Number(t || 0) / 1024))} KB${a}`;
 }
 // tools/pdf_studio/pdf_studio_ui.js
-var xt = class {
+var Ct = class {
 	constructor() {
 		this.activeTool = "compress_pdf", this.files = [], this.isProcessing = !1;
 	}
@@ -9612,7 +9692,7 @@ var xt = class {
 	async handleBrowseFolder() {
 		r.show("Opening Folder Picker", "Navigating Windows Explorer...", "info");
 		try {
-			let e = await u();
+			let e = await d();
 			if (!e.success) {
 				e.cancelled || r.show("Folder Select Error", e.error || "Failed to select folder", "error");
 				return;
@@ -9746,7 +9826,7 @@ var xt = class {
 	rotateSingleFile(e) {
 		let t = this.files[e];
 		if (t && t.bytes) try {
-			let e = yt(t.bytes, 90);
+			let e = xt(t.bytes, 90);
 			e.arrayBuffer().then((n) => {
 				t.bytes = new Uint8Array(n), t.size = e.size, this.renderQueue(), r.show("Page Rotated", `${t.name} rotated 90° clockwise.`, "info");
 			});
@@ -9765,7 +9845,7 @@ var xt = class {
 		let e = 0;
 		this.files.forEach((t) => {
 			if (t.bytes) try {
-				let n = yt(t.bytes, 90);
+				let n = xt(t.bytes, 90);
 				n.arrayBuffer().then((i) => {
 					t.bytes = new Uint8Array(i), t.size = n.size, e++, e === this.files.length && (this.renderQueue(), r.show("All Rotated", `Rotated all ${this.files.length} PDFs by 90°.`, "success"));
 				});
@@ -9790,7 +9870,7 @@ var xt = class {
 		r.show("Processing Started", `Running ${this._getToolDisplayName(e)} on ${this.files.length} files...`, "info");
 		try {
 			if (e === "merge_pdf") {
-				let e = vt(this.files.map((e) => e.bytes).filter(Boolean), "portrait");
+				let e = bt(this.files.map((e) => e.bytes).filter(Boolean), "portrait");
 				this._downloadBlob(e, "Merged_Admission_Dossier.pdf"), r.show("Merge Complete!", "Merged PDF Dossier generated and saved.", "success");
 			} else if (e === "compress_pdf") {
 				let e = 0;
@@ -9798,19 +9878,19 @@ var xt = class {
 					if (!t.bytes) continue;
 					let n = $(t.bytes), r;
 					r = n.length > 0 ? Q(n, "portrait") : new Blob([t.bytes], { type: "application/pdf" });
-					let i = bt(t.name, r.size);
+					let i = St(t.name, r.size);
 					this._downloadBlob(r, i), e++;
 				}
 				r.show("Compression Complete!", `Compressed ${e} files to safe MahaDBT thresholds.`, "success");
 			} else if (e === "split_pdf") {
 				let e = 0;
-				for (let t of this.files) t.bytes && _t(t.bytes, t.name).forEach((t) => {
+				for (let t of this.files) t.bytes && yt(t.bytes, t.name).forEach((t) => {
 					this._downloadBlob(t.blob, t.fileName), e++;
 				});
 				r.show("Split Complete!", `Extracted ${e} individual PDF pages.`, "success");
 			} else if (e === "pdf_to_jpg") {
 				let e = 0;
-				for (let t of this.files) t.bytes && gt(t.bytes, t.name).forEach((t) => {
+				for (let t of this.files) t.bytes && vt(t.bytes, t.name).forEach((t) => {
 					this._downloadBlob(t.blob, t.fileName), e++;
 				});
 				r.show("Conversion Complete!", `Extracted ${e} high-resolution JPG pages.`, "success");
@@ -9818,7 +9898,7 @@ var xt = class {
 				let e = 0;
 				for (let t of this.files) {
 					if (!t.bytes) continue;
-					let n = yt(t.bytes, 90);
+					let n = xt(t.bytes, 90);
 					this._downloadBlob(n, t.name), e++;
 				}
 				r.show("Rotation Complete!", `Rotated and saved ${e} PDF documents.`, "success");
@@ -9844,12 +9924,12 @@ var xt = class {
 		}, 1e3);
 	}
 };
-function St() {
-	let e = new xt();
+function wt() {
+	let e = new Ct();
 	return e.init(), e;
 }
 // src/modules/image-studio.js
-function Ct(e, t, n, r = "magic_color") {
+function Tt(e, t, n, r = "magic_color") {
 	if (!e || r === "none" || r === "original") return;
 	let i = e.getImageData(0, 0, t, n), a = i.data;
 	for (let e = 0; e < a.length; e += 4) {
@@ -9866,13 +9946,13 @@ function Ct(e, t, n, r = "magic_color") {
 	}
 	e.putImageData(i, 0, 0);
 }
-function wt(e, t = 0) {
+function Et(e, t = 0) {
 	let n = document.createElement("canvas"), r = (t % 360 + 360) % 360, i = r === 90 || r === 270, a = i ? e.height : e.width, o = i ? e.width : e.height;
 	n.width = a, n.height = o;
 	let s = n.getContext("2d");
 	return s.save(), s.translate(n.width / 2, n.height / 2), s.rotate(r * Math.PI / 180), s.drawImage(e, -e.width / 2, -e.height / 2), s.restore(), n;
 }
-async function Tt(e, t = 250, n = {}) {
+async function Dt(e, t = 250, n = {}) {
 	let { rotation: r = 0, filterMode: i = "none", outputMime: a = "image/jpeg", maxDimension: o = 2400 } = n;
 	return new Promise((n, s) => {
 		let c = new Image(), l = URL.createObjectURL(e);
@@ -9885,7 +9965,7 @@ async function Tt(e, t = 250, n = {}) {
 					e = Math.round(e * t), s = Math.round(s * t);
 				}
 				let l;
-				if (r === 0 ? (l = document.createElement("canvas"), l.width = e, l.height = s, l.getContext("2d").drawImage(c, 0, 0, e, s)) : l = wt(c, r), i && i !== "none" && Ct(l.getContext("2d"), l.width, l.height, i), !t || t <= 0) {
+				if (r === 0 ? (l = document.createElement("canvas"), l.width = e, l.height = s, l.getContext("2d").drawImage(c, 0, 0, e, s)) : l = Et(c, r), i && i !== "none" && Tt(l.getContext("2d"), l.width, l.height, i), !t || t <= 0) {
 					let e = await new Promise((e) => l.toBlob(e, a, .9));
 					return n({
 						blob: e,
@@ -9929,7 +10009,7 @@ async function Tt(e, t = 250, n = {}) {
 		}, c.src = l;
 	});
 }
-async function Et(e, t = "image/png") {
+async function Ot(e, t = "image/png") {
 	return new Promise((n, r) => {
 		let i = new Image(), a = URL.createObjectURL(e);
 		i.onload = () => {
@@ -9955,7 +10035,7 @@ async function Et(e, t = "image/png") {
 	});
 }
 // src/ui/image-studio-ui.js
-var Dt = class {
+var kt = class {
 	constructor() {
 		this.activeTool = "compress_photo_sign", this.files = [], this.isProcessing = !1;
 	}
@@ -10038,7 +10118,7 @@ var Dt = class {
 	async handleBrowseFolder() {
 		r.show("Opening Folder Picker", "Navigating Windows Explorer...", "info");
 		try {
-			let e = await u();
+			let e = await d();
 			if (!e.success) {
 				e.cancelled || r.show("Folder Select Error", e.error || "Failed to select folder", "error");
 				return;
@@ -10152,7 +10232,7 @@ var Dt = class {
 		if (!t || !t.url) return;
 		let n = new Image();
 		n.crossOrigin = "anonymous", n.onload = () => {
-			wt(n, 90).toBlob((e) => {
+			Et(n, 90).toBlob((e) => {
 				t.url = URL.createObjectURL(e), t.size = e.size, t.fileOrBlob = e, this.renderQueue(), r.show("Image Rotated", `${t.name} rotated 90° clockwise.`, "info");
 			}, "image/jpeg", .92);
 		}, n.src = t.url;
@@ -10185,13 +10265,13 @@ var Dt = class {
 				let r = n.fileOrBlob;
 				if (!r && n.url && (r = await (await fetch(n.url)).blob()), r) {
 					if (e === "compress_photo_sign") {
-						let e = /sign|signature|स्वाक्षरी/i.test(n.name) ? 18 : 45, i = await Tt(r, e);
+						let e = /sign|signature|स्वाक्षरी/i.test(n.name) ? 18 : 45, i = await Dt(r, e);
 						this._downloadBlob(i.blob, `Compressed_${n.name}`), t++;
 					} else if (e === "passport_crop") {
-						let e = await Tt(await this._cropPassport(r), 48);
+						let e = await Dt(await this._cropPassport(r), 48);
 						this._downloadBlob(e.blob, `Passport_${n.name}`), t++;
 					} else if (e === "sign_clean_invert") {
-						let e = await Tt(r, 18, { filterMode: "sharp_contrast" });
+						let e = await Dt(r, 18, { filterMode: "sharp_contrast" });
 						this._downloadBlob(e.blob, `Clean_Sign_${n.name}`), t++;
 					} else if (e === "image_to_pdf") {
 						let e = await r.arrayBuffer(), i = Q([{
@@ -10201,10 +10281,10 @@ var Dt = class {
 						}], "portrait"), a = n.name.replace(/\.[a-zA-Z0-9]+$/, "") + ".pdf";
 						this._downloadBlob(i, a), t++;
 					} else if (e === "magic_color") {
-						let e = await Tt(r, 240, { filterMode: "enhanced" });
+						let e = await Dt(r, 240, { filterMode: "enhanced" });
 						this._downloadBlob(e.blob, `Magic_${n.name}`), t++;
 					} else {
-						let e = await Et(r, "image/jpeg");
+						let e = await Ot(r, "image/jpeg");
 						this._downloadBlob(e.blob, `Converted_${n.name.replace(/\.[a-zA-Z0-9]+$/, ".jpg")}`), t++;
 					}
 				}
@@ -10237,12 +10317,12 @@ var Dt = class {
 		}, 1e3);
 	}
 };
-function Ot() {
-	let e = new Dt();
+function At() {
+	let e = new kt();
 	return e.init(), e;
 }
 // src/libraries/document-matcher.js
-var kt = [
+var jt = [
 	{
 		id: "12th-marksheet-passing-combined",
 		outputName: "12TH MARKSHEET AND PASSING",
@@ -10552,7 +10632,7 @@ var kt = [
 		]
 	}
 ];
-function At(e, t = null) {
+function Mt(e, t = null) {
 	if (!e || typeof e != "string") return {
 		docType: null,
 		percentage: 0,
@@ -10561,7 +10641,7 @@ function At(e, t = null) {
 		status: "none"
 	};
 	let n = e.trim().toLowerCase(), r = n.replace(/[-_.]+/g, " ");
-	for (let e of kt) if (n === e.shortcut.toLowerCase() || r.trim() === e.shortcut.toLowerCase()) return {
+	for (let e of jt) if (n === e.shortcut.toLowerCase() || r.trim() === e.shortcut.toLowerCase()) return {
 		docType: e.outputName,
 		percentage: 100,
 		badgeText: `100% Match: ${e.outputName}`,
@@ -10579,7 +10659,7 @@ function At(e, t = null) {
 			};
 		}
 	}
-	for (let e of kt) for (let t of e.patterns) if (t.test(n) || t.test(r)) return {
+	for (let e of jt) for (let t of e.patterns) if (t.test(n) || t.test(r)) return {
 		docType: e.outputName,
 		percentage: 100,
 		badgeText: `100% Match: ${e.outputName}`,
@@ -10607,16 +10687,16 @@ function At(e, t = null) {
 	};
 }
 ({ ...Oe });
-function jt(e) {
+function Nt(e) {
 	if (!e || typeof e != "string") return "";
-	let t = At(e);
+	let t = Mt(e);
 	if (t && t.docType) return t.docType;
 	let n = e.replace(/\.[^/.]+$/, "");
 	return n = n.replace(/\s*\(p\.\d+\)/i, ""), n.trim().toUpperCase();
 }
-function Mt(e) {
+function Pt(e) {
 	if (!e || typeof e != "string") return "";
-	let t = e.replace(/\.[^/.]+$/, "").trim(), n = At(t);
+	let t = e.replace(/\.[^/.]+$/, "").trim(), n = Mt(t);
 	if (n && n.docType) {
 		let e = n.docType, r = t, i = RegExp(`^${e}\\b`, "i");
 		if (i.test(r) ? r = r.replace(i, "").trim() : e.split(/\s+/).forEach((e) => {
@@ -10628,9 +10708,9 @@ function Mt(e) {
 	}
 	return t;
 }
-function Nt(e, t = []) {
+function Ft(e, t = []) {
 	return !Array.isArray(e) || e.length === 0 ? [] : !Array.isArray(t) || t.length === 0 ? [...e] : [...e].sort((e, n) => {
-		let r = e.docType || jt(e.label || e.name), i = n.docType || jt(n.label || n.name), a = t.findIndex((e) => {
+		let r = e.docType || Nt(e.label || e.name), i = n.docType || Nt(n.label || n.name), a = t.findIndex((e) => {
 			let t = e.toUpperCase(), n = r.toUpperCase();
 			return t === n || n.includes(t) || t.includes(n);
 		}), o = t.findIndex((e) => {
@@ -10641,7 +10721,7 @@ function Nt(e, t = []) {
 	});
 }
 // src/ui/print-studio-ui.js
-var Pt = class {
+var It = class {
 	constructor() {
 		this.presets = { ...Oe }, this.activePresetKey = "MAHA DBT FORM", this.documents = [], this.activeDocIndex = 0, this.zoomLevel = 100;
 	}
@@ -10788,12 +10868,12 @@ var Pt = class {
 	}
 	handleAutoOrder() {
 		let e = this.presets[this.activePresetKey] || [];
-		this.documents = Nt(this.documents, e), this.activeDocIndex = 0, this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), r.show("Sequence Applied", `Ordered according to ${this.activePresetKey} criteria.`, "success");
+		this.documents = Ft(this.documents, e), this.activeDocIndex = 0, this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), r.show("Sequence Applied", `Ordered according to ${this.activePresetKey} criteria.`, "success");
 	}
 	async handleBrowseFolder() {
 		r.show("Opening Folder Picker", "Navigating Windows Explorer...", "info");
 		try {
-			let e = await u();
+			let e = await d();
 			if (!e.success) {
 				e.cancelled || r.show("Folder Select Error", e.error || "Failed to select folder", "error");
 				return;
@@ -10804,7 +10884,7 @@ var Pt = class {
 				return;
 			}
 			this.documents = t.map((e, t) => {
-				let n = jt(e.name), r = Mt(e.name);
+				let n = Nt(e.name), r = Pt(e.name);
 				return {
 					id: `print_doc_${Date.now()}_${t}`,
 					name: e.name,
@@ -10895,22 +10975,22 @@ var Pt = class {
 		}
 	}
 };
-function Ft() {
-	let e = new Pt();
+function Lt() {
+	let e = new It();
 	return e.init(), e;
 }
 // src/ui/followup-ui.js
-var It = class {
+var Rt = class {
 	constructor() {
 		this.items = [], this.searchQuery = "";
 	}
 	init() {
-		this._seedDemoDataIfEmpty(), this.items = G(), this._bindControls(), this.renderTable(), console.info("[DocMitra Follow-up Desk] Follow-up UI manager initialized.");
+		this._seedDemoDataIfEmpty(), this.items = qe(), this._bindControls(), this.renderTable(), console.info("[DocMitra Follow-up Desk] Follow-up UI manager initialized.");
 	}
 	_seedDemoDataIfEmpty() {
-		if (G().length === 0) {
-			let e = Ze(), t = Qe(2);
-			qe([
+		if (qe().length === 0) {
+			let e = Qe(), t = $e(2);
+			Je([
 				{
 					id: "fu_demo_1",
 					folderName: "Vijay_Ramesh_Yadav",
@@ -10977,7 +11057,7 @@ var It = class {
 	async handleOpenBatchDirectory() {
 		r.show("Opening Folder Picker", "Navigating Windows Explorer...", "info");
 		try {
-			let e = await u();
+			let e = await d();
 			if (!e.success) {
 				e.cancelled || r.show("Folder Select Error", e.error || "Failed to select folder", "error");
 				return;
@@ -11019,7 +11099,7 @@ var It = class {
 			c.appendChild(u), s.appendChild(c), n.appendChild(s);
 			let d = document.createElement("td");
 			d.className = "py-3.5 px-space-md";
-			let f = Xe(t.promisedDate), p = document.createElement("div");
+			let f = Ze(t.promisedDate), p = document.createElement("div");
 			p.className = f === "overdue" ? "font-mono-code font-bold text-error" : f === "today" ? "font-mono-code font-bold text-amber-700" : "font-mono-code font-bold text-emerald-700", p.textContent = q(t.promisedDate), d.appendChild(p);
 			let m = document.createElement("span");
 			f === "overdue" ? (m.className = "text-[10px] font-bold uppercase tracking-wider text-error bg-error-container/40 px-1.5 py-0.5 rounded", m.textContent = "OVERDUE") : f === "today" ? (m.className = "text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded", m.textContent = "DUE TODAY") : (m.className = "text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded", m.textContent = "UPCOMING"), d.appendChild(m), n.appendChild(d);
@@ -11088,18 +11168,18 @@ var It = class {
 		window.open(i, "_blank"), r.show("WhatsApp उघडत आहे", `Opening WhatsApp for ${e.studentName}...`, "info");
 	}
 	markItemResolved(e) {
-		Je(e.folderName, e.documentName), e.status = "resolved", this.renderTable(), r.show("कागदपत्र प्राप्त!", `${e.documentName} for ${e.studentName} marked as received.`, "success");
+		Ye(e.folderName, e.documentName), e.status = "resolved", this.renderTable(), r.show("कागदपत्र प्राप्त!", `${e.documentName} for ${e.studentName} marked as received.`, "success");
 	}
 };
-function Lt() {
-	let e = new It();
+function zt() {
+	let e = new Rt();
 	return e.init(), e;
 }
 // src/ui/index.js
-function Rt() {
+function Bt() {
 	let e = new n();
-	e.init(), new i().init(), ft();
-	let t = ct();
+	e.init(), new a().init(), mt();
+	let t = ut();
 	typeof window < "u" && (window.renamerUI = t, window.location.search.includes("test_loaded=1") && setTimeout(() => {
 		t.state.folder = {
 			name: "Vijay_Ramesh_Yadav",
@@ -11135,13 +11215,13 @@ function Rt() {
 		], t.state.currentIndex = 0, t.renderQueue();
 	}, 200)), e.onViewChange = (e, n) => {
 		n === "bulk-renamer" && e !== "bulk-renamer" && t.handleClearQueue(!0);
-	}, St(), Ot(), Ft(), Lt(), a();
-	let o = document.getElementById("themeToggleBtn");
-	o && o.addEventListener("click", () => {
+	}, wt(), At(), Lt(), zt(), o();
+	let i = document.getElementById("themeToggleBtn");
+	i && i.addEventListener("click", () => {
 		document.documentElement.classList.toggle("dark");
 		let e = document.documentElement.classList.contains("dark");
 		r.show(e ? "Dark Theme Enabled" : "Light Theme Enabled", "UI Preference Updated", "info");
 	}), console.info("[DocMitra] UI Shell & Modules initialized successfully.");
 }
-document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", Rt) : Rt();
-export { Rt as initAppShell };
+document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", Bt) : Bt();
+export { Bt as initAppShell };

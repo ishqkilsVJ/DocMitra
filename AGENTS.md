@@ -33,6 +33,7 @@
 4. **100% English Production UI:** Production UI must remain 100% professional administrative English. Marathi is strictly reserved for user chat and documentation.
 5. **Zero Dummy Student Data:** DOM templates must initialize cleanly with real empty states.
 6. **Scoped CSS:** All styling must be strictly scoped under the `.<tool_name>-scope` namespace.
+7. **Unified Suite-Wide Toast Policy:** All tools (`rename_tool`, `pdf_studio`, `image_studio`, `print_studio`, `followup_desk`) must strictly route all notifications through `import { toast } from '../../shared/toast.js'` or `window.DocMitraToast`. Never create localized bottom toast banners or custom floating containers that overlap footer execution bars. All notifications must enforce top-right safe placement, anti-stacking (max 1 visible), and smart in-place counter merging (`×N`).
 
 ---
 

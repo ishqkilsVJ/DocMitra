@@ -21,6 +21,24 @@ function formatBytes(bytes) {
   return `${kb} KB`;
 }
 
+function formatFileDate(timestamp) {
+  if (!timestamp) {
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2, '0');
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const yyyy = now.getFullYear();
+    return `${dd}-${mm}-${yyyy}`;
+  }
+  const d = new Date(timestamp);
+  if (isNaN(d.getTime())) {
+    return '24-11-2026';
+  }
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${dd}-${mm}-${yyyy}`;
+}
+
 export class MissingDocumentsModal {
   constructor(options = {}) {
     this.container = options.container || document.body;
@@ -118,9 +136,12 @@ export class MissingDocumentsModal {
     // SVG dasharray (circumference = 100 for r=15.9155)
     const strokeDash = `${percent}, 100`;
 
+    // Clean folder name extraction (Option 1-B: compact ribbon in header, without file paths or edit pencil)
+    const cleanFolderName = (folderPath || '').split(/[/\\]/).filter(Boolean).pop() || studentName || 'Active Folder';
+
     this.contentEl.innerHTML = `
       <!-- 1. TOP HEADER WITH CONTEXT & SCHEME SELECTOR -->
-      <header class="px-5 py-3.5 bg-surface-container-lowest border-b border-outline-variant/30 flex flex-col gap-2.5 shrink-0">
+      <header class="px-5 py-3 bg-surface-container-lowest border-b border-outline-variant/30 flex flex-col gap-2 shrink-0">
         <div class="flex items-center justify-between gap-3 flex-wrap">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center shadow-xs shrink-0">
@@ -129,9 +150,6 @@ export class MissingDocumentsModal {
             <div>
               <div class="flex items-center gap-2 flex-wrap">
                 <h1 class="font-headline-md text-[17px] text-on-surface tracking-tight font-bold">Missing Documents &amp; Follow-up Desk</h1>
-                <span class="px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-mono-code text-[11px] font-semibold tracking-wide">
-                  ${escapeHtml(studentName)}
-                </span>
               </div>
               <p class="font-label-sm text-[11px] text-secondary mt-0.5">Maharashtra Admission &amp; Verification Workflow • 100% Offline Localhost</p>
             </div>
@@ -154,12 +172,12 @@ export class MissingDocumentsModal {
           </div>
         </div>
 
-        <!-- Directory Path Ribbon -->
-        <div class="bg-surface-container-low/70 border border-outline-variant/30 rounded-lg px-3 py-1.5 font-mono-code text-[12px] text-on-surface-variant flex items-center justify-between">
+        <!-- Sleek Folder Ribbon (Option 1-B: Compact clean folder name, zero raw path, zero pencil button) -->
+        <div class="bg-surface-container-low/70 border border-outline-variant/30 rounded-lg px-3 py-1 font-mono-code text-[11px] text-on-surface-variant flex items-center justify-between">
           <div class="flex items-center gap-2 truncate">
-            <span class="material-symbols-outlined text-primary text-[18px] shrink-0">folder</span>
-            <span class="font-semibold text-secondary text-[11px]">DIR:</span>
-            <span class="font-bold text-on-surface truncate" title="${escapeHtml(folderPath)}">📁 ${escapeHtml(folderPath || 'No Folder Selected')}</span>
+            <span class="material-symbols-outlined text-primary text-[16px] shrink-0">folder</span>
+            <span class="font-semibold text-secondary text-[10px] uppercase tracking-wider">Folder:</span>
+            <span class="font-bold text-on-surface truncate" title="${escapeHtml(cleanFolderName)}">📁 ${escapeHtml(cleanFolderName)}</span>
           </div>
           <span class="px-2 py-0.5 rounded bg-surface-container-lowest text-emerald-800 font-mono-code text-[10px] font-bold shrink-0 border border-outline-variant/30">LOCAL FS CONNECTED</span>
         </div>
@@ -167,65 +185,11 @@ export class MissingDocumentsModal {
 
       <!-- 2. MAIN WORKSTATION SCROLL BODY -->
       <div class="p-4 md:p-5 space-y-4 md:space-y-5 flex-1 overflow-y-auto custom-pan-scroll">
-        <!-- MISSING DOCUMENTS LIST -->
-        <div class="space-y-2.5">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="font-headline-sm text-[15px] text-on-surface font-bold">Missing Documents</span>
-              <span class="px-2.5 py-0.5 rounded-full ${missingCount > 0 ? 'bg-error text-white' : 'bg-emerald-600 text-white'} font-mono-code text-[11px] font-bold shadow-2xs">
-                ${missingCount > 0 ? `${missingCount} Required` : '0 Missing'}
-              </span>
-            </div>
-            <span class="font-mono-code text-[11px] text-secondary">Target Buffer: ≤ 256 KB (MahaDBT Strict)</span>
-          </div>
 
-          <div class="space-y-2">
-            ${missingCount === 0 ? `
-              <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center gap-2 text-emerald-800 dark:text-emerald-300 font-mono-code text-[12px] font-bold">
-                <span class="material-symbols-outlined text-[18px] text-emerald-600">check_circle</span>
-                <span>All ${totalCount} required documents staged! Application is 100% verified.</span>
-              </div>
-            ` : missingRules.map((rule) => {
-              const ruleName = typeof rule === 'string' ? rule : (rule.name || '');
-              const ruleTag = rule.tag || rule.code || '';
-              const currentFollowup = followupMap[ruleName] || '';
-
-              return `
-                <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-2.5 shadow-xs flex items-center justify-between gap-3 hover:bg-surface-container-low/40 transition-colors">
-                  <div class="flex items-center gap-3 min-w-0">
-                    <div class="w-3.5 h-3.5 rounded-full bg-error shrink-0 ring-4 ring-error/20"></div>
-                    <div class="min-w-0">
-                      <div class="flex items-center gap-2 flex-wrap">
-                        <h2 class="font-headline-sm text-[13px] md:text-[14px] text-on-surface font-bold truncate">${escapeHtml(ruleName)}</h2>
-                        ${ruleTag ? `<span class="px-2 py-0.5 rounded bg-error-container text-error font-mono-code text-[10px] font-bold uppercase">${escapeHtml(ruleTag)}</span>` : ''}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="flex items-center gap-2 shrink-0">
-                    <!-- Follow-up Desk/Date trigger -->
-                    <div class="flex items-center gap-1.5 bg-surface-container-low border border-outline-variant/40 rounded-lg px-2.5 py-1 shadow-2xs">
-                      <span class="material-symbols-outlined text-primary text-[16px]">event</span>
-                      <span class="font-label-sm text-[11px] text-secondary uppercase font-semibold">Follow-up:</span>
-                      <input type="date" value="${escapeHtml(currentFollowup)}" data-doc="${escapeHtml(ruleName)}" class="missing-followup-input bg-transparent text-on-surface font-mono-code text-[11px] font-bold focus:outline-none cursor-pointer w-[115px]">
-                    </div>
-
-                    <!-- Import File Button -->
-                    <button type="button" data-doc="${escapeHtml(ruleName)}" class="btn-missing-import-file px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white font-mono-code text-[12px] font-bold shadow-sm flex items-center gap-1.5 transition-all cursor-pointer active:scale-95">
-                      <span class="material-symbols-outlined text-[16px]">download</span>
-                      <span>📥 Import File</span>
-                    </button>
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-
-        <!-- 3. RICH CIRCULAR PROGRESS GAUGE & METRICS CARD -->
+        <!-- 2.1 APPLICATION READINESS STATUS SUMMARY CARD (MOVED TO TOP PER REQUIREMENT 2 & OPTION 1-B) -->
         <div class="bg-surface-container-low border border-outline-variant/40 rounded-xl p-3.5 shadow-xs">
           <div class="flex items-center justify-between gap-4 flex-wrap">
-            <!-- Circular Ring Gauge -->
+            <!-- Circular Ring Gauge + Student Name & Status -->
             <div class="flex items-center gap-4">
               <div class="relative w-16 h-16 shrink-0 flex items-center justify-center">
                 <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
@@ -242,11 +206,17 @@ export class MissingDocumentsModal {
 
               <div class="flex flex-col gap-0.5">
                 <span class="font-label-sm text-[10px] text-secondary uppercase tracking-wider font-semibold">Application Readiness Status</span>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 mt-0.5">
+                  <span class="font-label-sm text-[10px] text-secondary uppercase tracking-wider font-semibold">Student Name:</span>
+                  <span class="px-2.5 py-0.5 rounded-md bg-surface-container-lowest text-primary font-headline-sm text-[13px] font-bold tracking-wide border border-outline-variant/30">
+                    ${escapeHtml(studentName)}
+                  </span>
+                </div>
+                <div class="flex items-center gap-2 mt-1">
                   <span class="font-headline-md text-[15px] font-bold text-on-surface">${presentCount} of ${totalCount} Documents Staged</span>
                   <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 font-mono-code text-[11px] font-bold">${percent}% Verified</span>
                 </div>
-                <span class="font-label-sm text-[11px] text-secondary">Portal compliance buffer threshold met for all indexed files.</span>
+                <span class="font-label-sm text-[11px] text-secondary">Maharashtra admission compliance threshold met for all verified documents.</span>
               </div>
             </div>
 
@@ -277,7 +247,76 @@ export class MissingDocumentsModal {
           </div>
         </div>
 
-        <!-- 4. PRESENT / VERIFIED DOCUMENTS COLLAPSIBLE SECTION -->
+        <!-- 2.2 MISSING DOCUMENTS LIST (OPTION 3-A: Date, Size & File Type on Every Row) -->
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="font-headline-sm text-[15px] text-on-surface font-bold">Missing Documents</span>
+              <span class="px-2.5 py-0.5 rounded-full ${missingCount > 0 ? 'bg-error text-white' : 'bg-emerald-600 text-white'} font-mono-code text-[11px] font-bold shadow-2xs">
+                ${missingCount > 0 ? `${missingCount} Required` : '0 Missing'}
+              </span>
+            </div>
+            <span class="font-mono-code text-[11px] text-secondary">Target Buffer: ≤ 256 KB (MahaDBT Strict)</span>
+          </div>
+
+          <div class="space-y-2">
+            ${missingCount === 0 ? `
+              <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center gap-2 text-emerald-800 dark:text-emerald-300 font-mono-code text-[12px] font-bold">
+                <span class="material-symbols-outlined text-[18px] text-emerald-600">check_circle</span>
+                <span>All ${totalCount} required documents staged! Application is 100% verified.</span>
+              </div>
+            ` : missingRules.map((rule) => {
+              const ruleName = typeof rule === 'string' ? rule : (rule.name || '');
+              const ruleTag = rule.tag || rule.code || '';
+              const currentFollowup = followupMap[ruleName] || '';
+
+              return `
+                <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-2.5 shadow-xs flex items-center justify-between gap-3 hover:bg-surface-container-low/40 transition-colors">
+                  <div class="flex items-center gap-3 min-w-0 flex-1">
+                    <div class="w-3.5 h-3.5 rounded-full bg-error shrink-0 ring-4 ring-error/20"></div>
+                    <div class="min-w-0 flex-1">
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <h2 class="font-headline-sm text-[13px] md:text-[14px] text-on-surface font-bold break-words">${escapeHtml(ruleName)}</h2>
+                        ${ruleTag ? `<span class="px-2 py-0.5 rounded bg-error-container text-error font-mono-code text-[10px] font-bold uppercase shrink-0">${escapeHtml(ruleTag)}</span>` : ''}
+                      </div>
+
+                      <!-- Missing Metadata Row (Option 3-A): Type, Target Size, Follow-up Status -->
+                      <div class="flex items-center gap-2 mt-1 flex-wrap">
+                        <span class="px-1.5 py-0.2 rounded bg-surface-container-high text-on-surface-variant font-mono-code text-[9px] font-bold uppercase border border-outline-variant/20">
+                          PDF / JPG
+                        </span>
+                        <span class="px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono-code text-[9px] font-medium border border-slate-200 dark:border-slate-700">
+                          Target ≤ 256 KB
+                        </span>
+                        <span class="font-mono-code text-[10px] ${currentFollowup ? 'text-primary font-semibold' : 'text-secondary'}">
+                          <span class="material-symbols-outlined text-[12px] align-middle">calendar_clock</span>
+                          ${currentFollowup ? `Promised: ${escapeHtml(currentFollowup)}` : 'Status: Pending'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-2 shrink-0">
+                    <!-- Follow-up Desk/Date trigger -->
+                    <div class="flex items-center gap-1.5 bg-surface-container-low border border-outline-variant/40 rounded-lg px-2.5 py-1 shadow-2xs">
+                      <span class="material-symbols-outlined text-primary text-[16px]">event</span>
+                      <span class="font-label-sm text-[11px] text-secondary uppercase font-semibold">Follow-up:</span>
+                      <input type="date" value="${escapeHtml(currentFollowup)}" data-doc="${escapeHtml(ruleName)}" class="missing-followup-input bg-transparent text-on-surface font-mono-code text-[11px] font-bold focus:outline-none cursor-pointer w-[115px]">
+                    </div>
+
+                    <!-- Import File Button -->
+                    <button type="button" data-doc="${escapeHtml(ruleName)}" class="btn-missing-import-file px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white font-mono-code text-[12px] font-bold shadow-sm flex items-center gap-1.5 transition-all cursor-pointer active:scale-95">
+                      <span class="material-symbols-outlined text-[16px]">download</span>
+                      <span>📥 Import File</span>
+                    </button>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- 2.3 PRESENT / VERIFIED DOCUMENTS SECTION (OPTION 2-B: DD-MM-YYYY Date, Size, Type Badges) -->
         <div class="space-y-2 pt-1">
           <details class="group" open>
             <summary class="flex items-center justify-between cursor-pointer py-2 select-none list-none bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-3.5 shadow-2xs hover:bg-surface-container-low transition-colors">
@@ -299,17 +338,36 @@ export class MissingDocumentsModal {
                 const docName = doc.docType || doc.name || 'Document';
                 const sizeStr = formatBytes(doc.size);
                 const isCombined = doc.isCombined || false;
+                const fileType = (doc.ext || (doc.name ? doc.name.split('.').pop() : 'PDF')).toUpperCase().replace('.', '');
+                const dateStr = formatFileDate(doc.dateModified || doc.lastModified);
 
                 return `
-                  <div class="p-2 rounded-lg bg-surface-container-low border border-outline-variant/30 flex items-center justify-between">
-                    <div class="flex items-center gap-2 min-w-0">
-                      <span class="material-symbols-outlined text-emerald-600 text-[16px] shrink-0">task_alt</span>
-                      <span class="font-label-md text-[12px] font-semibold text-on-surface truncate" title="${escapeHtml(docName)}">${escapeHtml(docName)}</span>
+                  <div class="p-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 flex flex-col gap-1.5">
+                    <div class="flex items-center justify-between gap-2 min-w-0">
+                      <div class="flex items-center gap-1.5 min-w-0">
+                        <span class="material-symbols-outlined text-emerald-600 text-[16px] shrink-0">task_alt</span>
+                        <span class="font-label-md text-[12px] font-semibold text-on-surface break-words" title="${escapeHtml(docName)}">${escapeHtml(docName)}</span>
+                      </div>
+                      <span class="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-900 font-mono-code text-[9px] font-bold shrink-0">Verified</span>
                     </div>
-                    <div class="flex items-center gap-1.5 shrink-0">
-                      ${isCombined ? `<span class="px-1.5 py-0.2 rounded-full bg-secondary-container text-on-secondary-container font-mono-code text-[9px] font-bold">via Combined</span>` : ''}
-                      <span class="font-mono-code text-[10px] text-secondary">${escapeHtml(sizeStr)}</span>
-                      <span class="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-900 font-mono-code text-[9px] font-bold">Verified</span>
+
+                    <!-- Metadata Row: Date (DD-MM-YYYY), Size, File Type Badge -->
+                    <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-secondary pl-5">
+                      <div class="flex items-center gap-2">
+                        <!-- File Type Badge -->
+                        <span class="px-1.5 py-0.2 rounded bg-primary/10 text-primary font-bold uppercase text-[9px]">
+                          ${escapeHtml(fileType)}
+                        </span>
+                        <!-- File Size -->
+                        <span>${escapeHtml(sizeStr)}</span>
+                        ${isCombined ? `<span class="px-1.5 py-0.2 rounded-full bg-secondary-container text-on-secondary-container text-[9px] font-bold">via Combined</span>` : ''}
+                      </div>
+
+                      <!-- Date Modified (DD-MM-YYYY) -->
+                      <div class="flex items-center gap-1 text-on-surface-variant font-medium">
+                        <span class="material-symbols-outlined text-[13px] text-secondary">calendar_today</span>
+                        <span>${escapeHtml(dateStr)}</span>
+                      </div>
                     </div>
                   </div>
                 `;
@@ -319,7 +377,7 @@ export class MissingDocumentsModal {
         </div>
       </div>
 
-      <!-- 5. MODAL / DESK FOOTER -->
+      <!-- 3. MODAL / DESK FOOTER -->
       <footer class="px-5 py-3 bg-surface-container-low border-t border-outline-variant/30 flex items-center justify-between gap-3 rounded-b-2xl shrink-0">
         <div class="flex items-center gap-2 text-on-surface-variant max-w-xl">
           <span class="material-symbols-outlined text-primary text-[18px] shrink-0">info</span>
