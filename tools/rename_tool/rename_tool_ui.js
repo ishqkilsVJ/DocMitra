@@ -35,6 +35,7 @@ import {
   openFolderInExplorer,
   isNativeAvailable
 } from '../../shared/native-bridge.js';
+import { rotateFilePhysicallyOnDisk } from './rotation_engine.js';
 import {
   matchDocument,
   getMatchingSuggestions,
@@ -781,7 +782,7 @@ export class RenamerUIManager {
     const btnZoomIn = colPreview.querySelector('button[title*="Zoom In"]');
     const btnZoomOut = colPreview.querySelector('button[title*="Zoom Out"]');
     const btnReset = colPreview.querySelector('button[title*="Reset Zoom"]');
-    const btnRotate = colPreview.querySelector('button[title*="Rotate"]');
+    const btnRotate = colPreview.querySelector('#btnRenamerRotatePreview') || colPreview.querySelector('button[title*="Rotate"]');
     const zoomSlider = colPreview.querySelector('input[type="range"]');
     const btnFitA4 = colPreview.querySelector('button[title*="Fit to A4 Width"]');
     const btnPan = colPreview.querySelector('button[title*="Pan Hand"]');
@@ -823,15 +824,58 @@ export class RenamerUIManager {
     }
 
     if (btnRotate) {
-      btnRotate.addEventListener('click', () => {
+      btnRotate.addEventListener('click', async () => {
         const currentFile = this.state.files[this.state.currentIndex];
-        if (currentFile) {
+        if (!currentFile) {
+          this.state.rotation = (this.state.rotation + 90) % 360;
+          this._applyPreviewTransform();
+          return;
+        }
+
+        const origContent = btnRotate.innerHTML;
+        btnRotate.disabled = true;
+        btnRotate.innerHTML = '<span class="material-symbols-outlined text-[15px] animate-spin">refresh</span><span>Saving...</span>';
+
+        try {
+          const res = await rotateFilePhysicallyOnDisk({
+            filePath: currentFile.path,
+            ext: currentFile.ext || (currentFile.name ? currentFile.name.split('.').pop() : ''),
+            bytes: currentFile.bytes,
+            degrees: 90
+          });
+
+          if (res.success && res.newBytes) {
+            currentFile.bytes = res.newBytes;
+            if (currentFile.url) {
+              try { URL.revokeObjectURL(currentFile.url); } catch (_) {}
+            }
+            const cleanExt = (currentFile.ext || currentFile.name.split('.').pop() || '').toLowerCase();
+            const mime = cleanExt.includes('pdf')
+              ? 'application/pdf'
+              : cleanExt.includes('png')
+                ? 'image/png'
+                : 'image/jpeg';
+            currentFile.url = URL.createObjectURL(new Blob([res.newBytes], { type: mime }));
+            currentFile.rotation = 0;
+            this.state.rotation = 0;
+            this._applyPreviewTransform();
+            this.renderPreview();
+            toast.show('Document Rotated', `${currentFile.name} rotated 90° clockwise and saved to disk.`, 'success');
+          } else {
+            currentFile.rotation = ((currentFile.rotation || 0) + 90) % 360;
+            this.state.rotation = currentFile.rotation;
+            this._applyPreviewTransform();
+            toast.show('Preview Rotated', res.error || 'Rotated in viewport.', 'info');
+          }
+        } catch (err) {
+          console.error('[DocMitra Renamer] Rotation failed:', err);
           currentFile.rotation = ((currentFile.rotation || 0) + 90) % 360;
           this.state.rotation = currentFile.rotation;
-        } else {
-          this.state.rotation = (this.state.rotation + 90) % 360;
+          this._applyPreviewTransform();
+        } finally {
+          btnRotate.disabled = false;
+          btnRotate.innerHTML = origContent;
         }
-        this._applyPreviewTransform();
       });
     }
 
@@ -2294,18 +2338,18 @@ export class RenamerUIManager {
     const topStatusSection = document.createElement('div');
     topStatusSection.className = 'flex flex-col gap-2 shrink-0 select-none';
 
-    // 1.1 Scheme / Preset Selector in Dark Slate Bento Style
+    // 1.1 Preset Selector in Administrative Bento Theme with Glowing Hover Effect
     const schemeBox = document.createElement('div');
-    schemeBox.className = 'flex items-center justify-between bg-slate-900 border border-slate-700 hover:border-primary/60 rounded-lg px-3 py-1.5 shadow-sm transition-all';
+    schemeBox.className = 'group flex items-center justify-between bg-surface-container-lowest border border-outline-variant/60 hover:border-primary/80 rounded-xl px-3 py-2 shadow-2xs hover:shadow-[0_0_15px_rgba(0,55,176,0.18)] transition-all duration-200 cursor-pointer';
 
     const schemeLabel = document.createElement('span');
-    schemeLabel.className = 'font-mono-code text-[10px] text-slate-400 uppercase font-bold tracking-wider shrink-0';
-    schemeLabel.textContent = 'SCHEME:';
+    schemeLabel.className = 'font-mono-code text-[10px] text-secondary group-hover:text-primary uppercase font-bold tracking-wider shrink-0 flex items-center gap-1.5 transition-colors';
+    schemeLabel.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-primary inline-block shrink-0 shadow-[0_0_6px_rgba(0,55,176,0.4)]"></span>PRESET:';
     schemeBox.appendChild(schemeLabel);
 
     const presetSelect = document.createElement('select');
     presetSelect.id = 'selectQuickPreset';
-    presetSelect.className = 'bg-transparent font-mono-code text-[12px] font-bold text-white focus:outline-none cursor-pointer pr-1 text-right flex-1 ml-2';
+    presetSelect.className = 'bg-transparent font-mono-code text-[12px] font-bold text-on-surface focus:outline-none cursor-pointer pr-1 text-right flex-1 ml-2 tracking-wide';
     presetSelect.title = 'Switch active document preset';
 
     const availablePresets = this.state.documentPresets ? Object.keys(this.state.documentPresets) : ['MAHA DBT', 'SWAYAM DEENDAYAL YOJANA', 'CET CELL', 'EDUCATIONAL DOCUMENTS'];
@@ -2313,7 +2357,7 @@ export class RenamerUIManager {
       const opt = document.createElement('option');
       opt.value = p;
       opt.textContent = p;
-      opt.className = 'bg-slate-900 text-white';
+      opt.className = 'bg-surface-container-lowest text-on-surface font-mono-code text-[12px] py-1';
       if (p === (this.state.activePreset || 'MAHA DBT')) opt.selected = true;
       presetSelect.appendChild(opt);
     });
@@ -5960,6 +6004,8 @@ export class RenamerUIManager {
       if (callback) callback();
       return;
     }
+    if (!this._pdfCallbacks) this._pdfCallbacks = [];
+    if (callback) this._pdfCallbacks.push(callback);
     if (this._pdfLoading) return;
     this._pdfLoading = true;
 
@@ -5976,6 +6022,8 @@ export class RenamerUIManager {
       if (tryIdx >= candidateSources.length) {
         this._pdfLoading = false;
         console.warn('[DocMitra Renamer] Could not load pdf.js from any candidate source.');
+        const cbs = this._pdfCallbacks ? [...this._pdfCallbacks] : [];
+        this._pdfCallbacks = [];
         return;
       }
       const src = candidateSources[tryIdx++];
@@ -5988,7 +6036,11 @@ export class RenamerUIManager {
             : src.replace('pdf.min.js', 'pdf.worker.min.js');
           window.pdfjsLib.GlobalWorkerOptions.workerSrc = workerPath;
           this._pdfLoading = false;
-          if (callback) callback();
+          const cbs = this._pdfCallbacks ? [...this._pdfCallbacks] : [];
+          this._pdfCallbacks = [];
+          cbs.forEach(cb => {
+            try { cb(); } catch (err) { console.error('[DocMitra Renamer] PDF callback error:', err); }
+          });
         } else {
           tryNext();
         }

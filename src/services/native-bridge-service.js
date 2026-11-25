@@ -390,6 +390,46 @@ export async function batchRenameNativeFiles(renames) {
 }
 
 /**
+ * Reads binary file bytes from disk via Tauri invoke
+ * @param {string} filePath
+ * @returns {Promise<Uint8Array>}
+ */
+export async function readBinaryFile(filePath) {
+  const invoke = getTauriInvoke();
+  if (invoke) {
+    try {
+      const bytes = await invoke('read_binary_file', { path: filePath });
+      return new Uint8Array(bytes);
+    } catch (err) {
+      console.warn('[NativeBridge] read_binary_file failed:', err);
+      throw err;
+    }
+  }
+  return null;
+}
+
+/**
+ * Writes binary file bytes to disk via Tauri invoke
+ * @param {string} filePath
+ * @param {Uint8Array|Array<number>} bytes
+ * @returns {Promise<{ success: boolean, error?: string }>}
+ */
+export async function writeBinaryFile(filePath, bytes) {
+  const invoke = getTauriInvoke();
+  if (invoke) {
+    try {
+      const byteArr = (bytes instanceof Uint8Array) ? Array.from(bytes) : bytes;
+      await invoke('write_binary_file', { path: filePath, bytes: byteArr });
+      return { success: true };
+    } catch (err) {
+      console.warn('[NativeBridge] write_binary_file failed:', err);
+      return { success: false, error: err.message };
+    }
+  }
+  return { success: true };
+}
+
+/**
  * Rotate an image or PDF file on disk by given angle (90, 180, 270)
  */
 export async function rotateNativeFile(filePath, angle) {

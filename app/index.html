@@ -206,9 +206,9 @@
             <span>100% Air-Gapped Localhost</span>
           </div>
           <div
-            class="hidden 2xl:flex items-center gap-1.5 px-space-md py-1 bg-surface-container text-on-surface-variant border border-outline-variant/40 rounded-lg font-mono-code text-label-sm">
+            class="hidden 2xl:flex items-center gap-1.5 px-space-md py-1 bg-surface-container text-on-surface-variant border border-outline-variant/40 rounded-lg font-mono-code text-label-sm" id="licenseStatusBadge">
             <span class="material-symbols-outlined text-[15px] text-tertiary">workspace_premium</span>
-            <span>Lifetime License | DM-SYS-D83E-714F-3E56-D773</span>
+            <span id="licenseStatusText">Lifetime License | DM-SYS-D83E-714F-3E56-D773</span>
           </div>
           <button
             class="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer"
@@ -400,9 +400,12 @@
                         title="Fit to A4 Width" type="button"><span
                           class="material-symbols-outlined text-[16px]">fit_screen</span></button>
                       <button
-                        class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
-                        title="Rotate 90 Clockwise" type="button"><span
-                          class="material-symbols-outlined text-[16px]">rotate_right</span></button>
+                        id="btnRenamerRotatePreview"
+                        class="h-7 px-2 rounded-lg bg-surface-container hover:bg-primary hover:text-white text-on-surface flex items-center gap-1 font-mono-code text-[11px] font-bold border border-outline-variant/40 shadow-2xs hover:shadow-primary/20 transition-all cursor-pointer select-none"
+                        title="Rotate Document 90° Clockwise (Saves physically to disk)" type="button">
+                        <span class="material-symbols-outlined text-[15px]">rotate_right</span>
+                        <span>Rotate 90°</span>
+                      </button>
                       <button
                         class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface flex items-center justify-center"
                         title="Split Compare" type="button"><span
@@ -3438,6 +3441,352 @@
 
   <!-- Toast Notification Hub (Safe Top-Right Placement, below 64px header) -->
   <div id="toast-container" class="fixed top-20 right-6 z-[9999] flex flex-col gap-2 pointer-events-none max-w-[420px] select-none"></div>
+
+  <!-- ========================================== -->
+  <!-- DOCMITRA FULL-SCREEN ACTIVATION GATE OVERLAY -->
+  <!-- ========================================== -->
+  <div id="activationGateOverlay" class="fixed inset-0 z-[99999] bg-[#0b1c30]/85 backdrop-blur-md flex items-center justify-center p-4 select-none">
+    <div class="w-full max-w-lg bg-white border border-[#c4c5d7]/50 rounded-2xl shadow-2xl p-6 sm:p-7 flex flex-col text-slate-800">
+      
+      <!-- Top Header -->
+      <div class="flex items-center gap-3.5 border-b border-slate-100 pb-4 mb-4">
+        <div class="w-11 h-11 rounded-2xl bg-blue-50 border border-blue-200 text-[#0037b0] flex items-center justify-center shadow-xs">
+          <span class="material-symbols-outlined text-[26px]">lock</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="font-display font-bold text-base text-[#0b1c30] tracking-tight">DocMitra Activation Lock</h2>
+            <span class="px-2 py-0.5 rounded-full bg-blue-50 text-[#0037b0] text-[10px] font-mono font-bold border border-blue-200">100% Offline</span>
+          </div>
+          <p class="text-[11px] text-slate-500">Hardware-Bound Cryptographic Licensing</p>
+        </div>
+      </div>
+
+      <!-- State 1: Hardware Analysis Spinner (1.5s) -->
+      <div id="hwAnalyzingState" class="py-8 flex flex-col items-center justify-center space-y-3 text-center">
+        <div class="w-10 h-10 border-3 border-blue-100 border-t-[#0037b0] rounded-full animate-spin"></div>
+        <div>
+          <p class="text-xs font-bold text-slate-700">Analyzing Hardware &amp; Motherboard ID...</p>
+          <p class="text-[11px] text-slate-400 mt-0.5">Detecting BIOS Serial &amp; Cryptographic Machine GUID</p>
+        </div>
+      </div>
+
+      <!-- State 2: Activation Form -->
+      <div id="hwActiveFormState" class="space-y-4 hidden">
+        
+        <!-- Detected Hardware ID Box -->
+        <div class="p-3 bg-blue-50/70 border border-blue-200 rounded-xl flex items-center justify-between text-xs">
+          <div>
+            <span class="text-[10px] font-bold text-blue-700 uppercase tracking-wider block">Detected Motherboard HWID</span>
+            <span id="detectedHwidText" class="font-mono font-bold text-slate-900 text-xs">DM-HW-XXXX-XXXX-XXXX-XXXX</span>
+          </div>
+          <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10px]">VERIFIED</span>
+        </div>
+
+        <!-- Step 1: User Info & Request Code -->
+        <div class="space-y-2.5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">User / College Name *</label>
+              <input type="text" id="actUserName" placeholder="e.g. Rajesh Patil" oninput="updateRequestCode()" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-[#0037b0]">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Mobile / Email (Optional)</label>
+              <input type="text" id="actUserContact" placeholder="e.g. 9876543210" oninput="updateRequestCode()" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-[#0037b0]">
+            </div>
+          </div>
+
+          <!-- Request Code Box -->
+          <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="font-semibold text-slate-700">Your Machine Request Code:</span>
+              <button onclick="copyRequestCode()" class="text-[#0037b0] hover:underline font-bold flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">content_copy</span>
+                <span>Copy Request Code</span>
+              </button>
+            </div>
+            <div id="requestCodeDisplay" class="font-mono text-[10px] text-slate-500 break-all select-all bg-white p-2 rounded border border-slate-200 max-h-16 overflow-y-auto">
+              Enter your name above to generate code...
+            </div>
+            <p class="text-[10px] text-slate-400">Send this code to DocMitra Admin to receive your Activation Key.</p>
+          </div>
+        </div>
+
+        <!-- Step 2: Paste Activation Key & Verify -->
+        <div class="pt-2 border-t border-slate-100 space-y-2.5">
+          <label class="block text-[11px] font-semibold text-slate-700">Enter Activation Key *</label>
+          <div class="relative">
+            <input type="text" id="actKeyInput" placeholder="DM-ACT-RF-20261202-XXXX-XXXX-XXXX-XXXX" class="w-full font-mono text-xs uppercase px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-[#0037b0] outline-none pr-24">
+            <button onclick="pasteActivationKey()" class="absolute right-2 top-2 px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg text-xs font-semibold text-[#0037b0] flex items-center gap-1 shadow-2xs">
+              <span class="material-symbols-outlined text-[13px]">content_paste</span>
+              <span>Paste</span>
+            </button>
+          </div>
+
+          <div id="actErrorMsg" class="p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-xs font-semibold text-rose-700 hidden flex items-center gap-2">
+            <span class="material-symbols-outlined text-[16px]">error</span>
+            <span id="actErrorText">Invalid activation key</span>
+          </div>
+
+          <button onclick="verifyAndUnlockApp()" class="w-full py-3 bg-[#0037b0] hover:bg-[#1d4ed8] active:scale-[0.99] text-white font-semibold rounded-xl text-xs shadow-md transition-all flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-[18px]">verified</span>
+            <span>Verify &amp; Unlock DocMitra</span>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Offline Activation & Security Guard Script -->
+  <script>
+    const ACTIVATION_SECRET = "DOCMITRA_ULTRA_SECURE_HMAC_KEY_2026_PROD";
+    let detectedHwid = "DM-HW-9245-0181-E965-89D1";
+
+    function parseExpiryDate(expStr) {
+      if (expStr === 'LIFETIME') return null;
+      const y = parseInt(expStr.substring(0, 4), 10);
+      const m = parseInt(expStr.substring(4, 6), 10) - 1;
+      const d = parseInt(expStr.substring(6, 8), 10);
+      return new Date(y, m, d, 23, 59, 59);
+    }
+
+    async function computeHmacSha256(payload) {
+      const enc = new TextEncoder();
+      const keyObj = await crypto.subtle.importKey(
+        "raw",
+        enc.encode(ACTIVATION_SECRET),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"]
+      );
+      const signature = await crypto.subtle.sign("HMAC", keyObj, enc.encode(payload));
+      const hashArray = Array.from(new Uint8Array(signature));
+      const hexSig = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase().substring(0, 16);
+      return `${hexSig.substring(0,4)}-${hexSig.substring(4,8)}-${hexSig.substring(8,12)}-${hexSig.substring(12,16)}`;
+    }
+
+    async function verifyActivationKeyOffline(keyStr, hwid, userName) {
+      keyStr = (keyStr || '').trim().toUpperCase();
+      if (!keyStr.startsWith('DM-ACT-')) return { valid: false, reason: 'Invalid key prefix (must start with DM-ACT-)' };
+
+      // Key format: DM-ACT-<MOD>-<EXPIRY>-XXXX-XXXX-XXXX-XXXX (8 dash-separated parts)
+      const parts = keyStr.split('-');
+      if (parts.length !== 8) return { valid: false, reason: 'Malformed key format' };
+
+      const modCode = parts[2];
+      const expiry = parts[3];
+      const sigProvided = `${parts[4]}-${parts[5]}-${parts[6]}-${parts[7]}`;
+
+      const payload = `${hwid}:${userName}:${modCode}:${expiry}`;
+      const expectedSig = await computeHmacSha256(payload);
+
+      if (sigProvided !== expectedSig) {
+        return { valid: false, reason: 'Cryptographic signature mismatch for this hardware ID and user' };
+      }
+
+      if (expiry !== 'LIFETIME') {
+        const expDate = parseExpiryDate(expiry);
+        if (new Date() > expDate) {
+          return { valid: false, reason: 'License has expired', expired: true };
+        }
+      }
+
+      return { valid: true, modules: modCode, expiry };
+    }
+
+    function updateRequestCode() {
+      const name = document.getElementById('actUserName').value.trim();
+      const contact = document.getElementById('actUserContact').value.trim();
+      if (!name) {
+        document.getElementById('requestCodeDisplay').textContent = "Enter your name above to generate code...";
+        return;
+      }
+      const payload = {
+        h: detectedHwid,
+        u: name,
+        p: contact,
+        t: Math.floor(Date.now() / 1000)
+      };
+      const b64 = btoa(JSON.stringify(payload));
+      document.getElementById('requestCodeDisplay').textContent = `DM-REQ-${b64}`;
+    }
+
+    async function copyRequestCode() {
+      const code = document.getElementById('requestCodeDisplay').textContent.trim();
+      if (!code || code.includes('Enter your name')) {
+        alert('Please enter your name first');
+        return;
+      }
+      await navigator.clipboard.writeText(code);
+      if (window.DocMitraToast) {
+        window.DocMitraToast.success('Request Code copied! Send it to admin.');
+      } else {
+        alert('Request Code copied to clipboard!');
+      }
+    }
+
+    async function pasteActivationKey() {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          document.getElementById('actKeyInput').value = text.trim();
+        }
+      } catch (e) {
+        alert('Please paste manually using Ctrl+V');
+      }
+    }
+
+    async function verifyAndUnlockApp() {
+      const key = document.getElementById('actKeyInput').value.trim().toUpperCase();
+      const name = document.getElementById('actUserName').value.trim();
+      const errBox = document.getElementById('actErrorMsg');
+      const errText = document.getElementById('actErrorText');
+
+      if (!name) {
+        errText.textContent = "Please enter User / College Name";
+        errBox.classList.remove('hidden');
+        return;
+      }
+      if (!key) {
+        errText.textContent = "Please enter Activation Key";
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      const res = await verifyActivationKeyOffline(key, detectedHwid, name);
+      if (!res.valid) {
+        errText.textContent = res.reason || "Invalid Activation Key";
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      errBox.classList.add('hidden');
+
+      const record = {
+        key,
+        hwid: detectedHwid,
+        userName: name,
+        modules: res.modules,
+        expiry: res.expiry,
+        lastSeenTimestamp: Date.now()
+      };
+      localStorage.setItem('dm_offline_activation', JSON.stringify(record));
+
+      applyModuleLocks(res.modules, res.expiry);
+      document.getElementById('activationGateOverlay').classList.add('hidden');
+
+      if (window.DocMitraToast) {
+        window.DocMitraToast.success('DocMitra Unlocked & Activated Successfully!');
+      }
+    }
+
+    function applyModuleLocks(modulesCode, expiry) {
+      const badgeEl = document.getElementById('licenseStatusBadge');
+      const textEl = document.getElementById('licenseStatusText');
+      if (badgeEl && textEl) {
+        badgeEl.classList.remove('hidden');
+        if (expiry === 'LIFETIME') {
+          textEl.textContent = `Lifetime Pro | ${detectedHwid}`;
+        } else {
+          const expDate = parseExpiryDate(expiry);
+          const daysLeft = Math.max(0, Math.ceil((expDate - new Date()) / (1000 * 60 * 60 * 24)));
+          textEl.textContent = `Trial: ${daysLeft} Day${daysLeft === 1 ? '' : 's'} Left`;
+        }
+      }
+
+      const isAll = modulesCode === 'ALL';
+      const hasP = isAll || modulesCode.includes('P');
+      const hasI = isAll || modulesCode.includes('I');
+      const hasS = isAll || modulesCode.includes('S');
+
+      lockModuleTab('tabModPdf', hasP, 'PDF Studio');
+      lockModuleTab('tabModImage', hasI, 'Image Studio');
+      lockModuleTab('tabModPrint', hasS, 'Print Studio');
+    }
+
+    function lockModuleTab(tabId, isUnlocked, modName) {
+      const tab = document.getElementById(tabId);
+      if (!tab) return;
+      if (isUnlocked) {
+        tab.classList.remove('opacity-50', 'pointer-events-none', 'cursor-not-allowed');
+        const lockBadge = tab.querySelector('.lock-tag');
+        if (lockBadge) lockBadge.remove();
+      } else {
+        tab.classList.add('opacity-50', 'pointer-events-none', 'cursor-not-allowed');
+        if (!tab.querySelector('.lock-tag')) {
+          const tag = document.createElement('span');
+          tag.className = 'lock-tag text-[9px] font-bold text-amber-700 bg-amber-50 px-1 py-0.2 rounded border border-amber-300 ml-1 inline-flex items-center gap-0.5';
+          tag.innerHTML = '🔒 Locked';
+          tab.appendChild(tag);
+        }
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        if (window.__TAURI__ && window.__TAURI__.core && window.__TAURI__.core.invoke) {
+          detectedHwid = await window.__TAURI__.core.invoke('get_machine_hardware_id');
+        } else if (window.__TAURI__ && window.__TAURI__.invoke) {
+          detectedHwid = await window.__TAURI__.invoke('get_machine_hardware_id');
+        }
+      } catch (e) {
+        console.warn('Native HWID extraction fallback:', e);
+      }
+
+      const saved = localStorage.getItem('dm_offline_activation');
+      if (saved) {
+        try {
+          const act = JSON.parse(saved);
+          const verifyRes = await verifyActivationKeyOffline(act.key, act.hwid, act.userName);
+          if (verifyRes.valid) {
+            const now = Date.now();
+            const lastSeen = act.lastSeenTimestamp || now;
+            if (now < lastSeen - 60000) {
+              document.getElementById('activationGateOverlay').classList.remove('hidden');
+              document.getElementById('hwAnalyzingState').classList.add('hidden');
+              document.getElementById('hwActiveFormState').classList.remove('hidden');
+              document.getElementById('detectedHwidText').textContent = detectedHwid;
+              const errBox = document.getElementById('actErrorMsg');
+              document.getElementById('actErrorText').textContent = "⚠️ Clock tampering detected! System clock was moved backwards.";
+              errBox.classList.remove('hidden');
+              return;
+            }
+
+            if (verifyRes.expiry !== 'LIFETIME') {
+              const expDate = parseExpiryDate(verifyRes.expiry);
+              if (new Date() > expDate) {
+                document.getElementById('activationGateOverlay').classList.remove('hidden');
+                document.getElementById('hwAnalyzingState').classList.add('hidden');
+                document.getElementById('hwActiveFormState').classList.remove('hidden');
+                document.getElementById('detectedHwidText').textContent = detectedHwid;
+                const errBox = document.getElementById('actErrorMsg');
+                document.getElementById('actErrorText').textContent = "Your trial license has expired. Please enter a renewed key.";
+                errBox.classList.remove('hidden');
+                return;
+              }
+            }
+
+            act.lastSeenTimestamp = now;
+            localStorage.setItem('dm_offline_activation', JSON.stringify(act));
+            applyModuleLocks(verifyRes.modules, verifyRes.expiry);
+            document.getElementById('activationGateOverlay').classList.add('hidden');
+            return;
+          }
+        } catch (e) {
+          console.warn('Activation error:', e);
+        }
+      }
+
+      setTimeout(() => {
+        document.getElementById('detectedHwidText').textContent = detectedHwid;
+        document.getElementById('hwAnalyzingState').classList.add('hidden');
+        document.getElementById('hwActiveFormState').classList.remove('hidden');
+        updateRequestCode();
+      }, 1500);
+    });
+  </script>
 
   <!-- UI Shell Script (Modular UI Scripting) -->
   <script type="module" src="assets/js/app.js?v=20261125_05"></script>

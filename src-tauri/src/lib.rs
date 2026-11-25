@@ -439,6 +439,62 @@ fn open_in_explorer(path: String) -> Result<bool, String> {
     }
 }
 
+fn hash_hardware_string(input: &str) -> String {
+    let mut h1: u64 = 0xcbf29ce484222325;
+    let mut h2: u64 = 0x100000001b3;
+    for b in input.bytes() {
+        h1 = (h1 ^ (b as u64)).wrapping_mul(0x100000001b3);
+        h2 = (h2 ^ (b as u64)).wrapping_mul(0xcbf29ce484222325);
+    }
+    let hex1 = format!("{:08X}", (h1 >> 32) ^ (h1 & 0xFFFFFFFF));
+    let hex2 = format!("{:08X}", (h2 >> 32) ^ (h2 & 0xFFFFFFFF));
+    format!("DM-HW-{}-{}-{}-{}", &hex1[0..4], &hex1[4..8], &hex2[0..4], &hex2[4..8])
+}
+
+#[tauri::command]
+fn get_machine_hardware_id() -> Result<String, String> {
+    #[cfg(target_os = "windows")]
+    {
+        let mut raw_guid = String::new();
+        if let Ok(output) = std::process::Command::new("reg")
+            .args(&["query", r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography", "/v", "MachineGuid"])
+            .output()
+        {
+            let text = String::from_utf8_lossy(&output.stdout);
+            for line in text.lines() {
+                if line.contains("MachineGuid") {
+                    let parts: Vec<&str> = line.split_whitespace().collect();
+                    if let Some(val) = parts.last() {
+                        raw_guid = val.to_string();
+                    }
+                }
+            }
+        }
+
+        let mut raw_uuid = String::new();
+        if let Ok(output) = std::process::Command::new("powershell")
+            .args(&["-NoProfile", "-Command", "(Get-CimInstance Win32_ComputerSystemProduct).UUID"])
+            .output()
+        {
+            raw_uuid = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        }
+
+        let combined = format!("{}:{}", raw_guid, raw_uuid);
+        if combined.trim() == ":" {
+            let name = std::env::var("COMPUTERNAME").unwrap_or_else(|_| "DEFAULT".to_string());
+            let user = std::env::var("USERNAME").unwrap_or_else(|_| "USER".to_string());
+            return Ok(hash_hardware_string(&format!("{}:{}", name, user)));
+        }
+
+        Ok(hash_hardware_string(&combined))
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let host = std::env::var("HOSTNAME").unwrap_or_else(|_| "DEFAULT-HOST".to_string());
+        Ok(hash_hardware_string(&host))
+    }
+}
+
 #[tauri::command]
 fn read_binary_file(path: String) -> Result<Vec<u8>, String> {
     let clean_path = path.replace('/', "\\");
@@ -449,6 +505,21 @@ fn read_binary_file(path: String) -> Result<Vec<u8>, String> {
     match fs::read(&p) {
         Ok(bytes) => Ok(bytes),
         Err(e) => Err(format!("Failed to read file bytes: {}", e)),
+    }
+}
+
+#[tauri::command]
+fn write_binary_file(path: String, bytes: Vec<u8>) -> Result<bool, String> {
+    let clean_path = path.replace('/', "\\");
+    let p = PathBuf::from(&clean_path);
+    if let Some(parent) = p.parent() {
+        if !parent.exists() {
+            let _ = fs::create_dir_all(parent);
+        }
+    }
+    match fs::write(&p, bytes) {
+        Ok(_) => Ok(true),
+        Err(e) => Err(format!("Failed to write file bytes: {}", e)),
     }
 }
 
@@ -473,7 +544,9 @@ pub fn run() {
       rename_native_folder,
       move_native_file,
       open_in_explorer,
-      read_binary_file
+      read_binary_file,
+      write_binary_file,
+      get_machine_hardware_id
     ])
     .run(tauri::generate_context!())
     .expect("error while building tauri application");
