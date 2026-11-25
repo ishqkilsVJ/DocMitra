@@ -679,11 +679,15 @@ export class RenamerUIManager {
       const modalOverlay = document.getElementById('settings-modal-overlay');
       if (modalOverlay && !modalOverlay.classList.contains('hidden')) return;
 
-      // Escape: Dismiss active modal if open
+      // Escape: Dismiss active modal or active sub-layer if open (Point 2)
       if (e.key === 'Escape') {
         if (this.missingModal && this.missingModal.isOpen) {
           e.preventDefault();
-          this.missingModal.close();
+          if (this.missingModal.quickPreviewEl && !this.missingModal.quickPreviewEl.classList.contains('hidden')) {
+            this.missingModal.closeQuickPreview();
+          } else {
+            this.missingModal.close();
+          }
           return;
         }
         const modalRenameSettings = document.getElementById('modalRenameSettings');
@@ -4384,17 +4388,160 @@ export class RenamerUIManager {
     toast.show('Preset Switched', `Active preset: ${newPreset}`, 'success');
   }
 
-  handleNewPreset() {
-    const name = window.prompt('Enter name for the new document preset (e.g. CET CELL, MSBNPE):');
-    if (!name || !name.trim()) return;
-    const cleanPreset = name.trim().toUpperCase();
-    if (this.state.documentPresets[cleanPreset]) {
-      toast.show('Preset Exists', `Preset "${cleanPreset}" already exists.`, 'warning');
-      return;
+  _showInlinePresetAction(mode, defaultValue, onApply) {
+    const container = document.getElementById('settingsPresetContainer');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const wrap = document.createElement('div');
+    wrap.id = 'settingsPresetInlineForm';
+    wrap.className = 'flex items-center gap-1.5 bg-surface-container-lowest border-2 border-primary rounded-xl px-2.5 h-[38px] shadow-sm select-none min-w-[260px] animate-in fade-in duration-100';
+
+    const dot = document.createElement('span');
+    dot.className = 'w-1.5 h-1.5 rounded-full bg-primary inline-block shrink-0 shadow-[0_0_6px_rgba(0,55,176,0.4)]';
+    wrap.appendChild(dot);
+
+    const label = document.createElement('span');
+    label.className = 'font-mono-code text-[10px] text-primary uppercase font-bold tracking-wider shrink-0';
+    label.textContent = `${mode}:`;
+    wrap.appendChild(label);
+
+    const input = document.createElement('input');
+    input.id = 'inputInlinePresetAction';
+    input.type = 'text';
+    input.value = defaultValue || '';
+    input.className = 'font-mono-code text-[12px] font-bold text-on-surface bg-transparent border-b border-primary/50 focus:border-primary focus:outline-none w-44 uppercase px-1';
+    wrap.appendChild(input);
+
+    const btnApply = document.createElement('button');
+    btnApply.id = 'btnApplyInlinePresetAction';
+    btnApply.type = 'button';
+    btnApply.className = 'w-6 h-6 rounded bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white flex items-center justify-center cursor-pointer transition shrink-0';
+    btnApply.title = 'Apply (Enter)';
+    btnApply.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    wrap.appendChild(btnApply);
+
+    const btnCancel = document.createElement('button');
+    btnCancel.id = 'btnCancelInlinePresetAction';
+    btnCancel.type = 'button';
+    btnCancel.className = 'w-6 h-6 rounded bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-700 flex items-center justify-center cursor-pointer transition shrink-0';
+    btnCancel.title = 'Cancel (Esc)';
+    btnCancel.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    wrap.appendChild(btnCancel);
+
+    container.appendChild(wrap);
+    input.focus();
+    input.select();
+
+    const handleConfirm = () => {
+      const val = input.value.trim().toUpperCase();
+      if (!val) {
+        this.buildSettingsPresetDropdown();
+        return;
+      }
+      onApply(val);
+    };
+
+    btnApply.onclick = (e) => {
+      e.stopPropagation();
+      handleConfirm();
+    };
+
+    btnCancel.onclick = (e) => {
+      e.stopPropagation();
+      this.buildSettingsPresetDropdown();
+    };
+
+    input.onkeydown = (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        handleConfirm();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        this.buildSettingsPresetDropdown();
+      }
+    };
+  }
+
+  showCustomPresetDeleteDialog(presetName) {
+    let modal = document.getElementById('modalConfirmDeletePreset');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'modalConfirmDeletePreset';
+      modal.className = 'fixed inset-0 z-[10000] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-150';
+      document.body.appendChild(modal);
     }
-    this.state.documentPresets[cleanPreset] = [];
-    this.handleSwitchActivePreset(cleanPreset);
-    toast.show('Preset Created', `New preset "${cleanPreset}" created. You can now add documents to it.`, 'success');
+    modal.innerHTML = `
+      <div class="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-rose-200 overflow-hidden p-5 flex flex-col items-center text-center space-y-4">
+        <div class="w-12 h-12 rounded-full bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="space-y-1">
+          <h3 class="text-base font-bold text-slate-900 font-heading">Delete Preset</h3>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Are you sure you want to permanently delete preset <strong class="text-rose-700 font-mono">${escapeHtml(presetName)}</strong>?
+          </p>
+        </div>
+        <div class="flex items-center justify-center gap-2.5 w-full pt-1">
+          <button id="btnCancelCustomPresetDelete" type="button" class="flex-1 py-2 px-3 rounded-lg border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold transition cursor-pointer">
+            Cancel
+          </button>
+          <button id="btnProceedCustomPresetDelete" type="button" class="flex-1 py-2 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-bold shadow-xs transition cursor-pointer">
+            Delete Preset
+          </button>
+        </div>
+      </div>
+    `;
+    modal.classList.remove('hidden');
+
+    const cleanup = () => {
+      modal.classList.add('hidden');
+      document.removeEventListener('keydown', handleKey);
+    };
+
+    const handleKey = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        cleanup();
+      }
+    };
+    document.addEventListener('keydown', handleKey);
+
+    modal.querySelector('#btnCancelCustomPresetDelete').onclick = cleanup;
+    modal.onclick = (e) => {
+      if (e.target === modal) cleanup();
+    };
+
+    modal.querySelector('#btnProceedCustomPresetDelete').onclick = () => {
+      cleanup();
+      delete this.state.documentPresets[presetName];
+      const remaining = Object.keys(this.state.documentPresets);
+      this.state.activePreset = remaining[0] || 'MAHA DBT';
+      this.savePresetsAndSettings();
+      this._recalculateTargetNames(true);
+      this.updateTelemetry();
+      this.renderQueue();
+      this.renderCurrentPreview();
+      this.renderSettingsModal('presets');
+      toast.show('Preset Deleted', `Preset "${presetName}" deleted. Switched to ${this.state.activePreset}.`, 'info');
+    };
+  }
+
+  handleNewPreset() {
+    this._showInlinePresetAction('NEW', '', (cleanPreset) => {
+      if (this.state.documentPresets[cleanPreset]) {
+        toast.show('Preset Exists', `Preset "${cleanPreset}" already exists.`, 'warning');
+        return;
+      }
+      this.state.documentPresets[cleanPreset] = [];
+      this.handleSwitchActivePreset(cleanPreset);
+      toast.show('Preset Created', `New preset "${cleanPreset}" created.`, 'success');
+    });
   }
 
   handleCopyPreset() {
@@ -4406,31 +4553,33 @@ export class RenamerUIManager {
       counter++;
       newName = `${srcPreset} ${counter}`;
     }
-    const entered = window.prompt(`Copy preset "${srcPreset}" to new name:`, newName);
-    if (!entered || !entered.trim()) return;
-    const cleanNew = entered.trim().toUpperCase();
-    if (this.state.documentPresets[cleanNew]) {
-      toast.show('Duplicate Preset', `Preset "${cleanNew}" already exists.`, 'warning');
-      return;
-    }
-    this.state.documentPresets[cleanNew] = JSON.parse(JSON.stringify(list));
-    this.handleSwitchActivePreset(cleanNew);
-    toast.show('Preset Copied', `Copied "${srcPreset}" to "${cleanNew}".`, 'success');
+    this._showInlinePresetAction('COPY TO', newName, (cleanNew) => {
+      if (this.state.documentPresets[cleanNew]) {
+        toast.show('Duplicate Preset', `Preset "${cleanNew}" already exists.`, 'warning');
+        return;
+      }
+      this.state.documentPresets[cleanNew] = JSON.parse(JSON.stringify(list));
+      this.handleSwitchActivePreset(cleanNew);
+      toast.show('Preset Copied', `Copied "${srcPreset}" to "${cleanNew}".`, 'success');
+    });
   }
 
   handleRenamePreset() {
     const currentName = this.state.activePreset;
-    const newName = window.prompt(`Rename preset "${currentName}" to:`, currentName);
-    if (!newName || !newName.trim() || newName.trim().toUpperCase() === currentName) return;
-    const cleanNew = newName.trim().toUpperCase();
-    if (this.state.documentPresets[cleanNew]) {
-      toast.show('Duplicate Name', `Preset "${cleanNew}" already exists.`, 'warning');
-      return;
-    }
-    this.state.documentPresets[cleanNew] = this.state.documentPresets[currentName];
-    delete this.state.documentPresets[currentName];
-    this.handleSwitchActivePreset(cleanNew);
-    toast.show('Preset Renamed', `Preset renamed to "${cleanNew}".`, 'success');
+    this._showInlinePresetAction('RENAME', currentName, (cleanNew) => {
+      if (cleanNew === currentName) {
+        this.buildSettingsPresetDropdown();
+        return;
+      }
+      if (this.state.documentPresets[cleanNew]) {
+        toast.show('Duplicate Name', `Preset "${cleanNew}" already exists.`, 'warning');
+        return;
+      }
+      this.state.documentPresets[cleanNew] = this.state.documentPresets[currentName];
+      delete this.state.documentPresets[currentName];
+      this.handleSwitchActivePreset(cleanNew);
+      toast.show('Preset Renamed', `Preset renamed to "${cleanNew}".`, 'success');
+    });
   }
 
   handleDeletePreset() {
@@ -4440,18 +4589,7 @@ export class RenamerUIManager {
       return;
     }
     const toDelete = this.state.activePreset;
-    const confirmDel = window.confirm(`Are you sure you want to delete preset "${toDelete}"?`);
-    if (!confirmDel) return;
-    delete this.state.documentPresets[toDelete];
-    const remaining = Object.keys(this.state.documentPresets);
-    this.state.activePreset = remaining[0] || 'MAHA DBT';
-    this.savePresetsAndSettings();
-    this._recalculateTargetNames(true);
-    this.updateTelemetry();
-    this.renderQueue();
-    this.renderCurrentPreview();
-    this.renderSettingsModal('presets');
-    toast.show('Preset Deleted', `Preset "${toDelete}" deleted. Switched to ${this.state.activePreset}.`, 'info');
+    this.showCustomPresetDeleteDialog(toDelete);
   }
 
   handleResetPresetsDefault() {
@@ -6506,7 +6644,7 @@ export class RenamerUIManager {
   }
 
   /**
-   * Opens the dedicated Missing Documents & Follow-up Desk modal
+   * Opens the dedicated Document Desk modal
    */
   openMissingDocumentsModal() {
     if (!this.missingModal) {

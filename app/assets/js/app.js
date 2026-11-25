@@ -5994,7 +5994,7 @@ var st = class {
       `;
 	}
 	_handleKeydown(e) {
-		if (e.key === "Escape") e.preventDefault(), this.quickPreviewEl && !this.quickPreviewEl.classList.contains("hidden") ? this.closeQuickPreview() : this.close();
+		if (e.key === "Escape") e.preventDefault(), e.stopPropagation(), this.quickPreviewEl && !this.quickPreviewEl.classList.contains("hidden") ? this.closeQuickPreview() : this.close();
 		else if (e.key === "Enter") {
 			let t = document.activeElement ? document.activeElement.tagName : "";
 			t !== "INPUT" && t !== "BUTTON" && t !== "SELECT" && (e.preventDefault(), this.close());
@@ -6020,7 +6020,7 @@ var st = class {
           </div>
           <div>
             <h1 class="font-heading text-lg sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">
-              Missing Documents &amp; Follow-up Desk
+              Document Desk
             </h1>
           </div>
         </div>
@@ -6070,10 +6070,11 @@ var st = class {
             <div class="space-y-1">
               <div class="flex items-center space-x-2 text-[11px] font-bold tracking-wider text-slate-400 uppercase">
                 <span>STUDENT NAME:</span>
-                <div id="missingStudentDisplayWrap" class="inline-flex items-center space-x-1.5 bg-blue-50 text-blue-700 font-semibold px-2 py-0.5 rounded border border-blue-200/60 text-xs normal-case">
-                  <span id="missingStudentNameDisplay">${Y(t)}</span>
-                  <button id="btnMissingEditFolder" aria-label="Edit student name" class="text-blue-500 hover:text-blue-700 cursor-pointer" type="button" title="Edit Student / Folder Name">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div id="missingStudentDisplayWrap" class="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-indigo-50/80 text-blue-900 font-extrabold px-3 py-1 rounded-lg border border-blue-300 shadow-xs text-xs sm:text-sm normal-case tracking-wide">
+                  <span class="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse shrink-0 shadow-[0_0_8px_rgba(37,99,235,0.6)]"></span>
+                  <span id="missingStudentNameDisplay" class="font-heading font-extrabold text-blue-900">${Y(t)}</span>
+                  <button id="btnMissingEditFolder" aria-label="Edit student name" class="text-blue-600 hover:text-blue-800 p-0.5 rounded hover:bg-blue-100 transition cursor-pointer ml-1" type="button" title="Edit Student / Folder Name">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
                     </svg>
                   </button>
@@ -6091,28 +6092,12 @@ var st = class {
                 <h2 class="text-base sm:text-lg font-extrabold text-slate-900 font-heading">
                   ${u} of ${d} Documents Staged (${f}% Verified)
                 </h2>
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                  ✓ MahaDBT Compliant
-                </span>
               </div>
             </div>
           </div>
 
           <div class="flex items-center gap-3 shrink-0">
-            <!-- Active Verified Card -->
-            <div class="bg-white border-2 border-emerald-500/80 rounded-xl px-4 py-2.5 min-w-[140px] flex items-center space-x-3 shadow-xs ring-2 ring-emerald-100">
-              <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                  <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path>
-                </svg>
-              </div>
-              <div>
-                <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 leading-none">ACTIVE • VERIFIED</p>
-                <p class="text-sm font-extrabold text-emerald-700 mt-1">${u} Documents</p>
-              </div>
-            </div>
-
-            <!-- Missing Card -->
+            <!-- Left Summary Card: MISSING DOCUMENTS (Aliged with Left Column) -->
             <div class="bg-white border border-rose-200/90 rounded-xl px-4 py-2.5 min-w-[130px] flex items-center space-x-3 shadow-xs">
               <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center border border-rose-100">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -6120,8 +6105,21 @@ var st = class {
                 </svg>
               </div>
               <div>
-                <p class="text-[10px] font-bold uppercase tracking-wider text-rose-600 leading-none">MISSING</p>
+                <p class="text-[10px] font-bold uppercase tracking-wider text-rose-600 leading-none">MISSING DOCUMENTS</p>
                 <p class="text-sm font-extrabold text-rose-600 mt-1">${l} Documents</p>
+              </div>
+            </div>
+
+            <!-- Right Summary Card: PRESENT DOCUMENTS (Aligned with Right Column) -->
+            <div class="bg-white border-2 border-emerald-500/80 rounded-xl px-4 py-2.5 min-w-[140px] flex items-center space-x-3 shadow-xs ring-2 ring-emerald-100">
+              <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </div>
+              <div>
+                <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 leading-none">PRESENT DOCUMENTS</p>
+                <p class="text-sm font-extrabold text-emerald-700 mt-1">${u} Documents</p>
               </div>
             </div>
           </div>
@@ -6150,17 +6148,24 @@ var st = class {
 			let t = typeof e == "string" ? e : e.name || "", n = s[t] || "";
 			return `
                   <div class="bg-white border border-slate-200 border-l-[3.5px] border-l-rose-500 rounded-lg p-3 flex items-center justify-between gap-3 shadow-xs hover:border-slate-300 transition">
-                    <div class="min-w-0 flex items-center space-x-2.5">
-                      <span class="text-xs font-bold text-slate-800 tracking-wide uppercase truncate" title="${Y(t)}">${Y(t)}</span>
+                    <div class="min-w-0 flex-1 flex items-center space-x-2.5 mr-2">
+                      <span class="text-xs sm:text-sm font-bold text-slate-800 tracking-wide uppercase truncate" title="${Y(t)}">${Y(t)}</span>
                       <span class="text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded-full shrink-0">Missing</span>
                     </div>
 
                     <div class="flex items-center space-x-2 shrink-0">
+                      <!-- Compact Calendar Icon Button (Point 3) -->
                       <div class="relative flex items-center" title="Set follow-up promise date">
-                        <input type="date" value="${Y(n)}" data-doc="${Y(t)}" class="missing-followup-input text-xs py-1 px-2 border border-slate-200 rounded font-mono text-slate-600 w-32 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                        <button type="button" class="btn-missing-date-trigger p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 rounded-lg transition cursor-pointer flex items-center gap-1.5 shadow-2xs" title="${n ? `Follow-up Date: ${n}` : "Set follow-up promise date"}">
+                          <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
+                          ${n ? `<span class="text-[11px] font-mono font-bold text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200">${Y(n)}</span>` : ""}
+                        </button>
+                        <input type="date" value="${Y(n)}" data-doc="${Y(t)}" class="missing-followup-input absolute opacity-0 pointer-events-none w-0 h-0">
                       </div>
 
-                      <button type="button" data-doc="${Y(t)}" class="btn-missing-import-file bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold px-2.5 py-1 rounded inline-flex items-center space-x-1 shadow-xs transition cursor-pointer" title="Import external file for ${Y(t)}">
+                      <button type="button" data-doc="${Y(t)}" class="btn-missing-import-file bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold px-3 py-1.5 rounded-lg inline-flex items-center space-x-1 shadow-xs transition cursor-pointer" title="Import external file for ${Y(t)}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
                         </svg>
@@ -6268,7 +6273,13 @@ var st = class {
 				n.key === "Enter" ? (n.preventDefault(), e()) : n.key === "Escape" && (n.preventDefault(), n.stopPropagation(), S.value = t, x.classList.add("hidden"), b.classList.remove("hidden"));
 			};
 		}
-		this.contentEl.querySelectorAll(".missing-followup-input").forEach((e) => {
+		this.contentEl.querySelectorAll(".btn-missing-date-trigger").forEach((e) => {
+			e.onclick = (t) => {
+				t.stopPropagation();
+				let n = e.closest("div"), r = n ? n.querySelector(".missing-followup-input") : null;
+				r && (typeof r.showPicker == "function" ? r.showPicker() : r.click());
+			};
+		}), this.contentEl.querySelectorAll(".missing-followup-input").forEach((e) => {
 			e.onchange = (e) => {
 				let t = e.target.getAttribute("data-doc"), n = e.target.value;
 				this.onSetFollowup({
@@ -6713,7 +6724,7 @@ var ut = j.map((e) => ({
 			if (!n || n.classList.contains("hidden")) {
 				if (e.key === "Escape") {
 					if (this.missingModal && this.missingModal.isOpen) {
-						e.preventDefault(), this.missingModal.close();
+						e.preventDefault(), this.missingModal.quickPreviewEl && !this.missingModal.quickPreviewEl.classList.contains("hidden") ? this.missingModal.closeQuickPreview() : this.missingModal.close();
 						return;
 					}
 					let t = document.getElementById("modalRenameSettings");
@@ -8350,25 +8361,89 @@ var ut = j.map((e) => ({
 	handleSwitchActivePreset(e) {
 		e && this.state.documentPresets[e] && (this.state.activePreset = e, this.savePresetsAndSettings(), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal("presets"), r.show("Preset Switched", `Active preset: ${e}`, "success"));
 	}
+	_showInlinePresetAction(e, t, n) {
+		let r = document.getElementById("settingsPresetContainer");
+		if (!r) return;
+		r.innerHTML = "";
+		let i = document.createElement("div");
+		i.id = "settingsPresetInlineForm", i.className = "flex items-center gap-1.5 bg-surface-container-lowest border-2 border-primary rounded-xl px-2.5 h-[38px] shadow-sm select-none min-w-[260px] animate-in fade-in duration-100";
+		let a = document.createElement("span");
+		a.className = "w-1.5 h-1.5 rounded-full bg-primary inline-block shrink-0 shadow-[0_0_6px_rgba(0,55,176,0.4)]", i.appendChild(a);
+		let o = document.createElement("span");
+		o.className = "font-mono-code text-[10px] text-primary uppercase font-bold tracking-wider shrink-0", o.textContent = `${e}:`, i.appendChild(o);
+		let s = document.createElement("input");
+		s.id = "inputInlinePresetAction", s.type = "text", s.value = t || "", s.className = "font-mono-code text-[12px] font-bold text-on-surface bg-transparent border-b border-primary/50 focus:border-primary focus:outline-none w-44 uppercase px-1", i.appendChild(s);
+		let c = document.createElement("button");
+		c.id = "btnApplyInlinePresetAction", c.type = "button", c.className = "w-6 h-6 rounded bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white flex items-center justify-center cursor-pointer transition shrink-0", c.title = "Apply (Enter)", c.innerHTML = "<svg class=\"w-3.5 h-3.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path d=\"M5 13l4 4L19 7\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>", i.appendChild(c);
+		let l = document.createElement("button");
+		l.id = "btnCancelInlinePresetAction", l.type = "button", l.className = "w-6 h-6 rounded bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-700 flex items-center justify-center cursor-pointer transition shrink-0", l.title = "Cancel (Esc)", l.innerHTML = "<svg class=\"w-3.5 h-3.5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path d=\"M6 18L18 6M6 6l12 12\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>", i.appendChild(l), r.appendChild(i), s.focus(), s.select();
+		let u = () => {
+			let e = s.value.trim().toUpperCase();
+			e ? n(e) : this.buildSettingsPresetDropdown();
+		};
+		c.onclick = (e) => {
+			e.stopPropagation(), u();
+		}, l.onclick = (e) => {
+			e.stopPropagation(), this.buildSettingsPresetDropdown();
+		}, s.onkeydown = (e) => {
+			e.key === "Enter" ? (e.preventDefault(), e.stopPropagation(), u()) : e.key === "Escape" && (e.preventDefault(), e.stopPropagation(), this.buildSettingsPresetDropdown());
+		};
+	}
+	showCustomPresetDeleteDialog(e) {
+		let t = document.getElementById("modalConfirmDeletePreset");
+		t || (t = document.createElement("div"), t.id = "modalConfirmDeletePreset", t.className = "fixed inset-0 z-[10000] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 select-none animate-in fade-in duration-150", document.body.appendChild(t)), t.innerHTML = `
+      <div class="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-rose-200 overflow-hidden p-5 flex flex-col items-center text-center space-y-4">
+        <div class="w-12 h-12 rounded-full bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="space-y-1">
+          <h3 class="text-base font-bold text-slate-900 font-heading">Delete Preset</h3>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Are you sure you want to permanently delete preset <strong class="text-rose-700 font-mono">${U(e)}</strong>?
+          </p>
+        </div>
+        <div class="flex items-center justify-center gap-2.5 w-full pt-1">
+          <button id="btnCancelCustomPresetDelete" type="button" class="flex-1 py-2 px-3 rounded-lg border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold transition cursor-pointer">
+            Cancel
+          </button>
+          <button id="btnProceedCustomPresetDelete" type="button" class="flex-1 py-2 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-xs font-bold shadow-xs transition cursor-pointer">
+            Delete Preset
+          </button>
+        </div>
+      </div>
+    `, t.classList.remove("hidden");
+		let n = () => {
+			t.classList.add("hidden"), document.removeEventListener("keydown", i);
+		}, i = (e) => {
+			e.key === "Escape" && (e.preventDefault(), e.stopPropagation(), n());
+		};
+		document.addEventListener("keydown", i), t.querySelector("#btnCancelCustomPresetDelete").onclick = n, t.onclick = (e) => {
+			e.target === t && n();
+		}, t.querySelector("#btnProceedCustomPresetDelete").onclick = () => {
+			n(), delete this.state.documentPresets[e];
+			let t = Object.keys(this.state.documentPresets);
+			this.state.activePreset = t[0] || "MAHA DBT", this.savePresetsAndSettings(), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal("presets"), r.show("Preset Deleted", `Preset "${e}" deleted. Switched to ${this.state.activePreset}.`, "info");
+		};
+	}
 	handleNewPreset() {
-		let e = window.prompt("Enter name for the new document preset (e.g. CET CELL, MSBNPE):");
-		if (!e || !e.trim()) return;
-		let t = e.trim().toUpperCase();
-		this.state.documentPresets[t] ? r.show("Preset Exists", `Preset "${t}" already exists.`, "warning") : (this.state.documentPresets[t] = [], this.handleSwitchActivePreset(t), r.show("Preset Created", `New preset "${t}" created. You can now add documents to it.`, "success"));
+		this._showInlinePresetAction("NEW", "", (e) => {
+			this.state.documentPresets[e] ? r.show("Preset Exists", `Preset "${e}" already exists.`, "warning") : (this.state.documentPresets[e] = [], this.handleSwitchActivePreset(e), r.show("Preset Created", `New preset "${e}" created.`, "success"));
+		});
 	}
 	handleCopyPreset() {
 		let e = this.state.activePreset, t = this.state.documentPresets[e] || [], n = `${e} 2`, i = 2;
 		for (; this.state.documentPresets[n];) i++, n = `${e} ${i}`;
-		let a = window.prompt(`Copy preset "${e}" to new name:`, n);
-		if (!a || !a.trim()) return;
-		let o = a.trim().toUpperCase();
-		this.state.documentPresets[o] ? r.show("Duplicate Preset", `Preset "${o}" already exists.`, "warning") : (this.state.documentPresets[o] = JSON.parse(JSON.stringify(t)), this.handleSwitchActivePreset(o), r.show("Preset Copied", `Copied "${e}" to "${o}".`, "success"));
+		this._showInlinePresetAction("COPY TO", n, (n) => {
+			this.state.documentPresets[n] ? r.show("Duplicate Preset", `Preset "${n}" already exists.`, "warning") : (this.state.documentPresets[n] = JSON.parse(JSON.stringify(t)), this.handleSwitchActivePreset(n), r.show("Preset Copied", `Copied "${e}" to "${n}".`, "success"));
+		});
 	}
 	handleRenamePreset() {
-		let e = this.state.activePreset, t = window.prompt(`Rename preset "${e}" to:`, e);
-		if (!t || !t.trim() || t.trim().toUpperCase() === e) return;
-		let n = t.trim().toUpperCase();
-		this.state.documentPresets[n] ? r.show("Duplicate Name", `Preset "${n}" already exists.`, "warning") : (this.state.documentPresets[n] = this.state.documentPresets[e], delete this.state.documentPresets[e], this.handleSwitchActivePreset(n), r.show("Preset Renamed", `Preset renamed to "${n}".`, "success"));
+		let e = this.state.activePreset;
+		this._showInlinePresetAction("RENAME", e, (t) => {
+			t === e ? this.buildSettingsPresetDropdown() : this.state.documentPresets[t] ? r.show("Duplicate Name", `Preset "${t}" already exists.`, "warning") : (this.state.documentPresets[t] = this.state.documentPresets[e], delete this.state.documentPresets[e], this.handleSwitchActivePreset(t), r.show("Preset Renamed", `Preset renamed to "${t}".`, "success"));
+		});
 	}
 	handleDeletePreset() {
 		if (Object.keys(this.state.documentPresets).length <= 1) {
@@ -8376,10 +8451,7 @@ var ut = j.map((e) => ({
 			return;
 		}
 		let e = this.state.activePreset;
-		if (!window.confirm(`Are you sure you want to delete preset "${e}"?`)) return;
-		delete this.state.documentPresets[e];
-		let t = Object.keys(this.state.documentPresets);
-		this.state.activePreset = t[0] || "MAHA DBT", this.savePresetsAndSettings(), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal("presets"), r.show("Preset Deleted", `Preset "${e}" deleted. Switched to ${this.state.activePreset}.`, "info");
+		this.showCustomPresetDeleteDialog(e);
 	}
 	handleResetPresetsDefault() {
 		window.confirm("Reset document presets to factory defaults? All custom presets will be removed and default 4 presets restored.") && (this.state.documentPresets = JSON.parse(JSON.stringify(ft)), this.state.activePreset = "MAHA DBT", this.state.customShortcuts = [], this.shortcuts21 = JSON.parse(JSON.stringify(ut)), this.savePresetsAndSettings(), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal("presets"), r.show("Reset Complete", "Document presets restored to factory defaults.", "success"));

@@ -307,6 +307,7 @@ export class MissingDocumentsModal {
   _handleKeydown(e) {
     if (e.key === 'Escape') {
       e.preventDefault();
+      e.stopPropagation();
       if (this.quickPreviewEl && !this.quickPreviewEl.classList.contains('hidden')) {
         this.closeQuickPreview();
       } else {
@@ -359,7 +360,7 @@ export class MissingDocumentsModal {
           </div>
           <div>
             <h1 class="font-heading text-lg sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">
-              Missing Documents &amp; Follow-up Desk
+              Document Desk
             </h1>
           </div>
         </div>
@@ -411,10 +412,11 @@ export class MissingDocumentsModal {
             <div class="space-y-1">
               <div class="flex items-center space-x-2 text-[11px] font-bold tracking-wider text-slate-400 uppercase">
                 <span>STUDENT NAME:</span>
-                <div id="missingStudentDisplayWrap" class="inline-flex items-center space-x-1.5 bg-blue-50 text-blue-700 font-semibold px-2 py-0.5 rounded border border-blue-200/60 text-xs normal-case">
-                  <span id="missingStudentNameDisplay">${escapeHtml(studentName)}</span>
-                  <button id="btnMissingEditFolder" aria-label="Edit student name" class="text-blue-500 hover:text-blue-700 cursor-pointer" type="button" title="Edit Student / Folder Name">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div id="missingStudentDisplayWrap" class="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-indigo-50/80 text-blue-900 font-extrabold px-3 py-1 rounded-lg border border-blue-300 shadow-xs text-xs sm:text-sm normal-case tracking-wide">
+                  <span class="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse shrink-0 shadow-[0_0_8px_rgba(37,99,235,0.6)]"></span>
+                  <span id="missingStudentNameDisplay" class="font-heading font-extrabold text-blue-900">${escapeHtml(studentName)}</span>
+                  <button id="btnMissingEditFolder" aria-label="Edit student name" class="text-blue-600 hover:text-blue-800 p-0.5 rounded hover:bg-blue-100 transition cursor-pointer ml-1" type="button" title="Edit Student / Folder Name">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
                     </svg>
                   </button>
@@ -432,28 +434,12 @@ export class MissingDocumentsModal {
                 <h2 class="text-base sm:text-lg font-extrabold text-slate-900 font-heading">
                   ${presentCount} of ${totalCount} Documents Staged (${percent}% Verified)
                 </h2>
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                  ✓ MahaDBT Compliant
-                </span>
               </div>
             </div>
           </div>
 
           <div class="flex items-center gap-3 shrink-0">
-            <!-- Active Verified Card -->
-            <div class="bg-white border-2 border-emerald-500/80 rounded-xl px-4 py-2.5 min-w-[140px] flex items-center space-x-3 shadow-xs ring-2 ring-emerald-100">
-              <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                  <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path>
-                </svg>
-              </div>
-              <div>
-                <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 leading-none">ACTIVE • VERIFIED</p>
-                <p class="text-sm font-extrabold text-emerald-700 mt-1">${presentCount} Documents</p>
-              </div>
-            </div>
-
-            <!-- Missing Card -->
+            <!-- Left Summary Card: MISSING DOCUMENTS (Aliged with Left Column) -->
             <div class="bg-white border border-rose-200/90 rounded-xl px-4 py-2.5 min-w-[130px] flex items-center space-x-3 shadow-xs">
               <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center border border-rose-100">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -461,8 +447,21 @@ export class MissingDocumentsModal {
                 </svg>
               </div>
               <div>
-                <p class="text-[10px] font-bold uppercase tracking-wider text-rose-600 leading-none">MISSING</p>
+                <p class="text-[10px] font-bold uppercase tracking-wider text-rose-600 leading-none">MISSING DOCUMENTS</p>
                 <p class="text-sm font-extrabold text-rose-600 mt-1">${missingCount} Documents</p>
+              </div>
+            </div>
+
+            <!-- Right Summary Card: PRESENT DOCUMENTS (Aligned with Right Column) -->
+            <div class="bg-white border-2 border-emerald-500/80 rounded-xl px-4 py-2.5 min-w-[140px] flex items-center space-x-3 shadow-xs ring-2 ring-emerald-100">
+              <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </div>
+              <div>
+                <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 leading-none">PRESENT DOCUMENTS</p>
+                <p class="text-sm font-extrabold text-emerald-700 mt-1">${presentCount} Documents</p>
               </div>
             </div>
           </div>
@@ -497,17 +496,24 @@ export class MissingDocumentsModal {
 
                 return `
                   <div class="bg-white border border-slate-200 border-l-[3.5px] border-l-rose-500 rounded-lg p-3 flex items-center justify-between gap-3 shadow-xs hover:border-slate-300 transition">
-                    <div class="min-w-0 flex items-center space-x-2.5">
-                      <span class="text-xs font-bold text-slate-800 tracking-wide uppercase truncate" title="${escapeHtml(ruleName)}">${escapeHtml(ruleName)}</span>
+                    <div class="min-w-0 flex-1 flex items-center space-x-2.5 mr-2">
+                      <span class="text-xs sm:text-sm font-bold text-slate-800 tracking-wide uppercase truncate" title="${escapeHtml(ruleName)}">${escapeHtml(ruleName)}</span>
                       <span class="text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded-full shrink-0">Missing</span>
                     </div>
 
                     <div class="flex items-center space-x-2 shrink-0">
+                      <!-- Compact Calendar Icon Button (Point 3) -->
                       <div class="relative flex items-center" title="Set follow-up promise date">
-                        <input type="date" value="${escapeHtml(currentFollowup)}" data-doc="${escapeHtml(ruleName)}" class="missing-followup-input text-xs py-1 px-2 border border-slate-200 rounded font-mono text-slate-600 w-32 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                        <button type="button" class="btn-missing-date-trigger p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 rounded-lg transition cursor-pointer flex items-center gap-1.5 shadow-2xs" title="${currentFollowup ? `Follow-up Date: ${currentFollowup}` : 'Set follow-up promise date'}">
+                          <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
+                          ${currentFollowup ? `<span class="text-[11px] font-mono font-bold text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200">${escapeHtml(currentFollowup)}</span>` : ''}
+                        </button>
+                        <input type="date" value="${escapeHtml(currentFollowup)}" data-doc="${escapeHtml(ruleName)}" class="missing-followup-input absolute opacity-0 pointer-events-none w-0 h-0">
                       </div>
 
-                      <button type="button" data-doc="${escapeHtml(ruleName)}" class="btn-missing-import-file bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold px-2.5 py-1 rounded inline-flex items-center space-x-1 shadow-xs transition cursor-pointer" title="Import external file for ${escapeHtml(ruleName)}">
+                      <button type="button" data-doc="${escapeHtml(ruleName)}" class="btn-missing-import-file bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold px-3 py-1.5 rounded-lg inline-flex items-center space-x-1 shadow-xs transition cursor-pointer" title="Import external file for ${escapeHtml(ruleName)}">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
                         </svg>
@@ -694,7 +700,23 @@ export class MissingDocumentsModal {
       };
     }
 
-    // 4. Follow-up Date Pickers
+    // 4. Follow-up Date Pickers & Compact Icon Triggers (Point 3)
+    const dateTriggers = this.contentEl.querySelectorAll('.btn-missing-date-trigger');
+    dateTriggers.forEach((btn) => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const wrap = btn.closest('div');
+        const input = wrap ? wrap.querySelector('.missing-followup-input') : null;
+        if (input) {
+          if (typeof input.showPicker === 'function') {
+            input.showPicker();
+          } else {
+            input.click();
+          }
+        }
+      };
+    });
+
     const followupInputs = this.contentEl.querySelectorAll('.missing-followup-input');
     followupInputs.forEach((input) => {
       input.onchange = (e) => {

@@ -1,10 +1,18 @@
 # 🔒 LOCKED TOOL: Bulk Document Renamer (`tools/rename_tool/`)
 
 > [!IMPORTANT]
-> **STATUS: LOCKED & SEALED UNDER CP-034 VERIFICATION**  
+> **STATUS: LOCKED & SEALED UNDER CP-035 VERIFICATION**  
 > Module: `tools/rename_tool/`  
-> Last Verified Milestone: `CP-034` (Final 100% 7 Core Production Enhancements & Workstation Stabilization)  
+> Last Verified Milestone: `CP-035` (Final Polish: Zero-Localhost Inline Preset Rename & Custom Delete Dialog, Unified Esc/Cross Step-Back Hierarchy, Compact Date Picker Icon, Pulsing Folder Badge, Document Desk Rebrand)  
 > All files inside `tools/rename_tool/` are strictly locked. No modifications permitted without explicit user instruction containing: `UNLOCK RENAME_TOOL`.
+
+> **Last QA Stabilization & Verification:** 2026-11-26 (Final Polish 5 UI/UX Upgrades [CP-035] Verified 100%:
+> 1. Zero `localhost` Popups for Preset Actions: Removed all native window.prompt and window.confirm dialogs; implemented in-place inline text editing for Rename, New, and Copy presets with green tick (✓) Apply and cancel (×) buttons; implemented custom in-app confirmation modal for Delete preset with 0 browser popups.
+> 2. Unified Esc & Cross (×) Step-Back Dismissal: In Document Desk, pressing Esc or clicking × when Quick Preview is active closes strictly the preview layer (1 step back) keeping Document Desk open; pressing Esc in Document Desk closes the desk returning to Bulk Renamer.
+> 3. Compact Date Picker Icon & Full Document Title Visibility: Replaced bulky 128px text date box in Missing rows with a compact calendar icon button (📅) with native showPicker() and compact date badge, giving 100% width to document names without truncation.
+> 4. Bold & Highlighted Folder Name: Upgraded top folder name container with bold typography, highlighted badge styling, and live blue pulsing indicator dot (animate-pulse).
+> 5. MahaDBT Removal, Top Cards Alignment & Document Desk Rebrand: Removed '✓ MahaDBT Compliant' badge; aligned top summary cards 1:1 with columns below (Left: MISSING DOCUMENTS [Rose], Right: PRESENT DOCUMENTS [Emerald]); rebranded modal header and references to 'Document Desk'.
+> Dual-MCP automated QA passed 100% [Playwright MCP E2E + Chrome DevTools 0 console errors]; compiled UI with node build-ui.js and release binary via cargo tauri build [10.55 MB]; deployed directly to C:\Users\USER\AppData\Local\DocMitra\app.exe).
 
 > **Last QA Stabilization & Verification:** 2026-11-26 (Final 100% 7 Core Production Enhancements [CP-034] Verified 100%: 
 > 1. Cycle-Completion Auto-Sort: Automatically triggers natural sort (1-0, A-Z) when looping from last document back to first document; manual Sort A-Z button preserved.
