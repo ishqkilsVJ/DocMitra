@@ -11,6 +11,8 @@ pub struct FileEntry {
     pub size: u64,
     pub ext: String,
     pub mtime: u64,
+    #[serde(default)]
+    pub ctime: u64,
     pub dir: String,
     pub url: String,
 }
@@ -104,6 +106,10 @@ fn pick_native_files() -> Result<FilesResult, String> {
                             .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
                             .map(|d| d.as_millis() as u64)
                             .unwrap_or(0);
+                        let ctime = meta.created().ok()
+                            .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
+                            .map(|d| d.as_millis() as u64)
+                            .unwrap_or(mtime);
                         let dir = p.parent().unwrap_or(Path::new("")).to_string_lossy().replace('\\', "/");
                         let path_str = p.to_string_lossy().replace('\\', "/");
                         let url = format!("http://localhost:3000/api/serve-file?path={}", simple_url_encode(&path_str));
@@ -113,6 +119,7 @@ fn pick_native_files() -> Result<FilesResult, String> {
                             size: meta.len(),
                             ext,
                             mtime,
+                            ctime,
                             dir,
                             url,
                         });
@@ -176,6 +183,10 @@ fn list_native_directory(path: String) -> Result<DirectoryResult, String> {
                             .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
                             .map(|d| d.as_millis() as u64)
                             .unwrap_or(0);
+                        let ctime = meta.created().ok()
+                            .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
+                            .map(|d| d.as_millis() as u64)
+                            .unwrap_or(mtime);
                         let dir = p.parent().unwrap_or(Path::new("")).to_string_lossy().replace('\\', "/");
                         let path_str = p.to_string_lossy().replace('\\', "/");
                         let url = format!("http://localhost:3000/api/serve-file?path={}", simple_url_encode(&path_str));
@@ -185,6 +196,7 @@ fn list_native_directory(path: String) -> Result<DirectoryResult, String> {
                             size: meta.len(),
                             ext,
                             mtime,
+                            ctime,
                             dir,
                             url,
                         });

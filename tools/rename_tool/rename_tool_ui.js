@@ -373,72 +373,12 @@ export class RenamerUIManager {
 
       const applyFolderEdit = async () => {
         const newName = inputEditFolder.value.trim();
-        const oldFolderName = this.state.studentName || (this.state.folder?.name || '');
-        const oldFolderPath = this.state.folder ? (this.state.folder.nativePath || this.state.folder.path || '') : '';
-
         inputEditFolder.classList.add('hidden');
         if (btnApplyFolder) btnApplyFolder.classList.add('hidden');
         displayFolder.classList.remove('hidden');
         btnEditFolder.classList.remove('hidden');
 
-        if (!newName || newName === oldFolderName) {
-          return;
-        }
-
-        // 1. Exact Typing Casing: Use user's exact typing (Caps Lock On/Off fidelity)
-        this.state.studentName = newName;
-        displayFolder.textContent = newName;
-        displayFolder.title = newName;
-
-        // 2. Physical Disk Folder Rename
-        if (oldFolderPath) {
-          try {
-            const renameRes = await renameNativeFolder(oldFolderPath, newName);
-            if (renameRes && renameRes.success) {
-              const updatedPath = renameRes.newPath || renameRes.path;
-              if (updatedPath) {
-                const oldNormalized = oldFolderPath.replace(/\\/g, '/').toLowerCase();
-                const newNormalized = updatedPath.replace(/\\/g, '/');
-
-                if (this.state.folder) {
-                  this.state.folder.name = newName;
-                  this.state.folder.path = updatedPath;
-                  this.state.folder.nativePath = updatedPath;
-                }
-
-                // Update in-memory paths of all loaded queue files so subsequent renames succeed
-                for (const f of this.state.files) {
-                  if (f.path) {
-                    const fNorm = f.path.replace(/\\/g, '/');
-                    if (fNorm.toLowerCase().startsWith(oldNormalized)) {
-                      f.path = newNormalized + fNorm.slice(oldNormalized.length);
-                      if (f.nativePath) {
-                        f.nativePath = f.path;
-                      }
-                    }
-                  }
-                }
-              }
-            } else if (renameRes && renameRes.error) {
-              console.warn('[DocMitra] Physical folder rename notice:', renameRes.error);
-            }
-          } catch (err) {
-            console.warn('[DocMitra] Physical folder rename error:', err);
-          }
-        }
-
-        // 3. 'Add folder name in file' Checkbox Guard (Zero Recalculation if unchecked)
-        const chkInclude = document.getElementById('chkIncludeFolderName');
-        const shouldIncludeInFiles = chkInclude ? chkInclude.checked : true;
-
-        if (shouldIncludeInFiles) {
-          this._recalculateTargetNames(true);
-          this.renderQueue();
-          this.renderCurrentPreview();
-        }
-
-        this.updateTelemetry();
-        toast.show('Folder Renamed', `Folder name updated to: ${newName}`, 'success');
+        await this.applyFolderRename(newName);
       };
 
       if (btnApplyFolder) {
@@ -1330,6 +1270,7 @@ export class RenamerUIManager {
           name: f.name,
           path: f.path || `${folderPath}/${f.name}`,
           size: f.size || 0,
+          dateCreated: f.ctime || f.birthtime || f.dateCreated || f.lastModified || Date.now(),
           dateModified: f.lastModified || f.fileObj?.lastModified || f.dateModified || f.modified || Date.now(),
           ext: extension,
           fileObj: f.fileObj || null,
@@ -1372,6 +1313,7 @@ export class RenamerUIManager {
         name: f.name,
         path: f.path || `${folderPath}/${f.name}`,
         size: f.size || 0,
+        dateCreated: f.ctime || f.birthtime || f.dateCreated || f.lastModified || Date.now(),
         dateModified: f.lastModified || f.fileObj?.lastModified || f.dateModified || f.modified || Date.now(),
         ext: extension,
         fileObj: f.fileObj || null,
@@ -6274,6 +6216,79 @@ export class RenamerUIManager {
   }
 
   /**
+   * Centralized physical folder and student name rename handler
+   */
+  async applyFolderRename(newName) {
+    const oldFolderName = this.state.studentName || (this.state.folder?.name || '');
+    const oldFolderPath = this.state.folder ? (this.state.folder.nativePath || this.state.folder.path || '') : '';
+
+    if (!newName || newName === oldFolderName) return;
+
+    // 1. Exact Typing Casing: Use user's exact typing
+    this.state.studentName = newName;
+    const displayFolder = document.getElementById('displayFolderName');
+    if (displayFolder) {
+      displayFolder.textContent = newName;
+      displayFolder.title = newName;
+    }
+    const inputEditFolder = document.getElementById('inputEditFolderName');
+    if (inputEditFolder) {
+      inputEditFolder.value = newName;
+    }
+
+    // 2. Physical Disk Folder Rename
+    if (oldFolderPath) {
+      try {
+        const renameRes = await renameNativeFolder(oldFolderPath, newName);
+        if (renameRes && renameRes.success) {
+          const updatedPath = renameRes.newPath || renameRes.path;
+          if (updatedPath) {
+            const oldNormalized = oldFolderPath.replace(/\\/g, '/').toLowerCase();
+            const newNormalized = updatedPath.replace(/\\/g, '/');
+
+            if (this.state.folder) {
+              this.state.folder.name = newName;
+              this.state.folder.path = updatedPath;
+              this.state.folder.nativePath = updatedPath;
+            }
+
+            // Update in-memory paths of all loaded queue files so subsequent operations succeed
+            for (const f of this.state.files) {
+              if (f.path) {
+                const fNorm = f.path.replace(/\\/g, '/');
+                if (fNorm.toLowerCase().startsWith(oldNormalized)) {
+                  f.path = newNormalized + fNorm.slice(oldNormalized.length);
+                  if (f.nativePath) {
+                    f.nativePath = f.path;
+                  }
+                }
+              }
+            }
+          }
+        } else if (renameRes && renameRes.error) {
+          console.warn('[DocMitra] Physical folder rename notice:', renameRes.error);
+        }
+      } catch (err) {
+        console.warn('[DocMitra] Physical folder rename error:', err);
+      }
+    }
+
+    // 3. 'Add folder name in file' Checkbox Guard
+    const chkInclude = document.getElementById('chkIncludeFolderName');
+    const shouldIncludeInFiles = chkInclude ? chkInclude.checked : true;
+
+    if (shouldIncludeInFiles) {
+      this._recalculateTargetNames(true);
+      this.renderQueue();
+      this.renderCurrentPreview();
+    }
+
+    this.updateTelemetry();
+    this.updateMissingModal();
+    toast.show('Folder Renamed', `Folder name updated to: ${newName}`, 'success');
+  }
+
+  /**
    * Unified native import handler for missing documents (used by both sidebar and MissingDocumentsModal)
    */
   async handleImportMissingDocument(ruleName) {
@@ -6285,10 +6300,14 @@ export class RenamerUIManager {
       const picked = res.files[0];
       const fileExt = picked.ext || ext(picked.name);
       const folderPath = this.state.folder?.path || '';
-      const includeFolder = this.state.settings?.includeFolderNameInFile !== false;
-      const studentName = includeFolder ? (this.state.studentName || this.state.folder?.name || '') : '';
 
-      const targetBase = buildName(ruleName || cleanName(picked.name), studentName, this.state.settings?.groups, this.state.style);
+      // Dynamic Rule Inheritance: Check active ribbon settings (student name checked/unchecked, active casing)
+      const chkInclude = document.getElementById('chkIncludeFolderName');
+      const includeFolder = chkInclude ? chkInclude.checked : (this.state.settings?.includeFolderNameInFile !== false);
+      const studentName = includeFolder ? (this.state.studentName || this.state.folder?.name || '') : '';
+      const currentStyle = this.state.style || 'upper';
+
+      const targetBase = buildName(ruleName || cleanName(picked.name), studentName, this.state.settings?.groups, currentStyle);
       const cleanBase = targetBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
       const targetFilename = `${cleanBase}${fileExt}`;
 
@@ -6315,6 +6334,7 @@ export class RenamerUIManager {
         nativePath: finalPath,
         size: finalSize,
         ext: fileExt,
+        dateCreated: (imported && (imported.ctime || imported.dateCreated)) ? (imported.ctime || imported.dateCreated) : (picked.ctime || picked.dateCreated || Date.now()),
         dateModified: Date.now(),
         lastModified: Date.now(),
         url: (imported && imported.url) ? imported.url : (picked.url || resolveFilePreviewUrl(picked)),
@@ -6348,6 +6368,9 @@ export class RenamerUIManager {
     if (!this.missingModal) {
       this.missingModal = new MissingDocumentsModal({
         onImportFile: (ruleName) => this.handleImportMissingDocument(ruleName),
+        onRenameFolder: async (newFolderName) => {
+          await this.applyFolderRename(newFolderName);
+        },
         onSetFollowup: ({ docName, date }) => {
           const student = this.state.studentName || this.state.folder?.name || 'Student';
           addOrUpdateFollowUp({
@@ -6414,12 +6437,14 @@ export class RenamerUIManager {
       }
       const fileExt = f.ext || ext(f.name) || 'pdf';
       const dateModified = f.dateModified || f.lastModified || f.modified || Date.now();
+      const dateCreated = f.dateCreated || f.ctime || f.birthtime || dateModified;
       return {
         name: f.name,
         docType: docType,
         size: f.size || 0,
         ext: fileExt.toUpperCase().replace('.', ''),
         dateModified: dateModified,
+        dateCreated: dateCreated,
         isCombined: isCombined
       };
     });

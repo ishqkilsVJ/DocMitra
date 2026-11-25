@@ -37,19 +37,16 @@ describe('DocMitra Rename Tool — Phase 5: Missing Documents & Follow-up Desk T
       .should('contain.text', 'Missing Documents & Follow-up Desk');
   });
 
-  it('TC-DESK-02: Header displays clean folder badge, student name, and offline status', () => {
+  it('TC-DESK-02: Header displays clean scheme selector, student name with inline edit, and no redundant folder bar', () => {
     cy.get('#btnOpenMissingDeskModal').click();
 
     cy.get('#modalMissingDocumentsDesk').within(() => {
-      // Student Name is visible
+      // Student Name and Edit Pencil Button are visible
       cy.contains('Vijay Ramesh Yadav').should('be.visible');
+      cy.get('#btnMissingEditFolder').should('be.visible');
 
-      // Clean Folder Ribbon (Option 1-B: clean folder badge without raw DIR file path)
-      cy.contains('Folder:').parent()
-        .should('contain.text', 'Vijay_Ramesh_Yadav');
-
-      // Local FS Connected Status
-      cy.contains('LOCAL FS CONNECTED').should('be.visible');
+      // Redundant FOLDER: strip is removed
+      cy.get('header').should('not.contain.text', 'FOLDER:');
     });
   });
 
@@ -155,7 +152,7 @@ describe('DocMitra Rename Tool — Phase 5: Missing Documents & Follow-up Desk T
     cy.get('#modalMissingDocumentsDesk').should('have.class', 'hidden');
   });
 
-  it('TC-DESK-08: Layout order and metadata badges on document rows (Date, Size, Type)', () => {
+  it('TC-DESK-08: Layout order, 2-column missing cards, and metadata badges (True Created Date, Size, Type)', () => {
     cy.get('#btnOpenMissingDeskModal').click();
 
     cy.get('#modalMissingDocumentsDesk').within(() => {
@@ -163,14 +160,15 @@ describe('DocMitra Rename Tool — Phase 5: Missing Documents & Follow-up Desk T
       cy.contains('Application Readiness Status').should('be.visible');
       cy.contains('Student Name:').should('be.visible');
 
-      // 2. Missing Documents row metadata badges (Option 3-A)
+      // 2. Missing Documents 2-column card grid and metadata badges (Requirement 2 & Option 3-A)
+      cy.get('.grid.grid-cols-1.md\\:grid-cols-2').should('exist');
       cy.contains('PDF / JPG').should('be.visible');
       cy.contains('Target ≤ 256 KB').should('be.visible');
 
-      // 3. Present Documents row metadata (Option 2-B: DD-MM-YYYY date, size, type)
+      // 3. Present Documents row metadata with True Created Date (Requirement 3)
       cy.get('details').within(() => {
         cy.contains('Verified').should('be.visible');
-        cy.contains('calendar_today').should('be.visible');
+        cy.contains(/Created:/i).should('be.visible');
       });
     });
   });

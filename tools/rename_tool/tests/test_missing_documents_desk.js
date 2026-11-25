@@ -195,23 +195,25 @@ assert(html.includes('APARNA GORAKH NADEKAR'), 'Student Name must be clearly dis
 assert(html.includes('Student Name:'), 'Student Name label must be rendered in Readiness card');
 console.log('  ✓ Verified: Student Name is clearly displayed inside Application Readiness card');
 
-// 3. Verify clean folder name without raw file path or edit pencil
-assert(!html.includes('DIR:'), 'Raw DIR: prefix must be replaced with clean Folder:');
+// 3. Verify redundant FOLDER: sub-header strip is completely removed (Requirement 4)
+assert(!html.includes('DIR:'), 'Raw DIR: prefix must not be present');
+assert(!html.includes('FOLDER:'), 'Redundant FOLDER: sub-header ribbon must be completely removed');
 assert(!html.includes('📁 E:/Documents/Admissions/APARNA GORAKH NADEKAR.pdf'), 'Raw file path must not be displayed');
-assert(html.includes('📁 APARNA GORAKH NADEKAR.pdf') || html.includes('📁 APARNA GORAKH NADEKAR'), 'Clean folder badge must be displayed');
-console.log('  ✓ Verified: Raw file paths and clunky edit buttons removed, clean folder name shown');
+console.log('  ✓ Verified: Redundant FOLDER: sub-header bar removed, header is clean and compact');
 
-// 4. Verify Date (DD-MM-YYYY), Size and File Type on Present Document row
+// 4. Verify True NTFS Creation Date (DD-MM-YYYY), Size and File Type on Present Document row (Requirement 3)
 assert(html.includes('321 KB'), 'Present document must display formatted file size (321 KB)');
 assert(html.includes('PDF'), 'Present document must display file type badge (PDF)');
-assert(html.includes('24-11-2026'), 'Present document must display formatted date (24-11-2026)');
-console.log('  ✓ Verified: Present document rows display Date (DD-MM-YYYY), Size, and Type badge');
+assert(html.includes('Created: 24-11-2026'), 'Present document must display true Created Date (Created: 24-11-2026)');
+console.log('  ✓ Verified: Present document rows display true NTFS Created Date (DD-MM-YYYY), Size, and Type badge');
 
-// 5. Verify Type, Target Size and Follow-up on Missing Document row
+// 5. Verify 2-Column Card Grid Layout, Type, Target Size and Follow-up on Missing Document (Requirement 2 & 5)
+assert(html.includes('grid-cols-1 md:grid-cols-2'), 'Missing documents must render in matching 2-column grid layout');
+assert(html.includes('btnMissingEditFolder'), 'Inline Student/Folder edit pencil button must be present in Readiness card');
 assert(html.includes('PDF / JPG'), 'Missing document must display expected file type badge (PDF / JPG)');
 assert(html.includes('Target ≤ 256 KB'), 'Missing document must display Target ≤ 256 KB buffer');
-assert(html.includes('Promised: 2026-11-28') || html.includes('2026-11-28'), 'Missing document must display promised follow-up date');
-console.log('  ✓ Verified: Missing document rows display Type, Target Size, and Follow-up Status');
+assert(html.includes('2026-11-28'), 'Missing document must display promised follow-up date');
+console.log('  ✓ Verified: Missing document cards match 2-column grid layout with inline edit and metadata badges');
 
 console.log('✓ Test 5 Passed: All 5 UI/UX Audit & Layout specifications validated 100%');
 
