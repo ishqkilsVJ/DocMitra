@@ -6296,6 +6296,11 @@ export class RenamerUIManager {
    * Unified native import handler for missing documents (used by both sidebar and MissingDocumentsModal)
    */
   async handleImportMissingDocument(ruleName) {
+    if (!this.state.folder?.path) {
+      toast.show('Select Folder First', 'Please select a student folder before importing documents.', 'warning');
+      return;
+    }
+
     toast.show('Select File for Import', `Select document for ${ruleName}`, 'info');
     try {
       const res = await selectNativeFiles('All Supported Files (*.pdf;*.jpg;*.jpeg;*.png;*.docx)|*.pdf;*.jpg;*.jpeg;*.png;*.docx|All Files (*.*)|*.*', `Select File for ${ruleName}`);
@@ -6303,7 +6308,7 @@ export class RenamerUIManager {
 
       const picked = res.files[0];
       const fileExt = picked.ext || ext(picked.name);
-      const folderPath = this.state.folder?.path || '';
+      const folderPath = this.state.folder.path;
 
       // Dynamic Rule Inheritance: Check active ribbon settings (student name checked/unchecked, active casing)
       const chkInclude = document.getElementById('chkIncludeFolderName');
@@ -6321,12 +6326,17 @@ export class RenamerUIManager {
           sourcePath: picked.path,
           targetDir: folderPath,
           targetName: targetFilename,
-          studentName: studentName
+          studentName: studentName,
+          moveFile: true // User choice 1-b: Move / Cut-Paste
         });
       }
 
+      if (imported && imported.success === false) {
+        throw new Error(imported.error || 'Failed to move file to destination folder');
+      }
+
       const finalName = (imported && imported.name) ? imported.name : targetFilename;
-      const finalPath = (imported && imported.path) ? imported.path : (folderPath ? `${folderPath}/${finalName}` : picked.path);
+      const finalPath = (imported && imported.path) ? imported.path : `${folderPath}/${finalName}`;
       const finalSize = (imported && imported.size) ? imported.size : (picked.size || 0);
 
       const newFileItem = {
@@ -6358,7 +6368,7 @@ export class RenamerUIManager {
       this.renderQueue();
       this.renderCurrentPreview();
       this.updateMissingModal();
-      toast.show('Document Imported', `Imported ${cleanName(finalName)} as ${ruleName}`, 'success');
+      toast.show('Document Imported', `Moved & imported ${finalName} as ${ruleName}`, 'success');
     } catch (err) {
       console.error('[DocMitra Import] Import error:', err);
       toast.show('Import Error', err.message || 'Failed to import document', 'error');
@@ -6374,6 +6384,15 @@ export class RenamerUIManager {
         onImportFile: (ruleName) => this.handleImportMissingDocument(ruleName),
         onRenameFolder: async (newFolderName) => {
           await this.applyFolderRename(newFolderName);
+        },
+        onViewDocument: (doc) => {
+          const idx = this.state.files.findIndex(f => f.name === doc.name || f.path === doc.path);
+          if (idx !== -1) {
+            this.state.currentIndex = idx;
+            this.renderQueue();
+            this.renderCurrentPreview();
+            toast.show('Document Selected', `Focused on ${doc.name}`, 'info');
+          }
         },
         onSetFollowup: ({ docName, date }) => {
           const student = this.state.studentName || this.state.folder?.name || 'Student';

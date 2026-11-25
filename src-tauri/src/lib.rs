@@ -54,6 +54,27 @@ pub struct RenameResult {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
+pub struct ImportNativeResult {
+    pub success: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_path: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target_path: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    pub size: u64,
+    pub ctime: u64,
+    pub mtime: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct FilesResult {
     pub success: bool,
     pub files: Vec<FileEntry>,
@@ -445,6 +466,139 @@ fn move_native_file(source_path: String, target_dir_path: String) -> Result<Rena
 }
 
 #[tauri::command]
+fn import_native_file(
+    source_path: String,
+    target_dir: String,
+    target_name: String,
+    move_file: Option<bool>,
+) -> Result<ImportNativeResult, String> {
+    let clean_src = source_path.replace('/', "\\");
+    let src = PathBuf::from(&clean_src);
+    if !src.exists() || !src.is_file() {
+        return Ok(ImportNativeResult {
+            success: false,
+            source_path: Some(source_path),
+            target_path: None,
+            path: None,
+            name: None,
+            size: 0,
+            ctime: 0,
+            mtime: 0,
+            url: None,
+            error: Some("Source file does not exist on disk".to_string()),
+        });
+    }
+
+    let clean_target_dir = target_dir.replace('/', "\\");
+    let target_dir_path = PathBuf::from(&clean_target_dir);
+    if !target_dir_path.exists() {
+        if let Err(e) = fs::create_dir_all(&target_dir_path) {
+            return Ok(ImportNativeResult {
+                success: false,
+                source_path: Some(source_path),
+                target_path: None,
+                path: None,
+                name: None,
+                size: 0,
+                ctime: 0,
+                mtime: 0,
+                url: None,
+                error: Some(format!("Failed to create destination folder: {}", e)),
+            });
+        }
+    }
+
+    let final_name = if target_name.trim().is_empty() {
+        src.file_name().unwrap_or_default().to_string_lossy().to_string()
+    } else {
+        target_name.trim().to_string()
+    };
+
+    let path_obj = Path::new(&final_name);
+    let stem = path_obj.file_stem().unwrap_or_default().to_string_lossy().to_string();
+    let ext = match path_obj.extension() {
+        Some(e) => format!(".{}", e.to_string_lossy()),
+        None => String::new(),
+    };
+
+    let mut dest_path = target_dir_path.join(&final_name);
+    let mut actual_name = final_name.clone();
+    let mut counter = 2;
+    while dest_path.exists() {
+        actual_name = format!("{} {}{}", stem, counter, ext);
+        dest_path = target_dir_path.join(&actual_name);
+        counter += 1;
+    }
+
+    let should_move = move_file.unwrap_or(true);
+    if should_move {
+        if let Err(_rename_err) = fs::rename(&src, &dest_path) {
+            if let Err(copy_err) = fs::copy(&src, &dest_path) {
+                return Ok(ImportNativeResult {
+                    success: false,
+                    source_path: Some(source_path),
+                    target_path: None,
+                    path: None,
+                    name: None,
+                    size: 0,
+                    ctime: 0,
+                    mtime: 0,
+                    url: None,
+                    error: Some(format!("Failed to move file to destination: {}", copy_err)),
+                });
+            }
+            let _ = fs::remove_file(&src);
+        }
+    } else {
+        if let Err(copy_err) = fs::copy(&src, &dest_path) {
+            return Ok(ImportNativeResult {
+                success: false,
+                source_path: Some(source_path),
+                target_path: None,
+                path: None,
+                name: None,
+                size: 0,
+                ctime: 0,
+                mtime: 0,
+                url: None,
+                error: Some(format!("Failed to copy file to destination: {}", copy_err)),
+            });
+        }
+    }
+
+    strip_windows_file_locks(&dest_path);
+
+    let meta = fs::metadata(&dest_path).ok();
+    let size = meta.as_ref().map(|m| m.len()).unwrap_or(0);
+    let mtime = meta.as_ref()
+        .and_then(|m| m.modified().ok())
+        .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or(0);
+    let ctime = meta.as_ref()
+        .and_then(|m| m.created().ok())
+        .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or(mtime);
+
+    let target_path_str = dest_path.to_string_lossy().replace('\\', "/");
+    let url = format!("http://localhost:3000/api/serve-file?path={}", simple_url_encode(&target_path_str));
+
+    Ok(ImportNativeResult {
+        success: true,
+        source_path: Some(source_path),
+        target_path: Some(target_path_str.clone()),
+        path: Some(target_path_str),
+        name: Some(actual_name),
+        size,
+        ctime,
+        mtime,
+        url: Some(url),
+        error: None,
+    })
+}
+
+#[tauri::command]
 fn open_in_explorer(path: String) -> Result<bool, String> {
     #[cfg(target_os = "windows")]
     {
@@ -569,6 +723,7 @@ pub fn run() {
       rename_native_file,
       rename_native_folder,
       move_native_file,
+      import_native_file,
       open_in_explorer,
       read_binary_file,
       write_binary_file,

@@ -1,7 +1,7 @@
 /**
  * tools/rename_tool/missing_documents_modal.js
  * DocMitra Suite — Isolated Missing Documents & Follow-up Desk Modal
- * Extracted and adapted from Stitch design specification.
+ * Extracted and adapted from Stitch design specification (code.html / screen.png).
  * Fully encapsulated ES Module component.
  */
 
@@ -21,25 +21,6 @@ function formatBytes(bytes) {
   return `${kb} KB`;
 }
 
-// Helper: Determine expected file type and target buffer (PDF for certificates, JPG for photo/signature)
-function getExpectedFileSpec(ruleName, rule) {
-  let ext = 'PDF';
-  if (rule && rule.ext) {
-    ext = rule.ext.toUpperCase().replace('.', '');
-  } else if (rule && rule.format) {
-    ext = rule.format.toUpperCase().replace('.', '');
-  } else {
-    const upper = (typeof ruleName === 'string' ? ruleName : (ruleName.name || '')).toUpperCase();
-    if (upper.includes('PHOTO') || upper.includes('PHOTOGRAPH') || upper.includes('SIGNATURE') || upper.includes('SIGN') || upper.includes('THUMB') || upper.includes('PIC')) {
-      ext = 'JPG';
-    }
-  }
-
-  const isJpg = ext === 'JPG' || ext === 'JPEG';
-  const targetBuffer = isJpg ? 'Target ≤ 100 KB' : 'Target ≤ 256 KB';
-  return { ext, isJpg, targetBuffer };
-}
-
 function formatFileDate(timestamp) {
   if (!timestamp) {
     const now = new Date();
@@ -50,7 +31,7 @@ function formatFileDate(timestamp) {
   }
   const d = new Date(timestamp);
   if (isNaN(d.getTime())) {
-    return '24-11-2026';
+    return '25-11-2026';
   }
   const dd = String(d.getDate()).padStart(2, '0');
   const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -65,10 +46,12 @@ export class MissingDocumentsModal {
     this.onSetFollowup = options.onSetFollowup || (() => {});
     this.onPresetChange = options.onPresetChange || (() => {});
     this.onRenameFolder = options.onRenameFolder || (() => {});
+    this.onViewDocument = options.onViewDocument || (() => {});
     this.onClose = options.onClose || (() => {});
 
     this.modalEl = null;
     this.contentEl = null;
+    this.quickPreviewEl = null;
     this.isOpen = false;
     this.currentProps = null;
 
@@ -80,23 +63,58 @@ export class MissingDocumentsModal {
 
     const el = document.createElement('div');
     el.id = 'modalMissingDocumentsDesk';
-    el.className = 'rename-tool-scope fixed inset-0 z-[1050] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 md:p-6 hidden select-none animate-in fade-in duration-150';
+    el.className = 'rename-tool-scope fixed inset-0 z-[1050] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 hidden select-none animate-in fade-in duration-150';
     el.innerHTML = `
-      <div class="w-full max-w-4xl max-h-[92vh] bg-surface-container-lowest rounded-2xl shadow-2xl border border-outline-variant/40 flex flex-col overflow-hidden my-auto">
+      <div class="relative w-full max-w-[1040px] max-h-[94vh] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto transition-all duration-300">
         <div id="missingModalContent" class="flex flex-col h-full overflow-hidden"></div>
+
+        <!-- In-Modal Quick Preview Overlay (Choice 3-C) -->
+        <div id="inModalQuickPreview" class="hidden absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex flex-col items-center justify-center p-4">
+          <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] border border-slate-200">
+            <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="material-symbols-outlined text-primary text-[20px] shrink-0">visibility</span>
+                <span id="quickPreviewTitle" class="font-heading font-bold text-sm text-slate-900 truncate">Document Preview</span>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <button id="btnQuickPreviewJumpRenamer" type="button" class="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white font-mono-code text-[11px] font-bold shadow-xs transition cursor-pointer flex items-center gap-1 active:scale-95" title="Open and edit in main workstation preview">
+                  <span class="material-symbols-outlined text-[13px]">open_in_new</span>
+                  <span>Open in Renamer</span>
+                </button>
+                <button id="btnQuickPreviewClose" type="button" class="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-200 transition cursor-pointer" title="Close Preview (Esc)">
+                  <span class="material-symbols-outlined text-[18px]">close</span>
+                </button>
+              </div>
+            </div>
+            <div id="quickPreviewBody" class="flex-1 overflow-auto p-4 flex items-center justify-center bg-slate-100 min-h-[340px]">
+              <!-- Dynamic image or PDF canvas rendered here -->
+            </div>
+          </div>
+        </div>
       </div>
     `;
 
     this.container.appendChild(el);
     this.modalEl = el;
     this.contentEl = el.querySelector('#missingModalContent');
+    this.quickPreviewEl = el.querySelector('#inModalQuickPreview');
 
-    // Backdrop click dismisses modal
+    // Backdrop click dismisses modal (unless quick preview is active)
     this.modalEl.addEventListener('click', (e) => {
       if (e.target === this.modalEl) {
-        this.close();
+        if (!this.quickPreviewEl.classList.contains('hidden')) {
+          this.closeQuickPreview();
+        } else {
+          this.close();
+        }
       }
     });
+
+    // Quick preview close wiring
+    const btnQPClose = el.querySelector('#btnQuickPreviewClose');
+    if (btnQPClose) {
+      btnQPClose.onclick = () => this.closeQuickPreview();
+    }
   }
 
   open(props) {
@@ -113,15 +131,71 @@ export class MissingDocumentsModal {
     this.isOpen = false;
     if (this.modalEl) {
       this.modalEl.classList.add('hidden');
+      this.closeQuickPreview();
     }
     document.removeEventListener('keydown', this._handleKeydown);
     this.onClose();
   }
 
+  closeQuickPreview() {
+    if (this.quickPreviewEl) {
+      this.quickPreviewEl.classList.add('hidden');
+      const body = this.quickPreviewEl.querySelector('#quickPreviewBody');
+      if (body) body.innerHTML = '';
+    }
+  }
+
+  showQuickPreview(doc) {
+    if (!this.quickPreviewEl) return;
+
+    const titleEl = this.quickPreviewEl.querySelector('#quickPreviewTitle');
+    const bodyEl = this.quickPreviewEl.querySelector('#quickPreviewBody');
+    const btnJump = this.quickPreviewEl.querySelector('#btnQuickPreviewJumpRenamer');
+
+    const docName = doc.docType || doc.name || 'Document';
+    if (titleEl) {
+      titleEl.textContent = `${docName} • ${formatBytes(doc.size)}`;
+    }
+
+    if (btnJump) {
+      btnJump.onclick = () => {
+        this.closeQuickPreview();
+        this.close();
+        this.onViewDocument(doc);
+      };
+    }
+
+    if (bodyEl) {
+      bodyEl.innerHTML = '';
+      const ext = (doc.ext || (doc.name ? doc.name.split('.').pop() : 'pdf')).toLowerCase().replace('.', '');
+      const isImg = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'].includes(ext);
+
+      if (isImg) {
+        const img = document.createElement('img');
+        img.src = doc.url || doc.path || '';
+        img.alt = docName;
+        img.className = 'max-w-full max-h-[60vh] object-contain rounded-lg shadow-md border border-slate-200';
+        bodyEl.appendChild(img);
+      } else {
+        // PDF or generic document
+        const iframe = document.createElement('iframe');
+        iframe.src = doc.url || doc.path || '';
+        iframe.className = 'w-full h-[60vh] rounded-lg border border-slate-200 bg-white';
+        bodyEl.appendChild(iframe);
+      }
+    }
+
+    this.quickPreviewEl.classList.remove('hidden');
+  }
+
   _handleKeydown(e) {
     if (e.key === 'Escape') {
       e.preventDefault();
-      this.close();
+      if (this.quickPreviewEl && !this.quickPreviewEl.classList.contains('hidden')) {
+        this.closeQuickPreview();
+      } else {
+        this.close();
+      }
     } else if (e.key === 'Enter') {
       const activeTag = document.activeElement ? document.activeElement.tagName : '';
       if (activeTag !== 'INPUT' && activeTag !== 'BUTTON' && activeTag !== 'SELECT') {
@@ -153,44 +227,51 @@ export class MissingDocumentsModal {
     const totalCount = totalRequiredCount || (presentCount + missingCount);
     const percent = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 100;
 
-    // SVG dasharray (circumference = 100 for r=15.9155)
-    const strokeDash = `${percent}, 100`;
+    // SVG dasharray (circumference = 163.3 for r=26)
+    const circumference = 163.3;
+    const strokeDashOffset = circumference - (circumference * percent / 100);
 
     this.contentEl.innerHTML = `
-      <!-- 1. TOP HEADER WITH HIGH-CONTRAST ADMINISTRATIVE THEME (REQUIREMENT 6 & 4) -->
-      <header class="px-5 py-3.5 bg-surface-container-lowest border-b border-outline-variant/30 flex items-center justify-between gap-3 flex-wrap shrink-0">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center shadow-xs shrink-0">
-            <span class="material-symbols-outlined text-[24px]">checklist_rtl</span>
+      <!-- BEGIN: ModalHeader -->
+      <header class="px-6 py-4 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-3 bg-white sticky top-0 z-20 shrink-0">
+        <div class="flex items-center space-x-3.5">
+          <!-- App icon with double-layered bookmark/layer symbol -->
+          <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
           </div>
           <div>
-            <div class="flex items-center gap-2 flex-wrap">
-              <h1 class="font-headline-md text-[17px] text-on-surface tracking-tight font-bold">Missing Documents &amp; Follow-up Desk</h1>
-            </div>
-            <p class="font-label-sm text-[11px] text-secondary mt-0.5">Maharashtra Admission &amp; Verification Workflow • 100% Offline Localhost</p>
+            <h1 class="font-heading text-lg sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">
+              Missing Documents &amp; Follow-up Desk
+            </h1>
+            <p class="text-xs text-slate-500 font-medium flex items-center gap-1.5">
+              <span>Maharashtra Admission &amp; Verification Workflow</span>
+              <span class="inline-block w-1 h-1 rounded-full bg-slate-400"></span>
+              <span>100% Offline Localhost</span>
+            </p>
           </div>
         </div>
 
-        <!-- Bento PRESET Dropdown (100% Identical to Main Workstation) -->
+        <!-- Bento PRESET Selector Pill with Elevated Floating Menu -->
         <div class="flex items-center">
-          <div id="modalPresetCard" class="group relative flex items-center justify-between bg-surface-container-lowest border border-outline-variant/60 hover:border-primary/80 rounded-xl px-3 h-[38px] shadow-2xs hover:shadow-[0_0_15px_rgba(0,55,176,0.18)] transition-all duration-200 cursor-pointer select-none" title="Click to switch active document preset">
-            <div class="flex items-center gap-1.5 min-w-0 mr-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-primary inline-block shrink-0 shadow-[0_0_6px_rgba(0,55,176,0.4)]"></span>
-              <span class="font-mono-code text-[10px] text-secondary group-hover:text-primary uppercase font-bold tracking-wider shrink-0 transition-colors">PRESET:</span>
-              <span id="modalPresetActiveName" class="font-mono-code text-[12px] font-bold text-on-surface truncate tracking-wide">${escapeHtml(activePreset)}</span>
-            </div>
-            <span id="modalPresetChevron" class="material-symbols-outlined text-[18px] text-secondary group-hover:text-primary transition-transform duration-200 shrink-0">expand_more</span>
+          <div id="modalPresetCard" class="relative group flex items-center space-x-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-800 px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide transition shadow-xs cursor-pointer select-none" title="Click to switch active document preset">
+            <span class="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_6px_rgba(37,99,235,0.4)]"></span>
+            <span>PRESET: <strong id="modalPresetActiveName" class="text-slate-900">${escapeHtml(activePreset)}</strong></span>
+            <svg id="modalPresetChevron" class="w-3.5 h-3.5 text-slate-500 ml-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+            </svg>
 
             <!-- Elevated Floating Menu (z-[9999]) with Active Checkmarks -->
-            <div id="modalPresetMenu" class="hidden absolute top-[calc(100%+6px)] right-0 w-[240px] bg-surface-container-lowest border border-outline-variant/60 rounded-xl shadow-xl z-[9999] py-1.5 overflow-hidden backdrop-blur-md transition-all duration-150">
+            <div id="modalPresetMenu" class="hidden absolute top-[calc(100%+6px)] right-0 w-[240px] bg-white border border-slate-200 rounded-xl shadow-2xl z-[9999] py-1.5 overflow-hidden transition-all duration-150">
               ${presetsList.map(p => {
                 const isActive = p === activePreset;
                 return `
-                  <div class="modal-preset-item flex items-center justify-between px-3 py-2 text-[12px] font-mono-code font-semibold cursor-pointer transition-colors rounded-lg mx-1 ${
-                    isActive ? 'bg-primary/10 text-primary font-bold' : 'text-on-surface hover:bg-surface-container-high/60 hover:text-primary'
+                  <div class="modal-preset-item flex items-center justify-between px-3.5 py-2 text-[12px] font-mono font-semibold cursor-pointer transition-colors rounded-lg mx-1 ${
+                    isActive ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-700 hover:bg-slate-100 hover:text-blue-600'
                   }" data-preset="${escapeHtml(p)}">
                     <span class="truncate mr-2">${escapeHtml(p)}</span>
-                    ${isActive ? '<span class="material-symbols-outlined text-[16px] text-primary shrink-0">check</span>' : ''}
+                    ${isActive ? '<span class="material-symbols-outlined text-[16px] text-blue-600 shrink-0">check</span>' : ''}
                   </div>
                 `;
               }).join('')}
@@ -198,243 +279,234 @@ export class MissingDocumentsModal {
           </div>
         </div>
       </header>
+      <!-- END: ModalHeader -->
 
-      <!-- 2. MAIN WORKSTATION SCROLL BODY -->
-      <div class="p-4 md:p-5 space-y-4 md:space-y-5 flex-1 overflow-y-auto custom-pan-scroll">
-
-        <!-- 2.1 APPLICATION READINESS STATUS SUMMARY CARD (WITH INLINE FOLDER/STUDENT EDIT - REQUIREMENT 5) -->
-        <div class="bg-surface-container-low border border-outline-variant/40 rounded-xl p-3.5 shadow-xs">
-          <div class="flex items-center justify-between gap-4 flex-wrap">
-            <!-- Circular Ring Gauge + Student Name & Status -->
-            <div class="flex items-center gap-4">
-              <div class="relative w-16 h-16 shrink-0 flex items-center justify-center">
-                <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                  <!-- Background Track -->
-                  <path class="text-surface-container-high" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3.8"></path>
-                  <!-- Completed / Green Progress Track -->
-                  <path class="text-emerald-500 transition-all duration-300" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="${strokeDash}" stroke-linecap="round" stroke-width="3.8"></path>
-                </svg>
-                <div class="absolute flex flex-col items-center justify-center text-center leading-none">
-                  <span class="font-headline-sm text-[14px] font-bold text-on-surface">${percent}%</span>
-                  <span class="font-mono-code text-[8px] uppercase tracking-wider text-secondary mt-0.5">Ready</span>
-                </div>
+      <!-- BEGIN: ModalBodyContent -->
+      <main class="flex-1 overflow-y-auto px-6 py-5 space-y-5 custom-scroll">
+        <!-- BEGIN: ApplicationReadinessSection -->
+        <section class="bg-gradient-to-r from-slate-50 via-slate-50/70 to-blue-50/30 border border-slate-200/90 rounded-xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-xs" data-purpose="readiness-banner">
+          <div class="flex items-center space-x-4 sm:space-x-5">
+            <div class="relative w-16 h-16 shrink-0 flex items-center justify-center">
+              <svg class="w-16 h-16 transform -rotate-90">
+                <circle class="text-slate-200" cx="32" cy="32" fill="transparent" r="26" stroke="currentColor" stroke-width="5"></circle>
+                <circle class="text-emerald-500 progress-ring__circle transition-all duration-500" cx="32" cy="32" fill="transparent" r="26" stroke="currentColor" stroke-dasharray="163.3" stroke-dashoffset="${strokeDashOffset}" stroke-linecap="round" stroke-width="5.5"></circle>
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center leading-none text-center">
+                <span class="text-[13px] font-extrabold text-slate-800">${percent}%</span>
+                <span class="text-[8px] font-bold text-emerald-600 uppercase tracking-tight mt-0.5">VERIFIED</span>
               </div>
+            </div>
 
-              <div class="flex flex-col gap-0.5">
-                <span class="font-label-sm text-[10px] text-secondary uppercase tracking-wider font-semibold">Application Readiness Status</span>
-                
-                <!-- Display Mode for Student Name + Edit Pencil Button -->
-                <div class="flex items-center gap-2 mt-0.5" id="missingStudentDisplayWrap">
-                  <span class="font-label-sm text-[10px] text-secondary uppercase tracking-wider font-semibold">Student Name:</span>
-                  <span id="missingStudentNameDisplay" class="px-2.5 py-0.5 rounded-md bg-surface-container-lowest text-primary font-headline-sm text-[13px] font-bold tracking-wide border border-outline-variant/30">
-                    ${escapeHtml(studentName)}
-                  </span>
-                  <button id="btnMissingEditFolder" type="button" class="p-1 rounded-md bg-surface-container hover:bg-surface-container-high text-secondary hover:text-primary transition-colors border border-outline-variant/40 cursor-pointer shadow-2xs flex items-center justify-center" title="Edit Student / Folder Name">
-                    <span class="material-symbols-outlined text-[14px]">edit</span>
+            <div class="space-y-1">
+              <div class="flex items-center space-x-2 text-[11px] font-bold tracking-wider text-slate-400 uppercase">
+                <span>STUDENT NAME:</span>
+                <div id="missingStudentDisplayWrap" class="inline-flex items-center space-x-1.5 bg-blue-50 text-blue-700 font-semibold px-2 py-0.5 rounded border border-blue-200/60 text-xs normal-case">
+                  <span id="missingStudentNameDisplay">${escapeHtml(studentName)}</span>
+                  <button id="btnMissingEditFolder" aria-label="Edit student name" class="text-blue-500 hover:text-blue-700 cursor-pointer" type="button" title="Edit Student / Folder Name">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                    </svg>
                   </button>
                 </div>
 
                 <!-- Inline Edit Form (Hidden by default) -->
-                <div class="flex items-center gap-1.5 mt-0.5 hidden" id="missingStudentEditWrap">
-                  <span class="font-label-sm text-[10px] text-secondary uppercase tracking-wider font-semibold">Student:</span>
-                  <input id="inputMissingEditStudent" type="text" value="${escapeHtml(studentName)}" class="px-2 py-0.5 rounded-md bg-surface-container-lowest text-on-surface font-headline-sm text-[12px] font-bold border border-primary focus:outline-none w-52 md:w-64 shadow-2xs">
-                  <button id="btnMissingApplyStudent" type="button" class="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-mono-code text-[11px] font-bold flex items-center gap-1 cursor-pointer shadow-xs active:scale-95">
-                    <span class="material-symbols-outlined text-[13px]">check</span>
-                    <span>Apply</span>
-                  </button>
-                  <button id="btnMissingCancelStudent" type="button" class="px-2 py-1 rounded-md bg-surface-container hover:bg-surface-container-high text-secondary font-mono-code text-[11px] font-medium cursor-pointer" title="Cancel">
-                    <span>✕</span>
-                  </button>
+                <div id="missingStudentEditWrap" class="inline-flex items-center space-x-1.5 hidden">
+                  <input id="inputMissingEditStudent" type="text" value="${escapeHtml(studentName)}" class="px-2 py-0.5 rounded border border-blue-500 text-xs font-bold font-heading text-slate-800 focus:outline-none w-48 shadow-2xs">
+                  <button id="btnMissingApplyStudent" type="button" class="px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold cursor-pointer">Apply</button>
+                  <button id="btnMissingCancelStudent" type="button" class="px-1.5 py-0.5 rounded bg-slate-200 hover:bg-slate-300 text-slate-600 text-[11px] cursor-pointer">✕</button>
                 </div>
+              </div>
 
-                <div class="flex items-center gap-2 mt-1">
-                  <span class="font-headline-md text-[15px] font-bold text-on-surface">${presentCount} of ${totalCount} Documents Staged</span>
-                  <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 font-mono-code text-[11px] font-bold">${percent}% Verified</span>
-                </div>
-                <span class="font-label-sm text-[11px] text-secondary">Maharashtra admission compliance threshold met for all verified documents.</span>
+              <div class="flex items-center flex-wrap gap-2 pt-0.5">
+                <h2 class="text-base sm:text-lg font-extrabold text-slate-900 font-heading">
+                  ${presentCount} of ${totalCount} Documents Staged (${percent}% Verified)
+                </h2>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                  ✓ MahaDBT Compliant
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 font-normal leading-relaxed">
+                All present files verified against canonical MahaDBT schema with safe buffers &lt; 256 KB.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 shrink-0">
+            <!-- Active Verified Card -->
+            <div class="bg-white border-2 border-emerald-500/80 rounded-xl px-4 py-2.5 min-w-[140px] flex items-center space-x-3 shadow-xs ring-2 ring-emerald-100">
+              <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </div>
+              <div>
+                <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 leading-none">ACTIVE • VERIFIED</p>
+                <p class="text-sm font-extrabold text-emerald-700 mt-1">${presentCount} Documents</p>
               </div>
             </div>
 
-            <!-- Metrics Pill Breakdown -->
-            <div class="flex items-center gap-3 shrink-0">
-              <!-- Green Completed -->
-              <div class="bg-surface-container-lowest border border-emerald-300 rounded-xl px-3.5 py-2 shadow-2xs flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
-                  <span class="material-symbols-outlined text-[18px]">verified</span>
-                </div>
-                <div>
-                  <span class="font-label-sm text-[10px] text-secondary uppercase font-semibold block">Completed</span>
-                  <span class="font-mono-code text-[13px] font-bold text-emerald-800">${presentCount} Documents</span>
-                </div>
+            <!-- Missing Card -->
+            <div class="bg-white border border-rose-200/90 rounded-xl px-4 py-2.5 min-w-[130px] flex items-center space-x-3 shadow-xs">
+              <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center border border-rose-100">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
               </div>
-
-              <!-- Red/Amber Missing -->
-              <div class="bg-surface-container-lowest border border-error-container rounded-xl px-3.5 py-2 shadow-2xs flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded-lg bg-error-container text-error flex items-center justify-center font-bold">
-                  <span class="material-symbols-outlined text-[18px]">pending_actions</span>
-                </div>
-                <div>
-                  <span class="font-label-sm text-[10px] text-secondary uppercase font-semibold block">Pending / Missing</span>
-                  <span class="font-mono-code text-[13px] font-bold text-error">${missingCount} Documents</span>
-                </div>
+              <div>
+                <p class="text-[10px] font-bold uppercase tracking-wider text-rose-600 leading-none">MISSING</p>
+                <p class="text-sm font-extrabold text-rose-600 mt-1">${missingCount} Documents</p>
               </div>
             </div>
           </div>
-        </div>
+        </section>
+        <!-- END: ApplicationReadinessSection -->
 
-        <!-- 2.2 MISSING DOCUMENTS LIST (2-COLUMN CARDS MATCHING PRESENT DOCUMENTS - REQUIREMENT 2) -->
-        <div class="space-y-2.5">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="font-headline-sm text-[15px] text-on-surface font-bold">Missing Documents</span>
-              <span class="px-2.5 py-0.5 rounded-full ${missingCount > 0 ? 'bg-error text-white' : 'bg-emerald-600 text-white'} font-mono-code text-[11px] font-bold shadow-2xs">
-                ${missingCount > 0 ? `${missingCount} Required` : '0 Missing'}
+        <!-- BEGIN: 2-COLUMN SIDE-BY-SIDE BENTO LAYOUT (EXACT STITCH REPLICATION) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5" data-purpose="bento-columns-layout">
+
+          <!-- LEFT COLUMN: Missing Documents (${missingCount} Required) -->
+          <div class="flex flex-col bg-slate-50/60 border border-slate-200/90 rounded-xl overflow-hidden shadow-xs">
+            <!-- Column Header -->
+            <div class="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                <h3 class="font-heading text-sm sm:text-base font-bold text-slate-900 tracking-tight">Missing Documents</h3>
+              </div>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${missingCount > 0 ? 'bg-rose-100 text-rose-700 border border-rose-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}">
+                ${missingCount > 0 ? `${missingCount} Required` : '0 Required'}
               </span>
             </div>
-            <span class="font-mono-code text-[11px] text-secondary">Target Buffer: ≤ 256 KB (MahaDBT Strict)</span>
-          </div>
 
-          ${missingCount === 0 ? `
-            <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center gap-2 text-emerald-800 dark:text-emerald-300 font-mono-code text-[12px] font-bold">
-              <span class="material-symbols-outlined text-[18px] text-emerald-600">check_circle</span>
-              <span>All ${totalCount} required documents staged! Application is 100% verified.</span>
-            </div>
-          ` : `
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[300px] overflow-y-auto custom-pan-scroll pr-1">
-              ${missingRules.map((rule) => {
+            <!-- Scrollable Missing Documents List -->
+            <div class="p-3.5 space-y-2.5 overflow-y-auto custom-pan-scroll" style="max-height: 440px;">
+              ${missingCount === 0 ? `
+                <div class="p-6 text-center text-emerald-700 bg-emerald-50 rounded-lg border border-emerald-200 font-medium text-xs">
+                  🎉 All required documents have been verified and staged in this folder!
+                </div>
+              ` : missingRules.map((rule) => {
                 const ruleName = typeof rule === 'string' ? rule : (rule.name || '');
-                const ruleTag = rule.tag || rule.code || '';
                 const currentFollowup = followupMap[ruleName] || '';
-                const spec = getExpectedFileSpec(ruleName, rule);
 
                 return `
-                  <div class="p-2.5 rounded-lg bg-surface-container-low border border-rose-200/80 flex flex-col gap-1.5">
-                    <div class="flex items-center justify-between gap-2 min-w-0">
-                      <div class="flex items-center gap-1.5 min-w-0">
-                        <span class="material-symbols-outlined text-rose-600 text-[16px] shrink-0">error_outline</span>
-                        <span class="font-label-md text-[12px] font-semibold text-on-surface break-words" title="${escapeHtml(ruleName)}">${escapeHtml(ruleName)}</span>
-                      </div>
-                      <span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-900 font-mono-code text-[9px] font-bold shrink-0">Missing</span>
+                  <div class="bg-white border border-slate-200 border-l-[3.5px] border-l-rose-500 rounded-lg p-3 flex items-center justify-between gap-3 shadow-xs hover:border-slate-300 transition">
+                    <div class="min-w-0 flex items-center space-x-2.5">
+                      <span class="text-xs font-bold text-slate-800 tracking-wide uppercase truncate" title="${escapeHtml(ruleName)}">${escapeHtml(ruleName)}</span>
+                      <span class="text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded-full shrink-0">Missing</span>
                     </div>
 
-                    <!-- Metadata Row: File Type Badge, Target Buffer, Date Picker, Import Button (Exact Clone of Green Card) -->
-                    <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-secondary pl-5">
-                      <div class="flex items-center gap-2">
-                        <!-- File Type Badge -->
-                        <span class="px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 font-bold uppercase text-[9px] border border-rose-200">
-                          ${escapeHtml(spec.ext)}
-                        </span>
-                        <!-- Target Buffer -->
-                        <span>${escapeHtml(spec.targetBuffer)}</span>
+                    <div class="flex items-center space-x-2 shrink-0">
+                      <div class="relative flex items-center" title="Set follow-up promise date">
+                        <input type="date" value="${escapeHtml(currentFollowup)}" data-doc="${escapeHtml(ruleName)}" class="missing-followup-input text-xs py-1 px-2 border border-slate-200 rounded font-mono text-slate-600 w-32 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                       </div>
 
-                      <!-- Follow-up Date + Royal Blue Import Button -->
-                      <div class="flex items-center gap-1.5 shrink-0 h-[18px]">
-                        <div class="flex items-center gap-1 text-on-surface-variant font-medium h-full" title="Set follow-up promise date">
-                          <span class="material-symbols-outlined text-[13px] text-secondary shrink-0">calendar_today</span>
-                          <input type="date" value="${escapeHtml(currentFollowup)}" data-doc="${escapeHtml(ruleName)}" class="missing-followup-input bg-transparent text-on-surface font-mono-code text-[10px] font-semibold focus:outline-none cursor-pointer w-[74px] h-[16px] leading-none p-0 m-0">
-                        </div>
-
-                        <button type="button" data-doc="${escapeHtml(ruleName)}" class="btn-missing-import-file px-2 py-0 rounded bg-primary hover:bg-primary/90 text-white font-mono-code text-[9px] font-bold shadow-2xs flex items-center gap-0.5 h-[18px] transition-all cursor-pointer active:scale-95 shrink-0 leading-none" title="Import external file into student folder">
-                          <span class="material-symbols-outlined text-[11px]">download</span>
-                          <span>Import</span>
-                        </button>
-                      </div>
+                      <button type="button" data-doc="${escapeHtml(ruleName)}" class="btn-missing-import-file bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold px-2.5 py-1 rounded inline-flex items-center space-x-1 shadow-xs transition cursor-pointer" title="Import external file for ${escapeHtml(ruleName)}">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                        </svg>
+                        <span>Import</span>
+                      </button>
                     </div>
                   </div>
                 `;
               }).join('')}
             </div>
-          `}
-        </div>
+          </div>
 
-        <!-- 2.3 PRESENT / VERIFIED DOCUMENTS SECTION (TRUE CREATED DATE - REQUIREMENT 3) -->
-        <div class="space-y-2 pt-1">
-          <details class="group" open>
-            <summary class="flex items-center justify-between cursor-pointer py-2 select-none list-none bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-3.5 shadow-2xs hover:bg-surface-container-low transition-colors">
-              <div class="flex items-center gap-2.5">
-                <span class="material-symbols-outlined text-emerald-600 text-[20px]">check_circle</span>
-                <span class="font-headline-sm text-[14px] text-on-surface font-bold">Present Documents in Folder (${presentCount} Verified)</span>
-                <span class="text-secondary text-[11px] font-medium">• All auto-matched</span>
+          <!-- RIGHT COLUMN: Present Documents in Folder (${presentCount} Verified / Ready) -->
+          <div class="flex flex-col bg-slate-50/60 border border-slate-200/90 rounded-xl overflow-hidden shadow-xs">
+            <!-- Column Header -->
+            <div class="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                <h3 class="font-heading text-sm sm:text-base font-bold text-slate-900 tracking-tight">Present Documents in Folder</h3>
               </div>
-              <div class="flex items-center gap-2">
-                <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-mono-code text-[10px] font-bold">${presentCount} READY</span>
-                <span class="material-symbols-outlined text-secondary group-open:rotate-180 transition-transform text-[18px]">expand_more</span>
-              </div>
-            </summary>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                ${presentCount} Verified / Ready
+              </span>
+            </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 max-h-[220px] overflow-y-auto custom-pan-scroll pr-1">
+            <!-- Scrollable Present Documents List -->
+            <div class="p-3.5 space-y-2.5 overflow-y-auto custom-pan-scroll" style="max-height: 440px;">
               ${presentDocs.length === 0 ? `
-                <div class="col-span-2 p-3 text-center text-secondary font-mono-code text-[11px]">No verified documents loaded in this folder yet.</div>
-              ` : presentDocs.map((doc) => {
+                <div class="p-6 text-center text-slate-500 bg-white rounded-lg border border-slate-200 font-medium text-xs">
+                  No verified documents found in this folder yet. Use [Import] on the left to add missing files.
+                </div>
+              ` : presentDocs.map((doc, idx) => {
                 const docName = doc.docType || doc.name || 'Document';
                 const sizeStr = formatBytes(doc.size);
                 const isCombined = doc.isCombined || false;
                 const fileType = (doc.ext || (doc.name ? doc.name.split('.').pop() : 'PDF')).toUpperCase().replace('.', '');
-                // True NTFS Creation Date (birthtime) with fallback to modified time
                 const dateStr = formatFileDate(doc.dateCreated || doc.ctime || doc.birthtime || doc.dateModified || doc.lastModified);
+                const isImg = fileType === 'JPG' || fileType === 'JPEG' || fileType === 'PNG';
 
                 return `
-                  <div class="p-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 flex flex-col gap-1.5">
-                    <div class="flex items-center justify-between gap-2 min-w-0">
-                      <div class="flex items-center gap-1.5 min-w-0">
-                        <span class="material-symbols-outlined text-emerald-600 text-[16px] shrink-0">task_alt</span>
-                        <span class="font-label-md text-[12px] font-semibold text-on-surface break-words" title="${escapeHtml(docName)}">${escapeHtml(docName)}</span>
+                  <div class="bg-white border border-emerald-200/90 border-l-[3.5px] border-l-emerald-500 rounded-lg p-3 shadow-xs hover:border-emerald-300 transition flex items-center justify-between gap-3">
+                    <div class="min-w-0 space-y-1">
+                      <div class="flex items-center space-x-2">
+                        <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 text-[10px] font-bold">✓</span>
+                        <h4 class="font-heading font-bold text-xs sm:text-sm text-slate-900 tracking-tight truncate" title="${escapeHtml(docName)}">${escapeHtml(docName)}</h4>
+                        <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded-full shrink-0">Verified</span>
                       </div>
-                      <span class="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-900 font-mono-code text-[9px] font-bold shrink-0">Verified</span>
-                    </div>
-
-                    <!-- Metadata Row: True Created Date (DD-MM-YYYY), Size, File Type Badge -->
-                    <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-secondary pl-5">
-                      <div class="flex items-center gap-2">
-                        <!-- File Type Badge -->
-                        <span class="px-1.5 py-0.2 rounded bg-primary/10 text-primary font-bold uppercase text-[9px]">
-                          ${escapeHtml(fileType)}
-                        </span>
-                        <!-- File Size -->
-                        <span>${escapeHtml(sizeStr)}</span>
-                        ${isCombined ? `<span class="px-1.5 py-0.2 rounded-full bg-secondary-container text-on-secondary-container text-[9px] font-bold">via Combined</span>` : ''}
-                      </div>
-
-                      <!-- True Created Date (DD-MM-YYYY) -->
-                      <div class="flex items-center gap-1 text-on-surface-variant font-medium" title="True File Creation Date (NTFS Birthtime)">
-                        <span class="material-symbols-outlined text-[13px] text-secondary">date_range</span>
+                      <div class="flex items-center space-x-2 text-[11px] text-slate-500 pl-7">
+                        <span class="${isImg ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-700'} font-bold text-[9px] px-1 py-0.2 rounded">${escapeHtml(fileType)}</span>
+                        <span class="font-semibold text-slate-700">${escapeHtml(sizeStr)}</span>
+                        <span>•</span>
                         <span>Created: ${escapeHtml(dateStr)}</span>
+                        ${isCombined ? `<span class="px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-700 text-[9px] font-bold">via Combined</span>` : ''}
                       </div>
                     </div>
+
+                    <!-- Eye Icon Quick Inspect Button (Choice 3-C) -->
+                    <button type="button" data-doc-idx="${idx}" class="btn-present-view-inspect p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition shrink-0 cursor-pointer active:scale-95" title="View / Inspect Document (${escapeHtml(docName)})">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                        <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                      </svg>
+                    </button>
                   </div>
                 `;
               }).join('')}
             </div>
-          </details>
+          </div>
         </div>
-      </div>
+        <!-- END: 2-COLUMN SIDE-BY-SIDE BENTO LAYOUT -->
+      </main>
+      <!-- END: ModalBodyContent -->
 
-      <!-- 3. MODAL / DESK FOOTER -->
-      <footer class="px-5 py-3 bg-surface-container-low border-t border-outline-variant/30 flex items-center justify-between gap-3 rounded-b-2xl shrink-0">
-        <div class="flex items-center gap-2 text-on-surface-variant max-w-xl">
-          <span class="material-symbols-outlined text-primary text-[18px] shrink-0">info</span>
-          <span class="font-label-sm text-[11px] leading-tight text-secondary">
+      <!-- BEGIN: ModalFooter -->
+      <footer class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-4 sticky bottom-0 z-20 shrink-0">
+        <!-- Helper Notice -->
+        <div class="flex items-center space-x-2 text-xs text-slate-600 max-w-xl">
+          <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
+            <path d="M12 16v-4m0-4h.01" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+          </svg>
+          <span class="leading-tight">
             Imported files automatically move to the active folder, rename to canonical MahaDBT format, and re-scan admission queue.
           </span>
         </div>
-        <div class="flex items-center gap-2">
-          <button id="btnMissingModalDone" type="button" class="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white font-headline-sm text-[12px] font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95" title="Close and return to Bulk Renamer (Esc)">
-            <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+
+        <!-- Action Button -->
+        <div>
+          <button id="btnMissingModalDone" type="button" class="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md shadow-blue-500/20 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 cursor-pointer active:scale-95" title="Close and return to Bulk Renamer (Esc)">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+            </svg>
             <span>Back to Renamer</span>
-            <kbd class="px-1.5 py-0.5 rounded bg-white/20 text-[10px] font-mono-code font-bold">Esc</kbd>
+            <kbd class="ml-1.5 px-1.5 py-0.5 bg-blue-700 text-blue-100 rounded text-[10px] font-mono font-normal">Esc</kbd>
           </button>
         </div>
       </footer>
+      <!-- END: ModalFooter -->
     `;
 
-    // Bind event listeners
+    // 1. Modal Footer Close
     const btnDone = this.contentEl.querySelector('#btnMissingModalDone');
     if (btnDone) {
       btnDone.onclick = () => this.close();
     }
 
-    // Modal Header Bento PRESET Dropdown wiring
+    // 2. Bento PRESET Dropdown Wiring
     const modalPresetCard = this.contentEl.querySelector('#modalPresetCard');
     const modalPresetMenu = this.contentEl.querySelector('#modalPresetMenu');
     const modalPresetChevron = this.contentEl.querySelector('#modalPresetChevron');
@@ -465,7 +537,6 @@ export class MissingDocumentsModal {
         };
       });
 
-      // Dismiss menu on outside click
       const handleOutsideModalClick = (e) => {
         if (!modalPresetCard.contains(e.target)) {
           modalPresetMenu.classList.add('hidden');
@@ -475,7 +546,7 @@ export class MissingDocumentsModal {
       document.addEventListener('click', handleOutsideModalClick, { once: true });
     }
 
-    // Inline Student / Folder Name Edit Listeners
+    // 3. Inline Student / Folder Name Edit Listeners
     const btnEditFolder = this.contentEl.querySelector('#btnMissingEditFolder');
     const displayWrap = this.contentEl.querySelector('#missingStudentDisplayWrap');
     const editWrap = this.contentEl.querySelector('#missingStudentEditWrap');
@@ -526,7 +597,7 @@ export class MissingDocumentsModal {
       };
     }
 
-    // Follow-up date inputs
+    // 4. Follow-up Date Pickers
     const followupInputs = this.contentEl.querySelectorAll('.missing-followup-input');
     followupInputs.forEach((input) => {
       input.onchange = (e) => {
@@ -536,13 +607,26 @@ export class MissingDocumentsModal {
       };
     });
 
-    // Import buttons
+    // 5. Import Buttons
     const importButtons = this.contentEl.querySelectorAll('.btn-missing-import-file');
     importButtons.forEach((btn) => {
       btn.onclick = (e) => {
         e.stopPropagation();
         const docName = btn.getAttribute('data-doc');
         this.onImportFile(docName);
+      };
+    });
+
+    // 6. View / Inspect Eye Buttons (Choice 3-C: In-Modal Quick Preview)
+    const viewButtons = this.contentEl.querySelectorAll('.btn-present-view-inspect');
+    viewButtons.forEach((btn) => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.getAttribute('data-doc-idx'), 10);
+        const doc = presentDocs[idx];
+        if (doc) {
+          this.showQuickPreview(doc);
+        }
       };
     });
   }

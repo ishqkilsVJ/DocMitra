@@ -607,7 +607,18 @@ async function v(e, t) {
 	}
 	return { success: !0 };
 }
-async function y({ sourcePath: e, targetDir: t, targetName: n = "", studentName: r = "" }) {
+async function y({ sourcePath: e, targetDir: t, targetName: n = "", studentName: r = "", moveFile: i = !0 }) {
+	let a = c();
+	if (a) try {
+		return await a("import_native_file", {
+			sourcePath: e,
+			targetDir: t,
+			targetName: n,
+			moveFile: !!i
+		});
+	} catch (e) {
+		console.warn("[NativeBridge] Tauri import_native_file failed, falling back:", e);
+	}
 	try {
 		return await (await fetch(`${s}/api/native-import-file`, {
 			method: "POST",
@@ -616,7 +627,8 @@ async function y({ sourcePath: e, targetDir: t, targetName: n = "", studentName:
 				sourcePath: e,
 				targetDir: t,
 				targetName: n,
-				studentName: r
+				studentName: r,
+				moveFile: !!i
 			})
 		})).json();
 	} catch (e) {
@@ -5848,48 +5860,67 @@ function Y(e) {
 function at(e) {
 	return !e || e <= 0 ? "0 KB" : `${Math.round(e / 1024)} KB`;
 }
-function ot(e, t) {
-	let n = "PDF";
-	if (t && t.ext) n = t.ext.toUpperCase().replace(".", "");
-	else if (t && t.format) n = t.format.toUpperCase().replace(".", "");
-	else {
-		let t = (typeof e == "string" ? e : e.name || "").toUpperCase();
-		(t.includes("PHOTO") || t.includes("PHOTOGRAPH") || t.includes("SIGNATURE") || t.includes("SIGN") || t.includes("THUMB") || t.includes("PIC")) && (n = "JPG");
-	}
-	let r = n === "JPG" || n === "JPEG";
-	return {
-		ext: n,
-		isJpg: r,
-		targetBuffer: r ? "Target ≤ 100 KB" : "Target ≤ 256 KB"
-	};
-}
-function st(e) {
+function ot(e) {
 	if (!e) {
 		let e = /* @__PURE__ */ new Date();
 		return `${String(e.getDate()).padStart(2, "0")}-${String(e.getMonth() + 1).padStart(2, "0")}-${e.getFullYear()}`;
 	}
 	let t = new Date(e);
-	return isNaN(t.getTime()) ? "24-11-2026" : `${String(t.getDate()).padStart(2, "0")}-${String(t.getMonth() + 1).padStart(2, "0")}-${t.getFullYear()}`;
+	return isNaN(t.getTime()) ? "25-11-2026" : `${String(t.getDate()).padStart(2, "0")}-${String(t.getMonth() + 1).padStart(2, "0")}-${t.getFullYear()}`;
 }
-var ct = class {
+var st = class {
 	constructor(e = {}) {
-		this.container = e.container || document.body, this.onImportFile = e.onImportFile || (() => {}), this.onSetFollowup = e.onSetFollowup || (() => {}), this.onPresetChange = e.onPresetChange || (() => {}), this.onRenameFolder = e.onRenameFolder || (() => {}), this.onClose = e.onClose || (() => {}), this.modalEl = null, this.contentEl = null, this.isOpen = !1, this.currentProps = null, this._handleKeydown = this._handleKeydown.bind(this);
+		this.container = e.container || document.body, this.onImportFile = e.onImportFile || (() => {}), this.onSetFollowup = e.onSetFollowup || (() => {}), this.onPresetChange = e.onPresetChange || (() => {}), this.onRenameFolder = e.onRenameFolder || (() => {}), this.onViewDocument = e.onViewDocument || (() => {}), this.onClose = e.onClose || (() => {}), this.modalEl = null, this.contentEl = null, this.quickPreviewEl = null, this.isOpen = !1, this.currentProps = null, this._handleKeydown = this._handleKeydown.bind(this);
 	}
 	mount() {
 		if (this.modalEl) return;
 		let e = document.createElement("div");
-		e.id = "modalMissingDocumentsDesk", e.className = "rename-tool-scope fixed inset-0 z-[1050] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 md:p-6 hidden select-none animate-in fade-in duration-150", e.innerHTML = "\n      <div class=\"w-full max-w-4xl max-h-[92vh] bg-surface-container-lowest rounded-2xl shadow-2xl border border-outline-variant/40 flex flex-col overflow-hidden my-auto\">\n        <div id=\"missingModalContent\" class=\"flex flex-col h-full overflow-hidden\"></div>\n      </div>\n    ", this.container.appendChild(e), this.modalEl = e, this.contentEl = e.querySelector("#missingModalContent"), this.modalEl.addEventListener("click", (e) => {
-			e.target === this.modalEl && this.close();
+		e.id = "modalMissingDocumentsDesk", e.className = "rename-tool-scope fixed inset-0 z-[1050] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 hidden select-none animate-in fade-in duration-150", e.innerHTML = "\n      <div class=\"relative w-full max-w-[1040px] max-h-[94vh] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto transition-all duration-300\">\n        <div id=\"missingModalContent\" class=\"flex flex-col h-full overflow-hidden\"></div>\n\n        <!-- In-Modal Quick Preview Overlay (Choice 3-C) -->\n        <div id=\"inModalQuickPreview\" class=\"hidden absolute inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex flex-col items-center justify-center p-4\">\n          <div class=\"relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] border border-slate-200\">\n            <div class=\"px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between\">\n              <div class=\"flex items-center gap-2 min-w-0\">\n                <span class=\"material-symbols-outlined text-primary text-[20px] shrink-0\">visibility</span>\n                <span id=\"quickPreviewTitle\" class=\"font-heading font-bold text-sm text-slate-900 truncate\">Document Preview</span>\n              </div>\n              <div class=\"flex items-center gap-2 shrink-0\">\n                <button id=\"btnQuickPreviewJumpRenamer\" type=\"button\" class=\"px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white font-mono-code text-[11px] font-bold shadow-xs transition cursor-pointer flex items-center gap-1 active:scale-95\" title=\"Open and edit in main workstation preview\">\n                  <span class=\"material-symbols-outlined text-[13px]\">open_in_new</span>\n                  <span>Open in Renamer</span>\n                </button>\n                <button id=\"btnQuickPreviewClose\" type=\"button\" class=\"p-1.5 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-200 transition cursor-pointer\" title=\"Close Preview (Esc)\">\n                  <span class=\"material-symbols-outlined text-[18px]\">close</span>\n                </button>\n              </div>\n            </div>\n            <div id=\"quickPreviewBody\" class=\"flex-1 overflow-auto p-4 flex items-center justify-center bg-slate-100 min-h-[340px]\">\n              <!-- Dynamic image or PDF canvas rendered here -->\n            </div>\n          </div>\n        </div>\n      </div>\n    ", this.container.appendChild(e), this.modalEl = e, this.contentEl = e.querySelector("#missingModalContent"), this.quickPreviewEl = e.querySelector("#inModalQuickPreview"), this.modalEl.addEventListener("click", (e) => {
+			e.target === this.modalEl && (this.quickPreviewEl.classList.contains("hidden") ? this.close() : this.closeQuickPreview());
 		});
+		let t = e.querySelector("#btnQuickPreviewClose");
+		t && (t.onclick = () => this.closeQuickPreview());
 	}
 	open(e) {
 		this.mount(), this.currentProps = e, this.isOpen = !0, this.modalEl.classList.remove("hidden"), document.addEventListener("keydown", this._handleKeydown), this.render();
 	}
 	close() {
-		this.isOpen && (this.isOpen = !1, this.modalEl && this.modalEl.classList.add("hidden"), document.removeEventListener("keydown", this._handleKeydown), this.onClose());
+		this.isOpen && (this.isOpen = !1, this.modalEl && (this.modalEl.classList.add("hidden"), this.closeQuickPreview()), document.removeEventListener("keydown", this._handleKeydown), this.onClose());
+	}
+	closeQuickPreview() {
+		if (this.quickPreviewEl) {
+			this.quickPreviewEl.classList.add("hidden");
+			let e = this.quickPreviewEl.querySelector("#quickPreviewBody");
+			e && (e.innerHTML = "");
+		}
+	}
+	showQuickPreview(e) {
+		if (!this.quickPreviewEl) return;
+		let t = this.quickPreviewEl.querySelector("#quickPreviewTitle"), n = this.quickPreviewEl.querySelector("#quickPreviewBody"), r = this.quickPreviewEl.querySelector("#btnQuickPreviewJumpRenamer"), i = e.docType || e.name || "Document";
+		if (t && (t.textContent = `${i} • ${at(e.size)}`), r && (r.onclick = () => {
+			this.closeQuickPreview(), this.close(), this.onViewDocument(e);
+		}), n) {
+			n.innerHTML = "";
+			let t = (e.ext || (e.name ? e.name.split(".").pop() : "pdf")).toLowerCase().replace(".", "");
+			if ([
+				"jpg",
+				"jpeg",
+				"png",
+				"webp",
+				"gif",
+				"bmp"
+			].includes(t)) {
+				let t = document.createElement("img");
+				t.src = e.url || e.path || "", t.alt = i, t.className = "max-w-full max-h-[60vh] object-contain rounded-lg shadow-md border border-slate-200", n.appendChild(t);
+			} else {
+				let t = document.createElement("iframe");
+				t.src = e.url || e.path || "", t.className = "w-full h-[60vh] rounded-lg border border-slate-200 bg-white", n.appendChild(t);
+			}
+		}
+		this.quickPreviewEl.classList.remove("hidden");
 	}
 	_handleKeydown(e) {
-		if (e.key === "Escape") e.preventDefault(), this.close();
+		if (e.key === "Escape") e.preventDefault(), this.quickPreviewEl && !this.quickPreviewEl.classList.contains("hidden") ? this.closeQuickPreview() : this.close();
 		else if (e.key === "Enter") {
 			let t = document.activeElement ? document.activeElement.tagName : "";
 			t !== "INPUT" && t !== "BUTTON" && t !== "SELECT" && (e.preventDefault(), this.close());
@@ -5902,40 +5933,46 @@ var ct = class {
 			"CET CELL",
 			"SWAYAM DEENDAYAL YOJANA",
 			"EDUCATIONAL DOCUMENTS"
-		], missingRules: a = [], presentDocs: o = [], followupMap: s = {}, totalRequiredCount: c = 0 } = this.currentProps, l = a.length, u = o.length, d = c || u + l, f = d > 0 ? Math.round(u / d * 100) : 100, p = `${f}, 100`;
+		], missingRules: a = [], presentDocs: o = [], followupMap: s = {}, totalRequiredCount: c = 0 } = this.currentProps, l = a.length, u = o.length, d = c || u + l, f = d > 0 ? Math.round(u / d * 100) : 100, p = 163.3, m = p - p * f / 100;
 		this.contentEl.innerHTML = `
-      <!-- 1. TOP HEADER WITH HIGH-CONTRAST ADMINISTRATIVE THEME (REQUIREMENT 6 & 4) -->
-      <header class="px-5 py-3.5 bg-surface-container-lowest border-b border-outline-variant/30 flex items-center justify-between gap-3 flex-wrap shrink-0">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center shadow-xs shrink-0">
-            <span class="material-symbols-outlined text-[24px]">checklist_rtl</span>
+      <!-- BEGIN: ModalHeader -->
+      <header class="px-6 py-4 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-3 bg-white sticky top-0 z-20 shrink-0">
+        <div class="flex items-center space-x-3.5">
+          <!-- App icon with double-layered bookmark/layer symbol -->
+          <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
           </div>
           <div>
-            <div class="flex items-center gap-2 flex-wrap">
-              <h1 class="font-headline-md text-[17px] text-on-surface tracking-tight font-bold">Missing Documents &amp; Follow-up Desk</h1>
-            </div>
-            <p class="font-label-sm text-[11px] text-secondary mt-0.5">Maharashtra Admission &amp; Verification Workflow • 100% Offline Localhost</p>
+            <h1 class="font-heading text-lg sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">
+              Missing Documents &amp; Follow-up Desk
+            </h1>
+            <p class="text-xs text-slate-500 font-medium flex items-center gap-1.5">
+              <span>Maharashtra Admission &amp; Verification Workflow</span>
+              <span class="inline-block w-1 h-1 rounded-full bg-slate-400"></span>
+              <span>100% Offline Localhost</span>
+            </p>
           </div>
         </div>
 
-        <!-- Bento PRESET Dropdown (100% Identical to Main Workstation) -->
+        <!-- Bento PRESET Selector Pill with Elevated Floating Menu -->
         <div class="flex items-center">
-          <div id="modalPresetCard" class="group relative flex items-center justify-between bg-surface-container-lowest border border-outline-variant/60 hover:border-primary/80 rounded-xl px-3 h-[38px] shadow-2xs hover:shadow-[0_0_15px_rgba(0,55,176,0.18)] transition-all duration-200 cursor-pointer select-none" title="Click to switch active document preset">
-            <div class="flex items-center gap-1.5 min-w-0 mr-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-primary inline-block shrink-0 shadow-[0_0_6px_rgba(0,55,176,0.4)]"></span>
-              <span class="font-mono-code text-[10px] text-secondary group-hover:text-primary uppercase font-bold tracking-wider shrink-0 transition-colors">PRESET:</span>
-              <span id="modalPresetActiveName" class="font-mono-code text-[12px] font-bold text-on-surface truncate tracking-wide">${Y(r)}</span>
-            </div>
-            <span id="modalPresetChevron" class="material-symbols-outlined text-[18px] text-secondary group-hover:text-primary transition-transform duration-200 shrink-0">expand_more</span>
+          <div id="modalPresetCard" class="relative group flex items-center space-x-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-800 px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide transition shadow-xs cursor-pointer select-none" title="Click to switch active document preset">
+            <span class="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_6px_rgba(37,99,235,0.4)]"></span>
+            <span>PRESET: <strong id="modalPresetActiveName" class="text-slate-900">${Y(r)}</strong></span>
+            <svg id="modalPresetChevron" class="w-3.5 h-3.5 text-slate-500 ml-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+            </svg>
 
             <!-- Elevated Floating Menu (z-[9999]) with Active Checkmarks -->
-            <div id="modalPresetMenu" class="hidden absolute top-[calc(100%+6px)] right-0 w-[240px] bg-surface-container-lowest border border-outline-variant/60 rounded-xl shadow-xl z-[9999] py-1.5 overflow-hidden backdrop-blur-md transition-all duration-150">
+            <div id="modalPresetMenu" class="hidden absolute top-[calc(100%+6px)] right-0 w-[240px] bg-white border border-slate-200 rounded-xl shadow-2xl z-[9999] py-1.5 overflow-hidden transition-all duration-150">
               ${i.map((e) => {
 			let t = e === r;
 			return `
-                  <div class="modal-preset-item flex items-center justify-between px-3 py-2 text-[12px] font-mono-code font-semibold cursor-pointer transition-colors rounded-lg mx-1 ${t ? "bg-primary/10 text-primary font-bold" : "text-on-surface hover:bg-surface-container-high/60 hover:text-primary"}" data-preset="${Y(e)}">
+                  <div class="modal-preset-item flex items-center justify-between px-3.5 py-2 text-[12px] font-mono font-semibold cursor-pointer transition-colors rounded-lg mx-1 ${t ? "bg-blue-50 text-blue-700 font-bold" : "text-slate-700 hover:bg-slate-100 hover:text-blue-600"}" data-preset="${Y(e)}">
                     <span class="truncate mr-2">${Y(e)}</span>
-                    ${t ? "<span class=\"material-symbols-outlined text-[16px] text-primary shrink-0\">check</span>" : ""}
+                    ${t ? "<span class=\"material-symbols-outlined text-[16px] text-blue-600 shrink-0\">check</span>" : ""}
                   </div>
                 `;
 		}).join("")}
@@ -5943,252 +5980,237 @@ var ct = class {
           </div>
         </div>
       </header>
+      <!-- END: ModalHeader -->
 
-      <!-- 2. MAIN WORKSTATION SCROLL BODY -->
-      <div class="p-4 md:p-5 space-y-4 md:space-y-5 flex-1 overflow-y-auto custom-pan-scroll">
-
-        <!-- 2.1 APPLICATION READINESS STATUS SUMMARY CARD (WITH INLINE FOLDER/STUDENT EDIT - REQUIREMENT 5) -->
-        <div class="bg-surface-container-low border border-outline-variant/40 rounded-xl p-3.5 shadow-xs">
-          <div class="flex items-center justify-between gap-4 flex-wrap">
-            <!-- Circular Ring Gauge + Student Name & Status -->
-            <div class="flex items-center gap-4">
-              <div class="relative w-16 h-16 shrink-0 flex items-center justify-center">
-                <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                  <!-- Background Track -->
-                  <path class="text-surface-container-high" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3.8"></path>
-                  <!-- Completed / Green Progress Track -->
-                  <path class="text-emerald-500 transition-all duration-300" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="${p}" stroke-linecap="round" stroke-width="3.8"></path>
-                </svg>
-                <div class="absolute flex flex-col items-center justify-center text-center leading-none">
-                  <span class="font-headline-sm text-[14px] font-bold text-on-surface">${f}%</span>
-                  <span class="font-mono-code text-[8px] uppercase tracking-wider text-secondary mt-0.5">Ready</span>
-                </div>
+      <!-- BEGIN: ModalBodyContent -->
+      <main class="flex-1 overflow-y-auto px-6 py-5 space-y-5 custom-scroll">
+        <!-- BEGIN: ApplicationReadinessSection -->
+        <section class="bg-gradient-to-r from-slate-50 via-slate-50/70 to-blue-50/30 border border-slate-200/90 rounded-xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-xs" data-purpose="readiness-banner">
+          <div class="flex items-center space-x-4 sm:space-x-5">
+            <div class="relative w-16 h-16 shrink-0 flex items-center justify-center">
+              <svg class="w-16 h-16 transform -rotate-90">
+                <circle class="text-slate-200" cx="32" cy="32" fill="transparent" r="26" stroke="currentColor" stroke-width="5"></circle>
+                <circle class="text-emerald-500 progress-ring__circle transition-all duration-500" cx="32" cy="32" fill="transparent" r="26" stroke="currentColor" stroke-dasharray="163.3" stroke-dashoffset="${m}" stroke-linecap="round" stroke-width="5.5"></circle>
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center leading-none text-center">
+                <span class="text-[13px] font-extrabold text-slate-800">${f}%</span>
+                <span class="text-[8px] font-bold text-emerald-600 uppercase tracking-tight mt-0.5">VERIFIED</span>
               </div>
+            </div>
 
-              <div class="flex flex-col gap-0.5">
-                <span class="font-label-sm text-[10px] text-secondary uppercase tracking-wider font-semibold">Application Readiness Status</span>
-                
-                <!-- Display Mode for Student Name + Edit Pencil Button -->
-                <div class="flex items-center gap-2 mt-0.5" id="missingStudentDisplayWrap">
-                  <span class="font-label-sm text-[10px] text-secondary uppercase tracking-wider font-semibold">Student Name:</span>
-                  <span id="missingStudentNameDisplay" class="px-2.5 py-0.5 rounded-md bg-surface-container-lowest text-primary font-headline-sm text-[13px] font-bold tracking-wide border border-outline-variant/30">
-                    ${Y(t)}
-                  </span>
-                  <button id="btnMissingEditFolder" type="button" class="p-1 rounded-md bg-surface-container hover:bg-surface-container-high text-secondary hover:text-primary transition-colors border border-outline-variant/40 cursor-pointer shadow-2xs flex items-center justify-center" title="Edit Student / Folder Name">
-                    <span class="material-symbols-outlined text-[14px]">edit</span>
+            <div class="space-y-1">
+              <div class="flex items-center space-x-2 text-[11px] font-bold tracking-wider text-slate-400 uppercase">
+                <span>STUDENT NAME:</span>
+                <div id="missingStudentDisplayWrap" class="inline-flex items-center space-x-1.5 bg-blue-50 text-blue-700 font-semibold px-2 py-0.5 rounded border border-blue-200/60 text-xs normal-case">
+                  <span id="missingStudentNameDisplay">${Y(t)}</span>
+                  <button id="btnMissingEditFolder" aria-label="Edit student name" class="text-blue-500 hover:text-blue-700 cursor-pointer" type="button" title="Edit Student / Folder Name">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                    </svg>
                   </button>
                 </div>
 
                 <!-- Inline Edit Form (Hidden by default) -->
-                <div class="flex items-center gap-1.5 mt-0.5 hidden" id="missingStudentEditWrap">
-                  <span class="font-label-sm text-[10px] text-secondary uppercase tracking-wider font-semibold">Student:</span>
-                  <input id="inputMissingEditStudent" type="text" value="${Y(t)}" class="px-2 py-0.5 rounded-md bg-surface-container-lowest text-on-surface font-headline-sm text-[12px] font-bold border border-primary focus:outline-none w-52 md:w-64 shadow-2xs">
-                  <button id="btnMissingApplyStudent" type="button" class="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-mono-code text-[11px] font-bold flex items-center gap-1 cursor-pointer shadow-xs active:scale-95">
-                    <span class="material-symbols-outlined text-[13px]">check</span>
-                    <span>Apply</span>
-                  </button>
-                  <button id="btnMissingCancelStudent" type="button" class="px-2 py-1 rounded-md bg-surface-container hover:bg-surface-container-high text-secondary font-mono-code text-[11px] font-medium cursor-pointer" title="Cancel">
-                    <span>✕</span>
-                  </button>
+                <div id="missingStudentEditWrap" class="inline-flex items-center space-x-1.5 hidden">
+                  <input id="inputMissingEditStudent" type="text" value="${Y(t)}" class="px-2 py-0.5 rounded border border-blue-500 text-xs font-bold font-heading text-slate-800 focus:outline-none w-48 shadow-2xs">
+                  <button id="btnMissingApplyStudent" type="button" class="px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold cursor-pointer">Apply</button>
+                  <button id="btnMissingCancelStudent" type="button" class="px-1.5 py-0.5 rounded bg-slate-200 hover:bg-slate-300 text-slate-600 text-[11px] cursor-pointer">✕</button>
                 </div>
+              </div>
 
-                <div class="flex items-center gap-2 mt-1">
-                  <span class="font-headline-md text-[15px] font-bold text-on-surface">${u} of ${d} Documents Staged</span>
-                  <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 font-mono-code text-[11px] font-bold">${f}% Verified</span>
-                </div>
-                <span class="font-label-sm text-[11px] text-secondary">Maharashtra admission compliance threshold met for all verified documents.</span>
+              <div class="flex items-center flex-wrap gap-2 pt-0.5">
+                <h2 class="text-base sm:text-lg font-extrabold text-slate-900 font-heading">
+                  ${u} of ${d} Documents Staged (${f}% Verified)
+                </h2>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                  ✓ MahaDBT Compliant
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 font-normal leading-relaxed">
+                All present files verified against canonical MahaDBT schema with safe buffers &lt; 256 KB.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 shrink-0">
+            <!-- Active Verified Card -->
+            <div class="bg-white border-2 border-emerald-500/80 rounded-xl px-4 py-2.5 min-w-[140px] flex items-center space-x-3 shadow-xs ring-2 ring-emerald-100">
+              <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </div>
+              <div>
+                <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 leading-none">ACTIVE • VERIFIED</p>
+                <p class="text-sm font-extrabold text-emerald-700 mt-1">${u} Documents</p>
               </div>
             </div>
 
-            <!-- Metrics Pill Breakdown -->
-            <div class="flex items-center gap-3 shrink-0">
-              <!-- Green Completed -->
-              <div class="bg-surface-container-lowest border border-emerald-300 rounded-xl px-3.5 py-2 shadow-2xs flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
-                  <span class="material-symbols-outlined text-[18px]">verified</span>
-                </div>
-                <div>
-                  <span class="font-label-sm text-[10px] text-secondary uppercase font-semibold block">Completed</span>
-                  <span class="font-mono-code text-[13px] font-bold text-emerald-800">${u} Documents</span>
-                </div>
+            <!-- Missing Card -->
+            <div class="bg-white border border-rose-200/90 rounded-xl px-4 py-2.5 min-w-[130px] flex items-center space-x-3 shadow-xs">
+              <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center border border-rose-100">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
               </div>
-
-              <!-- Red/Amber Missing -->
-              <div class="bg-surface-container-lowest border border-error-container rounded-xl px-3.5 py-2 shadow-2xs flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded-lg bg-error-container text-error flex items-center justify-center font-bold">
-                  <span class="material-symbols-outlined text-[18px]">pending_actions</span>
-                </div>
-                <div>
-                  <span class="font-label-sm text-[10px] text-secondary uppercase font-semibold block">Pending / Missing</span>
-                  <span class="font-mono-code text-[13px] font-bold text-error">${l} Documents</span>
-                </div>
+              <div>
+                <p class="text-[10px] font-bold uppercase tracking-wider text-rose-600 leading-none">MISSING</p>
+                <p class="text-sm font-extrabold text-rose-600 mt-1">${l} Documents</p>
               </div>
             </div>
           </div>
-        </div>
+        </section>
+        <!-- END: ApplicationReadinessSection -->
 
-        <!-- 2.2 MISSING DOCUMENTS LIST (2-COLUMN CARDS MATCHING PRESENT DOCUMENTS - REQUIREMENT 2) -->
-        <div class="space-y-2.5">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="font-headline-sm text-[15px] text-on-surface font-bold">Missing Documents</span>
-              <span class="px-2.5 py-0.5 rounded-full ${l > 0 ? "bg-error text-white" : "bg-emerald-600 text-white"} font-mono-code text-[11px] font-bold shadow-2xs">
-                ${l > 0 ? `${l} Required` : "0 Missing"}
+        <!-- BEGIN: 2-COLUMN SIDE-BY-SIDE BENTO LAYOUT (EXACT STITCH REPLICATION) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5" data-purpose="bento-columns-layout">
+
+          <!-- LEFT COLUMN: Missing Documents (${l} Required) -->
+          <div class="flex flex-col bg-slate-50/60 border border-slate-200/90 rounded-xl overflow-hidden shadow-xs">
+            <!-- Column Header -->
+            <div class="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                <h3 class="font-heading text-sm sm:text-base font-bold text-slate-900 tracking-tight">Missing Documents</h3>
+              </div>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${l > 0 ? "bg-rose-100 text-rose-700 border border-rose-200" : "bg-emerald-100 text-emerald-800 border border-emerald-200"}">
+                ${l > 0 ? `${l} Required` : "0 Required"}
               </span>
             </div>
-            <span class="font-mono-code text-[11px] text-secondary">Target Buffer: ≤ 256 KB (MahaDBT Strict)</span>
+
+            <!-- Scrollable Missing Documents List -->
+            <div class="p-3.5 space-y-2.5 overflow-y-auto custom-pan-scroll" style="max-height: 440px;">
+              ${l === 0 ? "\n                <div class=\"p-6 text-center text-emerald-700 bg-emerald-50 rounded-lg border border-emerald-200 font-medium text-xs\">\n                  🎉 All required documents have been verified and staged in this folder!\n                </div>\n              " : a.map((e) => {
+			let t = typeof e == "string" ? e : e.name || "", n = s[t] || "";
+			return `
+                  <div class="bg-white border border-slate-200 border-l-[3.5px] border-l-rose-500 rounded-lg p-3 flex items-center justify-between gap-3 shadow-xs hover:border-slate-300 transition">
+                    <div class="min-w-0 flex items-center space-x-2.5">
+                      <span class="text-xs font-bold text-slate-800 tracking-wide uppercase truncate" title="${Y(t)}">${Y(t)}</span>
+                      <span class="text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded-full shrink-0">Missing</span>
+                    </div>
+
+                    <div class="flex items-center space-x-2 shrink-0">
+                      <div class="relative flex items-center" title="Set follow-up promise date">
+                        <input type="date" value="${Y(n)}" data-doc="${Y(t)}" class="missing-followup-input text-xs py-1 px-2 border border-slate-200 rounded font-mono text-slate-600 w-32 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                      </div>
+
+                      <button type="button" data-doc="${Y(t)}" class="btn-missing-import-file bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold px-2.5 py-1 rounded inline-flex items-center space-x-1 shadow-xs transition cursor-pointer" title="Import external file for ${Y(t)}">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                        </svg>
+                        <span>Import</span>
+                      </button>
+                    </div>
+                  </div>
+                `;
+		}).join("")}
+            </div>
           </div>
 
-          ${l === 0 ? `
-            <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center gap-2 text-emerald-800 dark:text-emerald-300 font-mono-code text-[12px] font-bold">
-              <span class="material-symbols-outlined text-[18px] text-emerald-600">check_circle</span>
-              <span>All ${d} required documents staged! Application is 100% verified.</span>
+          <!-- RIGHT COLUMN: Present Documents in Folder (${u} Verified / Ready) -->
+          <div class="flex flex-col bg-slate-50/60 border border-slate-200/90 rounded-xl overflow-hidden shadow-xs">
+            <!-- Column Header -->
+            <div class="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                <h3 class="font-heading text-sm sm:text-base font-bold text-slate-900 tracking-tight">Present Documents in Folder</h3>
+              </div>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                ${u} Verified / Ready
+              </span>
             </div>
-          ` : `
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[300px] overflow-y-auto custom-pan-scroll pr-1">
-              ${a.map((e) => {
-			let t = typeof e == "string" ? e : e.name || "";
-			e.tag || e.code;
-			let n = s[t] || "", r = ot(t, e);
+
+            <!-- Scrollable Present Documents List -->
+            <div class="p-3.5 space-y-2.5 overflow-y-auto custom-pan-scroll" style="max-height: 440px;">
+              ${o.length === 0 ? "\n                <div class=\"p-6 text-center text-slate-500 bg-white rounded-lg border border-slate-200 font-medium text-xs\">\n                  No verified documents found in this folder yet. Use [Import] on the left to add missing files.\n                </div>\n              " : o.map((e, t) => {
+			let n = e.docType || e.name || "Document", r = at(e.size), i = e.isCombined || !1, a = (e.ext || (e.name ? e.name.split(".").pop() : "PDF")).toUpperCase().replace(".", ""), o = ot(e.dateCreated || e.ctime || e.birthtime || e.dateModified || e.lastModified), s = a === "JPG" || a === "JPEG" || a === "PNG";
 			return `
-                  <div class="p-2.5 rounded-lg bg-surface-container-low border border-rose-200/80 flex flex-col gap-1.5">
-                    <div class="flex items-center justify-between gap-2 min-w-0">
-                      <div class="flex items-center gap-1.5 min-w-0">
-                        <span class="material-symbols-outlined text-rose-600 text-[16px] shrink-0">error_outline</span>
-                        <span class="font-label-md text-[12px] font-semibold text-on-surface break-words" title="${Y(t)}">${Y(t)}</span>
+                  <div class="bg-white border border-emerald-200/90 border-l-[3.5px] border-l-emerald-500 rounded-lg p-3 shadow-xs hover:border-emerald-300 transition flex items-center justify-between gap-3">
+                    <div class="min-w-0 space-y-1">
+                      <div class="flex items-center space-x-2">
+                        <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 text-[10px] font-bold">✓</span>
+                        <h4 class="font-heading font-bold text-xs sm:text-sm text-slate-900 tracking-tight truncate" title="${Y(n)}">${Y(n)}</h4>
+                        <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded-full shrink-0">Verified</span>
                       </div>
-                      <span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-900 font-mono-code text-[9px] font-bold shrink-0">Missing</span>
-                    </div>
-
-                    <!-- Metadata Row: File Type Badge, Target Buffer, Date Picker, Import Button (Exact Clone of Green Card) -->
-                    <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-secondary pl-5">
-                      <div class="flex items-center gap-2">
-                        <!-- File Type Badge -->
-                        <span class="px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 font-bold uppercase text-[9px] border border-rose-200">
-                          ${Y(r.ext)}
-                        </span>
-                        <!-- Target Buffer -->
-                        <span>${Y(r.targetBuffer)}</span>
-                      </div>
-
-                      <!-- Follow-up Date + Royal Blue Import Button -->
-                      <div class="flex items-center gap-1.5 shrink-0 h-[18px]">
-                        <div class="flex items-center gap-1 text-on-surface-variant font-medium h-full" title="Set follow-up promise date">
-                          <span class="material-symbols-outlined text-[13px] text-secondary shrink-0">calendar_today</span>
-                          <input type="date" value="${Y(n)}" data-doc="${Y(t)}" class="missing-followup-input bg-transparent text-on-surface font-mono-code text-[10px] font-semibold focus:outline-none cursor-pointer w-[74px] h-[16px] leading-none p-0 m-0">
-                        </div>
-
-                        <button type="button" data-doc="${Y(t)}" class="btn-missing-import-file px-2 py-0 rounded bg-primary hover:bg-primary/90 text-white font-mono-code text-[9px] font-bold shadow-2xs flex items-center gap-0.5 h-[18px] transition-all cursor-pointer active:scale-95 shrink-0 leading-none" title="Import external file into student folder">
-                          <span class="material-symbols-outlined text-[11px]">download</span>
-                          <span>Import</span>
-                        </button>
+                      <div class="flex items-center space-x-2 text-[11px] text-slate-500 pl-7">
+                        <span class="${s ? "bg-amber-100 text-amber-800" : "bg-blue-100 text-blue-700"} font-bold text-[9px] px-1 py-0.2 rounded">${Y(a)}</span>
+                        <span class="font-semibold text-slate-700">${Y(r)}</span>
+                        <span>•</span>
+                        <span>Created: ${Y(o)}</span>
+                        ${i ? "<span class=\"px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-700 text-[9px] font-bold\">via Combined</span>" : ""}
                       </div>
                     </div>
+
+                    <!-- Eye Icon Quick Inspect Button (Choice 3-C) -->
+                    <button type="button" data-doc-idx="${t}" class="btn-present-view-inspect p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition shrink-0 cursor-pointer active:scale-95" title="View / Inspect Document (${Y(n)})">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                        <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                      </svg>
+                    </button>
                   </div>
                 `;
 		}).join("")}
             </div>
-          `}
+          </div>
         </div>
+        <!-- END: 2-COLUMN SIDE-BY-SIDE BENTO LAYOUT -->
+      </main>
+      <!-- END: ModalBodyContent -->
 
-        <!-- 2.3 PRESENT / VERIFIED DOCUMENTS SECTION (TRUE CREATED DATE - REQUIREMENT 3) -->
-        <div class="space-y-2 pt-1">
-          <details class="group" open>
-            <summary class="flex items-center justify-between cursor-pointer py-2 select-none list-none bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-3.5 shadow-2xs hover:bg-surface-container-low transition-colors">
-              <div class="flex items-center gap-2.5">
-                <span class="material-symbols-outlined text-emerald-600 text-[20px]">check_circle</span>
-                <span class="font-headline-sm text-[14px] text-on-surface font-bold">Present Documents in Folder (${u} Verified)</span>
-                <span class="text-secondary text-[11px] font-medium">• All auto-matched</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-mono-code text-[10px] font-bold">${u} READY</span>
-                <span class="material-symbols-outlined text-secondary group-open:rotate-180 transition-transform text-[18px]">expand_more</span>
-              </div>
-            </summary>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 max-h-[220px] overflow-y-auto custom-pan-scroll pr-1">
-              ${o.length === 0 ? "\n                <div class=\"col-span-2 p-3 text-center text-secondary font-mono-code text-[11px]\">No verified documents loaded in this folder yet.</div>\n              " : o.map((e) => {
-			let t = e.docType || e.name || "Document", n = at(e.size), r = e.isCombined || !1, i = (e.ext || (e.name ? e.name.split(".").pop() : "PDF")).toUpperCase().replace(".", ""), a = st(e.dateCreated || e.ctime || e.birthtime || e.dateModified || e.lastModified);
-			return `
-                  <div class="p-2.5 rounded-lg bg-surface-container-low border border-outline-variant/30 flex flex-col gap-1.5">
-                    <div class="flex items-center justify-between gap-2 min-w-0">
-                      <div class="flex items-center gap-1.5 min-w-0">
-                        <span class="material-symbols-outlined text-emerald-600 text-[16px] shrink-0">task_alt</span>
-                        <span class="font-label-md text-[12px] font-semibold text-on-surface break-words" title="${Y(t)}">${Y(t)}</span>
-                      </div>
-                      <span class="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-900 font-mono-code text-[9px] font-bold shrink-0">Verified</span>
-                    </div>
-
-                    <!-- Metadata Row: True Created Date (DD-MM-YYYY), Size, File Type Badge -->
-                    <div class="flex items-center justify-between gap-1 text-[10px] font-mono-code text-secondary pl-5">
-                      <div class="flex items-center gap-2">
-                        <!-- File Type Badge -->
-                        <span class="px-1.5 py-0.2 rounded bg-primary/10 text-primary font-bold uppercase text-[9px]">
-                          ${Y(i)}
-                        </span>
-                        <!-- File Size -->
-                        <span>${Y(n)}</span>
-                        ${r ? "<span class=\"px-1.5 py-0.2 rounded-full bg-secondary-container text-on-secondary-container text-[9px] font-bold\">via Combined</span>" : ""}
-                      </div>
-
-                      <!-- True Created Date (DD-MM-YYYY) -->
-                      <div class="flex items-center gap-1 text-on-surface-variant font-medium" title="True File Creation Date (NTFS Birthtime)">
-                        <span class="material-symbols-outlined text-[13px] text-secondary">date_range</span>
-                        <span>Created: ${Y(a)}</span>
-                      </div>
-                    </div>
-                  </div>
-                `;
-		}).join("")}
-            </div>
-          </details>
-        </div>
-      </div>
-
-      <!-- 3. MODAL / DESK FOOTER -->
-      <footer class="px-5 py-3 bg-surface-container-low border-t border-outline-variant/30 flex items-center justify-between gap-3 rounded-b-2xl shrink-0">
-        <div class="flex items-center gap-2 text-on-surface-variant max-w-xl">
-          <span class="material-symbols-outlined text-primary text-[18px] shrink-0">info</span>
-          <span class="font-label-sm text-[11px] leading-tight text-secondary">
+      <!-- BEGIN: ModalFooter -->
+      <footer class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-4 sticky bottom-0 z-20 shrink-0">
+        <!-- Helper Notice -->
+        <div class="flex items-center space-x-2 text-xs text-slate-600 max-w-xl">
+          <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
+            <path d="M12 16v-4m0-4h.01" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+          </svg>
+          <span class="leading-tight">
             Imported files automatically move to the active folder, rename to canonical MahaDBT format, and re-scan admission queue.
           </span>
         </div>
-        <div class="flex items-center gap-2">
-          <button id="btnMissingModalDone" type="button" class="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white font-headline-sm text-[12px] font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer active:scale-95" title="Close and return to Bulk Renamer (Esc)">
-            <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+
+        <!-- Action Button -->
+        <div>
+          <button id="btnMissingModalDone" type="button" class="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md shadow-blue-500/20 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 cursor-pointer active:scale-95" title="Close and return to Bulk Renamer (Esc)">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+            </svg>
             <span>Back to Renamer</span>
-            <kbd class="px-1.5 py-0.5 rounded bg-white/20 text-[10px] font-mono-code font-bold">Esc</kbd>
+            <kbd class="ml-1.5 px-1.5 py-0.5 bg-blue-700 text-blue-100 rounded text-[10px] font-mono font-normal">Esc</kbd>
           </button>
         </div>
       </footer>
+      <!-- END: ModalFooter -->
     `;
-		let m = this.contentEl.querySelector("#btnMissingModalDone");
-		m && (m.onclick = () => this.close());
-		let h = this.contentEl.querySelector("#modalPresetCard"), g = this.contentEl.querySelector("#modalPresetMenu"), _ = this.contentEl.querySelector("#modalPresetChevron");
-		h && g && (h.onclick = (e) => {
-			e.stopPropagation(), g.classList.contains("hidden") ? (g.classList.remove("hidden"), _ && _.classList.add("rotate-180")) : (g.classList.add("hidden"), _ && _.classList.remove("rotate-180"));
-		}, g.querySelectorAll(".modal-preset-item").forEach((e) => {
+		let h = this.contentEl.querySelector("#btnMissingModalDone");
+		h && (h.onclick = () => this.close());
+		let g = this.contentEl.querySelector("#modalPresetCard"), _ = this.contentEl.querySelector("#modalPresetMenu"), v = this.contentEl.querySelector("#modalPresetChevron");
+		g && _ && (g.onclick = (e) => {
+			e.stopPropagation(), _.classList.contains("hidden") ? (_.classList.remove("hidden"), v && v.classList.add("rotate-180")) : (_.classList.add("hidden"), v && v.classList.remove("rotate-180"));
+		}, _.querySelectorAll(".modal-preset-item").forEach((e) => {
 			e.onclick = (t) => {
 				t.stopPropagation();
 				let n = e.getAttribute("data-preset");
-				g.classList.add("hidden"), _ && _.classList.remove("rotate-180"), n && n !== r && this.onPresetChange(n);
+				_.classList.add("hidden"), v && v.classList.remove("rotate-180"), n && n !== r && this.onPresetChange(n);
 			};
 		}), document.addEventListener("click", (e) => {
-			h.contains(e.target) || (g.classList.add("hidden"), _ && _.classList.remove("rotate-180"));
+			g.contains(e.target) || (_.classList.add("hidden"), v && v.classList.remove("rotate-180"));
 		}, { once: !0 }));
-		let v = this.contentEl.querySelector("#btnMissingEditFolder"), y = this.contentEl.querySelector("#missingStudentDisplayWrap"), b = this.contentEl.querySelector("#missingStudentEditWrap"), x = this.contentEl.querySelector("#inputMissingEditStudent"), S = this.contentEl.querySelector("#btnMissingApplyStudent"), C = this.contentEl.querySelector("#btnMissingCancelStudent");
-		if (v && y && b && x) {
-			v.onclick = () => {
-				y.classList.add("hidden"), b.classList.remove("hidden"), x.focus(), x.select();
+		let y = this.contentEl.querySelector("#btnMissingEditFolder"), b = this.contentEl.querySelector("#missingStudentDisplayWrap"), x = this.contentEl.querySelector("#missingStudentEditWrap"), S = this.contentEl.querySelector("#inputMissingEditStudent"), C = this.contentEl.querySelector("#btnMissingApplyStudent"), w = this.contentEl.querySelector("#btnMissingCancelStudent");
+		if (y && b && x && S) {
+			y.onclick = () => {
+				b.classList.add("hidden"), x.classList.remove("hidden"), S.focus(), S.select();
 			};
 			let e = () => {
-				let e = x.value.trim();
-				b.classList.add("hidden"), y.classList.remove("hidden"), e && e !== t && this.onRenameFolder(e);
+				let e = S.value.trim();
+				x.classList.add("hidden"), b.classList.remove("hidden"), e && e !== t && this.onRenameFolder(e);
 			};
-			S && (S.onclick = e), C && (C.onclick = () => {
-				x.value = t, b.classList.add("hidden"), y.classList.remove("hidden");
-			}), x.onkeydown = (n) => {
-				n.key === "Enter" ? (n.preventDefault(), e()) : n.key === "Escape" && (n.preventDefault(), n.stopPropagation(), x.value = t, b.classList.add("hidden"), y.classList.remove("hidden"));
+			C && (C.onclick = e), w && (w.onclick = () => {
+				S.value = t, x.classList.add("hidden"), b.classList.remove("hidden");
+			}), S.onkeydown = (n) => {
+				n.key === "Enter" ? (n.preventDefault(), e()) : n.key === "Escape" && (n.preventDefault(), n.stopPropagation(), S.value = t, x.classList.add("hidden"), b.classList.remove("hidden"));
 			};
 		}
 		this.contentEl.querySelectorAll(".missing-followup-input").forEach((e) => {
@@ -6205,11 +6227,17 @@ var ct = class {
 				let n = e.getAttribute("data-doc");
 				this.onImportFile(n);
 			};
+		}), this.contentEl.querySelectorAll(".btn-present-view-inspect").forEach((e) => {
+			e.onclick = (t) => {
+				t.stopPropagation();
+				let n = parseInt(e.getAttribute("data-doc-idx"), 10), r = o[n];
+				r && this.showQuickPreview(r);
+			};
 		});
 	}
 };
 // tools/rename_tool/rename_tool_ui.js
-function lt() {
+function ct() {
 	if (typeof window < "u") {
 		if (window.__TAURI__?.core?.invoke) return window.__TAURI__.core.invoke;
 		if (window.__TAURI_INTERNALS__?.invoke) return window.__TAURI_INTERNALS__.invoke;
@@ -6248,7 +6276,7 @@ function Z(e) {
 	let t = e.toLowerCase().trim();
 	return !!(t === "thumbs.db" || t === "ehthumbs.db" || t === "desktop.ini" || t === ".ds_store" || t.startsWith(".") || t.startsWith("~$") || t.endsWith(".tmp"));
 }
-function ut(e) {
+function lt(e) {
 	let t = (e || "").toUpperCase().trim();
 	return [
 		"ADR",
@@ -6316,15 +6344,15 @@ function ut(e) {
 		"HST"
 	].includes(t) ? "bg-slate-700 text-white font-extrabold" : "bg-primary text-on-primary font-extrabold";
 }
-var dt = j.map((e) => ({
+var ut = j.map((e) => ({
 	code: e.primaryShortcut,
 	codes: [e.primaryShortcut],
 	label: e.outputName,
 	canonical: e.outputName,
 	keywords: Array.isArray(e.alternateKeywords) ? [...e.alternateKeywords] : []
-})), ft = new Map(dt.map((e) => [e.code, e])), pt = {
+})), dt = new Map(ut.map((e) => [e.code, e])), ft = {
 	"MAHA DBT": (/* @__PURE__ */ "PIC.SIG.ADR.10M.10P.10MP.12M.12P.12MP.12LC.PYM.CST.VAL.NCL.INC.DOM.NAT.RAT.BNK.CAP.BON.FEE.ATT.HST.GAP.SDC.PDC.DTH".split(".")).map((e) => {
-		let t = ft.get(e);
+		let t = dt.get(e);
 		return {
 			name: t.canonical,
 			code: t.code,
@@ -6355,7 +6383,7 @@ var dt = j.map((e) => ({
 		"PDC",
 		"DIS"
 	].map((e) => {
-		let t = ft.get(e);
+		let t = dt.get(e);
 		return {
 			name: t.canonical,
 			code: t.code,
@@ -6363,7 +6391,7 @@ var dt = j.map((e) => ({
 		};
 	}),
 	"CET CELL": (/* @__PURE__ */ "PIC.SIG.ADR.APR.CETAF.CETSC.CAP.SRF.10M.10P.10MP.12M.12P.12MP.12LC.DOM.NAT.CST.VAL.NCL.EWS.INC.GAP.MIG.MED.BRT".split(".")).map((e) => {
-		let t = ft.get(e);
+		let t = dt.get(e);
 		return {
 			name: t.canonical,
 			code: t.code,
@@ -6371,14 +6399,14 @@ var dt = j.map((e) => ({
 		};
 	}),
 	"EDUCATIONAL DOCUMENTS": (/* @__PURE__ */ "PIC.SIG.ADR.10M.10P.10MP.12M.12P.12MP.12LC.PYM.CST.VAL.NCL.INC.DOM.NAT.RAT.BNK.CAP.BON.FEE.ATT.HST.GAP.SDC.PDC.DTH.NHC.DIS.APR.CETAF.CETSC.SRF.EWS.MIG.MED.BRT.PAN.VOT.DL.11M.1YM.2YM.3YM.4YM.DPC.DEG.REG.INT.CHR.GAZ.MIN".split(".")).map((e) => {
-		let t = ft.get(e);
+		let t = dt.get(e);
 		return {
 			name: t.canonical,
 			code: t.code,
 			keywords: [...t.keywords]
 		};
 	})
-}, mt = class {
+}, pt = class {
 	constructor() {
 		this.state = {
 			folder: null,
@@ -6406,7 +6434,7 @@ var dt = j.map((e) => ({
 			isSmartScanning: !1,
 			isMissingDocsCollapsed: !0,
 			isMissingModalOpen: !1
-		}, this._scanAbortController = null, this.missingModal = null, this.shortcuts21 = JSON.parse(JSON.stringify(dt)), this._presetDocsSearchQuery = "", this._shortcutsSearchQuery = "", this._sortOrder = "asc", this._recentMoves = [];
+		}, this._scanAbortController = null, this.missingModal = null, this.shortcuts21 = JSON.parse(JSON.stringify(ut)), this._presetDocsSearchQuery = "", this._shortcutsSearchQuery = "", this._sortOrder = "asc", this._recentMoves = [];
 	}
 	init() {
 		this.state.settings = He(), this.loadPresetsAndSettings();
@@ -6962,7 +6990,7 @@ var dt = j.map((e) => ({
 				e.sha256 || t.push(e);
 			});
 		}), t.length === 0) return;
-		let n = lt(), r = !1;
+		let n = ct(), r = !1;
 		for (let e of t) try {
 			let t = null;
 			if (e.fileObj && typeof e.fileObj.arrayBuffer == "function") t = await e.fileObj.arrayBuffer();
@@ -7480,7 +7508,7 @@ var dt = j.map((e) => ({
 			let r = document.createElement("div");
 			r.className = "flex items-center gap-2 min-w-0 flex-1";
 			let i = this.state.style || "upper", a = i === "lower" ? e.code.toLowerCase() : i === "title" ? e.code.length <= 4 && /\d/.test(e.code) ? e.code.toUpperCase() : L(e.code, "title") : e.code.toUpperCase(), o = L(e.label || e.canonical, i), s = document.createElement("span");
-			s.className = `px-2 py-0.5 rounded font-mono-code font-bold text-[11px] shrink-0 ${ut(e.code)}`, s.textContent = a, r.appendChild(s);
+			s.className = `px-2 py-0.5 rounded font-mono-code font-bold text-[11px] shrink-0 ${lt(e.code)}`, s.textContent = a, r.appendChild(s);
 			let c = document.createElement("span");
 			c.className = "text-[12px] font-semibold text-on-surface truncate flex-1", c.textContent = o, r.appendChild(c), n.appendChild(r);
 			let l = document.createElement("span");
@@ -7959,7 +7987,7 @@ var dt = j.map((e) => ({
 		} catch (e) {
 			console.warn("[DocMitra Renamer] Failed to parse custom shortcuts:", e);
 		}
-		this.state.documentPresets && typeof this.state.documentPresets == "object" && (this.state.documentPresets.SWAYAM && !this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] && (this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] = this.state.documentPresets.SWAYAM, delete this.state.documentPresets.SWAYAM), this.state.documentPresets.EDUCATIONAL && !this.state.documentPresets["EDUCATIONAL DOCUMENTS"] && (this.state.documentPresets["EDUCATIONAL DOCUMENTS"] = this.state.documentPresets.EDUCATIONAL, delete this.state.documentPresets.EDUCATIONAL)), this.state.documentPresets && Object.keys(this.state.documentPresets).length !== 0 || (this.state.documentPresets = JSON.parse(JSON.stringify(pt)), this.savePresetsAndSettings());
+		this.state.documentPresets && typeof this.state.documentPresets == "object" && (this.state.documentPresets.SWAYAM && !this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] && (this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] = this.state.documentPresets.SWAYAM, delete this.state.documentPresets.SWAYAM), this.state.documentPresets.EDUCATIONAL && !this.state.documentPresets["EDUCATIONAL DOCUMENTS"] && (this.state.documentPresets["EDUCATIONAL DOCUMENTS"] = this.state.documentPresets.EDUCATIONAL, delete this.state.documentPresets.EDUCATIONAL)), this.state.documentPresets && Object.keys(this.state.documentPresets).length !== 0 || (this.state.documentPresets = JSON.parse(JSON.stringify(ft)), this.savePresetsAndSettings());
 		let t = !1, n = (e) => {
 			if (!e || typeof e != "string") return e;
 			let t = e.trim().toUpperCase();
@@ -8186,7 +8214,7 @@ var dt = j.map((e) => ({
 		} else i.forEach((t, n) => {
 			let r = document.createElement("tr");
 			r.className = "row-compact-42 hover:bg-surface-container-low transition-colors group";
-			let i = Array.isArray(t.codes) && t.codes.length > 0 ? t.codes : t.code ? [t.code] : [], a = i.map((e) => `<span class="px-1.5 py-0.5 rounded font-mono-code font-bold text-[10px] ${ut(e)}">${e}</span>`).join(" ");
+			let i = Array.isArray(t.codes) && t.codes.length > 0 ? t.codes : t.code ? [t.code] : [], a = i.map((e) => `<span class="px-1.5 py-0.5 rounded font-mono-code font-bold text-[10px] ${lt(e)}">${e}</span>`).join(" ");
 			r.innerHTML = `
         <td class="py-1 px-3 text-center text-secondary font-mono-code text-[11px]" style="width: 44px;">${n + 1}</td>
         <td class="py-1 px-3 whitespace-normal" style="width: 15%;"><div class="flex flex-wrap gap-1 max-h-[30px] overflow-hidden">${a}</div></td>
@@ -8244,7 +8272,7 @@ var dt = j.map((e) => ({
 		this.state.activePreset = t[0] || "MAHA DBT", this.savePresetsAndSettings(), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal("presets"), r.show("Preset Deleted", `Preset "${e}" deleted. Switched to ${this.state.activePreset}.`, "info");
 	}
 	handleResetPresetsDefault() {
-		window.confirm("Reset document presets to factory defaults? All custom presets will be removed and default 4 presets restored.") && (this.state.documentPresets = JSON.parse(JSON.stringify(pt)), this.state.activePreset = "MAHA DBT", this.state.customShortcuts = [], this.shortcuts21 = JSON.parse(JSON.stringify(dt)), this.savePresetsAndSettings(), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal("presets"), r.show("Reset Complete", "Document presets restored to factory defaults.", "success"));
+		window.confirm("Reset document presets to factory defaults? All custom presets will be removed and default 4 presets restored.") && (this.state.documentPresets = JSON.parse(JSON.stringify(ft)), this.state.activePreset = "MAHA DBT", this.state.customShortcuts = [], this.shortcuts21 = JSON.parse(JSON.stringify(ut)), this.savePresetsAndSettings(), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal("presets"), r.show("Reset Complete", "Document presets restored to factory defaults.", "success"));
 	}
 	handleRemoveDocFromPreset(e) {
 		let t = this.state.documentPresets[this.state.activePreset];
@@ -8337,7 +8365,7 @@ var dt = j.map((e) => ({
 		let e = document.getElementById("containerPresetPills");
 		if (!e) return;
 		e.innerHTML = "";
-		let t = Object.keys(this.state.documentPresets || pt);
+		let t = Object.keys(this.state.documentPresets || ft);
 		t.length === 0 ? e.innerHTML = "<span class=\"text-secondary text-[11px] italic\">No presets available.</span>" : (t.forEach((t) => {
 			let n = this._selectedPresetKeys && this._selectedPresetKeys.has(t), r = document.createElement("button");
 			r.type = "button", r.className = n ? "inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-[#0037b0] text-white font-bold text-[11px] shadow-xs cursor-pointer transition-all border border-[#0037b0]" : "inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-surface text-secondary hover:text-on-surface font-medium text-[11px] cursor-pointer transition-all border border-outline-variant/50 hover:border-primary/50", r.innerHTML = `
@@ -8505,7 +8533,7 @@ var dt = j.map((e) => ({
 				primaryKeywords: [a.toLowerCase(), e.toLowerCase()],
 				secondaryKeywords: c
 			});
-		}), T(a, a), re(d, a, c), ft.set(d, {
+		}), T(a, a), re(d, a, c), dt.set(d, {
 			code: d,
 			canonical: a,
 			label: a,
@@ -8995,7 +9023,7 @@ var dt = j.map((e) => ({
 				this._renderDocumentInfoFallback(r(), e);
 			}
 			else {
-				let a = lt();
+				let a = ct();
 				if (e.path && a) n.innerHTML = "<div class=\"flex items-center justify-center w-full h-full text-secondary text-[12px]\"><span class=\"material-symbols-outlined text-[20px] animate-spin text-primary mr-2\">sync</span><span>Loading document preview...</span></div>", a("read_binary_file", { path: e.path }).then((t) => {
 					let n = e.name.toLowerCase().endsWith(".png") ? "image/png" : e.name.toLowerCase().endsWith(".webp") ? "image/webp" : "image/jpeg", r = new Blob([new Uint8Array(t)], { type: n });
 					i(URL.createObjectURL(r));
@@ -9034,7 +9062,7 @@ var dt = j.map((e) => ({
 				e._pdfBytes = new Uint8Array(t), i(e._pdfBytes);
 			}).catch(() => this._renderDocumentInfoFallback(r(), e));
 			else {
-				let t = lt();
+				let t = ct();
 				if (e.path && t) n.innerHTML = "<div class=\"flex items-center justify-center w-full h-full text-secondary text-[12px]\"><span class=\"material-symbols-outlined text-[20px] animate-spin text-primary mr-2\">sync</span><span>Loading PDF preview...</span></div>", t("read_binary_file", { path: e.path }).then((t) => {
 					e._pdfBytes = new Uint8Array(t), i(e._pdfBytes);
 				}).catch((t) => {
@@ -9159,50 +9187,58 @@ var dt = j.map((e) => ({
 		(!o || o.checked) && (this._recalculateTargetNames(!0), this.renderQueue(), this.renderCurrentPreview()), this.updateTelemetry(), this.updateMissingModal(), r.show("Folder Renamed", `Folder name updated to: ${e}`, "success");
 	}
 	async handleImportMissingDocument(e) {
-		r.show("Select File for Import", `Select document for ${e}`, "info");
-		try {
-			let t = await f("All Supported Files (*.pdf;*.jpg;*.jpeg;*.png;*.docx)|*.pdf;*.jpg;*.jpeg;*.png;*.docx|All Files (*.*)|*.*", `Select File for ${e}`);
-			if (!t.success || !t.files || t.files.length === 0) return;
-			let n = t.files[0], i = n.ext || F(n.name), a = this.state.folder?.path || "", o = document.getElementById("chkIncludeFolderName"), s = (o ? o.checked : this.state.settings?.includeFolderNameInFile !== !1) && (this.state.studentName || this.state.folder?.name) || "", c = this.state.style || "upper", l = `${R(e || I(n.name), s, this.state.settings?.groups, c).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim()}${i}`, u = null;
-			a && n.path && (u = await y({
-				sourcePath: n.path,
-				targetDir: a,
-				targetName: l,
-				studentName: s
-			}));
-			let d = u && u.name ? u.name : l, p = u && u.path ? u.path : a ? `${a}/${d}` : n.path, m = u && u.size ? u.size : n.size || 0, h = {
-				id: `imported_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-				name: d,
-				targetName: d,
-				suggestedName: d,
-				path: p,
-				nativePath: p,
-				size: m,
-				ext: i,
-				dateCreated: u && (u.ctime || u.dateCreated) ? u.ctime || u.dateCreated : n.ctime || n.dateCreated || Date.now(),
-				dateModified: Date.now(),
-				lastModified: Date.now(),
-				url: u && u.url ? u.url : n.url || X(n),
-				docType: e,
-				isMatched: !0,
-				isRenamed: !1,
-				isKept: !1,
-				rotation: 0,
-				isScanning: !1,
-				smartConfidence: 100,
-				smartDocType: e,
-				status: "matched"
-			};
-			this.state.files.push(h), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.updateMissingModal(), r.show("Document Imported", `Imported ${I(d)} as ${e}`, "success");
-		} catch (e) {
-			console.error("[DocMitra Import] Import error:", e), r.show("Import Error", e.message || "Failed to import document", "error");
+		if (!this.state.folder?.path) r.show("Select Folder First", "Please select a student folder before importing documents.", "warning");
+		else {
+			r.show("Select File for Import", `Select document for ${e}`, "info");
+			try {
+				let t = await f("All Supported Files (*.pdf;*.jpg;*.jpeg;*.png;*.docx)|*.pdf;*.jpg;*.jpeg;*.png;*.docx|All Files (*.*)|*.*", `Select File for ${e}`);
+				if (!t.success || !t.files || t.files.length === 0) return;
+				let n = t.files[0], i = n.ext || F(n.name), a = this.state.folder.path, o = document.getElementById("chkIncludeFolderName"), s = (o ? o.checked : this.state.settings?.includeFolderNameInFile !== !1) && (this.state.studentName || this.state.folder?.name) || "", c = this.state.style || "upper", l = `${R(e || I(n.name), s, this.state.settings?.groups, c).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim()}${i}`, u = null;
+				if (a && n.path && (u = await y({
+					sourcePath: n.path,
+					targetDir: a,
+					targetName: l,
+					studentName: s,
+					moveFile: !0
+				})), u && u.success === !1) throw Error(u.error || "Failed to move file to destination folder");
+				let d = u && u.name ? u.name : l, p = u && u.path ? u.path : `${a}/${d}`, m = u && u.size ? u.size : n.size || 0, h = {
+					id: `imported_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+					name: d,
+					targetName: d,
+					suggestedName: d,
+					path: p,
+					nativePath: p,
+					size: m,
+					ext: i,
+					dateCreated: u && (u.ctime || u.dateCreated) ? u.ctime || u.dateCreated : n.ctime || n.dateCreated || Date.now(),
+					dateModified: Date.now(),
+					lastModified: Date.now(),
+					url: u && u.url ? u.url : n.url || X(n),
+					docType: e,
+					isMatched: !0,
+					isRenamed: !1,
+					isKept: !1,
+					rotation: 0,
+					isScanning: !1,
+					smartConfidence: 100,
+					smartDocType: e,
+					status: "matched"
+				};
+				this.state.files.push(h), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.updateMissingModal(), r.show("Document Imported", `Moved & imported ${d} as ${e}`, "success");
+			} catch (e) {
+				console.error("[DocMitra Import] Import error:", e), r.show("Import Error", e.message || "Failed to import document", "error");
+			}
 		}
 	}
 	openMissingDocumentsModal() {
-		this.missingModal ||= new ct({
+		this.missingModal ||= new st({
 			onImportFile: (e) => this.handleImportMissingDocument(e),
 			onRenameFolder: async (e) => {
 				await this.applyFolderRename(e);
+			},
+			onViewDocument: (e) => {
+				let t = this.state.files.findIndex((t) => t.name === e.name || t.path === e.path);
+				t !== -1 && (this.state.currentIndex = t, this.renderQueue(), this.renderCurrentPreview(), r.show("Document Selected", `Focused on ${e.name}`, "info"));
 			},
 			onSetFollowup: ({ docName: e, date: t }) => {
 				let n = this.state.studentName || this.state.folder?.name || "Student";
@@ -9266,12 +9302,12 @@ var dt = j.map((e) => ({
 		});
 	}
 };
-function ht() {
-	let e = new mt();
+function mt() {
+	let e = new pt();
 	return e.init(), typeof window < "u" && (window.docmitraRenamer = e), e;
 }
 // src/services/export-import-service.js
-function gt(e) {
+function ht(e) {
 	let t = {
 		format: "BulkStudentRenamerSettings",
 		version: 1,
@@ -9284,7 +9320,7 @@ function gt(e) {
 	}, n = new Blob([JSON.stringify(t, null, 2)], { type: "application/json" }), r = URL.createObjectURL(n), i = document.createElement("a");
 	i.href = r, i.download = `student-renamer-settings-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.json`, i.click(), setTimeout(() => URL.revokeObjectURL(r), 1e3);
 }
-function _t(e, t) {
+function gt(e, t) {
 	return new Promise((n, r) => {
 		if (!e) return r(/* @__PURE__ */ Error("No backup file selected."));
 		if (e.size > 5242880) return r(/* @__PURE__ */ Error("Backup file exceeds maximum allowed size (5 MB)."));
@@ -9307,7 +9343,7 @@ function _t(e, t) {
 	});
 }
 // src/ui/settings-ui.js
-var vt = class {
+var _t = class {
 	constructor() {
 		this.state = null, this.initialState = null, this.activeChecklist = "MAHA DBT FORM";
 	}
@@ -9336,7 +9372,7 @@ var vt = class {
 		let a = document.getElementById("btnExportSettingsJSON");
 		a && a.addEventListener("click", () => {
 			try {
-				gt(this.state), r.show("Settings Exported", "Configuration JSON file downloaded.", "success");
+				ht(this.state), r.show("Settings Exported", "Configuration JSON file downloaded.", "success");
 			} catch (e) {
 				r.show("Export Error", e.message, "error");
 			}
@@ -9345,7 +9381,7 @@ var vt = class {
 		o && s && (o.addEventListener("click", () => s.click()), s.addEventListener("change", async (e) => {
 			let t = e.target.files?.[0];
 			if (t) try {
-				await _t(t, this.state), Ge(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Import Successful", "System configuration restored and verified.", "success");
+				await gt(t, this.state), Ge(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Import Successful", "System configuration restored and verified.", "success");
 			} catch (e) {
 				r.show("Import Failed", e.message || "Invalid settings JSON format.", "error");
 			} finally {
@@ -9650,12 +9686,12 @@ var vt = class {
 		e && e.classList.add("hidden"), document.body.style.overflow = "";
 	}
 };
-function yt() {
-	let e = new vt();
+function vt() {
+	let e = new _t();
 	return e.init(), e;
 }
 // tools/pdf_studio/pdf_studio_logic.js
-var bt = {
+var yt = {
 	A4_PORTRAIT: {
 		width: 595.28,
 		height: 841.89,
@@ -9667,7 +9703,7 @@ var bt = {
 		label: "A4 Landscape"
 	}
 };
-function xt(e) {
+function bt(e) {
 	let t = 2, n = e.length;
 	for (; t < n && e[t] === 255;) {
 		let r = e[t + 1];
@@ -9699,8 +9735,8 @@ function Q(e = [], t = "portrait", n = 0) {
 	for (let e = 0; e < c; e++) l.push(3 + e * 3);
 	r.push(i), s(a(`2 0 obj\n<< /Type /Pages /Kids [ ${l.map((e) => `${e} 0 R`).join(" ")} ] /Count ${c} >>\nendobj\n`));
 	for (let o = 0; o < c; o++) {
-		let c = e[o], l = 3 + o * 3, u = l + 1, d = l + 2, f = c.bytes, { width: p, height: m } = c.width && c.height ? c : xt(f), h = bt.A4_PORTRAIT.width, g = bt.A4_PORTRAIT.height;
-		(t === "landscape" || t === "fit" && p > m) && (h = bt.A4_LANDSCAPE.width, g = bt.A4_LANDSCAPE.height);
+		let c = e[o], l = 3 + o * 3, u = l + 1, d = l + 2, f = c.bytes, { width: p, height: m } = c.width && c.height ? c : bt(f), h = yt.A4_PORTRAIT.width, g = yt.A4_PORTRAIT.height;
+		(t === "landscape" || t === "fit" && p > m) && (h = yt.A4_LANDSCAPE.width, g = yt.A4_LANDSCAPE.height);
 		let _ = h - 36, v = g - 36, y = Math.min(_ / p, v / m), b = p * y, x = m * y, S = (h - b) / 2, C = (g - x) / 2, w = n ? ` /Rotate ${n}` : "";
 		r.push(i), s(a(`${l} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${h.toFixed(2)} ${g.toFixed(2)}]${w} /Contents ${u} 0 R /Resources << /XObject << /Im${o + 1} ${d} 0 R >> >> >>\nendobj\n`));
 		let T = `q ${b.toFixed(2)} 0 0 ${x.toFixed(2)} ${S.toFixed(2)} ${C.toFixed(2)} cm /Im${o + 1} Do Q\n`, E = T.length;
@@ -9711,13 +9747,13 @@ function Q(e = [], t = "portrait", n = 0) {
 	for (let e of r) s(a(`${String(e).padStart(10, "0")} 00000 n \n`));
 	return s(a(`trailer\n<< /Size ${d} /Root 1 0 R >>\nstartxref\n${u}\n%%EOF\n`)), new Blob(o, { type: "application/pdf" });
 }
-function St(e) {
+function xt(e) {
 	let t = [], n = e.length, r = 0;
 	for (; r < n - 3;) if (e[r] === 255 && e[r + 1] === 216 && e[r + 2] === 255) {
 		let i = r;
 		for (r += 2; r < n - 1;) {
 			if (e[r] === 255 && e[r + 1] === 217) {
-				let n = r + 2, a = e.slice(i, n), o = xt(a);
+				let n = r + 2, a = e.slice(i, n), o = bt(a);
 				t.push({
 					bytes: a,
 					width: o.width,
@@ -9731,7 +9767,7 @@ function St(e) {
 	return t;
 }
 function $(e) {
-	let t = St(e);
+	let t = xt(e);
 	if (!t.length) return [];
 	if (t.length === 1) return t;
 	let n = Math.max(...t.map((e) => (e.width || 0) * (e.height || 0))), r = Math.max(...t.map((e) => e.bytes?.length || 0)), i = t.filter((e) => {
@@ -9743,7 +9779,7 @@ function $(e) {
 		return r === n ? (t.bytes?.length || 0) - (e.bytes?.length || 0) : r - n;
 	});
 }
-function Ct(e, t = "Document.pdf") {
+function St(e, t = "Document.pdf") {
 	let n = $(e), r = t.replace(/\.pdf$/i, "");
 	return n.length ? n.map((e, t) => {
 		let i = n.length === 1 ? `${r}.jpg` : `${r}_page_${t + 1}.jpg`, a = new Blob([e.bytes], { type: "image/jpeg" });
@@ -9757,7 +9793,7 @@ function Ct(e, t = "Document.pdf") {
 		};
 	}) : [];
 }
-function wt(e, t = "Document.pdf") {
+function Ct(e, t = "Document.pdf") {
 	let n = $(e), r = t.replace(/\.pdf$/i, "");
 	return n.length ? n.map((e, t) => {
 		let n = `${r}_page_${t + 1}.pdf`, i = Q([e], "portrait");
@@ -9769,7 +9805,7 @@ function wt(e, t = "Document.pdf") {
 		};
 	}) : [];
 }
-function Tt(e = [], t = "portrait") {
+function wt(e = [], t = "portrait") {
 	let n = [];
 	for (let t of e) {
 		let e = $(t);
@@ -9778,7 +9814,7 @@ function Tt(e = [], t = "portrait") {
 	if (!n.length) throw Error("No document images could be extracted to merge PDFs.");
 	return Q(n, t);
 }
-function Et(e, t = 90) {
+function Tt(e, t = 90) {
 	let n = (t % 360 + 360) % 360;
 	if (n === 0) return new Blob([e], { type: "application/pdf" });
 	let r = $(e);
@@ -9797,13 +9833,13 @@ function Et(e, t = 90) {
 	}
 	throw Error("No pages found in PDF to rotate.");
 }
-function Dt(e, t, n = "auto") {
+function Et(e, t, n = "auto") {
 	if (!e) return "document.pdf";
 	let r = e.lastIndexOf("."), i = r === -1 ? e : e.slice(0, r), a = r === -1 ? "" : e.slice(r), o = i.replace(/[\s_-]+\d+\s*(?:KB|MB)$/i, "").trim();
 	return n === "MB" || n === "auto" && t >= 10485760 ? `${o} ${Math.max(1, Math.round(Number(t || 0) / 1048576))} MB${a}` : `${o} ${Math.max(1, Math.round(Number(t || 0) / 1024))} KB${a}`;
 }
 // tools/pdf_studio/pdf_studio_ui.js
-var Ot = class {
+var Dt = class {
 	constructor() {
 		this.activeTool = "compress_pdf", this.files = [], this.isProcessing = !1;
 	}
@@ -10020,7 +10056,7 @@ var Ot = class {
 	rotateSingleFile(e) {
 		let t = this.files[e];
 		if (t && t.bytes) try {
-			let e = Et(t.bytes, 90);
+			let e = Tt(t.bytes, 90);
 			e.arrayBuffer().then((n) => {
 				t.bytes = new Uint8Array(n), t.size = e.size, this.renderQueue(), r.show("Page Rotated", `${t.name} rotated 90° clockwise.`, "info");
 			});
@@ -10039,7 +10075,7 @@ var Ot = class {
 		let e = 0;
 		this.files.forEach((t) => {
 			if (t.bytes) try {
-				let n = Et(t.bytes, 90);
+				let n = Tt(t.bytes, 90);
 				n.arrayBuffer().then((i) => {
 					t.bytes = new Uint8Array(i), t.size = n.size, e++, e === this.files.length && (this.renderQueue(), r.show("All Rotated", `Rotated all ${this.files.length} PDFs by 90°.`, "success"));
 				});
@@ -10064,7 +10100,7 @@ var Ot = class {
 		r.show("Processing Started", `Running ${this._getToolDisplayName(e)} on ${this.files.length} files...`, "info");
 		try {
 			if (e === "merge_pdf") {
-				let e = Tt(this.files.map((e) => e.bytes).filter(Boolean), "portrait");
+				let e = wt(this.files.map((e) => e.bytes).filter(Boolean), "portrait");
 				this._downloadBlob(e, "Merged_Admission_Dossier.pdf"), r.show("Merge Complete!", "Merged PDF Dossier generated and saved.", "success");
 			} else if (e === "compress_pdf") {
 				let e = 0;
@@ -10072,19 +10108,19 @@ var Ot = class {
 					if (!t.bytes) continue;
 					let n = $(t.bytes), r;
 					r = n.length > 0 ? Q(n, "portrait") : new Blob([t.bytes], { type: "application/pdf" });
-					let i = Dt(t.name, r.size);
+					let i = Et(t.name, r.size);
 					this._downloadBlob(r, i), e++;
 				}
 				r.show("Compression Complete!", `Compressed ${e} files to safe MahaDBT thresholds.`, "success");
 			} else if (e === "split_pdf") {
 				let e = 0;
-				for (let t of this.files) t.bytes && wt(t.bytes, t.name).forEach((t) => {
+				for (let t of this.files) t.bytes && Ct(t.bytes, t.name).forEach((t) => {
 					this._downloadBlob(t.blob, t.fileName), e++;
 				});
 				r.show("Split Complete!", `Extracted ${e} individual PDF pages.`, "success");
 			} else if (e === "pdf_to_jpg") {
 				let e = 0;
-				for (let t of this.files) t.bytes && Ct(t.bytes, t.name).forEach((t) => {
+				for (let t of this.files) t.bytes && St(t.bytes, t.name).forEach((t) => {
 					this._downloadBlob(t.blob, t.fileName), e++;
 				});
 				r.show("Conversion Complete!", `Extracted ${e} high-resolution JPG pages.`, "success");
@@ -10092,7 +10128,7 @@ var Ot = class {
 				let e = 0;
 				for (let t of this.files) {
 					if (!t.bytes) continue;
-					let n = Et(t.bytes, 90);
+					let n = Tt(t.bytes, 90);
 					this._downloadBlob(n, t.name), e++;
 				}
 				r.show("Rotation Complete!", `Rotated and saved ${e} PDF documents.`, "success");
@@ -10118,12 +10154,12 @@ var Ot = class {
 		}, 1e3);
 	}
 };
-function kt() {
-	let e = new Ot();
+function Ot() {
+	let e = new Dt();
 	return e.init(), e;
 }
 // src/modules/image-studio.js
-function At(e, t, n, r = "magic_color") {
+function kt(e, t, n, r = "magic_color") {
 	if (!e || r === "none" || r === "original") return;
 	let i = e.getImageData(0, 0, t, n), a = i.data;
 	for (let e = 0; e < a.length; e += 4) {
@@ -10140,13 +10176,13 @@ function At(e, t, n, r = "magic_color") {
 	}
 	e.putImageData(i, 0, 0);
 }
-function jt(e, t = 0) {
+function At(e, t = 0) {
 	let n = document.createElement("canvas"), r = (t % 360 + 360) % 360, i = r === 90 || r === 270, a = i ? e.height : e.width, o = i ? e.width : e.height;
 	n.width = a, n.height = o;
 	let s = n.getContext("2d");
 	return s.save(), s.translate(n.width / 2, n.height / 2), s.rotate(r * Math.PI / 180), s.drawImage(e, -e.width / 2, -e.height / 2), s.restore(), n;
 }
-async function Mt(e, t = 250, n = {}) {
+async function jt(e, t = 250, n = {}) {
 	let { rotation: r = 0, filterMode: i = "none", outputMime: a = "image/jpeg", maxDimension: o = 2400 } = n;
 	return new Promise((n, s) => {
 		let c = new Image(), l = URL.createObjectURL(e);
@@ -10159,7 +10195,7 @@ async function Mt(e, t = 250, n = {}) {
 					e = Math.round(e * t), s = Math.round(s * t);
 				}
 				let l;
-				if (r === 0 ? (l = document.createElement("canvas"), l.width = e, l.height = s, l.getContext("2d").drawImage(c, 0, 0, e, s)) : l = jt(c, r), i && i !== "none" && At(l.getContext("2d"), l.width, l.height, i), !t || t <= 0) {
+				if (r === 0 ? (l = document.createElement("canvas"), l.width = e, l.height = s, l.getContext("2d").drawImage(c, 0, 0, e, s)) : l = At(c, r), i && i !== "none" && kt(l.getContext("2d"), l.width, l.height, i), !t || t <= 0) {
 					let e = await new Promise((e) => l.toBlob(e, a, .9));
 					return n({
 						blob: e,
@@ -10203,7 +10239,7 @@ async function Mt(e, t = 250, n = {}) {
 		}, c.src = l;
 	});
 }
-async function Nt(e, t = "image/png") {
+async function Mt(e, t = "image/png") {
 	return new Promise((n, r) => {
 		let i = new Image(), a = URL.createObjectURL(e);
 		i.onload = () => {
@@ -10229,7 +10265,7 @@ async function Nt(e, t = "image/png") {
 	});
 }
 // src/ui/image-studio-ui.js
-var Pt = class {
+var Nt = class {
 	constructor() {
 		this.activeTool = "compress_photo_sign", this.files = [], this.isProcessing = !1;
 	}
@@ -10426,7 +10462,7 @@ var Pt = class {
 		if (!t || !t.url) return;
 		let n = new Image();
 		n.crossOrigin = "anonymous", n.onload = () => {
-			jt(n, 90).toBlob((e) => {
+			At(n, 90).toBlob((e) => {
 				t.url = URL.createObjectURL(e), t.size = e.size, t.fileOrBlob = e, this.renderQueue(), r.show("Image Rotated", `${t.name} rotated 90° clockwise.`, "info");
 			}, "image/jpeg", .92);
 		}, n.src = t.url;
@@ -10459,13 +10495,13 @@ var Pt = class {
 				let r = n.fileOrBlob;
 				if (!r && n.url && (r = await (await fetch(n.url)).blob()), r) {
 					if (e === "compress_photo_sign") {
-						let e = /sign|signature|स्वाक्षरी/i.test(n.name) ? 18 : 45, i = await Mt(r, e);
+						let e = /sign|signature|स्वाक्षरी/i.test(n.name) ? 18 : 45, i = await jt(r, e);
 						this._downloadBlob(i.blob, `Compressed_${n.name}`), t++;
 					} else if (e === "passport_crop") {
-						let e = await Mt(await this._cropPassport(r), 48);
+						let e = await jt(await this._cropPassport(r), 48);
 						this._downloadBlob(e.blob, `Passport_${n.name}`), t++;
 					} else if (e === "sign_clean_invert") {
-						let e = await Mt(r, 18, { filterMode: "sharp_contrast" });
+						let e = await jt(r, 18, { filterMode: "sharp_contrast" });
 						this._downloadBlob(e.blob, `Clean_Sign_${n.name}`), t++;
 					} else if (e === "image_to_pdf") {
 						let e = await r.arrayBuffer(), i = Q([{
@@ -10475,10 +10511,10 @@ var Pt = class {
 						}], "portrait"), a = n.name.replace(/\.[a-zA-Z0-9]+$/, "") + ".pdf";
 						this._downloadBlob(i, a), t++;
 					} else if (e === "magic_color") {
-						let e = await Mt(r, 240, { filterMode: "enhanced" });
+						let e = await jt(r, 240, { filterMode: "enhanced" });
 						this._downloadBlob(e.blob, `Magic_${n.name}`), t++;
 					} else {
-						let e = await Nt(r, "image/jpeg");
+						let e = await Mt(r, "image/jpeg");
 						this._downloadBlob(e.blob, `Converted_${n.name.replace(/\.[a-zA-Z0-9]+$/, ".jpg")}`), t++;
 					}
 				}
@@ -10511,12 +10547,12 @@ var Pt = class {
 		}, 1e3);
 	}
 };
-function Ft() {
-	let e = new Pt();
+function Pt() {
+	let e = new Nt();
 	return e.init(), e;
 }
 // src/libraries/document-matcher.js
-var It = [
+var Ft = [
 	{
 		id: "12th-marksheet-passing-combined",
 		outputName: "12TH MARKSHEET AND PASSING",
@@ -10826,7 +10862,7 @@ var It = [
 		]
 	}
 ];
-function Lt(e, t = null) {
+function It(e, t = null) {
 	if (!e || typeof e != "string") return {
 		docType: null,
 		percentage: 0,
@@ -10835,7 +10871,7 @@ function Lt(e, t = null) {
 		status: "none"
 	};
 	let n = e.trim().toLowerCase(), r = n.replace(/[-_.]+/g, " ");
-	for (let e of It) if (n === e.shortcut.toLowerCase() || r.trim() === e.shortcut.toLowerCase()) return {
+	for (let e of Ft) if (n === e.shortcut.toLowerCase() || r.trim() === e.shortcut.toLowerCase()) return {
 		docType: e.outputName,
 		percentage: 100,
 		badgeText: `100% Match: ${e.outputName}`,
@@ -10853,7 +10889,7 @@ function Lt(e, t = null) {
 			};
 		}
 	}
-	for (let e of It) for (let t of e.patterns) if (t.test(n) || t.test(r)) return {
+	for (let e of Ft) for (let t of e.patterns) if (t.test(n) || t.test(r)) return {
 		docType: e.outputName,
 		percentage: 100,
 		badgeText: `100% Match: ${e.outputName}`,
@@ -10881,16 +10917,16 @@ function Lt(e, t = null) {
 	};
 }
 ({ ...je });
-function Rt(e) {
+function Lt(e) {
 	if (!e || typeof e != "string") return "";
-	let t = Lt(e);
+	let t = It(e);
 	if (t && t.docType) return t.docType;
 	let n = e.replace(/\.[^/.]+$/, "");
 	return n = n.replace(/\s*\(p\.\d+\)/i, ""), n.trim().toUpperCase();
 }
-function zt(e) {
+function Rt(e) {
 	if (!e || typeof e != "string") return "";
-	let t = e.replace(/\.[^/.]+$/, "").trim(), n = Lt(t);
+	let t = e.replace(/\.[^/.]+$/, "").trim(), n = It(t);
 	if (n && n.docType) {
 		let e = n.docType, r = t, i = RegExp(`^${e}\\b`, "i");
 		if (i.test(r) ? r = r.replace(i, "").trim() : e.split(/\s+/).forEach((e) => {
@@ -10902,9 +10938,9 @@ function zt(e) {
 	}
 	return t;
 }
-function Bt(e, t = []) {
+function zt(e, t = []) {
 	return !Array.isArray(e) || e.length === 0 ? [] : !Array.isArray(t) || t.length === 0 ? [...e] : [...e].sort((e, n) => {
-		let r = e.docType || Rt(e.label || e.name), i = n.docType || Rt(n.label || n.name), a = t.findIndex((e) => {
+		let r = e.docType || Lt(e.label || e.name), i = n.docType || Lt(n.label || n.name), a = t.findIndex((e) => {
 			let t = e.toUpperCase(), n = r.toUpperCase();
 			return t === n || n.includes(t) || t.includes(n);
 		}), o = t.findIndex((e) => {
@@ -10915,7 +10951,7 @@ function Bt(e, t = []) {
 	});
 }
 // src/ui/print-studio-ui.js
-var Vt = class {
+var Bt = class {
 	constructor() {
 		this.presets = { ...je }, this.activePresetKey = "MAHA DBT FORM", this.documents = [], this.activeDocIndex = 0, this.zoomLevel = 100;
 	}
@@ -11062,7 +11098,7 @@ var Vt = class {
 	}
 	handleAutoOrder() {
 		let e = this.presets[this.activePresetKey] || [];
-		this.documents = Bt(this.documents, e), this.activeDocIndex = 0, this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), r.show("Sequence Applied", `Ordered according to ${this.activePresetKey} criteria.`, "success");
+		this.documents = zt(this.documents, e), this.activeDocIndex = 0, this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), r.show("Sequence Applied", `Ordered according to ${this.activePresetKey} criteria.`, "success");
 	}
 	async handleBrowseFolder() {
 		r.show("Opening Folder Picker", "Navigating Windows Explorer...", "info");
@@ -11078,7 +11114,7 @@ var Vt = class {
 				return;
 			}
 			this.documents = t.map((e, t) => {
-				let n = Rt(e.name), r = zt(e.name);
+				let n = Lt(e.name), r = Rt(e.name);
 				return {
 					id: `print_doc_${Date.now()}_${t}`,
 					name: e.name,
@@ -11169,12 +11205,12 @@ var Vt = class {
 		}
 	}
 };
-function Ht() {
-	let e = new Vt();
+function Vt() {
+	let e = new Bt();
 	return e.init(), e;
 }
 // src/ui/followup-ui.js
-var Ut = class {
+var Ht = class {
 	constructor() {
 		this.items = [], this.searchQuery = "";
 	}
@@ -11365,15 +11401,15 @@ var Ut = class {
 		Qe(e.folderName, e.documentName), e.status = "resolved", this.renderTable(), r.show("कागदपत्र प्राप्त!", `${e.documentName} for ${e.studentName} marked as received.`, "success");
 	}
 };
-function Wt() {
-	let e = new Ut();
+function Ut() {
+	let e = new Ht();
 	return e.init(), e;
 }
 // src/ui/index.js
-function Gt() {
+function Wt() {
 	let e = new n();
-	e.init(), new a().init(), yt();
-	let t = ht();
+	e.init(), new a().init(), vt();
+	let t = mt();
 	typeof window < "u" && (window.renamerUI = t, window.location.search.includes("test_loaded=1") && setTimeout(() => {
 		t.state.folder = {
 			name: "Vijay_Ramesh_Yadav",
@@ -11409,7 +11445,7 @@ function Gt() {
 		], t.state.currentIndex = 0, t.renderQueue();
 	}, 200)), e.onViewChange = (e, n) => {
 		n === "bulk-renamer" && e !== "bulk-renamer" && t.handleClearQueue(!0);
-	}, kt(), Ft(), Ht(), Wt(), o();
+	}, Ot(), Pt(), Vt(), Ut(), o();
 	let i = document.getElementById("themeToggleBtn");
 	i && i.addEventListener("click", () => {
 		document.documentElement.classList.toggle("dark");
@@ -11417,5 +11453,5 @@ function Gt() {
 		r.show(e ? "Dark Theme Enabled" : "Light Theme Enabled", "UI Preference Updated", "info");
 	}), console.info("[DocMitra] UI Shell & Modules initialized successfully.");
 }
-document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", Gt) : Gt();
-export { Gt as initAppShell };
+document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", Wt) : Wt();
+export { Wt as initAppShell };

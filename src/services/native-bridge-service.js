@@ -447,14 +447,29 @@ export async function rotateNativeFile(filePath, angle) {
 }
 
 /**
- * Safely copy an external file into the active student directory
+ * Safely move/copy an external file into the active student directory
  */
-export async function importNativeFile({ sourcePath, targetDir, targetName = '', studentName = '' }) {
+export async function importNativeFile({ sourcePath, targetDir, targetName = '', studentName = '', moveFile = true }) {
+  const invoke = getTauriInvoke();
+  if (invoke) {
+    try {
+      const res = await invoke('import_native_file', {
+        sourcePath,
+        targetDir,
+        targetName,
+        moveFile: !!moveFile
+      });
+      return res;
+    } catch (err) {
+      console.warn('[NativeBridge] Tauri import_native_file failed, falling back:', err);
+    }
+  }
+
   try {
     const res = await fetch(`${BACKEND_BASE}/api/native-import-file`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sourcePath, targetDir, targetName, studentName })
+      body: JSON.stringify({ sourcePath, targetDir, targetName, studentName, moveFile: !!moveFile })
     });
     const data = await res.json();
     return data;
