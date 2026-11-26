@@ -10716,7 +10716,7 @@ async function jt(e, t = 150, n = .82) {
 // tools/pdf_studio/pdf_studio_ui.js
 var Mt = class {
 	constructor() {
-		this.activeTool = "compress_pdf", this.files = [], this.activeFolderPath = "", this.activeFolderName = "", this.targetKb = 256, this.jpgDpi = 150, this.splitPageRange = "", this.isProcessing = !1, this.lastOutputFolder = "", this.sortDesc = !0, this.draggedIndex = null, this.modalFileIdx = -1, this.modalPage = 1, this.modalTotalPages = 1, this.modalZoom = "fit", this.modalRotation = 0, this.modalPdfDoc = null, this.renderTask = null;
+		this.activeTool = "compress_pdf", this.files = [], this.activeFolderPath = "", this.activeFolderName = "", this.targetKb = 300, this.jpgDpi = 150, this.splitPageRange = "", this.isProcessing = !1, this.lastOutputFolder = "", this.sortDesc = !0, this.draggedIndex = null, this.modalFileIdx = -1, this.modalPage = 1, this.modalTotalPages = 1, this.modalZoom = "fit", this.modalRotation = 0, this.modalPdfDoc = null, this.renderTask = null;
 	}
 	init() {
 		this._bindRibbonTools(), this._bindActions(), this._bindDropzone(), this._bindTargetSizeControls(), this._bindBentoDropdowns(), this._bindModalControls(), this._bindHotkeys(), this.setTool("compress_pdf"), this.renderQueue(), console.info("[DocMitra PDF Studio] Zero-Port Native UI Manager initialized.");
@@ -10767,30 +10767,42 @@ var Mt = class {
 		t && (t.textContent = this._getToolDisplayName(this.activeTool));
 	}
 	_bindTargetSizeControls() {
-		let e = document.querySelectorAll("#compressTargetControlBar .target-radio-pill"), t = document.getElementById("sliderTargetKb"), n = document.getElementById("inputTargetKbBox"), i = (t) => {
+		let e = document.querySelectorAll("#compressTargetControlBar .target-radio-pill"), t = document.getElementById("sliderTargetKb"), n = document.getElementById("inputManualTargetKb"), i = document.getElementById("inputManualTargetMb"), a = (t) => {
 			e.forEach((e) => {
-				parseInt(e.getAttribute("data-kb"), 10) === t ? (e.classList.add("bg-slate-900", "text-white", "shadow-xs"), e.classList.remove("text-on-surface-variant", "hover:bg-surface-container-high")) : (e.classList.remove("bg-slate-900", "text-white", "shadow-xs"), e.classList.add("text-on-surface-variant", "hover:bg-surface-container-high"));
+				let n = parseInt(e.getAttribute("data-kb"), 10);
+				n === t ? n === 300 ? (e.className = "target-radio-pill relative px-3 py-0.5 text-xs font-bold text-white bg-blue-600 rounded-md shadow-md ring-2 ring-blue-500/50 flex items-center gap-1.5 transition cursor-pointer", e.innerHTML = "\n              <span class=\"relative flex h-1.5 w-1.5\">\n                <span class=\"animate-beacon-ping absolute inline-flex h-full w-full rounded-full bg-sky-300 opacity-75\"></span>\n                <span class=\"relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400\"></span>\n              </span>\n              <span class=\"tracking-wide\">300 KB</span>\n            ") : (e.className = "target-radio-pill px-2.5 py-0.5 text-xs font-bold text-white bg-blue-600 rounded-md shadow-xs transition cursor-pointer", e.textContent = `${n} KB`) : (e.className = "target-radio-pill px-2.5 py-0.5 text-xs font-medium text-slate-600 rounded-md hover:bg-white hover:text-slate-900 transition cursor-pointer", e.textContent = `${n} KB`);
 			});
-		}, a = (e, r) => {
-			let a = parseInt(e, 10);
-			(isNaN(a) || a <= 0) && (a = 256), this.targetKb = a, r !== "slider" && t && (t.value = Math.min(Math.max(a, 50), 1e3)), r !== "input" && n && (n.value = a), i(a), this.updateStats();
+		}, o = (e, r) => {
+			let o = parseInt(e, 10);
+			(isNaN(o) || o <= 0) && (o = 300), o > 102400 && (o = 102400), this.targetKb = o, r !== "slider" && t && (t.value = Math.min(Math.max(o, 50), 1e3)), r !== "inputKb" && n && (n.value = o), r !== "inputMb" && i && (i.value = (o / 1024).toFixed(2)), a(o), this.updateStats();
 		};
 		e.forEach((e) => {
 			e.addEventListener("click", (t) => {
 				t.preventDefault();
 				let n = parseInt(e.getAttribute("data-kb"), 10);
-				a(n, "radio"), r.show("Target Size", `Target set to < ${n} KB`, "info");
+				o(n, "radio"), r.show("Target Size", `Target set to < ${n} KB`, "info");
 			});
 		}), t && t.addEventListener("input", (e) => {
 			let t = parseInt(e.target.value, 10);
-			a(t, "slider");
+			o(t, "slider");
 		}), n && (n.addEventListener("input", (e) => {
 			let t = parseInt(e.target.value, 10);
-			!isNaN(t) && t > 0 && a(t, "input");
+			!isNaN(t) && t > 0 && o(t, "inputKb");
 		}), n.addEventListener("change", (e) => {
 			let t = parseInt(e.target.value, 10);
-			(isNaN(t) || t < 30) && (t = 30), a(t, "input");
-		})), i(this.targetKb);
+			(isNaN(t) || t < 30) && (t = 30), o(t, "inputKb");
+		})), i && (i.addEventListener("input", (e) => {
+			let t = parseFloat(e.target.value);
+			if (!isNaN(t) && t > 0) {
+				let e = Math.round(t * 1024);
+				o(e, "inputMb");
+			}
+		}), i.addEventListener("change", (e) => {
+			let t = parseFloat(e.target.value);
+			(isNaN(t) || t < .05) && (t = .05), t > 100 && (t = 100);
+			let n = Math.round(t * 1024);
+			o(n, "inputMb");
+		})), o(300, "init");
 	}
 	_bindActions() {
 		let e = document.getElementById("btnBrowsePdfDir");
@@ -10857,8 +10869,8 @@ var Mt = class {
 			e.preventDefault(), e.stopPropagation();
 		}), e.addEventListener("drop", async (e) => {
 			e.preventDefault(), e.stopPropagation();
-			let t = Array.from(e.dataTransfer?.files || []), n = this.activeTool === "jpg_to_pdf" ? t.filter((e) => /\.(jpe?g|png|webp)$/i.test(e.name)) : t.filter((e) => /\.pdf$/i.test(e.name));
-			n.length === 0 ? r.show("Invalid Files", this.activeTool === "jpg_to_pdf" ? "Please drop JPG/PNG images only." : "Please drop PDF files only.", "warning") : await this.loadDroppedFiles(n);
+			let t = Array.from(e.dataTransfer?.files || []), n = this.activeTool === "compress_pdf", i = this.activeTool === "jpg_to_pdf", a = n || i ? t.filter((e) => /\.(pdf|jpe?g|png|webp)$/i.test(e.name)) : t.filter((e) => /\.pdf$/i.test(e.name));
+			a.length === 0 ? r.show("Invalid Files", n ? "Please drop PDF, JPG, or PNG documents." : i ? "Please drop JPG/PNG images only." : "Please drop PDF files only.", "warning") : await this.loadDroppedFiles(a);
 		}));
 	}
 	_bindHotkeys() {
@@ -10909,34 +10921,34 @@ var Mt = class {
 			this.activeFolderPath = e.path || "", this.activeFolderName = e.name || (e.path ? e.path.split(/[\/\\]/).pop() : "Selected Folder");
 			let t = document.getElementById("displayPdfFolderName");
 			t && (t.textContent = this.activeFolderName, t.title = this.activeFolderPath);
-			let n = this.activeTool === "jpg_to_pdf", i = (e.files || []).filter((e) => n ? /\.(jpe?g|png|webp)$/i.test(e.name) : /\.pdf$/i.test(e.name));
-			if (i.length === 0) {
-				r.show("No Files Found", `Folder contains 0 ${n ? "image" : "PDF"} files.`, "warning");
+			let n = this.activeTool === "compress_pdf", i = this.activeTool === "jpg_to_pdf", a = (e.files || []).filter((e) => n ? /\.(pdf|jpe?g|png|webp)$/i.test(e.name) : i ? /\.(jpe?g|png|webp)$/i.test(e.name) : /\.pdf$/i.test(e.name));
+			if (a.length === 0) {
+				r.show("No Files Found", "Folder contains 0 matching documents.", "warning");
 				return;
 			}
-			await this.loadNativeFiles(i), r.show("Files Loaded", `${i.length} files added from ${this.activeFolderName}.`, "success");
+			await this.loadNativeFiles(a), r.show("Files Loaded", `${a.length} files added from ${this.activeFolderName}.`, "success");
 		} catch (e) {
 			r.show("Folder Error", e.message, "error");
 		}
 	}
 	async handleAddFiles() {
 		try {
-			let e = this.activeTool === "jpg_to_pdf", t = await f(e ? "Images (*.jpg;*.jpeg;*.png;*.webp)|*.jpg;*.jpeg;*.png;*.webp" : "PDF Documents (*.pdf)|*.pdf", e ? "Select Images for PDF - DocMitra" : "Select PDF Files - DocMitra");
-			if (t && t.success && t.files && t.files.length) {
-				if (!this.activeFolderPath && t.files[0].path) {
-					let e = t.files[0].path.replace(/\\/g, "/").split("/");
+			let e = this.activeTool === "compress_pdf", t = this.activeTool === "jpg_to_pdf", n = await f(e ? "Documents & Images (*.pdf;*.jpg;*.jpeg;*.png;*.webp)|*.pdf;*.jpg;*.jpeg;*.png;*.webp" : t ? "Images (*.jpg;*.jpeg;*.png;*.webp)|*.jpg;*.jpeg;*.png;*.webp" : "PDF Documents (*.pdf)|*.pdf", e ? "Select Documents (PDF, JPG, PNG) - DocMitra" : t ? "Select Images for PDF - DocMitra" : "Select PDF Files - DocMitra");
+			if (n && n.success && n.files && n.files.length) {
+				if (!this.activeFolderPath && n.files[0].path) {
+					let e = n.files[0].path.replace(/\\/g, "/").split("/");
 					e.pop(), this.activeFolderPath = e.join("/"), this.activeFolderName = e.pop() || "Selected Folder";
-					let n = document.getElementById("displayPdfFolderName");
-					n && (n.textContent = this.activeFolderName, n.title = this.activeFolderPath);
+					let t = document.getElementById("displayPdfFolderName");
+					t && (t.textContent = this.activeFolderName, t.title = this.activeFolderPath);
 				}
-				await this.loadNativeFiles(t.files), r.show("Files Added", `${t.files.length} files added to execution queue.`, "success");
+				await this.loadNativeFiles(n.files), r.show("Files Added", `${n.files.length} files added to execution queue.`, "success");
 				return;
 			}
 		} catch (e) {
 			console.warn("Native select files fallback:", e);
 		}
 		let e = document.createElement("input");
-		e.type = "file", e.accept = this.activeTool === "jpg_to_pdf" ? ".jpg,.jpeg,.png,.webp,image/*" : ".pdf,application/pdf", e.multiple = !0, e.style.display = "none", e.addEventListener("change", async (t) => {
+		e.type = "file", e.accept = this.activeTool === "compress_pdf" || this.activeTool === "jpg_to_pdf" ? ".pdf,.jpg,.jpeg,.png,.webp,image/*,application/pdf" : ".pdf,application/pdf", e.multiple = !0, e.style.display = "none", e.addEventListener("change", async (t) => {
 			let n = Array.from(t.target.files || []);
 			n.length > 0 && await this.loadDroppedFiles(n), document.body.removeChild(e);
 		}), document.body.appendChild(e), e.click();
@@ -10989,16 +11001,18 @@ var Mt = class {
 		this.updateStats(), this.renderQueue(), r.show("Files Queued", `${e.length} files added to execution queue.`, "success");
 	}
 	updateStats() {
-		let e = this.files.length, t = (this.files.reduce((e, t) => e + (t.size || 0), 0) / 1048576).toFixed(2), n = (e * this.targetKb * 1024 / 1048576).toFixed(2), r = document.getElementById("summaryPdfCount");
-		r && (r.textContent = `${e} Files`);
-		let i = document.getElementById("summaryPdfTotalSize");
-		i && (i.textContent = `${t} MB`);
-		let a = document.getElementById("summaryPdfProjected");
-		a && (a.textContent = `~${n} MB`);
-		let o = document.getElementById("pdfQueueCount");
-		o && (o.textContent = `${e} Files`);
-		let s = document.getElementById("pdfQueueStats");
-		s && (s.textContent = `Total: ${t} MB → Projected: ~${n} MB`), this._updateProcessButtonLabel();
+		let e = this.files.length, t = this.files.reduce((e, t) => e + (t.size || 0), 0), n = (t / 1048576).toFixed(2), r = this.files.reduce((e, t) => e + Math.min(t.size || 0, this.targetKb * 1024), 0), i = (r / 1048576).toFixed(2), a = t > 0 && t > r ? Math.max(0, Math.round((t - r) / t * 100)) : 0, o = document.getElementById("summaryPdfCount");
+		o && (o.innerHTML = `${e} Documents <span class="text-[10px] font-normal text-slate-500 font-sans">(Ready)</span>`);
+		let s = document.getElementById("summaryPdfTotalSize");
+		s && (s.innerHTML = `${n} MB <span class="text-[10px] font-normal text-slate-400 font-sans">(Uncompressed)</span>`);
+		let c = document.getElementById("summaryPdfProjected");
+		c && (c.textContent = `~${i} MB`);
+		let l = document.getElementById("summaryPdfReductionBadge");
+		l && (l.textContent = `↓ -${a}% saved`);
+		let u = document.getElementById("pdfQueueCount");
+		u && (u.textContent = `${e} Files`);
+		let d = document.getElementById("pdfQueueStats");
+		d && (d.textContent = `Total: ${n} MB → Projected: ~${i} MB`), this._updateProcessButtonLabel();
 	}
 	renderQueue() {
 		let e = document.getElementById("pdfCardsGrid");
@@ -11015,7 +11029,7 @@ var Mt = class {
 				i.className = "text-body-sm text-secondary", i.textContent = "or use Add Files above to queue documents for processing.", t.appendChild(i), e.appendChild(t);
 			} else this.files.forEach((t, n) => {
 				let i = document.createElement("div");
-				i.className = "docket-card bg-surface-container-lowest rounded-xl border border-surface-container-high/80 p-2.5 flex flex-col justify-between hover:shadow-md transition-all group relative cursor-pointer", this.activeTool === "merge_pdf" && (i.setAttribute("draggable", "true"), i.addEventListener("dragstart", (e) => {
+				i.className = "docket-card relative bg-white rounded-xl border border-slate-200/90 p-2.5 flex flex-col justify-between hover:border-blue-400 hover:shadow-lg transition-all group cursor-pointer stitch-paper-shadow", this.activeTool === "merge_pdf" && (i.setAttribute("draggable", "true"), i.addEventListener("dragstart", (e) => {
 					this.draggedIndex = n, i.classList.add("card-dragging"), e.dataTransfer.effectAllowed = "move";
 				}), i.addEventListener("dragend", () => {
 					i.classList.remove("card-dragging"), this.draggedIndex = null;
@@ -11030,63 +11044,64 @@ var Mt = class {
 					}
 				}));
 				let a = document.createElement("div");
-				a.className = "absolute top-1.5 right-1.5 z-10 flex items-center gap-1";
-				let o = document.createElement("button");
-				o.type = "button", o.className = "w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-primary transition-colors shadow-xs cursor-pointer", o.title = "Rotate 90° Clockwise";
-				let s = document.createElement("span");
-				s.className = "material-symbols-outlined text-[13px]", s.textContent = "rotate_right", o.appendChild(s), o.addEventListener("click", (e) => {
+				a.className = "flex items-center justify-between gap-1 mb-1.5";
+				let o = /\.(jpe?g)$/i.test(t.name), s = /\.(png|webp)$/i.test(t.name), c = document.createElement("span");
+				o ? (c.className = "px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-600 text-white font-mono uppercase", c.textContent = "JPG") : s ? (c.className = "px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-600 text-white font-mono uppercase", c.textContent = "PNG") : (c.className = "px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-800 text-white font-mono uppercase", c.textContent = "PDF"), a.appendChild(c);
+				let l = document.createElement("div");
+				l.className = "flex items-center gap-1";
+				let u = this.targetKb * 1024;
+				if (t.size > u) {
+					let e = Math.min(95, Math.max(10, Math.round((t.size - u) / t.size * 100))), n = document.createElement("span");
+					n.className = "bg-rose-50 border border-rose-200 text-rose-600 px-1.5 py-0.5 rounded text-[10px] font-bold font-mono", n.textContent = `-${e}%`, l.appendChild(n);
+				}
+				let d = document.createElement("button");
+				d.type = "button", d.className = "w-5 h-5 rounded flex items-center justify-center bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-600 transition-colors shadow-2xs cursor-pointer opacity-70 group-hover:opacity-100", d.title = "Rotate 90° Clockwise";
+				let f = document.createElement("span");
+				f.className = "material-symbols-outlined text-[13px]", f.textContent = "rotate_right", d.appendChild(f), d.addEventListener("click", (e) => {
 					e.stopPropagation(), this.rotateSingleFile(n);
-				}), a.appendChild(o);
-				let c = document.createElement("button");
-				c.type = "button", c.className = "w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-error transition-colors shadow-xs cursor-pointer", c.title = "Remove File";
-				let l = document.createElement("span");
-				l.className = "material-symbols-outlined text-[13px]", l.textContent = "close", c.appendChild(l), c.addEventListener("click", (e) => {
+				}), l.appendChild(d);
+				let p = document.createElement("button");
+				p.type = "button", p.className = "w-5 h-5 rounded flex items-center justify-center bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 transition-colors shadow-2xs cursor-pointer opacity-70 group-hover:opacity-100", p.title = "Remove File";
+				let m = document.createElement("span");
+				m.className = "material-symbols-outlined text-[13px]", m.textContent = "close", p.appendChild(m), p.addEventListener("click", (e) => {
 					e.stopPropagation(), this.removeFile(n);
-				}), a.appendChild(c), i.appendChild(a);
-				let u = document.createElement("div");
-				u.className = "relative w-full h-24 rounded-lg bg-surface-container-low overflow-hidden mb-2 border border-surface-container-high/60 flex items-center justify-center";
-				let d = document.createElement("canvas");
-				d.className = "w-full h-full object-contain", u.appendChild(d);
-				let f = document.createElement("div");
-				if (f.className = "absolute bottom-1 right-1 bg-inverse-surface/80 text-inverse-on-surface rounded px-1 text-[9px] font-mono-code font-bold", f.textContent = `${t.pageCount || 1}p`, t.bytes && window.pdfjsLib && !t.name.match(/\.(jpe?g|png|webp)$/i)) window.pdfjsLib.getDocument({ data: t.bytes }).promise.then((e) => {
-					t.pageCount = e.numPages, f.textContent = `${e.numPages}p`, e.getPage(1).then((e) => {
+				}), l.appendChild(p), a.appendChild(l), i.appendChild(a);
+				let h = document.createElement("div");
+				h.className = "relative w-full h-56 rounded-lg bg-slate-50 border border-slate-200/80 overflow-hidden mb-2 p-1.5 flex items-center justify-center group-hover:bg-blue-50/20 transition-colors";
+				let g = document.createElement("canvas");
+				g.className = "max-w-full max-h-full object-contain shadow-xs rounded bg-white", h.appendChild(g);
+				let _ = document.createElement("div");
+				if (_.className = "absolute bottom-1.5 right-1.5 bg-slate-900/80 text-white rounded px-1.5 py-0.5 text-[9px] font-mono font-bold select-none", _.textContent = `${t.pageCount || 1}p`, t.bytes && window.pdfjsLib && !t.name.match(/\.(jpe?g|png|webp)$/i)) window.pdfjsLib.getDocument({ data: t.bytes }).promise.then((e) => {
+					t.pageCount = e.numPages, _.textContent = `${e.numPages}p`, e.getPage(1).then((e) => {
 						let n = e.getViewport({
-							scale: .45,
+							scale: .5,
 							rotation: t.rotation || 0
 						});
-						d.height = n.height, d.width = n.width, e.render({
-							canvasContext: d.getContext("2d"),
+						g.height = n.height, g.width = n.width, e.render({
+							canvasContext: g.getContext("2d"),
 							viewport: n
 						});
 					});
 				}).catch(() => {
-					d.style.display = "none";
+					g.style.display = "none";
 					let e = document.createElement("span");
-					e.className = "material-symbols-outlined text-[32px] text-primary opacity-50", e.textContent = "picture_as_pdf", u.appendChild(e);
+					e.className = "material-symbols-outlined text-[36px] text-blue-500 opacity-40", e.textContent = "picture_as_pdf", h.appendChild(e);
 				});
 				else if (t.bytes && t.name.match(/\.(jpe?g|png|webp)$/i)) {
-					let e = new Image(), n = new Blob([t.bytes], { type: "image/jpeg" });
+					let e = new Image(), n = new Blob([t.bytes], { type: s ? "image/png" : "image/jpeg" });
 					e.src = URL.createObjectURL(n), e.onload = () => {
-						d.width = e.width, d.height = e.height, d.getContext("2d").drawImage(e, 0, 0), URL.revokeObjectURL(e.src);
-					}, f.textContent = "IMG";
+						g.width = e.width, g.height = e.height, g.getContext("2d").drawImage(e, 0, 0), URL.revokeObjectURL(e.src);
+					}, _.textContent = "IMG";
 				}
-				u.appendChild(f), i.appendChild(u);
-				let p = document.createElement("div");
-				p.className = "font-headline-sm text-[12px] font-bold text-on-surface truncate mb-1", p.title = t.name, p.textContent = `${n + 1}. ${t.name}`, i.appendChild(p);
-				let m = document.createElement("div");
-				m.className = "bg-surface-container-low border border-surface-container-high/60 rounded-lg p-1.5 flex flex-col gap-0.5 font-mono-code text-[10px]";
-				let h = document.createElement("div");
-				h.className = "flex items-center justify-between text-outline";
-				let g = t.size > 1048576 ? `${(t.size / 1048576).toFixed(2)} MB` : `${(t.size / 1024).toFixed(0)} KB`, _ = document.createElement("span");
-				_.textContent = `Size: ${g}`, h.appendChild(_);
-				let v = t.size > this.targetKb * 1024, y = document.createElement("span");
-				y.className = v ? "text-amber-600 font-bold" : "text-emerald-700 font-bold", y.textContent = v ? `>${this.targetKb}KB` : "Safe", h.appendChild(y), m.appendChild(h);
-				let b = document.createElement("div");
-				b.className = "flex items-center justify-between font-bold text-on-surface";
-				let x = document.createElement("span");
-				x.textContent = "Target:", b.appendChild(x);
-				let S = document.createElement("span");
-				S.className = "text-primary font-bold", S.textContent = v ? `< ${this.targetKb} KB` : g, b.appendChild(S), m.appendChild(b), i.appendChild(m), i.addEventListener("click", () => {
+				h.appendChild(_), i.appendChild(h);
+				let v = document.createElement("div");
+				v.className = "font-sans text-xs font-bold text-slate-800 truncate mb-1.5", v.title = t.name, v.textContent = t.name, i.appendChild(v);
+				let y = document.createElement("div");
+				y.className = "flex items-center justify-between gap-1 pt-1 border-t border-slate-100";
+				let b = t.size > 1048576 ? `${(t.size / 1048576).toFixed(2)} MB` : `${Math.round(t.size / 1024)} KB`, x = t.size > u ? this.targetKb >= 1024 ? `${(this.targetKb / 1024).toFixed(2)} MB` : `${this.targetKb} KB` : b, S = document.createElement("span");
+				S.className = "px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded font-mono text-[10px] font-bold truncate", S.textContent = `Orig ${b}`, y.appendChild(S);
+				let C = document.createElement("span");
+				C.className = "px-1.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-200/80 rounded font-mono text-[10px] font-bold truncate", C.textContent = `Comp ${x}`, y.appendChild(C), i.appendChild(y), i.addEventListener("click", () => {
 					this.openPreviewModal(n);
 				}), e.appendChild(i);
 			});
@@ -11254,12 +11269,17 @@ var Mt = class {
 			if (e === "compress_pdf") {
 				for (let e of this.files) {
 					if (!e.bytes) continue;
-					let r = $(e.bytes);
-					r && r.length !== 0 || (r = await jt(e.bytes, 150, .78));
-					let i;
-					i = r.length > 0 ? Q(r, "portrait", e.rotation || 0) : new Blob([e.bytes], { type: "application/pdf" });
-					let a = Ot(e.name, i.size);
-					await this.saveOutputFile(t, a, i), n++;
+					let r;
+					if (e.name.match(/\.(jpe?g|png|webp)$/i)) {
+						r = Q([e.bytes], "portrait", e.rotation || 0);
+						let i = Ot(e.name.replace(/\.[^/.]+$/, "") + ".pdf", r.size);
+						await this.saveOutputFile(t, i, r), n++;
+						continue;
+					}
+					let i = $(e.bytes);
+					i && i.length !== 0 || (i = await jt(e.bytes, 150, .78)), r = i.length > 0 ? Q(i, "portrait", e.rotation || 0) : new Blob([e.bytes], { type: "application/pdf" });
+					let a = Ot(e.name, r.size);
+					await this.saveOutputFile(t, a, r), n++;
 				}
 				r.show("Compression Complete!", `Saved ${n} files directly into ${t}/`, "success");
 			} else if (e === "merge_pdf") {
@@ -11316,7 +11336,7 @@ var Mt = class {
 };
 function Nt() {
 	let e = new Mt();
-	return e.init(), e;
+	return e.init(), typeof window < "u" && (window.pdfStudioUI = e), e;
 }
 // src/modules/image-studio.js
 function Pt(e, t, n, r = "magic_color") {

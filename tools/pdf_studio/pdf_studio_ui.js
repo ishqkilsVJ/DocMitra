@@ -39,7 +39,7 @@ export class PdfStudioUIManager {
     this.files = []; // Array of { id, name, path, dir, size, bytes: Uint8Array, pageCount, rotation, status }
     this.activeFolderPath = '';
     this.activeFolderName = '';
-    this.targetKb = 256;
+    this.targetKb = 300;
     this.jpgDpi = 150;
     this.splitPageRange = '';
     this.isProcessing = false;
@@ -155,33 +155,49 @@ export class PdfStudioUIManager {
   _bindTargetSizeControls() {
     const radioBtns = document.querySelectorAll('#compressTargetControlBar .target-radio-pill');
     const slider = document.getElementById('sliderTargetKb');
-    const input = document.getElementById('inputTargetKbBox');
+    const inputKb = document.getElementById('inputManualTargetKb');
+    const inputMb = document.getElementById('inputManualTargetMb');
 
-    const updateActiveRadio = (kb) => {
+    const updatePills = (kb) => {
       radioBtns.forEach(btn => {
         const btnKb = parseInt(btn.getAttribute('data-kb'), 10);
         if (btnKb === kb) {
-          btn.classList.add('bg-slate-900', 'text-white', 'shadow-xs');
-          btn.classList.remove('text-on-surface-variant', 'hover:bg-surface-container-high');
+          if (btnKb === 300) {
+            btn.className = 'target-radio-pill relative px-3 py-0.5 text-xs font-bold text-white bg-blue-600 rounded-md shadow-md ring-2 ring-blue-500/50 flex items-center gap-1.5 transition cursor-pointer';
+            btn.innerHTML = `
+              <span class="relative flex h-1.5 w-1.5">
+                <span class="animate-beacon-ping absolute inline-flex h-full w-full rounded-full bg-sky-300 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400"></span>
+              </span>
+              <span class="tracking-wide">300 KB</span>
+            `;
+          } else {
+            btn.className = 'target-radio-pill px-2.5 py-0.5 text-xs font-bold text-white bg-blue-600 rounded-md shadow-xs transition cursor-pointer';
+            btn.textContent = `${btnKb} KB`;
+          }
         } else {
-          btn.classList.remove('bg-slate-900', 'text-white', 'shadow-xs');
-          btn.classList.add('text-on-surface-variant', 'hover:bg-surface-container-high');
+          btn.className = 'target-radio-pill px-2.5 py-0.5 text-xs font-medium text-slate-600 rounded-md hover:bg-white hover:text-slate-900 transition cursor-pointer';
+          btn.textContent = `${btnKb} KB`;
         }
       });
     };
 
     const setTargetKb = (val, source) => {
       let kb = parseInt(val, 10);
-      if (isNaN(kb) || kb <= 0) kb = 256;
+      if (isNaN(kb) || kb <= 0) kb = 300;
+      if (kb > 102400) kb = 102400; // max 100 MB
       this.targetKb = kb;
 
       if (source !== 'slider' && slider) {
         slider.value = Math.min(Math.max(kb, 50), 1000);
       }
-      if (source !== 'input' && input) {
-        input.value = kb;
+      if (source !== 'inputKb' && inputKb) {
+        inputKb.value = kb;
       }
-      updateActiveRadio(kb);
+      if (source !== 'inputMb' && inputMb) {
+        inputMb.value = (kb / 1024).toFixed(2);
+      }
+      updatePills(kb);
       this.updateStats();
     };
 
@@ -201,22 +217,39 @@ export class PdfStudioUIManager {
       });
     }
 
-    if (input) {
-      input.addEventListener('input', (e) => {
+    if (inputKb) {
+      inputKb.addEventListener('input', (e) => {
         const kb = parseInt(e.target.value, 10);
         if (!isNaN(kb) && kb > 0) {
-          setTargetKb(kb, 'input');
+          setTargetKb(kb, 'inputKb');
         }
       });
-      input.addEventListener('change', (e) => {
+      inputKb.addEventListener('change', (e) => {
         let kb = parseInt(e.target.value, 10);
         if (isNaN(kb) || kb < 30) kb = 30;
-        setTargetKb(kb, 'input');
+        setTargetKb(kb, 'inputKb');
       });
     }
 
-    // Set initial active radio
-    updateActiveRadio(this.targetKb);
+    if (inputMb) {
+      inputMb.addEventListener('input', (e) => {
+        const mb = parseFloat(e.target.value);
+        if (!isNaN(mb) && mb > 0) {
+          const kb = Math.round(mb * 1024);
+          setTargetKb(kb, 'inputMb');
+        }
+      });
+      inputMb.addEventListener('change', (e) => {
+        let mb = parseFloat(e.target.value);
+        if (isNaN(mb) || mb < 0.05) mb = 0.05;
+        if (mb > 100) mb = 100;
+        const kb = Math.round(mb * 1024);
+        setTargetKb(kb, 'inputMb');
+      });
+    }
+
+    // Set initial active state (300 KB default)
+    setTargetKb(300, 'init');
   }
 
   _bindActions() {
@@ -356,12 +389,14 @@ export class PdfStudioUIManager {
       e.stopPropagation();
 
       const items = Array.from(e.dataTransfer?.files || []);
-      const validFiles = this.activeTool === 'jpg_to_pdf'
-        ? items.filter(f => /\.(jpe?g|png|webp)$/i.test(f.name))
+      const isMixedMode = this.activeTool === 'compress_pdf';
+      const isJpgMode = this.activeTool === 'jpg_to_pdf';
+      const validFiles = (isMixedMode || isJpgMode)
+        ? items.filter(f => /\.(pdf|jpe?g|png|webp)$/i.test(f.name))
         : items.filter(f => /\.pdf$/i.test(f.name));
 
       if (validFiles.length === 0) {
-        toast.show('Invalid Files', this.activeTool === 'jpg_to_pdf' ? 'Please drop JPG/PNG images only.' : 'Please drop PDF files only.', 'warning');
+        toast.show('Invalid Files', isMixedMode ? 'Please drop PDF, JPG, or PNG documents.' : (isJpgMode ? 'Please drop JPG/PNG images only.' : 'Please drop PDF files only.'), 'warning');
         return;
       }
 
@@ -464,11 +499,16 @@ export class PdfStudioUIManager {
         pill.title = this.activeFolderPath;
       }
 
+      const isMixedMode = this.activeTool === 'compress_pdf';
       const isJpgMode = this.activeTool === 'jpg_to_pdf';
-      const targetFiles = (res.files || []).filter(f => isJpgMode ? /\.(jpe?g|png|webp)$/i.test(f.name) : /\.pdf$/i.test(f.name));
+      const targetFiles = (res.files || []).filter(f => {
+        if (isMixedMode) return /\.(pdf|jpe?g|png|webp)$/i.test(f.name);
+        if (isJpgMode) return /\.(jpe?g|png|webp)$/i.test(f.name);
+        return /\.pdf$/i.test(f.name);
+      });
 
       if (targetFiles.length === 0) {
-        toast.show('No Files Found', `Folder contains 0 ${isJpgMode ? 'image' : 'PDF'} files.`, 'warning');
+        toast.show('No Files Found', `Folder contains 0 matching documents.`, 'warning');
         return;
       }
 
@@ -481,9 +521,14 @@ export class PdfStudioUIManager {
 
   async handleAddFiles() {
     try {
+      const isMixedMode = this.activeTool === 'compress_pdf';
       const isJpgMode = this.activeTool === 'jpg_to_pdf';
-      const filter = isJpgMode ? 'Images (*.jpg;*.jpeg;*.png;*.webp)|*.jpg;*.jpeg;*.png;*.webp' : 'PDF Documents (*.pdf)|*.pdf';
-      const title = isJpgMode ? 'Select Images for PDF - DocMitra' : 'Select PDF Files - DocMitra';
+      const filter = isMixedMode
+        ? 'Documents & Images (*.pdf;*.jpg;*.jpeg;*.png;*.webp)|*.pdf;*.jpg;*.jpeg;*.png;*.webp'
+        : (isJpgMode ? 'Images (*.jpg;*.jpeg;*.png;*.webp)|*.jpg;*.jpeg;*.png;*.webp' : 'PDF Documents (*.pdf)|*.pdf');
+      const title = isMixedMode
+        ? 'Select Documents (PDF, JPG, PNG) - DocMitra'
+        : (isJpgMode ? 'Select Images for PDF - DocMitra' : 'Select PDF Files - DocMitra');
 
       const res = await selectNativeFiles(filter, title);
       if (res && res.success && res.files && res.files.length) {
@@ -510,7 +555,9 @@ export class PdfStudioUIManager {
     // HTML input fallback
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = this.activeTool === 'jpg_to_pdf' ? '.jpg,.jpeg,.png,.webp,image/*' : '.pdf,application/pdf';
+    input.accept = (this.activeTool === 'compress_pdf' || this.activeTool === 'jpg_to_pdf')
+      ? '.pdf,.jpg,.jpeg,.png,.webp,image/*,application/pdf'
+      : '.pdf,application/pdf';
     input.multiple = true;
     input.style.display = 'none';
 
@@ -597,20 +644,39 @@ export class PdfStudioUIManager {
     const totalMB = (totalBytes / (1024 * 1024)).toFixed(2);
 
     // Projected calculation based on targetKb
-    const projectedBytes = totalFiles * this.targetKb * 1024;
+    const projectedBytes = this.files.reduce((acc, f) => {
+      const fileTarget = Math.min(f.size || 0, this.targetKb * 1024);
+      return acc + fileTarget;
+    }, 0);
     const projectedMB = (projectedBytes / (1024 * 1024)).toFixed(2);
+
+    // Reduction percentage
+    const reductionPct = totalBytes > 0 && totalBytes > projectedBytes
+      ? Math.max(0, Math.round(((totalBytes - projectedBytes) / totalBytes) * 100))
+      : 0;
 
     // Summary cards
     const cardCount = document.getElementById('summaryPdfCount');
-    if (cardCount) cardCount.textContent = `${totalFiles} Files`;
+    if (cardCount) {
+      cardCount.innerHTML = `${totalFiles} Documents <span class="text-[10px] font-normal text-slate-500 font-sans">(Ready)</span>`;
+    }
 
     const cardTotal = document.getElementById('summaryPdfTotalSize');
-    if (cardTotal) cardTotal.textContent = `${totalMB} MB`;
+    if (cardTotal) {
+      cardTotal.innerHTML = `${totalMB} MB <span class="text-[10px] font-normal text-slate-400 font-sans">(Uncompressed)</span>`;
+    }
 
     const cardProjected = document.getElementById('summaryPdfProjected');
-    if (cardProjected) cardProjected.textContent = `~${projectedMB} MB`;
+    if (cardProjected) {
+      cardProjected.textContent = `~${projectedMB} MB`;
+    }
 
-    // Queue header readout
+    const reductionBadge = document.getElementById('summaryPdfReductionBadge');
+    if (reductionBadge) {
+      reductionBadge.textContent = `↓ -${reductionPct}% saved`;
+    }
+
+    // Queue header readout if present
     const countEl = document.getElementById('pdfQueueCount');
     if (countEl) countEl.textContent = `${totalFiles} Files`;
 
@@ -653,7 +719,7 @@ export class PdfStudioUIManager {
 
     this.files.forEach((file, idx) => {
       const card = document.createElement('div');
-      card.className = 'docket-card bg-surface-container-lowest rounded-xl border border-surface-container-high/80 p-2.5 flex flex-col justify-between hover:shadow-md transition-all group relative cursor-pointer';
+      card.className = 'docket-card relative bg-white rounded-xl border border-slate-200/90 p-2.5 flex flex-col justify-between hover:border-blue-400 hover:shadow-lg transition-all group cursor-pointer stitch-paper-shadow';
 
       // Drag-to-reorder for Merge Tool
       if (this.activeTool === 'merge_pdf') {
@@ -687,13 +753,44 @@ export class PdfStudioUIManager {
         });
       }
 
-      // Card Header Actions (Rotate / Remove)
-      const actionCluster = document.createElement('div');
-      actionCluster.className = 'absolute top-1.5 right-1.5 z-10 flex items-center gap-1';
+      // Card Header: Format Badge on Left + Reduction / Actions on Right
+      const cardHeader = document.createElement('div');
+      cardHeader.className = 'flex items-center justify-between gap-1 mb-1.5';
 
+      // Format Badge
+      const isJpg = /\.(jpe?g)$/i.test(file.name);
+      const isPng = /\.(png|webp)$/i.test(file.name);
+      const formatBadge = document.createElement('span');
+      if (isJpg) {
+        formatBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-600 text-white font-mono uppercase';
+        formatBadge.textContent = 'JPG';
+      } else if (isPng) {
+        formatBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-600 text-white font-mono uppercase';
+        formatBadge.textContent = 'PNG';
+      } else {
+        formatBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-800 text-white font-mono uppercase';
+        formatBadge.textContent = 'PDF';
+      }
+      cardHeader.appendChild(formatBadge);
+
+      // Right Header Cluster (Reduction Badge + Action Buttons)
+      const rightCluster = document.createElement('div');
+      rightCluster.className = 'flex items-center gap-1';
+
+      // Reduction Percentage Badge (Stitch Sample 4 Red Badge)
+      const targetBytes = this.targetKb * 1024;
+      if (file.size > targetBytes) {
+        const redPct = Math.min(95, Math.max(10, Math.round(((file.size - targetBytes) / file.size) * 100)));
+        const redBadge = document.createElement('span');
+        redBadge.className = 'bg-rose-50 border border-rose-200 text-rose-600 px-1.5 py-0.5 rounded text-[10px] font-bold font-mono';
+        redBadge.textContent = `-${redPct}%`;
+        rightCluster.appendChild(redBadge);
+      }
+
+      // Quick Actions (Rotate / Remove)
       const btnRotate = document.createElement('button');
       btnRotate.type = 'button';
-      btnRotate.className = 'w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-primary transition-colors shadow-xs cursor-pointer';
+      btnRotate.className = 'w-5 h-5 rounded flex items-center justify-center bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-600 transition-colors shadow-2xs cursor-pointer opacity-70 group-hover:opacity-100';
       btnRotate.title = 'Rotate 90° Clockwise';
       const rotIcon = document.createElement('span');
       rotIcon.className = 'material-symbols-outlined text-[13px]';
@@ -703,11 +800,11 @@ export class PdfStudioUIManager {
         e.stopPropagation();
         this.rotateSingleFile(idx);
       });
-      actionCluster.appendChild(btnRotate);
+      rightCluster.appendChild(btnRotate);
 
       const btnRemove = document.createElement('button');
       btnRemove.type = 'button';
-      btnRemove.className = 'w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-error transition-colors shadow-xs cursor-pointer';
+      btnRemove.className = 'w-5 h-5 rounded flex items-center justify-center bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 transition-colors shadow-2xs cursor-pointer opacity-70 group-hover:opacity-100';
       btnRemove.title = 'Remove File';
       const remIcon = document.createElement('span');
       remIcon.className = 'material-symbols-outlined text-[13px]';
@@ -717,29 +814,31 @@ export class PdfStudioUIManager {
         e.stopPropagation();
         this.removeFile(idx);
       });
-      actionCluster.appendChild(btnRemove);
-      card.appendChild(actionCluster);
+      rightCluster.appendChild(btnRemove);
 
-      // Card Thumbnail Preview Area
+      cardHeader.appendChild(rightCluster);
+      card.appendChild(cardHeader);
+
+      // Card Paper Thumbnail Preview Area (h-56 portrait paper container matching Stitch)
       const thumbBox = document.createElement('div');
-      thumbBox.className = 'relative w-full h-24 rounded-lg bg-surface-container-low overflow-hidden mb-2 border border-surface-container-high/60 flex items-center justify-center';
+      thumbBox.className = 'relative w-full h-56 rounded-lg bg-slate-50 border border-slate-200/80 overflow-hidden mb-2 p-1.5 flex items-center justify-center group-hover:bg-blue-50/20 transition-colors';
 
       const canvas = document.createElement('canvas');
-      canvas.className = 'w-full h-full object-contain';
+      canvas.className = 'max-w-full max-h-full object-contain shadow-xs rounded bg-white';
       thumbBox.appendChild(canvas);
 
       const pageBadge = document.createElement('div');
-      pageBadge.className = 'absolute bottom-1 right-1 bg-inverse-surface/80 text-inverse-on-surface rounded px-1 text-[9px] font-mono-code font-bold';
+      pageBadge.className = 'absolute bottom-1.5 right-1.5 bg-slate-900/80 text-white rounded px-1.5 py-0.5 text-[9px] font-mono font-bold select-none';
       pageBadge.textContent = `${file.pageCount || 1}p`;
 
-      // Render first page with PDF.js if bytes are available
+      // Render first page with PDF.js if PDF, or render Image
       if (file.bytes && window.pdfjsLib && !file.name.match(/\.(jpe?g|png|webp)$/i)) {
         window.pdfjsLib.getDocument({ data: file.bytes }).promise.then(pdf => {
           file.pageCount = pdf.numPages;
           pageBadge.textContent = `${pdf.numPages}p`;
 
           pdf.getPage(1).then(page => {
-            const viewport = page.getViewport({ scale: 0.45, rotation: file.rotation || 0 });
+            const viewport = page.getViewport({ scale: 0.5, rotation: file.rotation || 0 });
             canvas.height = viewport.height;
             canvas.width = viewport.width;
             page.render({
@@ -750,14 +849,13 @@ export class PdfStudioUIManager {
         }).catch(() => {
           canvas.style.display = 'none';
           const icon = document.createElement('span');
-          icon.className = 'material-symbols-outlined text-[32px] text-primary opacity-50';
+          icon.className = 'material-symbols-outlined text-[36px] text-blue-500 opacity-40';
           icon.textContent = 'picture_as_pdf';
           thumbBox.appendChild(icon);
         });
       } else if (file.bytes && file.name.match(/\.(jpe?g|png|webp)$/i)) {
-        // Image preview
         const img = new Image();
-        const blob = new Blob([file.bytes], { type: 'image/jpeg' });
+        const blob = new Blob([file.bytes], { type: isPng ? 'image/png' : 'image/jpeg' });
         img.src = URL.createObjectURL(blob);
         img.onload = () => {
           canvas.width = img.width;
@@ -774,46 +872,35 @@ export class PdfStudioUIManager {
 
       // Filename
       const title = document.createElement('div');
-      title.className = 'font-headline-sm text-[12px] font-bold text-on-surface truncate mb-1';
+      title.className = 'font-sans text-xs font-bold text-slate-800 truncate mb-1.5';
       title.title = file.name;
-      title.textContent = `${idx + 1}. ${file.name}`;
+      title.textContent = file.name;
       card.appendChild(title);
 
-      // Size & Projected Compression Box
-      const sizeBox = document.createElement('div');
-      sizeBox.className = 'bg-surface-container-low border border-surface-container-high/60 rounded-lg p-1.5 flex flex-col gap-0.5 font-mono-code text-[10px]';
+      // Bottom Row: Dual Size Badges (Orig Emerald + Comp Rose matching Stitch Sample 4)
+      const footerPills = document.createElement('div');
+      footerPills.className = 'flex items-center justify-between gap-1 pt-1 border-t border-slate-100';
 
-      const oldRow = document.createElement('div');
-      oldRow.className = 'flex items-center justify-between text-outline';
-      const oldSizeStr = file.size > 1024 * 1024
+      const origKb = file.size > 1024 * 1024
         ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
-        : `${(file.size / 1024).toFixed(0)} KB`;
-      const oldSpan = document.createElement('span');
-      oldSpan.textContent = `Size: ${oldSizeStr}`;
-      oldRow.appendChild(oldSpan);
+        : `${Math.round(file.size / 1024)} KB`;
+      const compKb = file.size > targetBytes
+        ? (this.targetKb >= 1024 ? `${(this.targetKb / 1024).toFixed(2)} MB` : `${this.targetKb} KB`)
+        : origKb;
 
-      const isOversized = file.size > this.targetKb * 1024;
-      const pctBadge = document.createElement('span');
-      pctBadge.className = isOversized ? 'text-amber-600 font-bold' : 'text-emerald-700 font-bold';
-      pctBadge.textContent = isOversized ? `>${this.targetKb}KB` : 'Safe';
-      oldRow.appendChild(pctBadge);
-      sizeBox.appendChild(oldRow);
+      const pillOrig = document.createElement('span');
+      pillOrig.className = 'px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded font-mono text-[10px] font-bold truncate';
+      pillOrig.textContent = `Orig ${origKb}`;
+      footerPills.appendChild(pillOrig);
 
-      const newRow = document.createElement('div');
-      newRow.className = 'flex items-center justify-between font-bold text-on-surface';
-      const newLabel = document.createElement('span');
-      newLabel.textContent = 'Target:';
-      newRow.appendChild(newLabel);
+      const pillComp = document.createElement('span');
+      pillComp.className = 'px-1.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-200/80 rounded font-mono text-[10px] font-bold truncate';
+      pillComp.textContent = `Comp ${compKb}`;
+      footerPills.appendChild(pillComp);
 
-      const targetVal = document.createElement('span');
-      targetVal.className = 'text-primary font-bold';
-      targetVal.textContent = isOversized ? `< ${this.targetKb} KB` : oldSizeStr;
-      newRow.appendChild(targetVal);
-      sizeBox.appendChild(newRow);
+      card.appendChild(footerPills);
 
-      card.appendChild(sizeBox);
-
-      // Click card opens Bento Preview Modal (Choice 3-B)
+      // Click card opens Bento Preview Modal
       card.addEventListener('click', () => {
         this.openPreviewModal(idx);
       });
@@ -867,7 +954,7 @@ export class PdfStudioUIManager {
               toast.show('All Rotated', `Rotated all ${this.files.length} PDFs by 90°.`, 'success');
             }
           });
-        } catch (e) {}
+        } catch (e) { }
       }
     });
   }
@@ -960,7 +1047,7 @@ export class PdfStudioUIManager {
     const modal = document.getElementById('modalPdfStudioPreview');
     if (modal) modal.classList.add('hidden');
     if (this.renderTask) {
-      try { this.renderTask.cancel(); } catch (e) {}
+      try { this.renderTask.cancel(); } catch (e) { }
     }
     this.modalPdfDoc = null;
     this.modalFileIdx = -1;
@@ -1135,9 +1222,20 @@ export class PdfStudioUIManager {
       let savedCount = 0;
 
       if (opName === 'compress_pdf') {
-        // Compress PDF to < targetKb
+        // Compress PDF or auto-convert images to compressed PDF (< targetKb)
         for (const f of this.files) {
           if (!f.bytes) continue;
+
+          let outputBlob;
+          if (f.name.match(/\.(jpe?g|png|webp)$/i)) {
+            // Image input: auto-convert to PDF
+            outputBlob = createPdfFromJpegs([f.bytes], 'portrait', f.rotation || 0);
+            const baseName = f.name.replace(/\.[^/.]+$/, "") + '.pdf';
+            const outName = formatSizeSuffixFilename(baseName, outputBlob.size);
+            await this.saveOutputFile(subfolder, outName, outputBlob);
+            savedCount++;
+            continue;
+          }
 
           let images = getDocumentImagesFromPdf(f.bytes);
           // Vector PDF Fallback: Render via PDF.js canvas if 0 embedded JPEGs found
@@ -1145,7 +1243,6 @@ export class PdfStudioUIManager {
             images = await renderPdfPagesToJpegs(f.bytes, 150, 0.78);
           }
 
-          let outputBlob;
           if (images.length > 0) {
             outputBlob = createPdfFromJpegs(images, 'portrait', f.rotation || 0);
           } else {
@@ -1269,5 +1366,8 @@ export class PdfStudioUIManager {
 export function initPdfStudioUI() {
   const manager = new PdfStudioUIManager();
   manager.init();
+  if (typeof window !== 'undefined') {
+    window.pdfStudioUI = manager;
+  }
   return manager;
 }

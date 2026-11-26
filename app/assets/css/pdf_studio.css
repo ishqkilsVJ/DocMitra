@@ -116,3 +116,40 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* ==========================================================================
+   8. Stitch Sample 4 Enhancements (Beacon Ping & Target Control Bar)
+   ========================================================================== */
+
+@keyframes beaconPing {
+  75%, 100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.pdf-studio-scope .animate-beacon-ping {
+  animation: beaconPing 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.pdf-studio-scope input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #2563eb;
+  cursor: pointer;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.1s ease;
+}
+
+.pdf-studio-scope input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.pdf-studio-scope .stitch-paper-shadow {
+  box-shadow: 0 2px 8px -1px rgba(0, 0, 0, 0.08), 0 1px 4px -1px rgba(0, 0, 0, 0.04);
+}
+
+
