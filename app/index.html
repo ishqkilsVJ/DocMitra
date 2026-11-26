@@ -1205,7 +1205,7 @@
           <!-- Main Execution Workspace Canvas -->
           <main class="flex-1 min-w-0 flex flex-col overflow-hidden bg-[#f8f9ff]">
             <!-- Sticky Header Stack (Frozen at Top - Zero Scroll) -->
-            <div id="pdfStudioHeaderStack" class="flex-shrink-0 bg-[#f8f9ff] border-b border-surface-container-high/60 p-4 pb-2.5 flex flex-col gap-2.5 z-20">
+            <div id="pdfStudioHeaderStack" class="w-full flex-shrink-0 bg-[#f8f9ff] border-b border-surface-container-high/60 p-4 pb-2.5 flex flex-col gap-2.5 z-20">
               <div class="max-w-7xl w-full mx-auto flex flex-col gap-2.5">
                 <!-- Top Toolbar: Supported Formats & Action Triggers -->
                 <div
@@ -1369,7 +1369,7 @@
             </div>
 
             <!-- Preview Cards Grid Viewport (Scrolls Independently) -->
-            <div id="pdfCardsGridContainer" class="flex-1 min-h-0 overflow-y-auto p-4 custom-pan-scroll">
+            <div id="pdfCardsGridContainer" class="w-full flex-1 min-h-0 overflow-y-auto p-4 custom-pan-scroll">
               <div class="max-w-7xl w-full mx-auto">
                 <!-- Main PDF Docket Cards Grid (Dynamically rendered by PdfStudioUIManager.renderQueue()) -->
                 <div id="pdfCardsGrid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 min-h-[300px]">

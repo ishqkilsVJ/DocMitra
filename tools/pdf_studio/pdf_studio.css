@@ -8,6 +8,11 @@
    1. Scoped Scrollbar & Pan Scrolling
    ========================================================================== */
 
+.pdf-studio-scope #pdfStudioHeaderStack,
+.pdf-studio-scope #pdfCardsGridContainer {
+  width: 100% !important;
+}
+
 .pdf-studio-scope .custom-pan-scroll,
 .pdf-studio-scope ::-webkit-scrollbar {
   width: 5px;

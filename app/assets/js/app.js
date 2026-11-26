@@ -11312,9 +11312,9 @@ var qt = class {
 					let n = await e.fileObj.arrayBuffer();
 					t = new Uint8Array(n);
 				}
-				let n = e.dir || (e.path ? e.path.substring(0, e.path.lastIndexOf(/[\/\\]/)) : this.activeFolderPath);
-				if (!this.activeFolderPath && n) {
-					this.activeFolderPath = n.replace(/\\/g, "/"), this.activeFolderName = this.activeFolderPath.split("/").pop() || "Folder";
+				let n = e.path ? Math.max(e.path.lastIndexOf("/"), e.path.lastIndexOf("\\")) : -1, r = e.dir || (e.path && n !== -1 ? e.path.substring(0, n) : this.activeFolderPath);
+				if (!this.activeFolderPath && r) {
+					this.activeFolderPath = r.replace(/\\/g, "/"), this.activeFolderName = this.activeFolderPath.split("/").pop() || "Folder";
 					let e = document.getElementById("displayPdfFolderName");
 					e && (e.textContent = this.activeFolderName, e.title = this.activeFolderPath);
 				}
@@ -11322,7 +11322,7 @@ var qt = class {
 					id: `pdf_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
 					name: e.name,
 					path: e.path || e.name,
-					dir: n,
+					dir: r,
 					size: e.size || (t ? t.length : 0),
 					bytes: t,
 					pageCount: 1,
@@ -11380,90 +11380,94 @@ var qt = class {
 				let i = document.createElement("div");
 				i.className = "text-body-sm text-secondary", i.textContent = "or use Add Files above to queue documents for processing.", t.appendChild(i), e.appendChild(t);
 			} else this.files.forEach((t, n) => {
-				let i = document.createElement("div");
-				i.className = "docket-card relative bg-white rounded-xl border border-slate-200/90 p-2.5 flex flex-col justify-between hover:border-blue-400 hover:shadow-lg transition-all group cursor-pointer stitch-paper-shadow", i.setAttribute("data-file-id", t.id), this.activeTool === "merge_pdf" && (i.setAttribute("draggable", "true"), i.addEventListener("dragstart", (e) => {
-					this.draggedIndex = n, i.classList.add("card-dragging"), e.dataTransfer.effectAllowed = "move";
-				}), i.addEventListener("dragend", () => {
-					i.classList.remove("card-dragging"), this.draggedIndex = null;
-				}), i.addEventListener("dragover", (e) => {
-					e.preventDefault(), e.dataTransfer.dropEffect = "move", i.classList.add("card-drag-over");
-				}), i.addEventListener("dragleave", () => {
-					i.classList.remove("card-drag-over");
-				}), i.addEventListener("drop", (e) => {
-					if (e.preventDefault(), i.classList.remove("card-drag-over"), this.draggedIndex !== null && this.draggedIndex !== n) {
-						let e = this.files.splice(this.draggedIndex, 1)[0];
-						this.files.splice(n, 0, e), this.renderQueue(), r.show("Reordered", `Moved "${e.name}" to position ${n + 1}.`, "info");
-					}
-				}));
-				let a = document.createElement("div");
-				a.className = "flex items-center justify-between gap-1 mb-1.5";
-				let o = /\.(jpe?g)$/i.test(t.name), s = /\.(png|webp)$/i.test(t.name), c = document.createElement("span");
-				o ? (c.className = "px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-600 text-white font-mono uppercase", c.textContent = "JPG") : s ? (c.className = "px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-600 text-white font-mono uppercase", c.textContent = "PNG") : (c.className = "px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-800 text-white font-mono uppercase", c.textContent = "PDF"), a.appendChild(c);
-				let l = document.createElement("div");
-				l.className = "flex items-center gap-1";
-				let u = this.targetKb * 1024, d = document.createElement("span");
-				d.className = "badge-reduction-pct bg-rose-50 border border-rose-200 text-rose-600 px-1.5 py-0.5 rounded text-[10px] font-bold font-mono", t.size > u ? d.textContent = `-${Math.min(95, Math.max(1, Math.round((t.size - u) / t.size * 100)))}%` : d.style.display = "none", l.appendChild(d);
-				let f = document.createElement("button");
-				f.type = "button", f.className = "w-5 h-5 rounded flex items-center justify-center bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-600 transition-colors shadow-2xs cursor-pointer opacity-70 group-hover:opacity-100", f.title = "Rotate 90° Clockwise";
-				let p = document.createElement("span");
-				p.className = "material-symbols-outlined text-[13px]", p.textContent = "rotate_right", f.appendChild(p), f.addEventListener("click", (e) => {
-					e.stopPropagation(), this.rotateSingleFile(n);
-				}), l.appendChild(f);
-				let m = document.createElement("button");
-				m.type = "button", m.className = "w-5 h-5 rounded flex items-center justify-center bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 transition-colors shadow-2xs cursor-pointer opacity-70 group-hover:opacity-100", m.title = "Remove File";
-				let h = document.createElement("span");
-				h.className = "material-symbols-outlined text-[13px]", h.textContent = "close", m.appendChild(h), m.addEventListener("click", (e) => {
-					e.stopPropagation(), this.removeFile(n);
-				}), l.appendChild(m), a.appendChild(l), i.appendChild(a);
-				let g = document.createElement("div");
-				g.className = "relative w-full h-56 rounded-lg bg-slate-50 border border-slate-200/80 overflow-hidden mb-2 p-1.5 flex items-center justify-center group-hover:bg-blue-50/20 transition-colors";
-				let _ = document.createElement("canvas");
-				if (_.className = "max-w-full max-h-full object-contain shadow-xs rounded bg-white", g.appendChild(_), t.thumbUrl) {
-					let e = new Image();
-					e.onload = () => {
-						_.width = e.width, _.height = e.height, _.getContext("2d").drawImage(e, 0, 0);
-					}, e.src = t.thumbUrl;
-				} else if (t.bytes && window.pdfjsLib && !t.name.match(/\.(jpe?g|png|webp)$/i)) window.pdfjsLib.getDocument({ data: t.bytes.slice() }).promise.then((e) => {
-					t.pageCount = e.numPages, e.getPage(1).then((e) => {
-						let n = e.getViewport({
-							scale: .5,
-							rotation: t.rotation || 0
+				try {
+					let i = document.createElement("div");
+					i.className = "docket-card relative bg-white rounded-xl border border-slate-200/90 p-2.5 flex flex-col justify-between hover:border-blue-400 hover:shadow-lg transition-all group cursor-pointer stitch-paper-shadow", i.setAttribute("data-file-id", t.id), this.activeTool === "merge_pdf" && (i.setAttribute("draggable", "true"), i.addEventListener("dragstart", (e) => {
+						this.draggedIndex = n, i.classList.add("card-dragging"), e.dataTransfer.effectAllowed = "move";
+					}), i.addEventListener("dragend", () => {
+						i.classList.remove("card-dragging"), this.draggedIndex = null;
+					}), i.addEventListener("dragover", (e) => {
+						e.preventDefault(), e.dataTransfer.dropEffect = "move", i.classList.add("card-drag-over");
+					}), i.addEventListener("dragleave", () => {
+						i.classList.remove("card-drag-over");
+					}), i.addEventListener("drop", (e) => {
+						if (e.preventDefault(), i.classList.remove("card-drag-over"), this.draggedIndex !== null && this.draggedIndex !== n) {
+							let e = this.files.splice(this.draggedIndex, 1)[0];
+							this.files.splice(n, 0, e), this.renderQueue(), r.show("Reordered", `Moved "${e.name}" to position ${n + 1}.`, "info");
+						}
+					}));
+					let a = document.createElement("div");
+					a.className = "flex items-center justify-between gap-1 mb-1.5";
+					let o = /\.(jpe?g)$/i.test(t.name), s = /\.(png|webp)$/i.test(t.name), c = document.createElement("span");
+					o ? (c.className = "px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-600 text-white font-mono uppercase", c.textContent = "JPG") : s ? (c.className = "px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-600 text-white font-mono uppercase", c.textContent = "PNG") : (c.className = "px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-800 text-white font-mono uppercase", c.textContent = "PDF"), a.appendChild(c);
+					let l = document.createElement("div");
+					l.className = "flex items-center gap-1";
+					let u = this.targetKb * 1024, d = document.createElement("span");
+					d.className = "badge-reduction-pct bg-rose-50 border border-rose-200 text-rose-600 px-1.5 py-0.5 rounded text-[10px] font-bold font-mono", t.size > u ? d.textContent = `-${Math.min(95, Math.max(1, Math.round((t.size - u) / t.size * 100)))}%` : d.style.display = "none", l.appendChild(d);
+					let f = document.createElement("button");
+					f.type = "button", f.className = "w-5 h-5 rounded flex items-center justify-center bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-600 transition-colors shadow-2xs cursor-pointer opacity-70 group-hover:opacity-100", f.title = "Rotate 90° Clockwise";
+					let p = document.createElement("span");
+					p.className = "material-symbols-outlined text-[13px]", p.textContent = "rotate_right", f.appendChild(p), f.addEventListener("click", (e) => {
+						e.stopPropagation(), this.rotateSingleFile(n);
+					}), l.appendChild(f);
+					let m = document.createElement("button");
+					m.type = "button", m.className = "w-5 h-5 rounded flex items-center justify-center bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 transition-colors shadow-2xs cursor-pointer opacity-70 group-hover:opacity-100", m.title = "Remove File";
+					let h = document.createElement("span");
+					h.className = "material-symbols-outlined text-[13px]", h.textContent = "close", m.appendChild(h), m.addEventListener("click", (e) => {
+						e.stopPropagation(), this.removeFile(n);
+					}), l.appendChild(m), a.appendChild(l), i.appendChild(a);
+					let g = document.createElement("div");
+					g.className = "relative w-full h-56 rounded-lg bg-slate-50 border border-slate-200/80 overflow-hidden mb-2 p-1.5 flex items-center justify-center group-hover:bg-blue-50/20 transition-colors";
+					let _ = document.createElement("canvas");
+					if (_.className = "max-w-full max-h-full object-contain shadow-xs rounded bg-white", g.appendChild(_), t.thumbUrl) {
+						let e = new Image();
+						e.onload = () => {
+							_.width = e.width, _.height = e.height, _.getContext("2d").drawImage(e, 0, 0);
+						}, e.src = t.thumbUrl;
+					} else if (t.bytes && window.pdfjsLib && !t.name.match(/\.(jpe?g|png|webp)$/i)) window.pdfjsLib.getDocument({ data: t.bytes.slice() }).promise.then((e) => {
+						t.pageCount = e.numPages, e.getPage(1).then((e) => {
+							let n = e.getViewport({
+								scale: .5,
+								rotation: t.rotation || 0
+							});
+							_.height = n.height, _.width = n.width, e.render({
+								canvasContext: _.getContext("2d"),
+								viewport: n
+							}).promise.then(() => {
+								try {
+									t.thumbUrl = _.toDataURL("image/jpeg", .85);
+								} catch {}
+							}).catch(() => {});
 						});
-						_.height = n.height, _.width = n.width, e.render({
-							canvasContext: _.getContext("2d"),
-							viewport: n
-						}).promise.then(() => {
+					}).catch((e) => {
+						console.warn("PDF.js thumbnail render error:", e), _.style.display = "none";
+						let t = document.createElement("span");
+						t.className = "material-symbols-outlined text-[36px] text-blue-500 opacity-40", t.textContent = "picture_as_pdf", g.appendChild(t);
+					});
+					else if (t.bytes && t.name.match(/\.(jpe?g|png|webp)$/i)) {
+						let e = new Image(), n = new Blob([t.bytes.slice()], { type: s ? "image/png" : "image/jpeg" });
+						e.src = URL.createObjectURL(n), e.onload = () => {
+							_.width = e.width, _.height = e.height, _.getContext("2d").drawImage(e, 0, 0);
 							try {
 								t.thumbUrl = _.toDataURL("image/jpeg", .85);
 							} catch {}
-						}).catch(() => {});
-					});
-				}).catch((e) => {
-					console.warn("PDF.js thumbnail render error:", e), _.style.display = "none";
-					let t = document.createElement("span");
-					t.className = "material-symbols-outlined text-[36px] text-blue-500 opacity-40", t.textContent = "picture_as_pdf", g.appendChild(t);
-				});
-				else if (t.bytes && t.name.match(/\.(jpe?g|png|webp)$/i)) {
-					let e = new Image(), n = new Blob([t.bytes.slice()], { type: s ? "image/png" : "image/jpeg" });
-					e.src = URL.createObjectURL(n), e.onload = () => {
-						_.width = e.width, _.height = e.height, _.getContext("2d").drawImage(e, 0, 0);
-						try {
-							t.thumbUrl = _.toDataURL("image/jpeg", .85);
-						} catch {}
-						URL.revokeObjectURL(e.src);
-					};
+							URL.revokeObjectURL(e.src);
+						};
+					}
+					i.appendChild(g);
+					let v = document.createElement("div");
+					v.className = "font-sans text-xs font-bold text-slate-800 truncate mb-1.5", v.title = t.name, v.textContent = t.name, i.appendChild(v);
+					let y = document.createElement("div");
+					y.className = "flex items-center justify-between gap-1 pt-1 border-t border-slate-100";
+					let b = t.size > 1048576 ? `${(t.size / 1048576).toFixed(2)} MB` : `${Math.round(t.size / 1024)} KB`, x = t.size > u ? this.targetKb >= 1024 ? `${(this.targetKb / 1024).toFixed(2)} MB` : `${this.targetKb} KB` : b, S = document.createElement("span");
+					S.className = "badge-orig-size px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded font-mono text-[10px] font-bold truncate", S.textContent = `Orig ${b}`, y.appendChild(S);
+					let C = document.createElement("span");
+					C.className = t.size > u ? "badge-comp-size px-1.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-200/80 rounded font-mono text-[10px] font-bold truncate" : "badge-comp-size px-1.5 py-0.5 bg-slate-50 text-slate-600 border border-slate-200/80 rounded font-mono text-[10px] font-bold truncate", C.textContent = `Comp ${x}`, y.appendChild(C), i.appendChild(y), i.addEventListener("click", () => {
+						this.openPreviewModal(n);
+					}), e.appendChild(i);
+				} catch (e) {
+					console.error(`[PDF-STUDIO] Failed to render card for ${t ? t.name : n}:`, e);
 				}
-				i.appendChild(g);
-				let v = document.createElement("div");
-				v.className = "font-sans text-xs font-bold text-slate-800 truncate mb-1.5", v.title = t.name, v.textContent = t.name, i.appendChild(v);
-				let y = document.createElement("div");
-				y.className = "flex items-center justify-between gap-1 pt-1 border-t border-slate-100";
-				let b = t.size > 1048576 ? `${(t.size / 1048576).toFixed(2)} MB` : `${Math.round(t.size / 1024)} KB`, x = t.size > u ? this.targetKb >= 1024 ? `${(this.targetKb / 1024).toFixed(2)} MB` : `${this.targetKb} KB` : b, S = document.createElement("span");
-				S.className = "badge-orig-size px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded font-mono text-[10px] font-bold truncate", S.textContent = `Orig ${b}`, y.appendChild(S);
-				let C = document.createElement("span");
-				C.className = t.size > u ? "badge-comp-size px-1.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-200/80 rounded font-mono text-[10px] font-bold truncate" : "badge-comp-size px-1.5 py-0.5 bg-slate-50 text-slate-600 border border-slate-200/80 rounded font-mono text-[10px] font-bold truncate", C.textContent = `Comp ${x}`, y.appendChild(C), i.appendChild(y), i.addEventListener("click", () => {
-					this.openPreviewModal(n);
-				}), e.appendChild(i);
 			});
 		}
 	}

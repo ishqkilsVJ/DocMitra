@@ -621,7 +621,8 @@ export class PdfStudioUIManager {
           bytes = new Uint8Array(buf);
         }
 
-        const dir = f.dir || (f.path ? f.path.substring(0, f.path.lastIndexOf(/[\/\\]/)) : this.activeFolderPath);
+        const lastSlash = f.path ? Math.max(f.path.lastIndexOf('/'), f.path.lastIndexOf('\\')) : -1;
+        const dir = f.dir || (f.path && lastSlash !== -1 ? f.path.substring(0, lastSlash) : this.activeFolderPath);
         if (!this.activeFolderPath && dir) {
           this.activeFolderPath = dir.replace(/\\/g, '/');
           this.activeFolderName = this.activeFolderPath.split('/').pop() || 'Folder';
@@ -755,7 +756,8 @@ export class PdfStudioUIManager {
     }
 
     this.files.forEach((file, idx) => {
-      const card = document.createElement('div');
+      try {
+        const card = document.createElement('div');
       card.className = 'docket-card relative bg-white rounded-xl border border-slate-200/90 p-2.5 flex flex-col justify-between hover:border-blue-400 hover:shadow-lg transition-all group cursor-pointer stitch-paper-shadow';
       card.setAttribute('data-file-id', file.id);
 
@@ -959,6 +961,9 @@ export class PdfStudioUIManager {
       });
 
       grid.appendChild(card);
+      } catch (cardErr) {
+        console.error(`[PDF-STUDIO] Failed to render card for ${file ? file.name : idx}:`, cardErr);
+      }
     });
   }
 
