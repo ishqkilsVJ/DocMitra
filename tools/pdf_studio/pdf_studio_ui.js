@@ -290,12 +290,15 @@ export class PdfStudioUIManager {
       btnFilter.addEventListener('click', () => this.handleFilterOversized());
     }
 
-    // Open Output Folder
+    // Open Output Folder (Choice 1-C)
     const btnOpenOutput = document.getElementById('btnOpenOutputFolder');
     if (btnOpenOutput) {
       btnOpenOutput.addEventListener('click', () => {
-        if (this.lastOutputFolder) {
-          openFolderInExplorer(this.lastOutputFolder);
+        const targetDir = this.lastOutputFolder || (this.activeFolderPath ? `${this.activeFolderPath}/${getSubfolderName(this.activeTool)}` : null);
+        if (targetDir) {
+          openFolderInExplorer(targetDir);
+        } else {
+          toast.show('No Output Folder', 'Process documents first to generate output folder.', 'info');
         }
       });
     }
@@ -651,6 +654,10 @@ export class PdfStudioUIManager {
 
     this.updateStats();
     this.renderQueue();
+    if (this.activeFolderPath) {
+      const btnOpen = document.getElementById('btnOpenOutputFolder');
+      if (btnOpen) btnOpen.classList.remove('hidden');
+    }
   }
 
   async loadDroppedFiles(fileList) {
@@ -673,6 +680,10 @@ export class PdfStudioUIManager {
 
     this.updateStats();
     this.renderQueue();
+    if (this.activeFolderPath) {
+      const btnOpen = document.getElementById('btnOpenOutputFolder');
+      if (btnOpen) btnOpen.classList.remove('hidden');
+    }
     toast.show('Files Queued', `${fileList.length} files added to execution queue.`, 'success');
   }
 
@@ -758,209 +769,209 @@ export class PdfStudioUIManager {
     this.files.forEach((file, idx) => {
       try {
         const card = document.createElement('div');
-      card.className = 'docket-card relative bg-white rounded-xl border border-slate-200/90 p-2.5 flex flex-col justify-between hover:border-blue-400 hover:shadow-lg transition-all group cursor-pointer stitch-paper-shadow';
-      card.setAttribute('data-file-id', file.id);
+        card.className = 'docket-card relative bg-white rounded-xl border border-slate-200/90 p-2.5 flex flex-col justify-between hover:border-blue-400 hover:shadow-lg transition-all group cursor-pointer stitch-paper-shadow';
+        card.setAttribute('data-file-id', file.id);
 
-      // Drag-to-reorder for Merge Tool
-      if (this.activeTool === 'merge_pdf') {
-        card.setAttribute('draggable', 'true');
-        card.addEventListener('dragstart', (e) => {
-          this.draggedIndex = idx;
-          card.classList.add('card-dragging');
-          e.dataTransfer.effectAllowed = 'move';
-        });
-        card.addEventListener('dragend', () => {
-          card.classList.remove('card-dragging');
-          this.draggedIndex = null;
-        });
-        card.addEventListener('dragover', (e) => {
-          e.preventDefault();
-          e.dataTransfer.dropEffect = 'move';
-          card.classList.add('card-drag-over');
-        });
-        card.addEventListener('dragleave', () => {
-          card.classList.remove('card-drag-over');
-        });
-        card.addEventListener('drop', (e) => {
-          e.preventDefault();
-          card.classList.remove('card-drag-over');
-          if (this.draggedIndex !== null && this.draggedIndex !== idx) {
-            const moved = this.files.splice(this.draggedIndex, 1)[0];
-            this.files.splice(idx, 0, moved);
-            this.renderQueue();
-            toast.show('Reordered', `Moved "${moved.name}" to position ${idx + 1}.`, 'info');
-          }
-        });
-      }
-
-      // Card Header: Format Badge on Left + Reduction / Actions on Right
-      const cardHeader = document.createElement('div');
-      cardHeader.className = 'flex items-center justify-between gap-1 mb-1.5';
-
-      // Format Badge
-      const isJpg = /\.(jpe?g)$/i.test(file.name);
-      const isPng = /\.(png|webp)$/i.test(file.name);
-      const formatBadge = document.createElement('span');
-      if (isJpg) {
-        formatBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-600 text-white font-mono uppercase';
-        formatBadge.textContent = 'JPG';
-      } else if (isPng) {
-        formatBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-600 text-white font-mono uppercase';
-        formatBadge.textContent = 'PNG';
-      } else {
-        formatBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-800 text-white font-mono uppercase';
-        formatBadge.textContent = 'PDF';
-      }
-      cardHeader.appendChild(formatBadge);
-
-      // Right Header Cluster (Reduction Badge + Action Buttons)
-      const rightCluster = document.createElement('div');
-      rightCluster.className = 'flex items-center gap-1';
-
-      // Reduction Percentage Badge (Stitch Sample 4 Red Badge, hidden when orig <= target per Choice 2-A)
-      const targetBytes = this.targetKb * 1024;
-      const redBadge = document.createElement('span');
-      redBadge.className = 'badge-reduction-pct bg-rose-50 border border-rose-200 text-rose-600 px-1.5 py-0.5 rounded text-[10px] font-bold font-mono';
-      if (file.size > targetBytes) {
-        const redPct = Math.min(95, Math.max(1, Math.round(((file.size - targetBytes) / file.size) * 100)));
-        redBadge.textContent = `-${redPct}%`;
-      } else {
-        redBadge.style.display = 'none';
-      }
-      rightCluster.appendChild(redBadge);
-
-      // Quick Actions (Rotate / Remove)
-      const btnRotate = document.createElement('button');
-      btnRotate.type = 'button';
-      btnRotate.className = 'w-5 h-5 rounded flex items-center justify-center bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-600 transition-colors shadow-2xs cursor-pointer opacity-70 group-hover:opacity-100';
-      btnRotate.title = 'Rotate 90° Clockwise';
-      const rotIcon = document.createElement('span');
-      rotIcon.className = 'material-symbols-outlined text-[13px]';
-      rotIcon.textContent = 'rotate_right';
-      btnRotate.appendChild(rotIcon);
-      btnRotate.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.rotateSingleFile(idx);
-      });
-      rightCluster.appendChild(btnRotate);
-
-      const btnRemove = document.createElement('button');
-      btnRemove.type = 'button';
-      btnRemove.className = 'w-5 h-5 rounded flex items-center justify-center bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 transition-colors shadow-2xs cursor-pointer opacity-70 group-hover:opacity-100';
-      btnRemove.title = 'Remove File';
-      const remIcon = document.createElement('span');
-      remIcon.className = 'material-symbols-outlined text-[13px]';
-      remIcon.textContent = 'close';
-      btnRemove.appendChild(remIcon);
-      btnRemove.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.removeFile(idx);
-      });
-      rightCluster.appendChild(btnRemove);
-
-      cardHeader.appendChild(rightCluster);
-      card.appendChild(cardHeader);
-
-      // Card Paper Thumbnail Preview Area (h-56 portrait paper container matching Stitch)
-      const thumbBox = document.createElement('div');
-      thumbBox.className = 'relative w-full h-56 rounded-lg bg-slate-50 border border-slate-200/80 overflow-hidden mb-2 p-1.5 flex items-center justify-center group-hover:bg-blue-50/20 transition-colors';
-
-      const canvas = document.createElement('canvas');
-      canvas.className = 'max-w-full max-h-full object-contain shadow-xs rounded bg-white';
-      thumbBox.appendChild(canvas);
-
-      // Render thumbnail with cache check and buffer cloning (No 1p/2p badges)
-      if (file.thumbUrl) {
-        const img = new Image();
-        img.onload = () => {
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0);
-        };
-        img.src = file.thumbUrl;
-      } else if (file.bytes && window.pdfjsLib && !file.name.match(/\.(jpe?g|png|webp)$/i)) {
-        // Pass cloned buffer to protect master bytes from detachment
-        window.pdfjsLib.getDocument({ data: file.bytes.slice() }).promise.then(pdf => {
-          file.pageCount = pdf.numPages;
-          pdf.getPage(1).then(page => {
-            const viewport = page.getViewport({ scale: 0.5, rotation: file.rotation || 0 });
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-            page.render({
-              canvasContext: canvas.getContext('2d'),
-              viewport: viewport
-            }).promise.then(() => {
-              try {
-                file.thumbUrl = canvas.toDataURL('image/jpeg', 0.85);
-              } catch (e) { }
-            }).catch(() => { });
+        // Drag-to-reorder for Merge Tool
+        if (this.activeTool === 'merge_pdf') {
+          card.setAttribute('draggable', 'true');
+          card.addEventListener('dragstart', (e) => {
+            this.draggedIndex = idx;
+            card.classList.add('card-dragging');
+            e.dataTransfer.effectAllowed = 'move';
           });
-        }).catch((err) => {
-          console.warn('PDF.js thumbnail render error:', err);
-          canvas.style.display = 'none';
-          const icon = document.createElement('span');
-          icon.className = 'material-symbols-outlined text-[36px] text-blue-500 opacity-40';
-          icon.textContent = 'picture_as_pdf';
-          thumbBox.appendChild(icon);
+          card.addEventListener('dragend', () => {
+            card.classList.remove('card-dragging');
+            this.draggedIndex = null;
+          });
+          card.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            card.classList.add('card-drag-over');
+          });
+          card.addEventListener('dragleave', () => {
+            card.classList.remove('card-drag-over');
+          });
+          card.addEventListener('drop', (e) => {
+            e.preventDefault();
+            card.classList.remove('card-drag-over');
+            if (this.draggedIndex !== null && this.draggedIndex !== idx) {
+              const moved = this.files.splice(this.draggedIndex, 1)[0];
+              this.files.splice(idx, 0, moved);
+              this.renderQueue();
+              toast.show('Reordered', `Moved "${moved.name}" to position ${idx + 1}.`, 'info');
+            }
+          });
+        }
+
+        // Card Header: Format Badge on Left + Reduction / Actions on Right
+        const cardHeader = document.createElement('div');
+        cardHeader.className = 'flex items-center justify-between gap-1 mb-1.5';
+
+        // Format Badge
+        const isJpg = /\.(jpe?g)$/i.test(file.name);
+        const isPng = /\.(png|webp)$/i.test(file.name);
+        const formatBadge = document.createElement('span');
+        if (isJpg) {
+          formatBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-600 text-white font-mono uppercase';
+          formatBadge.textContent = 'JPG';
+        } else if (isPng) {
+          formatBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-600 text-white font-mono uppercase';
+          formatBadge.textContent = 'PNG';
+        } else {
+          formatBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-800 text-white font-mono uppercase';
+          formatBadge.textContent = 'PDF';
+        }
+        cardHeader.appendChild(formatBadge);
+
+        // Right Header Cluster (Reduction Badge + Action Buttons)
+        const rightCluster = document.createElement('div');
+        rightCluster.className = 'flex items-center gap-1';
+
+        // Reduction Percentage Badge (Stitch Sample 4 Red Badge, hidden when orig <= target per Choice 2-A)
+        const targetBytes = this.targetKb * 1024;
+        const redBadge = document.createElement('span');
+        redBadge.className = 'badge-reduction-pct bg-rose-50 border border-rose-200 text-rose-600 px-1.5 py-0.5 rounded text-[10px] font-bold font-mono';
+        if (file.size > targetBytes) {
+          const redPct = Math.min(95, Math.max(1, Math.round(((file.size - targetBytes) / file.size) * 100)));
+          redBadge.textContent = `-${redPct}%`;
+        } else {
+          redBadge.style.display = 'none';
+        }
+        rightCluster.appendChild(redBadge);
+
+        // Quick Actions (Rotate / Remove)
+        const btnRotate = document.createElement('button');
+        btnRotate.type = 'button';
+        btnRotate.className = 'w-5 h-5 rounded flex items-center justify-center bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-600 transition-colors shadow-2xs cursor-pointer opacity-70 group-hover:opacity-100';
+        btnRotate.title = 'Rotate 90° Clockwise';
+        const rotIcon = document.createElement('span');
+        rotIcon.className = 'material-symbols-outlined text-[13px]';
+        rotIcon.textContent = 'rotate_right';
+        btnRotate.appendChild(rotIcon);
+        btnRotate.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.rotateSingleFile(idx);
         });
-      } else if (file.bytes && file.name.match(/\.(jpe?g|png|webp)$/i)) {
-        const img = new Image();
-        const blob = new Blob([file.bytes.slice()], { type: isPng ? 'image/png' : 'image/jpeg' });
-        img.src = URL.createObjectURL(blob);
-        img.onload = () => {
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0);
-          try {
-            file.thumbUrl = canvas.toDataURL('image/jpeg', 0.85);
-          } catch (e) { }
-          URL.revokeObjectURL(img.src);
-        };
-      }
-      card.appendChild(thumbBox);
+        rightCluster.appendChild(btnRotate);
 
-      // Filename
-      const title = document.createElement('div');
-      title.className = 'font-sans text-xs font-bold text-slate-800 truncate mb-1.5';
-      title.title = file.name;
-      title.textContent = file.name;
-      card.appendChild(title);
+        const btnRemove = document.createElement('button');
+        btnRemove.type = 'button';
+        btnRemove.className = 'w-5 h-5 rounded flex items-center justify-center bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 transition-colors shadow-2xs cursor-pointer opacity-70 group-hover:opacity-100';
+        btnRemove.title = 'Remove File';
+        const remIcon = document.createElement('span');
+        remIcon.className = 'material-symbols-outlined text-[13px]';
+        remIcon.textContent = 'close';
+        btnRemove.appendChild(remIcon);
+        btnRemove.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.removeFile(idx);
+        });
+        rightCluster.appendChild(btnRemove);
 
-      // Bottom Row: Dual Size Badges (Orig Emerald + Comp Rose matching Stitch Sample 4)
-      const footerPills = document.createElement('div');
-      footerPills.className = 'flex items-center justify-between gap-1 pt-1 border-t border-slate-100';
+        cardHeader.appendChild(rightCluster);
+        card.appendChild(cardHeader);
 
-      const origKb = file.size > 1024 * 1024
-        ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
-        : `${Math.round(file.size / 1024)} KB`;
-      const compKb = file.size > targetBytes
-        ? (this.targetKb >= 1024 ? `${(this.targetKb / 1024).toFixed(2)} MB` : `${this.targetKb} KB`)
-        : origKb;
+        // Card Paper Thumbnail Preview Area (h-56 portrait paper container matching Stitch)
+        const thumbBox = document.createElement('div');
+        thumbBox.className = 'relative w-full h-56 rounded-lg bg-slate-50 border border-slate-200/80 overflow-hidden mb-2 p-1.5 flex items-center justify-center group-hover:bg-blue-50/20 transition-colors';
 
-      const pillOrig = document.createElement('span');
-      pillOrig.className = 'badge-orig-size px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded font-mono text-[10px] font-bold truncate';
-      pillOrig.textContent = `Orig ${origKb}`;
-      footerPills.appendChild(pillOrig);
+        const canvas = document.createElement('canvas');
+        canvas.className = 'max-w-full max-h-full object-contain shadow-xs rounded bg-white';
+        thumbBox.appendChild(canvas);
 
-      const pillComp = document.createElement('span');
-      if (file.size > targetBytes) {
-        pillComp.className = 'badge-comp-size px-1.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-200/80 rounded font-mono text-[10px] font-bold truncate';
-      } else {
-        pillComp.className = 'badge-comp-size px-1.5 py-0.5 bg-slate-50 text-slate-600 border border-slate-200/80 rounded font-mono text-[10px] font-bold truncate';
-      }
-      pillComp.textContent = `Comp ${compKb}`;
-      footerPills.appendChild(pillComp);
+        // Render thumbnail with cache check and buffer cloning (No 1p/2p badges)
+        if (file.thumbUrl) {
+          const img = new Image();
+          img.onload = () => {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+          };
+          img.src = file.thumbUrl;
+        } else if (file.bytes && window.pdfjsLib && !file.name.match(/\.(jpe?g|png|webp)$/i)) {
+          // Pass cloned buffer to protect master bytes from detachment
+          window.pdfjsLib.getDocument({ data: file.bytes.slice() }).promise.then(pdf => {
+            file.pageCount = pdf.numPages;
+            pdf.getPage(1).then(page => {
+              const viewport = page.getViewport({ scale: 0.5, rotation: file.rotation || 0 });
+              canvas.height = viewport.height;
+              canvas.width = viewport.width;
+              page.render({
+                canvasContext: canvas.getContext('2d'),
+                viewport: viewport
+              }).promise.then(() => {
+                try {
+                  file.thumbUrl = canvas.toDataURL('image/jpeg', 0.85);
+                } catch (e) { }
+              }).catch(() => { });
+            });
+          }).catch((err) => {
+            console.warn('PDF.js thumbnail render error:', err);
+            canvas.style.display = 'none';
+            const icon = document.createElement('span');
+            icon.className = 'material-symbols-outlined text-[36px] text-blue-500 opacity-40';
+            icon.textContent = 'picture_as_pdf';
+            thumbBox.appendChild(icon);
+          });
+        } else if (file.bytes && file.name.match(/\.(jpe?g|png|webp)$/i)) {
+          const img = new Image();
+          const blob = new Blob([file.bytes.slice()], { type: isPng ? 'image/png' : 'image/jpeg' });
+          img.src = URL.createObjectURL(blob);
+          img.onload = () => {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            try {
+              file.thumbUrl = canvas.toDataURL('image/jpeg', 0.85);
+            } catch (e) { }
+            URL.revokeObjectURL(img.src);
+          };
+        }
+        card.appendChild(thumbBox);
 
-      card.appendChild(footerPills);
+        // Filename
+        const title = document.createElement('div');
+        title.className = 'font-sans text-xs font-bold text-slate-800 truncate mb-1.5';
+        title.title = file.name;
+        title.textContent = file.name;
+        card.appendChild(title);
 
-      // Click card opens Bento Preview Modal
-      card.addEventListener('click', () => {
-        this.openPreviewModal(idx);
-      });
+        // Bottom Row: Dual Size Badges (Orig Emerald + Comp Rose matching Stitch Sample 4)
+        const footerPills = document.createElement('div');
+        footerPills.className = 'flex items-center justify-between gap-1 pt-1 border-t border-slate-100';
 
-      grid.appendChild(card);
+        const origKb = file.size > 1024 * 1024
+          ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
+          : `${Math.round(file.size / 1024)} KB`;
+        const compKb = file.size > targetBytes
+          ? (this.targetKb >= 1024 ? `${(this.targetKb / 1024).toFixed(2)} MB` : `${this.targetKb} KB`)
+          : origKb;
+
+        const pillOrig = document.createElement('span');
+        pillOrig.className = 'badge-orig-size px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded font-mono text-[10px] font-bold truncate';
+        pillOrig.textContent = `Orig ${origKb}`;
+        footerPills.appendChild(pillOrig);
+
+        const pillComp = document.createElement('span');
+        if (file.size > targetBytes) {
+          pillComp.className = 'badge-comp-size px-1.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-200/80 rounded font-mono text-[10px] font-bold truncate';
+        } else {
+          pillComp.className = 'badge-comp-size px-1.5 py-0.5 bg-slate-50 text-slate-600 border border-slate-200/80 rounded font-mono text-[10px] font-bold truncate';
+        }
+        pillComp.textContent = `Comp ${compKb}`;
+        footerPills.appendChild(pillComp);
+
+        card.appendChild(footerPills);
+
+        // Click card opens Bento Preview Modal
+        card.addEventListener('click', () => {
+          this.openPreviewModal(idx);
+        });
+
+        grid.appendChild(card);
       } catch (cardErr) {
         console.error(`[PDF-STUDIO] Failed to render card for ${file ? file.name : idx}:`, cardErr);
       }
@@ -1086,6 +1097,10 @@ export class PdfStudioUIManager {
     this.files.splice(idx, 1);
     this.updateStats();
     this.renderQueue();
+    if (this.activeFolderPath) {
+      const btnOpen = document.getElementById('btnOpenOutputFolder');
+      if (btnOpen) btnOpen.classList.remove('hidden');
+    }
   }
 
   handleRotateAll() {
@@ -1118,6 +1133,8 @@ export class PdfStudioUIManager {
     this.files = [];
     this.updateStats();
     this.renderQueue();
+    const btnOpen = document.getElementById('btnOpenOutputFolder');
+    if (btnOpen && !this.lastOutputFolder) btnOpen.classList.add('hidden');
     toast.show('Queue Cleared', 'PDF workstation reset.', 'info');
   }
 
@@ -1127,6 +1144,10 @@ export class PdfStudioUIManager {
     this.files = this.files.filter(f => f.size > threshold);
     this.updateStats();
     this.renderQueue();
+    if (this.activeFolderPath) {
+      const btnOpen = document.getElementById('btnOpenOutputFolder');
+      if (btnOpen) btnOpen.classList.remove('hidden');
+    }
     toast.show('Filter Applied', `Kept ${this.files.length} oversized files (>${this.targetKb} KB) from ${initialCount}.`, 'info');
   }
 
@@ -1360,7 +1381,7 @@ export class PdfStudioUIManager {
     if (typeof window !== 'undefined' && window.__TAURI__?.invoke) {
       try {
         await window.__TAURI__.invoke('strip_windows_file_locks', { paths: [destPath] });
-      } catch (e) {}
+      } catch (e) { }
     }
 
     this.lastOutputFolder = targetDir;

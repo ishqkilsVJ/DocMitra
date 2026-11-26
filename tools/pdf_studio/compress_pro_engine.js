@@ -188,6 +188,34 @@ export function convertCanvasToGrayscale(ctx, width, height) {
 }
 
 /**
+ * Safe Image to Bitmap Loader with Image() Fallback
+ * @param {Blob} blob
+ * @returns {Promise<ImageBitmap|HTMLImageElement>}
+ */
+export async function loadImageToBitmap(blob) {
+  try {
+    if (typeof createImageBitmap === 'function') {
+      return await createImageBitmap(blob);
+    }
+  } catch (e) {
+    console.warn('[CompressProEngine] createImageBitmap fallback to Image():', e);
+  }
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(blob);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to load image into bitmap'));
+    };
+    img.src = url;
+  });
+}
+
+/**
  * Feature 8: Auto-A4 Page Fit for JPG/PNG Intake
  * Proportional scale into ISO A4 dimensions (595.28 x 841.89 pt) with 18pt white margins.
  * @param {ImageBitmap|HTMLImageElement} img
@@ -428,19 +456,23 @@ export async function compressSingleDocumentPro(file, targetKb = 300) {
   const isImage = /\.(jpe?g|png|webp)$/i.test(file.name);
   const targetBytes = targetKb * 1024;
 
-  // Feature 2: Skip-If-Already-Smaller Guard
+  // Feature 2: Skip-If-Already-Smaller Guard (Choice 3-A: Save 100% of files to Compressed_PDF)
   if (isAlreadySmaller(file.size, targetKb)) {
     if (isImage) {
-      // Auto-convert image to pristine PDF without re-compression degradation
-      const blob = createPdfFromJpegs([file.bytes.slice()], 'portrait', file.rotation || 0);
-      const buf = await blob.arrayBuffer();
+      // Auto-convert image to pristine PDF with A4 canvas fit without re-compression degradation
+      const blob = new Blob([file.bytes.slice()], { type: file.name.match(/\.png$/i) ? 'image/png' : 'image/jpeg' });
+      const imgBitmap = await loadImageToBitmap(blob);
+      const a4Cv = autoFitA4Canvas(imgBitmap, 150);
+      const jpegBytes = await canvasToJpegBytes(a4Cv, 0.94);
+      const pdfBlob = createPdfFromJpegs([jpegBytes], 'portrait', file.rotation || 0);
+      const buf = await pdfBlob.arrayBuffer();
       const bytes = new Uint8Array(buf);
       const basePdfName = file.name.replace(/\.[^/.]+$/, "") + '.pdf';
       const outName = formatProSizeSuffix(basePdfName, bytes.length);
       return {
         success: true,
         finalBytes: bytes,
-        finalBlob: blob,
+        finalBlob: pdfBlob,
         finalSize: bytes.length,
         outName,
         isAtFloor: false,
@@ -448,7 +480,7 @@ export async function compressSingleDocumentPro(file, targetKb = 300) {
         skippedSmaller: true
       };
     } else {
-      // Already <= target, save pristine copy directly
+      // Already <= target, save pristine copy directly with exact size suffix
       const outName = formatProSizeSuffix(file.name, file.size);
       const blob = new Blob([file.bytes.slice()], { type: 'application/pdf' });
       return {
@@ -494,7 +526,7 @@ export async function compressSingleDocumentPro(file, targetKb = 300) {
   if (isImage) {
     // Feature 8: Auto-A4 Page Fit
     const blob = new Blob([processedBytes], { type: file.name.match(/\.png$/i) ? 'image/png' : 'image/jpeg' });
-    const imgBitmap = await createImageBitmap(blob);
+    const imgBitmap = await loadImageToBitmap(blob);
     const a4Cv = autoFitA4Canvas(imgBitmap, 150);
     const ctx = a4Cv.getContext('2d');
 

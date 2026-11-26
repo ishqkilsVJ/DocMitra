@@ -21,6 +21,9 @@ export const PDF_PAGE_SIZES = {
  * @returns {{ width: number, height: number }}
  */
 export function getJpegDimensions(bytes) {
+  if (!bytes || bytes.length < 4) {
+    return { width: 1240, height: 1754 };
+  }
   let offset = 2; // Skip 0xFFD8 SOI
   const len = bytes.length;
 
@@ -98,8 +101,14 @@ export function createPdfFromJpegs(imageList = [], orientation = 'portrait', rot
     const contentId = pageId + 1;
     const imageId = pageId + 2;
 
-    const rawBytes = imgData.bytes;
-    let { width: imgW, height: imgH } = imgData.width && imgData.height ? imgData : getJpegDimensions(rawBytes);
+    const rawBytes = imgData instanceof Uint8Array ? imgData : (imgData?.bytes || imgData);
+    let imgW = imgData?.width;
+    let imgH = imgData?.height;
+    if (!imgW || !imgH) {
+      const dims = getJpegDimensions(rawBytes);
+      imgW = dims.width || 1240;
+      imgH = dims.height || 1754;
+    }
 
     let pageW = PDF_PAGE_SIZES.A4_PORTRAIT.width;
     let pageH = PDF_PAGE_SIZES.A4_PORTRAIT.height;

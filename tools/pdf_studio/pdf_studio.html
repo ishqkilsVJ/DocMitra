@@ -262,18 +262,17 @@
   <!-- Bottom Sticky Execution Dock -->
   <div
     class="flex-shrink-0 h-16 bg-inverse-surface text-inverse-on-surface px-gutter flex items-center justify-between z-40 shadow-[0_-4px_16px_rgba(0,0,0,0.15)] border-t border-outline/20">
-    <!-- Left: Operational Launcher -->
-    <div class="flex items-center gap-space-md">
+    <!-- Left: Operational Launcher / Telemetry -->
+    <div class="flex items-center gap-space-md"></div>
+
+    <!-- Right: Open Output Folder (Choice 1-C) & Emerald Primary Action Button -->
+    <div class="flex items-center gap-3">
       <button id="btnOpenOutputFolder"
-        class="hidden px-space-md py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-label-md text-label-md font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
-        type="button">
-        <span class="material-symbols-outlined text-[16px]">folder_special</span>
+        class="hidden px-4 py-2.5 rounded-lg border-2 border-emerald-500/80 bg-emerald-950/40 hover:bg-emerald-600 text-emerald-300 hover:text-white font-bold text-xs transition-all flex items-center gap-2 cursor-pointer shadow-xs hover:shadow-md active:scale-98"
+        type="button" title="Open Output Folder in Windows Explorer">
+        <span class="material-symbols-outlined text-[18px] text-emerald-400">folder_open</span>
         <span>Open Output Folder</span>
       </button>
-    </div>
-
-    <!-- Right: Stitch Style Emerald Primary Action Button -->
-    <div class="flex items-center gap-space-sm">
       <button
         class="px-7 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center space-x-2 cursor-pointer active:scale-98"
         id="startCompressBtn" type="button">
