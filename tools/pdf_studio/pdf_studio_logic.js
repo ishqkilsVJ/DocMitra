@@ -31,9 +31,9 @@ export function getJpegDimensions(bytes) {
 
     // SOF markers: SOF0 (0xC0) to SOF3 (0xC3), SOF5-SOF7, SOF9-SOF11, SOF13-SOF15
     const isSOF = (marker >= 0xC0 && marker <= 0xC3) ||
-                  (marker >= 0xC5 && marker <= 0xC7) ||
-                  (marker >= 0xC9 && marker <= 0xCB) ||
-                  (marker >= 0xCD && marker <= 0xCF);
+      (marker >= 0xC5 && marker <= 0xC7) ||
+      (marker >= 0xC9 && marker <= 0xCB) ||
+      (marker >= 0xCD && marker <= 0xCF);
 
     if (offset + 1 >= len) break;
     const blockLength = (bytes[offset] << 8) | bytes[offset + 1];
@@ -543,7 +543,7 @@ export async function renderPdfPagesToJpegs(pdfBytes, dpi = 150, quality = 0.82)
     throw new Error('PDF.js library is not loaded');
   }
 
-  const pdf = await window.pdfjsLib.getDocument({ data: pdfBytes }).promise;
+  const pdf = await window.pdfjsLib.getDocument({ data: pdfBytes.slice() }).promise;
   const numPages = pdf.numPages;
   const scale = (dpi || 150) / 72;
   const images = [];

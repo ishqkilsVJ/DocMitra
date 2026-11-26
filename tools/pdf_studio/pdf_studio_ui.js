@@ -32,6 +32,7 @@ import {
   parsePageRanges,
   renderPdfPagesToJpegs
 } from './pdf_studio_logic.js';
+import { rotateFilePhysicallyOnDisk } from './rotation_engine.js';
 
 export class PdfStudioUIManager {
   constructor() {
@@ -199,6 +200,7 @@ export class PdfStudioUIManager {
       }
       updatePills(kb);
       this.updateStats();
+      this.updateCardsProjectedSize();
     };
 
     radioBtns.forEach(btn => {
@@ -391,12 +393,21 @@ export class PdfStudioUIManager {
       const items = Array.from(e.dataTransfer?.files || []);
       const isMixedMode = this.activeTool === 'compress_pdf';
       const isJpgMode = this.activeTool === 'jpg_to_pdf';
-      const validFiles = (isMixedMode || isJpgMode)
-        ? items.filter(f => /\.(pdf|jpe?g|png|webp)$/i.test(f.name))
-        : items.filter(f => /\.pdf$/i.test(f.name));
+      const filterRegex = (isMixedMode || isJpgMode)
+        ? (isJpgMode ? /\.(jpe?g|png)$/i : /\.(pdf|jpe?g|png)$/i)
+        : /\.pdf$/i;
+
+      const validFiles = items.filter(f => filterRegex.test(f.name));
+      const invalidFiles = items.filter(f => !filterRegex.test(f.name));
+
+      if (invalidFiles.length > 0) {
+        toast.show('Unsupported File Skipped', `Skipped ${invalidFiles.length} unsupported file(s). Only PDF, JPG, and PNG are allowed.`, 'warning');
+      }
 
       if (validFiles.length === 0) {
-        toast.show('Invalid Files', isMixedMode ? 'Please drop PDF, JPG, or PNG documents.' : (isJpgMode ? 'Please drop JPG/PNG images only.' : 'Please drop PDF files only.'), 'warning');
+        if (invalidFiles.length === 0) {
+          toast.show('No Files Dropped', isMixedMode ? 'Please drop PDF, JPG, or PNG files.' : 'Please drop valid documents.', 'warning');
+        }
         return;
       }
 
@@ -524,8 +535,8 @@ export class PdfStudioUIManager {
       const isMixedMode = this.activeTool === 'compress_pdf';
       const isJpgMode = this.activeTool === 'jpg_to_pdf';
       const filter = isMixedMode
-        ? 'Documents & Images (*.pdf;*.jpg;*.jpeg;*.png;*.webp)|*.pdf;*.jpg;*.jpeg;*.png;*.webp'
-        : (isJpgMode ? 'Images (*.jpg;*.jpeg;*.png;*.webp)|*.jpg;*.jpeg;*.png;*.webp' : 'PDF Documents (*.pdf)|*.pdf');
+        ? 'Documents & Images (*.pdf;*.jpg;*.jpeg;*.png)|*.pdf;*.jpg;*.jpeg;*.png'
+        : (isJpgMode ? 'Images (*.jpg;*.jpeg;*.png)|*.jpg;*.jpeg;*.png' : 'PDF Documents (*.pdf)|*.pdf');
       const title = isMixedMode
         ? 'Select Documents (PDF, JPG, PNG) - DocMitra'
         : (isJpgMode ? 'Select Images for PDF - DocMitra' : 'Select PDF Files - DocMitra');
@@ -556,15 +567,23 @@ export class PdfStudioUIManager {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = (this.activeTool === 'compress_pdf' || this.activeTool === 'jpg_to_pdf')
-      ? '.pdf,.jpg,.jpeg,.png,.webp,image/*,application/pdf'
+      ? '.pdf,.jpg,.jpeg,.png,image/jpeg,image/png,application/pdf'
       : '.pdf,application/pdf';
     input.multiple = true;
     input.style.display = 'none';
 
     input.addEventListener('change', async (e) => {
       const fileList = Array.from(e.target.files || []);
-      if (fileList.length > 0) {
-        await this.loadDroppedFiles(fileList);
+      const filterRegex = (this.activeTool === 'compress_pdf' || this.activeTool === 'jpg_to_pdf')
+        ? (this.activeTool === 'jpg_to_pdf' ? /\.(jpe?g|png)$/i : /\.(pdf|jpe?g|png)$/i)
+        : /\.pdf$/i;
+      const validFiles = fileList.filter(f => filterRegex.test(f.name));
+      const invalidFiles = fileList.filter(f => !filterRegex.test(f.name));
+      if (invalidFiles.length > 0) {
+        toast.show('Unsupported File Skipped', `Skipped ${invalidFiles.length} unsupported file(s). Only PDF, JPG, and PNG are allowed.`, 'warning');
+      }
+      if (validFiles.length > 0) {
+        await this.loadDroppedFiles(validFiles);
       }
       document.body.removeChild(input);
     });
@@ -574,7 +593,20 @@ export class PdfStudioUIManager {
   }
 
   async loadNativeFiles(fileList) {
-    for (const f of fileList) {
+    const isMixedMode = this.activeTool === 'compress_pdf';
+    const isJpgMode = this.activeTool === 'jpg_to_pdf';
+    const filterRegex = (isMixedMode || isJpgMode)
+      ? (isJpgMode ? /\.(jpe?g|png)$/i : /\.(pdf|jpe?g|png)$/i)
+      : /\.pdf$/i;
+
+    const validFiles = fileList.filter(f => filterRegex.test(f.name));
+    const invalidFiles = fileList.filter(f => !filterRegex.test(f.name));
+    if (invalidFiles.length > 0) {
+      toast.show('Unsupported File Skipped', `Skipped ${invalidFiles.length} unsupported file(s). Only PDF, JPG, and PNG are allowed.`, 'warning');
+    }
+    if (validFiles.length === 0) return;
+
+    for (const f of validFiles) {
       try {
         let bytes = null;
         if (f.path) {
@@ -720,6 +752,7 @@ export class PdfStudioUIManager {
     this.files.forEach((file, idx) => {
       const card = document.createElement('div');
       card.className = 'docket-card relative bg-white rounded-xl border border-slate-200/90 p-2.5 flex flex-col justify-between hover:border-blue-400 hover:shadow-lg transition-all group cursor-pointer stitch-paper-shadow';
+      card.setAttribute('data-file-id', file.id);
 
       // Drag-to-reorder for Merge Tool
       if (this.activeTool === 'merge_pdf') {
@@ -777,15 +810,17 @@ export class PdfStudioUIManager {
       const rightCluster = document.createElement('div');
       rightCluster.className = 'flex items-center gap-1';
 
-      // Reduction Percentage Badge (Stitch Sample 4 Red Badge)
+      // Reduction Percentage Badge (Stitch Sample 4 Red Badge, hidden when orig <= target per Choice 2-A)
       const targetBytes = this.targetKb * 1024;
+      const redBadge = document.createElement('span');
+      redBadge.className = 'badge-reduction-pct bg-rose-50 border border-rose-200 text-rose-600 px-1.5 py-0.5 rounded text-[10px] font-bold font-mono';
       if (file.size > targetBytes) {
-        const redPct = Math.min(95, Math.max(10, Math.round(((file.size - targetBytes) / file.size) * 100)));
-        const redBadge = document.createElement('span');
-        redBadge.className = 'bg-rose-50 border border-rose-200 text-rose-600 px-1.5 py-0.5 rounded text-[10px] font-bold font-mono';
+        const redPct = Math.min(95, Math.max(1, Math.round(((file.size - targetBytes) / file.size) * 100)));
         redBadge.textContent = `-${redPct}%`;
-        rightCluster.appendChild(redBadge);
+      } else {
+        redBadge.style.display = 'none';
       }
+      rightCluster.appendChild(redBadge);
 
       // Quick Actions (Rotate / Remove)
       const btnRotate = document.createElement('button');
@@ -827,16 +862,20 @@ export class PdfStudioUIManager {
       canvas.className = 'max-w-full max-h-full object-contain shadow-xs rounded bg-white';
       thumbBox.appendChild(canvas);
 
-      const pageBadge = document.createElement('div');
-      pageBadge.className = 'absolute bottom-1.5 right-1.5 bg-slate-900/80 text-white rounded px-1.5 py-0.5 text-[9px] font-mono font-bold select-none';
-      pageBadge.textContent = `${file.pageCount || 1}p`;
-
-      // Render first page with PDF.js if PDF, or render Image
-      if (file.bytes && window.pdfjsLib && !file.name.match(/\.(jpe?g|png|webp)$/i)) {
-        window.pdfjsLib.getDocument({ data: file.bytes }).promise.then(pdf => {
+      // Render thumbnail with cache check and buffer cloning (No 1p/2p badges)
+      if (file.thumbUrl) {
+        const img = new Image();
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+        };
+        img.src = file.thumbUrl;
+      } else if (file.bytes && window.pdfjsLib && !file.name.match(/\.(jpe?g|png|webp)$/i)) {
+        // Pass cloned buffer to protect master bytes from detachment
+        window.pdfjsLib.getDocument({ data: file.bytes.slice() }).promise.then(pdf => {
           file.pageCount = pdf.numPages;
-          pageBadge.textContent = `${pdf.numPages}p`;
-
           pdf.getPage(1).then(page => {
             const viewport = page.getViewport({ scale: 0.5, rotation: file.rotation || 0 });
             canvas.height = viewport.height;
@@ -844,9 +883,14 @@ export class PdfStudioUIManager {
             page.render({
               canvasContext: canvas.getContext('2d'),
               viewport: viewport
-            });
+            }).promise.then(() => {
+              try {
+                file.thumbUrl = canvas.toDataURL('image/jpeg', 0.85);
+              } catch (e) { }
+            }).catch(() => { });
           });
-        }).catch(() => {
+        }).catch((err) => {
+          console.warn('PDF.js thumbnail render error:', err);
           canvas.style.display = 'none';
           const icon = document.createElement('span');
           icon.className = 'material-symbols-outlined text-[36px] text-blue-500 opacity-40';
@@ -855,19 +899,19 @@ export class PdfStudioUIManager {
         });
       } else if (file.bytes && file.name.match(/\.(jpe?g|png|webp)$/i)) {
         const img = new Image();
-        const blob = new Blob([file.bytes], { type: isPng ? 'image/png' : 'image/jpeg' });
+        const blob = new Blob([file.bytes.slice()], { type: isPng ? 'image/png' : 'image/jpeg' });
         img.src = URL.createObjectURL(blob);
         img.onload = () => {
           canvas.width = img.width;
           canvas.height = img.height;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0);
+          try {
+            file.thumbUrl = canvas.toDataURL('image/jpeg', 0.85);
+          } catch (e) { }
           URL.revokeObjectURL(img.src);
         };
-        pageBadge.textContent = 'IMG';
       }
-
-      thumbBox.appendChild(pageBadge);
       card.appendChild(thumbBox);
 
       // Filename
@@ -889,12 +933,16 @@ export class PdfStudioUIManager {
         : origKb;
 
       const pillOrig = document.createElement('span');
-      pillOrig.className = 'px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded font-mono text-[10px] font-bold truncate';
+      pillOrig.className = 'badge-orig-size px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded font-mono text-[10px] font-bold truncate';
       pillOrig.textContent = `Orig ${origKb}`;
       footerPills.appendChild(pillOrig);
 
       const pillComp = document.createElement('span');
-      pillComp.className = 'px-1.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-200/80 rounded font-mono text-[10px] font-bold truncate';
+      if (file.size > targetBytes) {
+        pillComp.className = 'badge-comp-size px-1.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-200/80 rounded font-mono text-[10px] font-bold truncate';
+      } else {
+        pillComp.className = 'badge-comp-size px-1.5 py-0.5 bg-slate-50 text-slate-600 border border-slate-200/80 rounded font-mono text-[10px] font-bold truncate';
+      }
       pillComp.textContent = `Comp ${compKb}`;
       footerPills.appendChild(pillComp);
 
@@ -909,20 +957,117 @@ export class PdfStudioUIManager {
     });
   }
 
-  rotateSingleFile(idx) {
+  updateCardsProjectedSize() {
+    const cards = document.querySelectorAll('#pdfCardsGrid .docket-card[data-file-id]');
+    const targetBytes = this.targetKb * 1024;
+    const targetStr = this.targetKb >= 1024
+      ? `${(this.targetKb / 1024).toFixed(2)} MB`
+      : `${this.targetKb} KB`;
+
+    cards.forEach(card => {
+      const fileId = card.getAttribute('data-file-id');
+      const file = this.files.find(f => f.id === fileId);
+      if (!file) return;
+
+      const redBadge = card.querySelector('.badge-reduction-pct');
+      const compBadge = card.querySelector('.badge-comp-size');
+      const origStr = file.size > 1024 * 1024
+        ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
+        : `${Math.round(file.size / 1024)} KB`;
+
+      if (file.size > targetBytes) {
+        const redPct = Math.min(95, Math.max(1, Math.round(((file.size - targetBytes) / file.size) * 100)));
+        if (redBadge) {
+          redBadge.textContent = `-${redPct}%`;
+          redBadge.style.display = '';
+        }
+        if (compBadge) {
+          compBadge.textContent = `Comp ${targetStr}`;
+          compBadge.className = 'badge-comp-size px-1.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-200/80 rounded font-mono text-[10px] font-bold truncate';
+        }
+      } else {
+        // Choice 2-A: orig <= target, hide red badge, Comp = Orig
+        if (redBadge) {
+          redBadge.style.display = 'none';
+        }
+        if (compBadge) {
+          compBadge.textContent = `Comp ${origStr}`;
+          compBadge.className = 'badge-comp-size px-1.5 py-0.5 bg-slate-50 text-slate-600 border border-slate-200/80 rounded font-mono text-[10px] font-bold truncate';
+        }
+      }
+    });
+  }
+
+  async rotateSingleFile(idx) {
     const file = this.files[idx];
     if (!file || !file.bytes) return;
 
+    toast.show('Rotating...', `Rotating ${file.name} 90° clockwise...`, 'info');
     try {
-      file.rotation = ((file.rotation || 0) + 90) % 360;
-      const rotatedBlob = rotatePdfDocument(file.bytes, 90);
-      rotatedBlob.arrayBuffer().then(buf => {
-        file.bytes = new Uint8Array(buf);
-        file.size = rotatedBlob.size;
-        this.renderQueue();
-        toast.show('Page Rotated', `${file.name} rotated 90° clockwise.`, 'info');
+      const res = await rotateFilePhysicallyOnDisk({
+        filePath: file.path,
+        ext: file.name.split('.').pop(),
+        bytes: file.bytes.slice(),
+        degrees: 90
       });
+
+      if (!res.success) {
+        toast.show('Rotate Failed', res.error || 'Could not rotate file on disk', 'error');
+        return;
+      }
+
+      file.bytes = res.newBytes;
+      file.size = res.newBytes.length;
+      file.rotation = ((file.rotation || 0) + 90) % 360;
+      file.thumbUrl = null; // Clear cached thumbnail to regenerate fresh rotated image
+
+      // Update live preview in DOM
+      const card = document.querySelector(`.docket-card[data-file-id="${file.id}"]`);
+      if (card) {
+        const canvas = card.querySelector('canvas');
+        if (canvas) {
+          if (file.name.match(/\.(jpe?g|png|webp)$/i)) {
+            const img = new Image();
+            const blob = new Blob([file.bytes.slice()], { type: file.name.match(/\.png$/i) ? 'image/png' : 'image/jpeg' });
+            img.src = URL.createObjectURL(blob);
+            img.onload = () => {
+              canvas.width = img.width;
+              canvas.height = img.height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0);
+              try {
+                file.thumbUrl = canvas.toDataURL('image/jpeg', 0.85);
+              } catch (e) { }
+              URL.revokeObjectURL(img.src);
+            };
+          } else if (window.pdfjsLib) {
+            const pdf = await window.pdfjsLib.getDocument({ data: file.bytes.slice() }).promise;
+            const page = await pdf.getPage(1);
+            const viewport = page.getViewport({ scale: 0.5, rotation: 0 });
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            const ctx = canvas.getContext('2d');
+            await page.render({ canvasContext: ctx, viewport }).promise;
+            try {
+              file.thumbUrl = canvas.toDataURL('image/jpeg', 0.85);
+            } catch (e) { }
+          }
+        }
+
+        const origEl = card.querySelector('.badge-orig-size');
+        if (origEl) {
+          const origStr = file.size > 1024 * 1024
+            ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
+            : `${Math.round(file.size / 1024)} KB`;
+          origEl.textContent = `Orig ${origStr}`;
+        }
+      }
+
+      this.updateStats();
+      this.updateCardsProjectedSize();
+      toast.show('File Rotated & Saved', 'File rotated & saved directly to disk.', 'success');
     } catch (err) {
+      console.error('[PDF Studio] Rotate error:', err);
       toast.show('Rotate Error', err.message, 'error');
     }
   }
@@ -1030,7 +1175,7 @@ export class PdfStudioUIManager {
 
     if (window.pdfjsLib && !file.name.match(/\.(jpe?g|png|webp)$/i)) {
       try {
-        this.modalPdfDoc = await window.pdfjsLib.getDocument({ data: file.bytes }).promise;
+        this.modalPdfDoc = await window.pdfjsLib.getDocument({ data: file.bytes.slice() }).promise;
         this.modalTotalPages = this.modalPdfDoc.numPages;
         this.renderModalPage();
       } catch (err) {
