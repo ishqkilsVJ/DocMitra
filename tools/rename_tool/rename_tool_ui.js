@@ -92,7 +92,7 @@ import {
   formatFriendlyDate,
   computeImportTargetName
 } from '../../src/services/followup-service.js';
-import { MissingDocumentsModal } from './missing_documents_modal.js';
+import { MissingDocumentsModal, naturalAlphanumericSort } from './missing_documents_modal.js';
 
 /**
  * Get Tauri invoke function across all Tauri v2 runtime variations
@@ -7493,6 +7493,19 @@ export class RenamerUIManager {
       if (pending && pending.promisedDate) {
         followupMap[ruleName] = pending.promisedDate;
       }
+    });
+
+    // Universal Natural Auto-Sorting (1-0, A-Z)
+    missingRules.sort((a, b) => {
+      const nameA = typeof a === 'string' ? a : (a.name || '');
+      const nameB = typeof b === 'string' ? b : (b.name || '');
+      return naturalAlphanumericSort(nameA, nameB);
+    });
+
+    presentDocs.sort((a, b) => {
+      const nameA = a.docType || a.name || '';
+      const nameB = b.docType || b.name || '';
+      return naturalAlphanumericSort(nameA, nameB);
     });
 
     this.missingModal.open({

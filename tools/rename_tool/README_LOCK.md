@@ -1,15 +1,21 @@
 # 🔒 LOCKED TOOL: Bulk Document Renamer (`tools/rename_tool/`)
 
 > [!IMPORTANT]
-> **FROZEN & FULLY VERIFIED UNDER CHECKPOINT `CP-040`**  
+> **FROZEN & FULLY VERIFIED UNDER CHECKPOINT `CP-041`**  
 > **Status:** `LOCKED & PRODUCTION SEALED`  
 > **Module Integrity:** 100% Passing Unit & Dual-MCP Automated QA Tests  
 > **Verification Date:** 2026-11-26  
-> **Core Architecture:** Smart Link Rule Builder (Natural 1 -> 2 -> Combined Flow, Clean Searchable Bento Comboboxes with Live Filter across 58 Canonical Documents, Dynamic Zero-Error Exclusion: Doc 1 excluded from Doc 2, Doc 1 & Doc 2 excluded from Combined, and High-Contrast DOC 1, DOC 2, COMBINED Badges).
+> **Core Architecture:** Document Desk Report & Notepad Integration (#btnDeskReport in footer, #inModalDeskNotepad Bento overlay with Copy/Save/Windows Notepad launchers, bold Student/Folder Name header, structured Missing and Present sections, and Universal Natural Auto-Sorting 1-0 and A-Z across Desk cards and Notepad report).
 >
 > **LOCKED BY POLICY (`AGENTS.md` Rule 3):**  
 > Zero direct file modifications permitted inside `tools/rename_tool/` without explicit user unlock command:  
 > `UNLOCK RENAME_TOOL`
+
+> **Last QA Stabilization & Verification:** 2026-11-26 (Document Desk Report, Notepad & Universal Natural Auto-Sort [CP-041] Verified 100%:
+> 1. Document Desk Report Button: Added `#btnDeskReport` to modal footer with clean Bento styling, icon, and 'Notepad' pill badge alongside 'Back to Renamer'.
+> 2. In-App Bento Notepad Modal (#inModalDeskNotepad): Instant in-modal notepad viewer with bold uppercase Student Name header, read-only monospace paper textarea, Copy Report button, Save .txt button, and Open in Windows Notepad launcher.
+> 3. Universal Natural Auto-Sorting (1-0, A-Z): Both Left Column (Missing Documents) and Right Column (Present Documents) on Document Desk cards AND inside the generated Notepad report are strictly auto-sorted in natural order with numbers first (10th, 12th...) followed by alphabetical letters (Aadhaar, Caste, Domicile...).
+> 4. Dual-MCP automated QA passed 100% [Playwright MCP E2E + Chrome DevTools 0 console errors]; compiled UI with node build-ui.js and release binary via cargo tauri build [10.56 MB]; deployed directly to C:\Users\USER\AppData\Local\DocMitra\app.exe).
 
 > **Last QA Stabilization & Verification:** 2026-11-26 (Smart Link Rule Builder & Dynamic Exclusion Filtering [CP-040] Verified 100%:
 > 1. Natural Hierarchical Flow: Restructured Add/Edit Link Rule builder to Document No. 1 (DOC 1 green badge) -> Document No. 2 (DOC 2 amber badge) -> Combined Document (COMBINED indigo badge).
