@@ -1,8 +1,8 @@
 <!-- tools/pdf_studio/pdf_studio.html -->
 <!-- DocMitra PDF Studio — Scoped Component Markup -->
-<!-- ZERO Dummy Data | ZERO Marathi Text | Strict Clean Architecture -->
+<!-- ZERO Dummy Data | ZERO Marathi Text | 100% Zero-Port Native Architecture -->
 
-<div class="pdf-studio-scope flex flex-col w-full h-full min-h-0 overflow-hidden">
+<div class="pdf-studio-scope flex flex-col w-full h-full min-h-0 overflow-hidden select-none">
   <!-- Main Workspace Layout (Sidebar + Execution Canvas) -->
   <div class="flex flex-1 min-h-0 overflow-hidden">
     <!-- Left Sidebar: PDF Tools Ribbon -->
@@ -13,42 +13,49 @@
           <span class="text-tertiary bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded font-bold">PRO</span>
         </div>
         <!-- Tool Items -->
-        <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl bg-primary-container text-on-primary font-semibold shadow-sm transition-all group" href="#">
+        <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl bg-primary-container text-on-primary font-semibold shadow-sm transition-all group cursor-pointer" data-tool="compress_pdf" href="#">
           <div class="flex items-center gap-2.5">
             <span class="material-symbols-outlined text-[20px]">compress</span>
             <span class="font-label-md text-label-md">Compress PDF</span>
           </div>
           <span class="bg-primary/60 text-on-primary text-[10px] font-mono-code px-1.5 py-0.5 rounded font-bold uppercase tracking-tight">Active</span>
         </a>
-        <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group" href="#">
+        <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group cursor-pointer" data-tool="merge_pdf" href="#">
           <div class="flex items-center gap-2.5">
             <span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">tab_unselected</span>
             <span>Merge PDF</span>
           </div>
           <span class="text-outline-variant text-[11px] font-mono-code">Alt+M</span>
         </a>
-        <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group" href="#">
+        <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group cursor-pointer" data-tool="split_pdf" href="#">
           <div class="flex items-center gap-2.5">
             <span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">call_split</span>
             <span>Split PDF</span>
           </div>
           <span class="text-outline-variant text-[11px] font-mono-code">Alt+S</span>
         </a>
-        <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group" href="#">
+        <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group cursor-pointer" data-tool="pdf_to_jpg" href="#">
           <div class="flex items-center gap-2.5">
             <span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">image</span>
             <span>PDF to JPG</span>
           </div>
           <span class="text-outline-variant text-[11px] font-mono-code">Alt+J</span>
         </a>
-        <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group" href="#">
+        <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group cursor-pointer" data-tool="jpg_to_pdf" href="#">
+          <div class="flex items-center gap-2.5">
+            <span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">picture_as_pdf</span>
+            <span>JPG to PDF</span>
+          </div>
+          <span class="text-outline-variant text-[11px] font-mono-code">Alt+P</span>
+        </a>
+        <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group cursor-pointer" data-tool="rotate_pdf" href="#">
           <div class="flex items-center gap-2.5">
             <span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">rotate_right</span>
             <span>Rotate PDF</span>
           </div>
           <span class="text-outline-variant text-[11px] font-mono-code">Alt+R</span>
         </a>
-        <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group" href="#">
+        <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group cursor-pointer" data-tool="clean_pdf" href="#">
           <div class="flex items-center gap-2.5">
             <span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">auto_fix_high</span>
             <span>Clean &amp; Enhance</span>
@@ -61,14 +68,14 @@
         <div class="bg-surface-container-low p-2.5 rounded-xl border border-surface-container-high/50 flex flex-col gap-1.5">
           <div class="flex items-center justify-between">
             <span class="font-label-sm text-[11px] text-on-surface-variant font-semibold flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              PDF Engine Core
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              Native Engine
             </span>
-            <span class="font-mono-code text-[10px] text-primary font-bold">v1.4 ISO</span>
+            <span class="font-mono-code text-[10px] text-primary font-bold">Zero-Port IPC</span>
           </div>
           <div class="flex items-center justify-between text-[10px] font-mono-code text-on-surface-variant">
-            <span>Subfolder Output:</span>
-            <span class="text-emerald-700 font-semibold truncate max-w-[100px]">Zero-Overwrite</span>
+            <span>Direct Output:</span>
+            <span class="text-emerald-700 font-semibold truncate max-w-[100px]" id="sidebarOutputSubfolderText">Compressed_PDF</span>
           </div>
         </div>
       </div>
@@ -76,54 +83,164 @@
 
     <!-- Main Execution Workspace Canvas -->
     <main class="flex-1 min-w-0 flex flex-col justify-between overflow-y-auto bg-[#f8f9ff]">
-      <div class="max-w-7xl w-full mx-auto p-4 flex flex-col gap-3.5">
-        <!-- Drag & Drop Instant Dropzone Strip -->
-        <div class="w-full bg-surface-container-lowest border border-surface-container-high/80 rounded-xl px-3 py-2 shadow-xs flex items-center justify-between gap-3">
-          <div class="flex items-center gap-2">
-            <button id="btnBrowsePdfDir" class="px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container-high text-on-surface border border-surface-container-high font-label-md text-[12px] font-semibold transition-colors flex items-center gap-1.5 cursor-pointer" type="button">
-              <span class="material-symbols-outlined text-[16px] text-primary">drive_folder_upload</span>
-              <span>Browse Directory</span>
-            </button>
-            <button id="btnAddPdfFiles" class="px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container-high text-on-surface border border-surface-container-high font-label-md text-[12px] font-semibold transition-colors flex items-center gap-1.5 cursor-pointer" type="button">
-              <span class="material-symbols-outlined text-[16px] text-primary">add_circle</span>
-              <span>Add Files</span>
-            </button>
+      <div class="max-w-7xl w-full mx-auto p-4 flex flex-col gap-3">
+        <!-- Top Toolbar: Dark Slate Folder Pill & Action Triggers -->
+        <div class="w-full bg-surface-container-lowest border border-surface-container-high/80 rounded-xl px-3 py-2 shadow-xs flex flex-wrap items-center justify-between gap-3">
+          <!-- Left: Dark Slate Folder Pill -->
+          <div class="flex items-center gap-2.5 min-w-0 flex-1 overflow-hidden">
+            <div id="containerPdfFolderBadge" class="flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-xl shadow-md border border-slate-700/80 shrink-0 max-w-[360px]">
+              <span class="material-symbols-outlined text-[17px] text-amber-400 shrink-0">folder_open</span>
+              <span id="displayPdfFolderName" class="font-mono-code font-bold text-[13px] text-white tracking-wide truncate max-w-[240px]" title="Current student / admission folder">No Folder Selected</span>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <button id="btnBrowsePdfDir" class="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white font-label-md text-[12px] font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-98" type="button">
+                <span class="material-symbols-outlined text-[16px]">folder_open</span>
+                <span>Select Folder</span>
+                <kbd class="px-1.5 py-0.5 rounded bg-white/20 font-mono-code text-[10px] text-white font-bold ml-0.5">F2</kbd>
+              </button>
+              <button id="btnAddPdfFiles" class="px-3 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container-high text-on-surface border border-surface-container-high font-label-md text-[12px] font-semibold transition-colors flex items-center gap-1.5 cursor-pointer" type="button">
+                <span class="material-symbols-outlined text-[16px] text-primary">add_circle</span>
+                <span>Add Files</span>
+              </button>
+            </div>
           </div>
-          <div class="flex items-center gap-1.5 text-outline font-mono-code text-[11px]">
-            <span class="material-symbols-outlined text-[14px]">folder_open</span>
-            <span>Drag &amp; drop PDF files anywhere to queue</span>
+          <!-- Right: Dropzone Tip -->
+          <div class="hidden md:flex items-center gap-1.5 text-outline font-mono-code text-[11px] shrink-0">
+            <span class="material-symbols-outlined text-[14px]">drag_indicator</span>
+            <span>Drag &amp; drop files anywhere to queue</span>
           </div>
         </div>
 
-        <!-- Active Batch Queue Meta Header -->
-        <div class="flex items-center justify-between px-1">
+        <!-- Bento Summary Cards Strip (Matching Renamer Aesthetics) -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+          <div class="bg-surface-container-lowest border border-surface-container-high/80 rounded-xl p-2.5 flex items-center gap-3 shadow-2xs">
+            <div class="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[20px]">folder_copy</span>
+            </div>
+            <div class="min-w-0">
+              <div class="text-[10px] font-mono-code text-outline uppercase font-semibold">Loaded Files</div>
+              <div id="summaryPdfCount" class="font-headline-sm text-[15px] font-bold text-on-surface truncate">0 Files</div>
+            </div>
+          </div>
+          <div class="bg-surface-container-lowest border border-surface-container-high/80 rounded-xl p-2.5 flex items-center gap-3 shadow-2xs">
+            <div class="w-9 h-9 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[20px]">storage</span>
+            </div>
+            <div class="min-w-0">
+              <div class="text-[10px] font-mono-code text-outline uppercase font-semibold">Current Size</div>
+              <div id="summaryPdfTotalSize" class="font-headline-sm text-[15px] font-bold text-on-surface truncate">0.00 MB</div>
+            </div>
+          </div>
+          <div class="bg-surface-container-lowest border border-surface-container-high/80 rounded-xl p-2.5 flex items-center gap-3 shadow-2xs">
+            <div class="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[20px]">compress</span>
+            </div>
+            <div class="min-w-0">
+              <div class="text-[10px] font-mono-code text-outline uppercase font-semibold">Projected Output</div>
+              <div id="summaryPdfProjected" class="font-headline-sm text-[15px] font-bold text-emerald-700 truncate">~0.00 MB</div>
+            </div>
+          </div>
+          <div class="bg-surface-container-lowest border border-surface-container-high/80 rounded-xl p-2.5 flex items-center gap-3 shadow-2xs">
+            <div class="w-9 h-9 rounded-lg bg-indigo-500/10 text-indigo-600 flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[20px]">shield_check</span>
+            </div>
+            <div class="min-w-0">
+              <div class="text-[10px] font-mono-code text-outline uppercase font-semibold">Native Engine</div>
+              <div id="summaryPdfEngine" class="font-headline-sm text-[13px] font-bold text-indigo-700 truncate">Direct Disk Save</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Batch Queue Meta Header & Bento Dropdowns -->
+        <div class="flex flex-wrap items-center justify-between gap-2 px-1">
+          <!-- Left: Queue Header -->
           <div class="flex items-center gap-2.5">
             <h2 class="font-headline-sm text-[15px] font-bold text-on-surface">Execution Queue</h2>
-            <span id="pdfQueueCount" class="bg-primary-container text-on-primary font-mono-code text-[11px] px-2 py-0.5 rounded-full font-bold">0 Files Loaded</span>
+            <span id="pdfQueueCount" class="bg-primary-container text-on-primary font-mono-code text-[11px] px-2 py-0.5 rounded-full font-bold">0 Files</span>
             <span class="text-outline-variant">•</span>
             <span id="pdfQueueStats" class="font-mono-code text-[12px] text-outline">Total: 0 MB → Projected: ~0 MB</span>
           </div>
+
+          <!-- Right: Context Controls, Chevrons & Custom Bento Dropdowns -->
           <div class="flex items-center gap-2">
-            <div class="flex items-center gap-1 bg-surface-container-lowest border border-surface-container-high p-0.5 rounded-lg shadow-xs">
-              <button class="w-7 h-7 flex items-center justify-center rounded text-on-surface hover:bg-surface-container text-outline hover:text-on-surface transition-colors" title="Scroll Left" type="button">
-                <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+            <!-- Custom Bento Dropdown: Compress Target -->
+            <div id="bentoCompressTargetWrapper" class="relative inline-block text-left">
+              <button id="btnBentoCompressTarget" type="button" class="px-2.5 py-1 rounded-lg bg-slate-900 text-white font-mono-code text-[11px] font-bold flex items-center gap-1.5 shadow-xs border border-slate-700 cursor-pointer hover:bg-slate-800 transition-colors">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span id="labelCompressTarget">&lt; 256 KB (MahaDBT)</span>
+                <span class="material-symbols-outlined text-[14px] text-slate-400">arrow_drop_down</span>
               </button>
-              <button class="w-7 h-7 flex items-center justify-center rounded text-on-surface hover:bg-surface-container text-outline hover:text-on-surface transition-colors" title="Scroll Right" type="button">
-                <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+              <div id="menuBentoCompressTarget" class="absolute right-0 mt-1.5 w-60 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-1 z-50 hidden font-mono-code text-[11px]">
+                <button type="button" data-kb="256" class="w-full text-left px-3 py-1.5 hover:bg-slate-800 text-white flex items-center justify-between cursor-pointer">
+                  <span>&lt; 256 KB (MahaDBT Standard)</span>
+                  <span class="text-emerald-400 font-bold">✓</span>
+                </button>
+                <button type="button" data-kb="200" class="w-full text-left px-3 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-between cursor-pointer">
+                  <span>&lt; 200 KB (CET Cell)</span>
+                </button>
+                <button type="button" data-kb="500" class="w-full text-left px-3 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-between cursor-pointer">
+                  <span>&lt; 500 KB (General Portal)</span>
+                </button>
+                <div class="border-t border-slate-800 my-1"></div>
+                <div class="px-3 py-1.5 flex items-center gap-2">
+                  <span class="text-slate-400">Custom:</span>
+                  <input id="inputCustomTargetKb" type="number" min="50" max="2000" placeholder="KB" class="w-20 bg-slate-800 border border-slate-700 text-white px-1.5 py-0.5 rounded text-[11px] outline-none focus:border-amber-400">
+                  <button id="btnApplyCustomKb" type="button" class="px-2 py-0.5 rounded bg-emerald-600 text-white font-bold hover:bg-emerald-500 cursor-pointer">Set</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Custom Bento Dropdown: PDF to JPG DPI -->
+            <div id="bentoJpgDpiWrapper" class="relative inline-block text-left hidden">
+              <button id="btnBentoJpgDpi" type="button" class="px-2.5 py-1 rounded-lg bg-slate-900 text-white font-mono-code text-[11px] font-bold flex items-center gap-1.5 shadow-xs border border-slate-700 cursor-pointer hover:bg-slate-800 transition-colors">
+                <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                <span id="labelJpgDpi">150 DPI (Fast)</span>
+                <span class="material-symbols-outlined text-[14px] text-slate-400">arrow_drop_down</span>
+              </button>
+              <div id="menuBentoJpgDpi" class="absolute right-0 mt-1.5 w-52 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-1 z-50 hidden font-mono-code text-[11px]">
+                <button type="button" data-dpi="150" class="w-full text-left px-3 py-1.5 hover:bg-slate-800 text-white flex items-center justify-between cursor-pointer">
+                  <span>150 DPI (Fast / Standard)</span>
+                  <span class="text-blue-400 font-bold">✓</span>
+                </button>
+                <button type="button" data-dpi="300" class="w-full text-left px-3 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-between cursor-pointer">
+                  <span>300 DPI (High Quality)</span>
+                </button>
+                <button type="button" data-dpi="72" class="w-full text-left px-3 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-between cursor-pointer">
+                  <span>72 DPI (Web Compact)</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Split Page Range Input Strip (Visible when Split PDF is active) -->
+            <div id="splitRangeWrapper" class="hidden items-center gap-1.5 bg-surface-container-lowest border border-surface-container-high px-2 py-0.5 rounded-lg shadow-xs">
+              <span class="text-outline font-mono-code text-[11px]">Pages:</span>
+              <input id="inputSplitPageRange" type="text" placeholder="All (e.g. 1-3, 5)" class="w-32 font-mono-code text-[11px] px-1.5 py-0.5 bg-surface-container-low border border-surface-container-high rounded outline-none focus:border-primary text-on-surface">
+            </div>
+
+            <div class="h-4 w-px bg-outline-variant/60"></div>
+
+            <!-- Chevrons Scroll -->
+            <div class="flex items-center gap-0.5 bg-surface-container-lowest border border-surface-container-high p-0.5 rounded-lg shadow-xs">
+              <button id="btnPdfScrollLeft" class="w-6 h-6 flex items-center justify-center rounded text-outline hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer" title="Scroll Left" type="button">
+                <span class="material-symbols-outlined text-[16px]">chevron_left</span>
+              </button>
+              <button id="btnPdfScrollRight" class="w-6 h-6 flex items-center justify-center rounded text-outline hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer" title="Scroll Right" type="button">
+                <span class="material-symbols-outlined text-[16px]">chevron_right</span>
               </button>
             </div>
-            <span class="text-outline-variant">|</span>
-            <button class="bg-surface-container-lowest border border-surface-container-high px-2.5 py-1 rounded-lg text-on-surface font-mono-code text-[11px] font-semibold shadow-xs hover:bg-surface-container transition-colors" type="button">
+
+            <!-- Sort Buttons -->
+            <button id="btnPdfSortSize" class="bg-surface-container-lowest border border-surface-container-high px-2.5 py-1 rounded-lg text-on-surface font-mono-code text-[11px] font-semibold shadow-xs hover:bg-surface-container transition-colors cursor-pointer" type="button">
               Size (Desc)
             </button>
-            <button class="bg-surface-container-lowest border border-surface-container-high px-2.5 py-1 rounded-lg text-outline font-mono-code text-[11px] hover:bg-surface-container transition-colors" type="button">
-              Docket Type
+            <button id="btnPdfSortDocket" class="bg-surface-container-lowest border border-surface-container-high px-2.5 py-1 rounded-lg text-outline font-mono-code text-[11px] hover:bg-surface-container transition-colors cursor-pointer" type="button">
+              Name (A-Z)
             </button>
           </div>
         </div>
 
         <!-- Main PDF Docket Cards Grid (Dynamically rendered by PdfStudioUIManager.renderQueue()) -->
-        <div id="pdfCardsGrid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+        <div id="pdfCardsGrid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 min-h-[300px]">
           <!-- Dynamically filled with clean empty state or file cards -->
         </div>
       </div>
@@ -140,7 +257,7 @@
       </div>
       <div class="h-4 w-px bg-on-surface-variant"></div>
       <div class="font-mono-code text-[12px] text-surface-variant">
-        <span>Target: <strong class="text-emerald-400">&lt; 256 KB</strong> (MahaDBT Standard)</span>
+        <span>Target: <strong id="dockTargetLabel" class="text-emerald-400">&lt; 256 KB</strong> (MahaDBT Standard)</span>
       </div>
     </div>
 
@@ -158,11 +275,15 @@
         <span class="material-symbols-outlined text-[16px]">filter_alt</span>
         <span>Filter Oversized (&gt;256KB)</span>
       </button>
+      <button id="btnOpenOutputFolder" class="hidden px-space-md py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-label-md text-label-md font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md" type="button">
+        <span class="material-symbols-outlined text-[16px]">folder_special</span>
+        <span>Open Output Folder</span>
+      </button>
     </div>
 
     <!-- Right: High Contrast Primary CTAs -->
     <div class="flex items-center gap-space-sm">
-      <button class="px-space-lg py-2.5 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-headline-sm text-headline-sm font-bold shadow-lg shadow-primary-container/30 transition-all flex items-center gap-2 cursor-pointer" id="startCompressBtn" type="button">
+      <button class="px-space-lg py-2.5 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-headline-sm text-headline-sm font-bold shadow-lg shadow-primary-container/30 transition-all flex items-center gap-2 cursor-pointer active:scale-98" id="startCompressBtn" type="button">
         <span class="material-symbols-outlined text-[20px]">rocket_launch</span>
         <span>Start Process (0 Files)</span>
         <kbd class="bg-primary px-1.5 py-0.5 rounded text-[11px] font-mono-code font-bold">F8</kbd>
@@ -173,20 +294,98 @@
   <!-- Persistent Hotkey Footer Strip Matching Renamer -->
   <footer class="flex-shrink-0 h-10 bg-[#14202e] text-inverse-on-surface flex items-center justify-between px-gutter font-mono-code text-mono-code border-t border-slate-700/60 z-50">
     <div class="flex items-center gap-space-md">
-      <div class="flex items-center gap-1.5"><kbd class="bg-[#213145] px-1.5 py-0.5 rounded text-inverse-on-surface font-semibold shadow-inner">Ctrl+Z</kbd><span class="text-surface-variant">Undo</span></div>
+      <div class="flex items-center gap-1.5"><kbd class="bg-[#213145] px-1.5 py-0.5 rounded text-inverse-on-surface font-semibold shadow-inner">F2</kbd><span class="text-surface-variant">Select Folder</span></div>
       <div class="h-3 w-px bg-on-surface-variant"></div>
-      <div class="flex items-center gap-1.5"><kbd class="bg-[#213145] px-1.5 py-0.5 rounded text-inverse-on-surface font-semibold shadow-inner">Tab</kbd><span class="text-surface-variant">Next Field</span></div>
+      <div class="flex items-center gap-1.5"><kbd class="bg-[#213145] px-1.5 py-0.5 rounded text-inverse-on-surface font-semibold shadow-inner">Alt+M/S/J/P/R</kbd><span class="text-surface-variant">Switch Tool</span></div>
       <div class="h-3 w-px bg-on-surface-variant"></div>
-      <div class="flex items-center gap-1.5"><kbd class="bg-primary-container text-on-primary px-1.5 py-0.5 rounded font-semibold shadow-inner">F8</kbd><span class="text-surface-variant font-semibold">Process &amp; Verify</span></div>
+      <div class="flex items-center gap-1.5"><kbd class="bg-primary-container text-on-primary px-1.5 py-0.5 rounded font-semibold shadow-inner">F8</kbd><span class="text-surface-variant font-semibold">Start Process</span></div>
       <div class="h-3 w-px bg-on-surface-variant"></div>
-      <div class="flex items-center gap-1.5"><kbd class="bg-[#213145] px-1.5 py-0.5 rounded text-inverse-on-surface font-semibold shadow-inner">Esc</kbd><span class="text-surface-variant">Close / Abort</span></div>
+      <div class="flex items-center gap-1.5"><kbd class="bg-[#213145] px-1.5 py-0.5 rounded text-inverse-on-surface font-semibold shadow-inner">Esc</kbd><span class="text-surface-variant">Close / Reset</span></div>
     </div>
     <div class="flex items-center gap-space-lg">
       <div class="flex items-center gap-space-xs">
         <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-        <span class="text-inverse-on-surface">Safe Threshold &lt; 256 KB</span>
+        <span class="text-inverse-on-surface">Zero-Port Native IPC Engine Active</span>
       </div>
-      <div class="text-surface-variant">Engine: <span class="text-inverse-on-surface font-semibold">Ready (Offline Pure JS + PyPDF)</span></div>
+      <div class="text-surface-variant">Output: <span class="text-inverse-on-surface font-semibold" id="footerSubfolderOutputText">Direct Disk Subfolder</span></div>
     </div>
   </footer>
+
+  <!-- Modal: Interactive Bento Document Preview Viewport (Choice 3-B) -->
+  <div id="modalPdfStudioPreview" class="fixed inset-0 z-[1000] bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="w-[92vw] max-w-5xl h-[88vh] bg-surface-container-lowest rounded-2xl border border-slate-700 shadow-2xl flex flex-col overflow-hidden">
+      <!-- Modal Header -->
+      <div class="px-5 py-3 bg-surface-container-low flex items-center justify-between border-b border-outline-variant/30 shrink-0">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold shrink-0">
+            <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+          </div>
+          <div class="min-w-0">
+            <h3 id="pdfModalDocTitle" class="font-headline-sm text-[15px] font-bold text-on-surface truncate">Document Preview</h3>
+            <div id="pdfModalDocMeta" class="text-body-sm text-[11px] text-secondary font-mono-code">Page 1 of 1 • 0 KB</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2.5 shrink-0">
+          <button id="btnClosePdfModal" type="button" class="w-7 h-7 rounded-lg hover:bg-surface-container text-secondary hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer" title="Close Preview (Esc)">
+            <span class="material-symbols-outlined text-[18px]">close</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bento Slate Toolbar matching Rename Tool -->
+      <div class="px-4 py-2 bg-slate-900 border-b border-slate-700/80 flex flex-wrap items-center justify-between gap-2 shrink-0 text-slate-100">
+        <!-- Left: Zoom Group -->
+        <div class="flex items-center gap-1 bg-slate-800/90 rounded-lg p-0.5 border border-slate-700/90 shadow-2xs">
+          <button id="btnPdfModalZoomOut" class="w-7 h-7 rounded hover:bg-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition-colors cursor-pointer" title="Zoom Out (Ctrl -)" type="button">
+            <span class="material-symbols-outlined text-[16px]">zoom_out</span>
+          </button>
+          <span id="pdfModalZoomReadout" class="font-mono-code text-[11px] font-bold px-2 py-0.5 bg-slate-950 rounded text-sky-400 min-w-[50px] text-center shadow-inner select-none">Fit</span>
+          <button id="btnPdfModalZoomIn" class="w-7 h-7 rounded hover:bg-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition-colors cursor-pointer" title="Zoom In (Ctrl +)" type="button">
+            <span class="material-symbols-outlined text-[16px]">zoom_in</span>
+          </button>
+          <button id="btnPdfModalZoomFit" class="px-2 h-7 rounded hover:bg-slate-700 flex items-center gap-1 text-[11px] font-semibold text-slate-300 hover:text-white transition-colors cursor-pointer" title="Fit to Screen (Ctrl 0)" type="button">
+            <span class="material-symbols-outlined text-[15px]">fit_screen</span><span>Fit</span>
+          </button>
+          <button id="btnPdfModalZoomReset" class="w-7 h-7 rounded hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer" title="Reset Zoom" type="button">
+            <span class="material-symbols-outlined text-[15px]">restart_alt</span>
+          </button>
+        </div>
+
+        <!-- Center: Multi-Page Navigator -->
+        <div class="flex items-center gap-2 bg-slate-800/90 border border-blue-500/40 rounded-lg px-2.5 py-1 shadow-inner">
+          <button id="btnPdfModalPrev" type="button" class="w-6 h-6 rounded bg-slate-700 hover:bg-blue-600 text-white flex items-center justify-center transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed" title="Previous Page (▲ / PgUp)">
+            <span class="material-symbols-outlined text-[16px]">chevron_left</span>
+          </button>
+          <div id="pdfModalPageIndicator" class="flex items-center gap-1.5 select-none font-mono-code text-xs font-bold text-white tracking-wide">
+            <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse inline-block"></span>
+            <span id="pdfModalPageIndicatorText">Page 1 of 1</span>
+          </div>
+          <button id="btnPdfModalNext" type="button" class="w-6 h-6 rounded bg-slate-700 hover:bg-blue-600 text-white flex items-center justify-center transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed" title="Next Page (▼ / PgDn)">
+            <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+          </button>
+        </div>
+
+        <!-- Right: 3-Way Rotation Group -->
+        <div class="flex items-center gap-1">
+          <button id="btnPdfModalRotateCCW" class="h-7 px-2.5 rounded-lg bg-slate-800 hover:bg-blue-600 text-slate-200 hover:text-white flex items-center gap-1 font-mono-code text-[11px] font-bold border border-slate-700 shadow-2xs transition-all cursor-pointer select-none" title="Rotate Counter-Clockwise (-90°)" type="button">
+            <span class="material-symbols-outlined text-[15px]">rotate_left</span>
+            <span>-90°</span>
+          </button>
+          <button id="btnPdfModalRotateCW" class="h-7 px-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-1 font-mono-code text-[11px] font-bold shadow-md shadow-blue-900/40 transition-all cursor-pointer select-none" title="Rotate Clockwise (+90°)" type="button">
+            <span class="material-symbols-outlined text-[15px]">rotate_right</span>
+            <span>+90°</span>
+          </button>
+          <button id="btnPdfModalRotateFlip" class="h-7 px-2.5 rounded-lg bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white flex items-center gap-1 font-mono-code text-[11px] font-bold border border-slate-700 shadow-2xs transition-all cursor-pointer select-none" title="Flip Upside-Down (180° Flip)" type="button">
+            <span class="material-symbols-outlined text-[15px]">flip</span>
+            <span>180° Flip</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Center Modal Preview Stage -->
+      <div id="pdfModalViewport" class="flex-1 bg-surface-container-high/40 p-4 flex items-center justify-center overflow-auto min-h-0 relative">
+        <canvas id="pdfModalCanvas" class="max-w-full max-h-full object-contain shadow-lg rounded bg-white transition-transform"></canvas>
+      </div>
+    </div>
+  </div>
 </div>

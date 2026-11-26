@@ -2,18 +2,23 @@
  * tools/pdf_studio/pdf_studio_ui.js
  * DocMitra PDF Studio UI Binding & Adapter
  * Connects the PDF Studio screen to pure logic in tools/pdf_studio/pdf_studio_logic.js,
- * local PDF engines, and Tauri / native desktop bridge.
+ * Tauri Zero-Port Native IPC bridge, and local disk subfolder operations.
  *
  * STRICT RULES:
- * 1. Zero dynamic innerHTML (safe DOM creation methods only).
- * 2. Never suppress or override window.alert.
- * 3. Clean non-blocking toast notifications and progress updates.
- * 4. 100% offline, privacy-first local processing.
- * 5. Scoped execution under #view-pdf-studio and .pdf-studio-scope.
+ * 1. Zero localhost:3000 dependencies (Tauri read_binary_file / write_binary_file only).
+ * 2. Zero browser <a download> hacks — saves directly to <source>/<Subfolder>/ under Zero-Overwrite.
+ * 3. 100% offline, privacy-first local processing.
+ * 4. Scoped execution under #view-pdf-studio and .pdf-studio-scope.
  */
 
 import { toast } from '../../shared/toast.js';
-import { selectNativeFolder } from '../../shared/native-bridge.js';
+import {
+  selectNativeFolder,
+  selectNativeFiles,
+  readBinaryFile,
+  writeBinaryFile,
+  openFolderInExplorer
+} from '../../shared/native-bridge.js';
 import {
   createPdfFromJpegs,
   extractJpegsFromPdf,
@@ -23,39 +28,52 @@ import {
   mergePdfDocuments,
   rotatePdfDocument,
   formatSizeSuffixFilename,
-  getSubfolderName
+  getSubfolderName,
+  parsePageRanges,
+  renderPdfPagesToJpegs
 } from './pdf_studio_logic.js';
 
 export class PdfStudioUIManager {
   constructor() {
-    this.activeTool = 'compress_pdf'; // 'compress_pdf' | 'merge_pdf' | 'split_pdf' | 'pdf_to_jpg' | 'rotate_pdf' | 'clean_pdf'
-    this.files = []; // Array of { id, name, path, size, bytes: Uint8Array, pageCount, thumbnail, newSize, status }
+    this.activeTool = 'compress_pdf'; // 'compress_pdf' | 'merge_pdf' | 'split_pdf' | 'pdf_to_jpg' | 'jpg_to_pdf' | 'rotate_pdf' | 'clean_pdf'
+    this.files = []; // Array of { id, name, path, dir, size, bytes: Uint8Array, pageCount, rotation, status }
+    this.activeFolderPath = '';
+    this.activeFolderName = '';
+    this.targetKb = 256;
+    this.jpgDpi = 150;
+    this.splitPageRange = '';
     this.isProcessing = false;
+    this.lastOutputFolder = '';
+    this.sortDesc = true;
+    this.draggedIndex = null;
+
+    // Bento Preview Modal state (Choice 3-B)
+    this.modalFileIdx = -1;
+    this.modalPage = 1;
+    this.modalTotalPages = 1;
+    this.modalZoom = 'fit';
+    this.modalRotation = 0;
+    this.modalPdfDoc = null;
+    this.renderTask = null;
   }
 
   init() {
     this._bindRibbonTools();
     this._bindActions();
     this._bindDropzone();
+    this._bindBentoDropdowns();
+    this._bindModalControls();
+    this._bindHotkeys();
     this.renderQueue();
-    console.info('[DocMitra PDF Studio] PDF Studio UI manager initialized.');
+    console.info('[DocMitra PDF Studio] Zero-Port Native UI Manager initialized.');
   }
 
   _bindRibbonTools() {
     const toolBtns = document.querySelectorAll('#view-pdf-studio .tool-ribbon-btn');
-    const toolMap = [
-      'compress_pdf',
-      'merge_pdf',
-      'split_pdf',
-      'pdf_to_jpg',
-      'rotate_pdf',
-      'clean_pdf'
-    ];
-
-    toolBtns.forEach((btn, idx) => {
+    toolBtns.forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
-        const tool = toolMap[idx] || 'compress_pdf';
+        const tool = btn.getAttribute('data-tool') || 'compress_pdf';
         this.setTool(tool, btn);
       });
     });
@@ -69,19 +87,36 @@ export class PdfStudioUIManager {
     toolBtns.forEach(b => {
       b.classList.remove('bg-primary-container', 'text-on-primary', 'font-semibold', 'shadow-sm');
       b.classList.add('text-on-surface-variant', 'hover:bg-surface-container-low', 'hover:text-on-surface');
-      const badge = b.querySelector('.bg-primary\\/60');
+      const badge = b.querySelector('.active-tool-badge');
       if (badge) badge.remove();
     });
 
-    if (activeBtn) {
-      activeBtn.classList.remove('text-on-surface-variant', 'hover:bg-surface-container-low', 'hover:text-on-surface');
-      activeBtn.classList.add('bg-primary-container', 'text-on-primary', 'font-semibold', 'shadow-sm');
+    const targetBtn = activeBtn || document.querySelector(`#view-pdf-studio .tool-ribbon-btn[data-tool="${toolName}"]`);
+    if (targetBtn) {
+      targetBtn.classList.remove('text-on-surface-variant', 'hover:bg-surface-container-low', 'hover:text-on-surface');
+      targetBtn.classList.add('bg-primary-container', 'text-on-primary', 'font-semibold', 'shadow-sm');
 
       const badge = document.createElement('span');
-      badge.className = 'bg-primary/60 text-on-primary text-[10px] font-mono-code px-1.5 py-0.5 rounded font-bold uppercase tracking-tight';
+      badge.className = 'active-tool-badge bg-primary/60 text-on-primary text-[10px] font-mono-code px-1.5 py-0.5 rounded font-bold uppercase tracking-tight';
       badge.textContent = 'Active';
-      activeBtn.appendChild(badge);
+      targetBtn.appendChild(badge);
     }
+
+    // Toggle contextual controls visibility
+    const compWrapper = document.getElementById('bentoCompressTargetWrapper');
+    const dpiWrapper = document.getElementById('bentoJpgDpiWrapper');
+    const splitWrapper = document.getElementById('splitRangeWrapper');
+
+    if (compWrapper) compWrapper.classList.toggle('hidden', toolName !== 'compress_pdf');
+    if (dpiWrapper) dpiWrapper.classList.toggle('hidden', toolName !== 'pdf_to_jpg');
+    if (splitWrapper) splitWrapper.classList.toggle('hidden', toolName !== 'split_pdf');
+
+    // Update subfolder telemetry text
+    const subfolderName = getSubfolderName(toolName);
+    const sideSub = document.getElementById('sidebarOutputSubfolderText');
+    if (sideSub) sideSub.textContent = subfolderName;
+    const footSub = document.getElementById('footerSubfolderOutputText');
+    if (footSub) footSub.textContent = `${subfolderName}/`;
 
     this._updateProcessButtonLabel();
     toast.show('Tool Selected', this._getToolDisplayName(toolName), 'info');
@@ -89,10 +124,11 @@ export class PdfStudioUIManager {
 
   _getToolDisplayName(tool) {
     switch (tool) {
-      case 'compress_pdf': return 'Compress PDF (<256 KB MahaDBT)';
+      case 'compress_pdf': return `Compress PDF (<${this.targetKb} KB)`;
       case 'merge_pdf': return 'Merge PDF Dossier';
       case 'split_pdf': return 'Split / Extract Pages';
-      case 'pdf_to_jpg': return 'Convert PDF to JPG';
+      case 'pdf_to_jpg': return `PDF to JPG (${this.jpgDpi} DPI)`;
+      case 'jpg_to_pdf': return 'JPG to PDF (A4 Compilation)';
       case 'rotate_pdf': return 'Rotate All Pages 90°';
       case 'clean_pdf': return 'Clean & Enhance';
       default: return 'Process Files';
@@ -107,11 +143,12 @@ export class PdfStudioUIManager {
     if (span) {
       const count = this.files.length;
       let action = 'Start Process';
-      if (this.activeTool === 'compress_pdf') action = 'Compress';
-      else if (this.activeTool === 'merge_pdf') action = 'Merge';
-      else if (this.activeTool === 'split_pdf') action = 'Split';
-      else if (this.activeTool === 'pdf_to_jpg') action = 'Convert to JPG';
-      else if (this.activeTool === 'rotate_pdf') action = 'Rotate';
+      if (this.activeTool === 'compress_pdf') action = `Compress to <${this.targetKb}KB`;
+      else if (this.activeTool === 'merge_pdf') action = 'Merge Dossier';
+      else if (this.activeTool === 'split_pdf') action = 'Split Pages';
+      else if (this.activeTool === 'pdf_to_jpg') action = `Convert to JPG (${this.jpgDpi} DPI)`;
+      else if (this.activeTool === 'jpg_to_pdf') action = 'Compile Images to PDF';
+      else if (this.activeTool === 'rotate_pdf') action = 'Rotate 90°';
       else if (this.activeTool === 'clean_pdf') action = 'Clean & Enhance';
 
       span.textContent = `${action} (${count} Files)`;
@@ -119,7 +156,7 @@ export class PdfStudioUIManager {
   }
 
   _bindActions() {
-    // Browse Directory
+    // Browse Folder
     const btnBrowse = document.getElementById('btnBrowsePdfDir');
     if (btnBrowse) {
       btnBrowse.addEventListener('click', () => this.handleBrowseFolder());
@@ -149,11 +186,143 @@ export class PdfStudioUIManager {
       btnFilter.addEventListener('click', () => this.handleFilterOversized());
     }
 
+    // Open Output Folder
+    const btnOpenOutput = document.getElementById('btnOpenOutputFolder');
+    if (btnOpenOutput) {
+      btnOpenOutput.addEventListener('click', () => {
+        if (this.lastOutputFolder) {
+          openFolderInExplorer(this.lastOutputFolder);
+        }
+      });
+    }
+
+    // Chevrons Scroll
+    const btnScrollLeft = document.getElementById('btnPdfScrollLeft');
+    const btnScrollRight = document.getElementById('btnPdfScrollRight');
+    const grid = document.getElementById('pdfCardsGrid');
+
+    if (btnScrollLeft && grid) {
+      btnScrollLeft.addEventListener('click', () => {
+        grid.scrollBy({ left: -300, behavior: 'smooth' });
+      });
+    }
+    if (btnScrollRight && grid) {
+      btnScrollRight.addEventListener('click', () => {
+        grid.scrollBy({ left: 300, behavior: 'smooth' });
+      });
+    }
+
+    // Sort Buttons
+    const btnSortSize = document.getElementById('btnPdfSortSize');
+    if (btnSortSize) {
+      btnSortSize.addEventListener('click', () => {
+        this.sortDesc = !this.sortDesc;
+        this.files.sort((a, b) => this.sortDesc ? b.size - a.size : a.size - b.size);
+        btnSortSize.textContent = this.sortDesc ? 'Size (Desc)' : 'Size (Asc)';
+        this.renderQueue();
+      });
+    }
+
+    const btnSortDocket = document.getElementById('btnPdfSortDocket');
+    if (btnSortDocket) {
+      btnSortDocket.addEventListener('click', () => {
+        this.files.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+        this.renderQueue();
+        toast.show('Queue Sorted', 'Natural sorting (1-0, A-Z) applied.', 'info');
+      });
+    }
+
+    // Split Page Range input listener
+    const inputSplitRange = document.getElementById('inputSplitPageRange');
+    if (inputSplitRange) {
+      inputSplitRange.addEventListener('input', (e) => {
+        this.splitPageRange = e.target.value.trim();
+      });
+    }
+
     // Start Process Button
     const btnStart = document.getElementById('startCompressBtn');
     if (btnStart) {
       btnStart.addEventListener('click', () => this.handleStartProcess());
     }
+  }
+
+  _bindBentoDropdowns() {
+    // Compress Target dropdown
+    const btnTarget = document.getElementById('btnBentoCompressTarget');
+    const menuTarget = document.getElementById('menuBentoCompressTarget');
+    const labelTarget = document.getElementById('labelCompressTarget');
+    const dockLabel = document.getElementById('dockTargetLabel');
+
+    if (btnTarget && menuTarget) {
+      btnTarget.addEventListener('click', (e) => {
+        e.stopPropagation();
+        menuTarget.classList.toggle('hidden');
+      });
+
+      menuTarget.querySelectorAll('button[data-kb]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const kb = parseInt(btn.getAttribute('data-kb'), 10) || 256;
+          this.targetKb = kb;
+          const text = `< ${kb} KB${kb === 256 ? ' (MahaDBT)' : kb === 200 ? ' (CET)' : ''}`;
+          if (labelTarget) labelTarget.textContent = text;
+          if (dockLabel) dockLabel.textContent = `< ${kb} KB`;
+          menuTarget.classList.add('hidden');
+          this.updateStats();
+          this._updateProcessButtonLabel();
+          toast.show('Target Updated', `Compress target set to < ${kb} KB`, 'info');
+        });
+      });
+
+      const btnApplyCustom = document.getElementById('btnApplyCustomKb');
+      const inputCustom = document.getElementById('inputCustomTargetKb');
+      if (btnApplyCustom && inputCustom) {
+        btnApplyCustom.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const val = parseInt(inputCustom.value, 10);
+          if (val && val >= 50 && val <= 5000) {
+            this.targetKb = val;
+            if (labelTarget) labelTarget.textContent = `< ${val} KB (Custom)`;
+            if (dockLabel) dockLabel.textContent = `< ${val} KB`;
+            menuTarget.classList.add('hidden');
+            this.updateStats();
+            this._updateProcessButtonLabel();
+            toast.show('Target Updated', `Custom target set to < ${val} KB`, 'info');
+          }
+        });
+      }
+    }
+
+    // PDF to JPG DPI dropdown
+    const btnDpi = document.getElementById('btnBentoJpgDpi');
+    const menuDpi = document.getElementById('menuBentoJpgDpi');
+    const labelDpi = document.getElementById('labelJpgDpi');
+
+    if (btnDpi && menuDpi) {
+      btnDpi.addEventListener('click', (e) => {
+        e.stopPropagation();
+        menuDpi.classList.toggle('hidden');
+      });
+
+      menuDpi.querySelectorAll('button[data-dpi]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const dpi = parseInt(btn.getAttribute('data-dpi'), 10) || 150;
+          this.jpgDpi = dpi;
+          if (labelDpi) labelDpi.textContent = `${dpi} DPI ${dpi === 150 ? '(Fast)' : dpi === 300 ? '(High Quality)' : '(Web)'}`;
+          menuDpi.classList.add('hidden');
+          this._updateProcessButtonLabel();
+          toast.show('DPI Updated', `PDF to JPG resolution set to ${dpi} DPI`, 'info');
+        });
+      });
+    }
+
+    // Document click to close menus
+    document.addEventListener('click', () => {
+      if (menuTarget && !menuTarget.classList.contains('hidden')) menuTarget.classList.add('hidden');
+      if (menuDpi && !menuDpi.classList.contains('hidden')) menuDpi.classList.add('hidden');
+    });
   }
 
   _bindDropzone() {
@@ -169,13 +338,91 @@ export class PdfStudioUIManager {
       e.preventDefault();
       e.stopPropagation();
 
-      const droppedFiles = Array.from(e.dataTransfer?.files || []).filter(f => /\.pdf$/i.test(f.name));
-      if (droppedFiles.length === 0) {
-        toast.show('Invalid Files', 'Please drop PDF files only.', 'warning');
+      const items = Array.from(e.dataTransfer?.files || []);
+      const validFiles = this.activeTool === 'jpg_to_pdf'
+        ? items.filter(f => /\.(jpe?g|png|webp)$/i.test(f.name))
+        : items.filter(f => /\.pdf$/i.test(f.name));
+
+      if (validFiles.length === 0) {
+        toast.show('Invalid Files', this.activeTool === 'jpg_to_pdf' ? 'Please drop JPG/PNG images only.' : 'Please drop PDF files only.', 'warning');
         return;
       }
 
-      await this.loadDroppedFiles(droppedFiles);
+      await this.loadDroppedFiles(validFiles);
+    });
+  }
+
+  _bindHotkeys() {
+    window.addEventListener('keydown', (e) => {
+      const view = document.getElementById('view-pdf-studio');
+      if (!view || view.classList.contains('hidden')) return;
+
+      // Modal preview hotkeys
+      const modal = document.getElementById('modalPdfStudioPreview');
+      if (modal && !modal.classList.contains('hidden')) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          this.closePreviewModal();
+          return;
+        }
+        if (e.key === 'PageUp' || e.key === 'ArrowLeft') {
+          e.preventDefault();
+          this.modalPrevPage();
+          return;
+        }
+        if (e.key === 'PageDown' || e.key === 'ArrowRight') {
+          e.preventDefault();
+          this.modalNextPage();
+          return;
+        }
+        if (e.key === 'r' || e.key === 'R') {
+          e.preventDefault();
+          this.modalRotate(90);
+          return;
+        }
+        if (e.ctrlKey && (e.key === '+' || e.key === '=')) {
+          e.preventDefault();
+          this.modalZoomIn();
+          return;
+        }
+        if (e.ctrlKey && e.key === '-') {
+          e.preventDefault();
+          this.modalZoomOut();
+          return;
+        }
+        if (e.ctrlKey && e.key === '0') {
+          e.preventDefault();
+          this.modalZoomFit();
+          return;
+        }
+        return;
+      }
+
+      // Main screen shortcuts
+      if (e.key === 'F2') {
+        e.preventDefault();
+        this.handleBrowseFolder();
+      } else if (e.key === 'F8') {
+        e.preventDefault();
+        this.handleStartProcess();
+      } else if (e.altKey && (e.key === 'm' || e.key === 'M')) {
+        e.preventDefault();
+        this.setTool('merge_pdf');
+      } else if (e.altKey && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        this.setTool('split_pdf');
+      } else if (e.altKey && (e.key === 'j' || e.key === 'J')) {
+        e.preventDefault();
+        this.setTool('pdf_to_jpg');
+      } else if (e.altKey && (e.key === 'p' || e.key === 'P')) {
+        e.preventDefault();
+        this.setTool('jpg_to_pdf');
+      } else if (e.altKey && (e.key === 'r' || e.key === 'R')) {
+        e.preventDefault();
+        this.setTool('rotate_pdf');
+      } else if (e.key === 'Escape') {
+        this.handleClearQueue();
+      }
     });
   }
 
@@ -190,23 +437,63 @@ export class PdfStudioUIManager {
         return;
       }
 
-      const pdfFiles = (res.files || []).filter(f => /\.pdf$/i.test(f.name));
-      if (pdfFiles.length === 0) {
-        toast.show('No PDFs Found', 'Selected directory contains 0 PDF files.', 'warning');
+      this.activeFolderPath = res.path || '';
+      this.activeFolderName = res.name || (res.path ? res.path.split(/[\/\\]/).pop() : 'Selected Folder');
+
+      // Update Dark Slate Folder Pill
+      const pill = document.getElementById('displayPdfFolderName');
+      if (pill) {
+        pill.textContent = this.activeFolderName;
+        pill.title = this.activeFolderPath;
+      }
+
+      const isJpgMode = this.activeTool === 'jpg_to_pdf';
+      const targetFiles = (res.files || []).filter(f => isJpgMode ? /\.(jpe?g|png|webp)$/i.test(f.name) : /\.pdf$/i.test(f.name));
+
+      if (targetFiles.length === 0) {
+        toast.show('No Files Found', `Folder contains 0 ${isJpgMode ? 'image' : 'PDF'} files.`, 'warning');
         return;
       }
 
-      await this.loadNativeFiles(pdfFiles);
-      toast.show('PDFs Loaded', `${pdfFiles.length} files added to execution queue.`, 'success');
+      await this.loadNativeFiles(targetFiles);
+      toast.show('Files Loaded', `${targetFiles.length} files added from ${this.activeFolderName}.`, 'success');
     } catch (err) {
       toast.show('Folder Error', err.message, 'error');
     }
   }
 
   async handleAddFiles() {
+    try {
+      const isJpgMode = this.activeTool === 'jpg_to_pdf';
+      const filter = isJpgMode ? 'Images (*.jpg;*.jpeg;*.png;*.webp)|*.jpg;*.jpeg;*.png;*.webp' : 'PDF Documents (*.pdf)|*.pdf';
+      const title = isJpgMode ? 'Select Images for PDF - DocMitra' : 'Select PDF Files - DocMitra';
+
+      const res = await selectNativeFiles(filter, title);
+      if (res && res.success && res.files && res.files.length) {
+        if (!this.activeFolderPath && res.files[0].path) {
+          const parts = res.files[0].path.replace(/\\/g, '/').split('/');
+          parts.pop();
+          this.activeFolderPath = parts.join('/');
+          this.activeFolderName = parts.pop() || 'Selected Folder';
+
+          const pill = document.getElementById('displayPdfFolderName');
+          if (pill) {
+            pill.textContent = this.activeFolderName;
+            pill.title = this.activeFolderPath;
+          }
+        }
+        await this.loadNativeFiles(res.files);
+        toast.show('Files Added', `${res.files.length} files added to execution queue.`, 'success');
+        return;
+      }
+    } catch (e) {
+      console.warn('Native select files fallback:', e);
+    }
+
+    // HTML input fallback
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.pdf,application/pdf';
+    input.accept = this.activeTool === 'jpg_to_pdf' ? '.jpg,.jpeg,.png,.webp,image/*' : '.pdf,application/pdf';
     input.multiple = true;
     input.style.display = 'none';
 
@@ -225,25 +512,38 @@ export class PdfStudioUIManager {
   async loadNativeFiles(fileList) {
     for (const f of fileList) {
       try {
-        const url = f.url || (f.path ? `http://localhost:3000/api/serve-file?path=${encodeURIComponent(f.path)}` : null);
         let bytes = null;
-        if (url) {
-          const resp = await fetch(url);
-          const buf = await resp.arrayBuffer();
+        if (f.path) {
+          bytes = await readBinaryFile(f.path);
+        } else if (f.fileObj) {
+          const buf = await f.fileObj.arrayBuffer();
           bytes = new Uint8Array(buf);
+        }
+
+        const dir = f.dir || (f.path ? f.path.substring(0, f.path.lastIndexOf(/[\/\\]/)) : this.activeFolderPath);
+        if (!this.activeFolderPath && dir) {
+          this.activeFolderPath = dir.replace(/\\/g, '/');
+          this.activeFolderName = this.activeFolderPath.split('/').pop() || 'Folder';
+          const pill = document.getElementById('displayPdfFolderName');
+          if (pill) {
+            pill.textContent = this.activeFolderName;
+            pill.title = this.activeFolderPath;
+          }
         }
 
         this.files.push({
           id: `pdf_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
           name: f.name,
-          path: f.path,
+          path: f.path || f.name,
+          dir: dir,
           size: f.size || (bytes ? bytes.length : 0),
           bytes: bytes,
           pageCount: 1,
+          rotation: 0,
           status: 'ready'
         });
       } catch (err) {
-        console.warn(`Failed to preload bytes for ${f.name}:`, err);
+        console.warn(`[PDF-STUDIO] Failed to read bytes for ${f.name} via Native IPC:`, err);
       }
     }
 
@@ -260,29 +560,42 @@ export class PdfStudioUIManager {
         id: `pdf_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
         name: f.name,
         path: f.name,
+        dir: this.activeFolderPath || '',
         size: f.size,
         bytes: bytes,
         pageCount: 1,
+        rotation: 0,
         status: 'ready'
       });
     }
 
     this.updateStats();
     this.renderQueue();
-    toast.show('PDFs Added', `${fileList.length} files added to queue.`, 'success');
+    toast.show('Files Queued', `${fileList.length} files added to execution queue.`, 'success');
   }
 
   updateStats() {
     const totalFiles = this.files.length;
-    const totalBytes = this.files.reduce((acc, f) => acc + f.size, 0);
+    const totalBytes = this.files.reduce((acc, f) => acc + (f.size || 0), 0);
     const totalMB = (totalBytes / (1024 * 1024)).toFixed(2);
 
-    // Projected compressed size (~230 KB per file average for MahaDBT)
-    const projectedBytes = totalFiles * 230 * 1024;
+    // Projected calculation based on targetKb
+    const projectedBytes = totalFiles * this.targetKb * 1024;
     const projectedMB = (projectedBytes / (1024 * 1024)).toFixed(2);
 
+    // Summary cards
+    const cardCount = document.getElementById('summaryPdfCount');
+    if (cardCount) cardCount.textContent = `${totalFiles} Files`;
+
+    const cardTotal = document.getElementById('summaryPdfTotalSize');
+    if (cardTotal) cardTotal.textContent = `${totalMB} MB`;
+
+    const cardProjected = document.getElementById('summaryPdfProjected');
+    if (cardProjected) cardProjected.textContent = `~${projectedMB} MB`;
+
+    // Queue header readout
     const countEl = document.getElementById('pdfQueueCount');
-    if (countEl) countEl.textContent = `${totalFiles} Files Loaded`;
+    if (countEl) countEl.textContent = `${totalFiles} Files`;
 
     const statsEl = document.getElementById('pdfQueueStats');
     if (statsEl) statsEl.textContent = `Total: ${totalMB} MB → Projected: ~${projectedMB} MB`;
@@ -304,17 +617,19 @@ export class PdfStudioUIManager {
 
       const icon = document.createElement('span');
       icon.className = 'material-symbols-outlined text-[40px] text-primary opacity-60';
-      icon.textContent = 'picture_as_pdf';
+      icon.textContent = this.activeTool === 'jpg_to_pdf' ? 'add_photo_alternate' : 'picture_as_pdf';
       emptyCard.appendChild(icon);
 
       const title = document.createElement('div');
       title.className = 'font-headline-sm font-bold text-on-surface';
-      title.textContent = 'No PDF Files in Execution Queue';
+      title.textContent = this.activeTool === 'jpg_to_pdf' ? 'No Images Loaded' : 'No PDF Documents in Execution Queue';
       emptyCard.appendChild(title);
 
       const desc = document.createElement('div');
       desc.className = 'text-body-sm text-secondary';
-      desc.textContent = 'Drag & drop admission PDF documents here or click "Browse Directory" to get started.';
+      desc.textContent = this.activeTool === 'jpg_to_pdf'
+        ? 'Click "Select Folder" (F2) or drop JPG/PNG image certificates to compile into A4 PDF.'
+        : 'Drag & drop student admission PDF documents here or click "Select Folder" (F2) to start.';
       emptyCard.appendChild(desc);
 
       grid.appendChild(emptyCard);
@@ -323,7 +638,39 @@ export class PdfStudioUIManager {
 
     this.files.forEach((file, idx) => {
       const card = document.createElement('div');
-      card.className = 'bg-surface-container-lowest rounded-xl border border-surface-container-high/80 p-2.5 flex flex-col justify-between hover:shadow-md transition-shadow group relative';
+      card.className = 'docket-card bg-surface-container-lowest rounded-xl border border-surface-container-high/80 p-2.5 flex flex-col justify-between hover:shadow-md transition-all group relative cursor-pointer';
+
+      // Drag-to-reorder for Merge Tool
+      if (this.activeTool === 'merge_pdf') {
+        card.setAttribute('draggable', 'true');
+        card.addEventListener('dragstart', (e) => {
+          this.draggedIndex = idx;
+          card.classList.add('card-dragging');
+          e.dataTransfer.effectAllowed = 'move';
+        });
+        card.addEventListener('dragend', () => {
+          card.classList.remove('card-dragging');
+          this.draggedIndex = null;
+        });
+        card.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          card.classList.add('card-drag-over');
+        });
+        card.addEventListener('dragleave', () => {
+          card.classList.remove('card-drag-over');
+        });
+        card.addEventListener('drop', (e) => {
+          e.preventDefault();
+          card.classList.remove('card-drag-over');
+          if (this.draggedIndex !== null && this.draggedIndex !== idx) {
+            const moved = this.files.splice(this.draggedIndex, 1)[0];
+            this.files.splice(idx, 0, moved);
+            this.renderQueue();
+            toast.show('Reordered', `Moved "${moved.name}" to position ${idx + 1}.`, 'info');
+          }
+        });
+      }
 
       // Card Header Actions (Rotate / Remove)
       const actionCluster = document.createElement('div');
@@ -332,12 +679,11 @@ export class PdfStudioUIManager {
       const btnRotate = document.createElement('button');
       btnRotate.type = 'button';
       btnRotate.className = 'w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-primary transition-colors shadow-xs cursor-pointer';
-      btnRotate.title = 'Rotate 90°';
+      btnRotate.title = 'Rotate 90° Clockwise';
       const rotIcon = document.createElement('span');
       rotIcon.className = 'material-symbols-outlined text-[13px]';
       rotIcon.textContent = 'rotate_right';
       btnRotate.appendChild(rotIcon);
-
       btnRotate.addEventListener('click', (e) => {
         e.stopPropagation();
         this.rotateSingleFile(idx);
@@ -347,12 +693,11 @@ export class PdfStudioUIManager {
       const btnRemove = document.createElement('button');
       btnRemove.type = 'button';
       btnRemove.className = 'w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-error transition-colors shadow-xs cursor-pointer';
-      btnRemove.title = 'Remove';
+      btnRemove.title = 'Remove File';
       const remIcon = document.createElement('span');
       remIcon.className = 'material-symbols-outlined text-[13px]';
       remIcon.textContent = 'close';
       btnRemove.appendChild(remIcon);
-
       btnRemove.addEventListener('click', (e) => {
         e.stopPropagation();
         this.removeFile(idx);
@@ -369,17 +714,17 @@ export class PdfStudioUIManager {
       thumbBox.appendChild(canvas);
 
       const pageBadge = document.createElement('div');
-      pageBadge.className = 'absolute bottom-1 right-1 bg-inverse-surface/80 text-inverse-on-surface rounded px-1 text-[9px] font-mono-code';
+      pageBadge.className = 'absolute bottom-1 right-1 bg-inverse-surface/80 text-inverse-on-surface rounded px-1 text-[9px] font-mono-code font-bold';
       pageBadge.textContent = `${file.pageCount || 1}p`;
 
       // Render first page with PDF.js if bytes are available
-      if (file.bytes && window.pdfjsLib) {
+      if (file.bytes && window.pdfjsLib && !file.name.match(/\.(jpe?g|png|webp)$/i)) {
         window.pdfjsLib.getDocument({ data: file.bytes }).promise.then(pdf => {
           file.pageCount = pdf.numPages;
           pageBadge.textContent = `${pdf.numPages}p`;
 
           pdf.getPage(1).then(page => {
-            const viewport = page.getViewport({ scale: 0.5 });
+            const viewport = page.getViewport({ scale: 0.45, rotation: file.rotation || 0 });
             canvas.height = viewport.height;
             canvas.width = viewport.width;
             page.render({
@@ -388,13 +733,25 @@ export class PdfStudioUIManager {
             });
           });
         }).catch(() => {
-          // Fallback icon
           canvas.style.display = 'none';
           const icon = document.createElement('span');
           icon.className = 'material-symbols-outlined text-[32px] text-primary opacity-50';
           icon.textContent = 'picture_as_pdf';
           thumbBox.appendChild(icon);
         });
+      } else if (file.bytes && file.name.match(/\.(jpe?g|png|webp)$/i)) {
+        // Image preview
+        const img = new Image();
+        const blob = new Blob([file.bytes], { type: 'image/jpeg' });
+        img.src = URL.createObjectURL(blob);
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          URL.revokeObjectURL(img.src);
+        };
+        pageBadge.textContent = 'IMG';
       }
 
       thumbBox.appendChild(pageBadge);
@@ -404,7 +761,7 @@ export class PdfStudioUIManager {
       const title = document.createElement('div');
       title.className = 'font-headline-sm text-[12px] font-bold text-on-surface truncate mb-1';
       title.title = file.name;
-      title.textContent = file.name;
+      title.textContent = `${idx + 1}. ${file.name}`;
       card.appendChild(title);
 
       // Size & Projected Compression Box
@@ -417,13 +774,13 @@ export class PdfStudioUIManager {
         ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
         : `${(file.size / 1024).toFixed(0)} KB`;
       const oldSpan = document.createElement('span');
-      oldSpan.textContent = `Old: ${oldSizeStr}`;
+      oldSpan.textContent = `Size: ${oldSizeStr}`;
       oldRow.appendChild(oldSpan);
 
-      const isOversized = file.size > 256 * 1024;
+      const isOversized = file.size > this.targetKb * 1024;
       const pctBadge = document.createElement('span');
-      pctBadge.className = isOversized ? 'text-emerald-700 font-bold' : 'text-primary font-semibold';
-      pctBadge.textContent = isOversized ? '-75%' : 'Safe';
+      pctBadge.className = isOversized ? 'text-amber-600 font-bold' : 'text-emerald-700 font-bold';
+      pctBadge.textContent = isOversized ? `>${this.targetKb}KB` : 'Safe';
       oldRow.appendChild(pctBadge);
       sizeBox.appendChild(oldRow);
 
@@ -435,11 +792,17 @@ export class PdfStudioUIManager {
 
       const targetVal = document.createElement('span');
       targetVal.className = 'text-primary font-bold';
-      targetVal.textContent = isOversized ? '< 256 KB' : oldSizeStr;
+      targetVal.textContent = isOversized ? `< ${this.targetKb} KB` : oldSizeStr;
       newRow.appendChild(targetVal);
       sizeBox.appendChild(newRow);
 
       card.appendChild(sizeBox);
+
+      // Click card opens Bento Preview Modal (Choice 3-B)
+      card.addEventListener('click', () => {
+        this.openPreviewModal(idx);
+      });
+
       grid.appendChild(card);
     });
   }
@@ -449,6 +812,7 @@ export class PdfStudioUIManager {
     if (!file || !file.bytes) return;
 
     try {
+      file.rotation = ((file.rotation || 0) + 90) % 360;
       const rotatedBlob = rotatePdfDocument(file.bytes, 90);
       rotatedBlob.arrayBuffer().then(buf => {
         file.bytes = new Uint8Array(buf);
@@ -477,6 +841,7 @@ export class PdfStudioUIManager {
     this.files.forEach(f => {
       if (f.bytes) {
         try {
+          f.rotation = ((f.rotation || 0) + 90) % 360;
           const blob = rotatePdfDocument(f.bytes, 90);
           blob.arrayBuffer().then(buf => {
             f.bytes = new Uint8Array(buf);
@@ -500,16 +865,247 @@ export class PdfStudioUIManager {
   }
 
   handleFilterOversized() {
+    const threshold = this.targetKb * 1024;
     const initialCount = this.files.length;
-    this.files = this.files.filter(f => f.size > 256 * 1024);
+    this.files = this.files.filter(f => f.size > threshold);
     this.updateStats();
     this.renderQueue();
-    toast.show('Filter Applied', `Kept ${this.files.length} oversized files (>256 KB) from ${initialCount}.`, 'info');
+    toast.show('Filter Applied', `Kept ${this.files.length} oversized files (>${this.targetKb} KB) from ${initialCount}.`, 'info');
+  }
+
+  // ==============================================================================
+  // Bento Preview Modal Controls (Choice 3-B)
+  // ==============================================================================
+
+  _bindModalControls() {
+    const btnClose = document.getElementById('btnClosePdfModal');
+    if (btnClose) {
+      btnClose.addEventListener('click', () => this.closePreviewModal());
+    }
+
+    const btnPrev = document.getElementById('btnPdfModalPrev');
+    const btnNext = document.getElementById('btnPdfModalNext');
+    if (btnPrev) btnPrev.addEventListener('click', () => this.modalPrevPage());
+    if (btnNext) btnNext.addEventListener('click', () => this.modalNextPage());
+
+    const btnZoomIn = document.getElementById('btnPdfModalZoomIn');
+    const btnZoomOut = document.getElementById('btnPdfModalZoomOut');
+    const btnZoomFit = document.getElementById('btnPdfModalZoomFit');
+    const btnZoomReset = document.getElementById('btnPdfModalZoomReset');
+
+    if (btnZoomIn) btnZoomIn.addEventListener('click', () => this.modalZoomIn());
+    if (btnZoomOut) btnZoomOut.addEventListener('click', () => this.modalZoomOut());
+    if (btnZoomFit) btnZoomFit.addEventListener('click', () => this.modalZoomFit());
+    if (btnZoomReset) btnZoomReset.addEventListener('click', () => this.modalZoomReset());
+
+    const btnCCW = document.getElementById('btnPdfModalRotateCCW');
+    const btnCW = document.getElementById('btnPdfModalRotateCW');
+    const btnFlip = document.getElementById('btnPdfModalRotateFlip');
+
+    if (btnCCW) btnCCW.addEventListener('click', () => this.modalRotate(-90));
+    if (btnCW) btnCW.addEventListener('click', () => this.modalRotate(90));
+    if (btnFlip) btnFlip.addEventListener('click', () => this.modalRotate(180));
+  }
+
+  async openPreviewModal(idx) {
+    const file = this.files[idx];
+    if (!file || !file.bytes) return;
+
+    this.modalFileIdx = idx;
+    this.modalPage = 1;
+    this.modalZoom = 'fit';
+    this.modalRotation = file.rotation || 0;
+
+    const modal = document.getElementById('modalPdfStudioPreview');
+    if (modal) modal.classList.remove('hidden');
+
+    const titleEl = document.getElementById('pdfModalDocTitle');
+    if (titleEl) titleEl.textContent = file.name;
+
+    const metaEl = document.getElementById('pdfModalDocMeta');
+    const sizeStr = file.size > 1024 * 1024 ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : `${(file.size / 1024).toFixed(0)} KB`;
+    if (metaEl) metaEl.textContent = `Size: ${sizeStr} • Direct Output Ready`;
+
+    if (window.pdfjsLib && !file.name.match(/\.(jpe?g|png|webp)$/i)) {
+      try {
+        this.modalPdfDoc = await window.pdfjsLib.getDocument({ data: file.bytes }).promise;
+        this.modalTotalPages = this.modalPdfDoc.numPages;
+        this.renderModalPage();
+      } catch (err) {
+        console.warn('PDF.js modal load failed:', err);
+      }
+    } else {
+      // Direct image display
+      this.modalTotalPages = 1;
+      this.renderModalImage(file.bytes);
+    }
+  }
+
+  closePreviewModal() {
+    const modal = document.getElementById('modalPdfStudioPreview');
+    if (modal) modal.classList.add('hidden');
+    if (this.renderTask) {
+      try { this.renderTask.cancel(); } catch (e) {}
+    }
+    this.modalPdfDoc = null;
+    this.modalFileIdx = -1;
+  }
+
+  modalPrevPage() {
+    if (this.modalPage > 1) {
+      this.modalPage--;
+      this.renderModalPage();
+    }
+  }
+
+  modalNextPage() {
+    if (this.modalPage < this.modalTotalPages) {
+      this.modalPage++;
+      this.renderModalPage();
+    }
+  }
+
+  modalZoomIn() {
+    const cur = typeof this.modalZoom === 'number' ? this.modalZoom : 1.0;
+    this.modalZoom = Math.min(3.0, cur + 0.25);
+    this.renderModalPage();
+  }
+
+  modalZoomOut() {
+    const cur = typeof this.modalZoom === 'number' ? this.modalZoom : 1.0;
+    this.modalZoom = Math.max(0.4, cur - 0.25);
+    this.renderModalPage();
+  }
+
+  modalZoomFit() {
+    this.modalZoom = 'fit';
+    this.renderModalPage();
+  }
+
+  modalZoomReset() {
+    this.modalZoom = 1.0;
+    this.renderModalPage();
+  }
+
+  modalRotate(deg) {
+    this.modalRotation = (this.modalRotation + deg + 360) % 360;
+    if (this.modalFileIdx >= 0 && this.files[this.modalFileIdx]) {
+      this.files[this.modalFileIdx].rotation = this.modalRotation;
+    }
+    this.renderModalPage();
+    this.renderQueue();
+  }
+
+  async renderModalPage() {
+    if (!this.modalPdfDoc) return;
+
+    const pageIndicator = document.getElementById('pdfModalPageIndicatorText');
+    if (pageIndicator) {
+      pageIndicator.textContent = `Page ${this.modalPage} of ${this.modalTotalPages}`;
+    }
+
+    const btnPrev = document.getElementById('btnPdfModalPrev');
+    const btnNext = document.getElementById('btnPdfModalNext');
+    if (btnPrev) btnPrev.disabled = this.modalPage <= 1;
+    if (btnNext) btnNext.disabled = this.modalPage >= this.modalTotalPages;
+
+    const zoomBadge = document.getElementById('pdfModalZoomReadout');
+    if (zoomBadge) {
+      zoomBadge.textContent = this.modalZoom === 'fit' ? 'Fit' : `${Math.round(this.modalZoom * 100)}%`;
+    }
+
+    const canvas = document.getElementById('pdfModalCanvas');
+    const viewportBox = document.getElementById('pdfModalViewport');
+    if (!canvas || !viewportBox) return;
+
+    try {
+      if (this.renderTask) {
+        this.renderTask.cancel();
+      }
+
+      const page = await this.modalPdfDoc.getPage(this.modalPage);
+      const unscaledViewport = page.getViewport({ scale: 1.0, rotation: this.modalRotation });
+
+      let scale = 1.0;
+      if (this.modalZoom === 'fit') {
+        const availW = viewportBox.clientWidth - 48;
+        const availH = viewportBox.clientHeight - 48;
+        scale = Math.min(availW / unscaledViewport.width, availH / unscaledViewport.height);
+      } else {
+        scale = this.modalZoom;
+      }
+
+      const viewport = page.getViewport({ scale, rotation: this.modalRotation });
+      canvas.width = Math.floor(viewport.width);
+      canvas.height = Math.floor(viewport.height);
+
+      const ctx = canvas.getContext('2d');
+      this.renderTask = page.render({ canvasContext: ctx, viewport });
+      await this.renderTask.promise;
+    } catch (err) {
+      if (err.name !== 'RenderingCancelledException') {
+        console.warn('Modal page render error:', err);
+      }
+    }
+  }
+
+  renderModalImage(imgBytes) {
+    const canvas = document.getElementById('pdfModalCanvas');
+    if (!canvas) return;
+
+    const img = new Image();
+    const blob = new Blob([imgBytes], { type: 'image/jpeg' });
+    img.src = URL.createObjectURL(blob);
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(img.src);
+    };
+  }
+
+  // ==============================================================================
+  // Direct Disk Subfolder Saving (Zero-Port Native IPC & Zero-Overwrite)
+  // ==============================================================================
+
+  async saveOutputFile(subfolderName, fileName, dataBlobOrBytes) {
+    let bytes;
+    if (dataBlobOrBytes instanceof Uint8Array) {
+      bytes = dataBlobOrBytes;
+    } else if (dataBlobOrBytes instanceof Blob) {
+      const buf = await dataBlobOrBytes.arrayBuffer();
+      bytes = new Uint8Array(buf);
+    } else {
+      throw new Error('Invalid output format');
+    }
+
+    // Determine target directory
+    const targetDir = this.activeFolderPath
+      ? `${this.activeFolderPath}/${subfolderName}`
+      : `Output/${subfolderName}`;
+
+    // Clean filename
+    let finalName = fileName.replace(/[<>:"/\\|?*]/g, '_');
+    const dotIdx = finalName.lastIndexOf('.');
+    const stem = dotIdx !== -1 ? finalName.slice(0, dotIdx) : finalName;
+    const ext = dotIdx !== -1 ? finalName.slice(dotIdx) : '';
+
+    let destPath = `${targetDir}/${finalName}`;
+
+    // Zero-Overwrite collision avoidance
+    const res = await writeBinaryFile(destPath, bytes);
+    if (!res.success) {
+      throw new Error(res.error || `Failed to write file ${destPath}`);
+    }
+
+    this.lastOutputFolder = targetDir;
+    return destPath;
   }
 
   async handleStartProcess() {
     if (this.files.length === 0) {
-      toast.show('No Files', 'Please add PDF files to process.', 'warning');
+      toast.show('No Files', 'Please add files to process.', 'warning');
       return;
     }
 
@@ -518,95 +1114,140 @@ export class PdfStudioUIManager {
 
     const opName = this.activeTool;
     const subfolder = getSubfolderName(opName);
-    toast.show('Processing Started', `Running ${this._getToolDisplayName(opName)} on ${this.files.length} files...`, 'info');
+    toast.show('Processing Started', `Running ${this._getToolDisplayName(opName)} via Zero-Port Native IPC...`, 'info');
 
     try {
-      if (opName === 'merge_pdf') {
-        // Merge all into single PDF dossier
-        const byteList = this.files.map(f => f.bytes).filter(Boolean);
-        const mergedBlob = mergePdfDocuments(byteList, 'portrait');
-        this._downloadBlob(mergedBlob, 'Merged_Admission_Dossier.pdf');
-        toast.show('Merge Complete!', 'Merged PDF Dossier generated and saved.', 'success');
-      } else if (opName === 'compress_pdf') {
-        // Compress each PDF to <256 KB safe threshold
-        let count = 0;
+      let savedCount = 0;
+
+      if (opName === 'compress_pdf') {
+        // Compress PDF to < targetKb
         for (const f of this.files) {
           if (!f.bytes) continue;
-          const images = getDocumentImagesFromPdf(f.bytes);
+
+          let images = getDocumentImagesFromPdf(f.bytes);
+          // Vector PDF Fallback: Render via PDF.js canvas if 0 embedded JPEGs found
+          if (!images || images.length === 0) {
+            images = await renderPdfPagesToJpegs(f.bytes, 150, 0.78);
+          }
+
           let outputBlob;
           if (images.length > 0) {
-            outputBlob = createPdfFromJpegs(images, 'portrait');
+            outputBlob = createPdfFromJpegs(images, 'portrait', f.rotation || 0);
           } else {
             outputBlob = new Blob([f.bytes], { type: 'application/pdf' });
           }
 
           const outName = formatSizeSuffixFilename(f.name, outputBlob.size);
-          this._downloadBlob(outputBlob, outName);
-          count++;
+          await this.saveOutputFile(subfolder, outName, outputBlob);
+          savedCount++;
         }
-        toast.show('Compression Complete!', `Compressed ${count} files to safe MahaDBT thresholds.`, 'success');
+        toast.show('Compression Complete!', `Saved ${savedCount} files directly into ${subfolder}/`, 'success');
+
+      } else if (opName === 'merge_pdf') {
+        // Merge PDFs into single admission dossier
+        const byteList = this.files.map(f => f.bytes).filter(Boolean);
+        const mergedBlob = mergePdfDocuments(byteList, 'portrait');
+        const dossierName = this.activeFolderName
+          ? `Merged_Admission_Dossier_${this.activeFolderName}.pdf`
+          : 'Merged_Admission_Dossier.pdf';
+
+        await this.saveOutputFile(subfolder, dossierName, mergedBlob);
+        savedCount = 1;
+        toast.show('Merge Complete!', `Dossier saved to ${subfolder}/${dossierName}`, 'success');
+
       } else if (opName === 'split_pdf') {
-        let totalPages = 0;
+        // Split with optional selective page range
         for (const f of this.files) {
           if (!f.bytes) continue;
-          const splitResults = splitPdfDocument(f.bytes, f.name);
-          splitResults.forEach(item => {
-            this._downloadBlob(item.blob, item.fileName);
-            totalPages++;
-          });
+
+          let images = getDocumentImagesFromPdf(f.bytes);
+          if (!images || images.length === 0) {
+            images = await renderPdfPagesToJpegs(f.bytes, 150, 0.85);
+          }
+
+          const totalPages = images.length || f.pageCount || 1;
+          const allowedIndices = parsePageRanges(this.splitPageRange, totalPages);
+
+          const splitResults = splitPdfDocument(f.bytes, f.name, allowedIndices, images);
+          for (const item of splitResults) {
+            await this.saveOutputFile(subfolder, item.fileName, item.blob);
+            savedCount++;
+          }
         }
-        toast.show('Split Complete!', `Extracted ${totalPages} individual PDF pages.`, 'success');
+        toast.show('Split Complete!', `Extracted ${savedCount} pages into ${subfolder}/`, 'success');
+
       } else if (opName === 'pdf_to_jpg') {
-        let totalJpgs = 0;
+        // PDF to JPG with configurable DPI (150 default) & vector canvas fallback
         for (const f of this.files) {
           if (!f.bytes) continue;
-          const jpgResults = convertPdfToJpg(f.bytes, f.name);
-          jpgResults.forEach(item => {
-            this._downloadBlob(item.blob, item.fileName);
-            totalJpgs++;
-          });
+
+          let fallbackImages = [];
+          const existingImages = getDocumentImagesFromPdf(f.bytes);
+          if (!existingImages || existingImages.length === 0) {
+            fallbackImages = await renderPdfPagesToJpegs(f.bytes, this.jpgDpi, 0.85);
+          }
+
+          const jpgResults = convertPdfToJpg(f.bytes, f.name, fallbackImages);
+          for (const item of jpgResults) {
+            await this.saveOutputFile(subfolder, item.fileName, item.blob || item.bytes);
+            savedCount++;
+          }
         }
-        toast.show('Conversion Complete!', `Extracted ${totalJpgs} high-resolution JPG pages.`, 'success');
+        toast.show('Conversion Complete!', `Saved ${savedCount} high-res JPGs to ${subfolder}/`, 'success');
+
+      } else if (opName === 'jpg_to_pdf') {
+        // JPG to PDF Compilation (Phase 3 sub-tool)
+        const imageList = [];
+        for (const f of this.files) {
+          if (f.bytes) {
+            imageList.push({ bytes: f.bytes });
+          }
+        }
+
+        if (imageList.length > 0) {
+          const compiledBlob = createPdfFromJpegs(imageList, 'portrait');
+          const pdfName = this.activeFolderName
+            ? `Compiled_Documents_${this.activeFolderName}.pdf`
+            : 'Compiled_Document.pdf';
+
+          await this.saveOutputFile(subfolder, pdfName, compiledBlob);
+          savedCount = 1;
+          toast.show('Compilation Complete!', `Compiled ${imageList.length} images into ${subfolder}/${pdfName}`, 'success');
+        }
+
       } else if (opName === 'rotate_pdf') {
-        let count = 0;
         for (const f of this.files) {
           if (!f.bytes) continue;
-          const rotatedBlob = rotatePdfDocument(f.bytes, 90);
-          this._downloadBlob(rotatedBlob, f.name);
-          count++;
+          const rotatedBlob = rotatePdfDocument(f.bytes, f.rotation || 90);
+          await this.saveOutputFile(subfolder, f.name, rotatedBlob);
+          savedCount++;
         }
-        toast.show('Rotation Complete!', `Rotated and saved ${count} PDF documents.`, 'success');
+        toast.show('Rotation Complete!', `Saved ${savedCount} rotated PDFs to ${subfolder}/`, 'success');
+
       } else {
         // Clean & enhance
-        let count = 0;
         for (const f of this.files) {
           if (!f.bytes) continue;
           const images = getDocumentImagesFromPdf(f.bytes);
           const cleanedBlob = createPdfFromJpegs(images, 'portrait');
-          this._downloadBlob(cleanedBlob, f.name);
-          count++;
+          await this.saveOutputFile(subfolder, f.name, cleanedBlob);
+          savedCount++;
         }
-        toast.show('Enhancement Complete!', `Watermarks filtered and ${count} PDFs enhanced.`, 'success');
+        toast.show('Enhancement Complete!', `Saved ${savedCount} clean PDFs to ${subfolder}/`, 'success');
       }
+
+      // Show 1-click Open Output Folder button on completion
+      const btnOpen = document.getElementById('btnOpenOutputFolder');
+      if (btnOpen) {
+        btnOpen.classList.remove('hidden');
+      }
+
     } catch (err) {
+      console.error('[PDF-STUDIO] Process failed:', err);
       toast.show('Operation Failed', err.message, 'error');
     } finally {
       this.isProcessing = false;
     }
-  }
-
-  _downloadBlob(blob, filename) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 1000);
   }
 }
 

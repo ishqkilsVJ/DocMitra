@@ -10586,13 +10586,16 @@ function $(e) {
 		return r === n ? (t.bytes?.length || 0) - (e.bytes?.length || 0) : r - n;
 	});
 }
-function wt(e, t = "Document.pdf") {
-	let n = $(e), r = t.replace(/\.pdf$/i, "");
-	return n.length ? n.map((e, t) => {
-		let i = n.length === 1 ? `${r}.jpg` : `${r}_page_${t + 1}.jpg`, a = new Blob([e.bytes], { type: "image/jpeg" });
+function wt(e, t = "Document.pdf", n = []) {
+	let r = $(e);
+	!r.length && n && n.length && (r = n);
+	let i = t.replace(/\.pdf$/i, "");
+	return r.length ? r.map((e, t) => {
+		let n = r.length === 1 ? `${i}.jpg` : `${i}_page_${t + 1}.jpg`, a = new Blob([e.bytes], { type: "image/jpeg" });
 		return {
-			fileName: i,
+			fileName: n,
 			blob: a,
+			bytes: e.bytes,
 			size: a.size,
 			pageIndex: t + 1,
 			width: e.width,
@@ -10600,17 +10603,23 @@ function wt(e, t = "Document.pdf") {
 		};
 	}) : [];
 }
-function Tt(e, t = "Document.pdf") {
-	let n = $(e), r = t.replace(/\.pdf$/i, "");
-	return n.length ? n.map((e, t) => {
-		let n = `${r}_page_${t + 1}.pdf`, i = Q([e], "portrait");
-		return {
-			fileName: n,
+function Tt(e, t = "Document.pdf", n = null, r = []) {
+	let i = $(e);
+	!i.length && r && r.length && (i = r);
+	let a = t.replace(/\.pdf$/i, "");
+	if (!i.length) return [];
+	let o = [];
+	return i.forEach((e, t) => {
+		if (n && !n.includes(t)) return;
+		let r = `${a}_page_${t + 1}.pdf`, i = Q([e], "portrait");
+		o.push({
+			fileName: r,
 			blob: i,
+			bytes: e.bytes,
 			size: i.size,
 			pageIndex: t + 1
-		};
-	}) : [];
+		});
+	}), o;
 }
 function Et(e = [], t = "portrait") {
 	let n = [];
@@ -10645,49 +10654,108 @@ function Ot(e, t, n = "auto") {
 	let r = e.lastIndexOf("."), i = r === -1 ? e : e.slice(0, r), a = r === -1 ? "" : e.slice(r), o = i.replace(/[\s_-]+\d+\s*(?:KB|MB)$/i, "").trim();
 	return n === "MB" || n === "auto" && t >= 10485760 ? `${o} ${Math.max(1, Math.round(Number(t || 0) / 1048576))} MB${a}` : `${o} ${Math.max(1, Math.round(Number(t || 0) / 1024))} KB${a}`;
 }
+function kt(e) {
+	switch (e) {
+		case "compress_pdf": return "Compressed_PDF";
+		case "hyper_compress": return "Hyper_Compressed_PDF";
+		case "pdf_to_jpg": return "Converted_JPG";
+		case "jpg_to_pdf": return "Converted_PDF";
+		case "merge_pdf": return "Merged_PDF";
+		case "split_pdf": return "Split_PDF";
+		case "rotate_pdf": return "Rotated_PDF";
+		case "clean_pdf": return "Enhanced_PDF";
+		case "compress_jpg":
+		case "bulk_compress": return "Compressed_JPG";
+		case "rotate_image": return "Rotated_JPG";
+		case "clean_image": return "Enhanced_JPG";
+		case "format_convert": return "Converted_Images";
+		case "converted_png": return "Converted_PNG";
+		default: return "Processed_Files";
+	}
+}
+function At(e, t) {
+	if (!e || !e.trim() || e.trim().toLowerCase() === "all") return Array.from({ length: t }, (e, t) => t);
+	let n = /* @__PURE__ */ new Set(), r = e.split(/[,;\s]+/);
+	for (let e of r) if (e) {
+		if (e.includes("-")) {
+			let [r, i] = e.split("-"), a = parseInt(r, 10), o = parseInt(i, 10);
+			if (!isNaN(a) && !isNaN(o)) {
+				let e = Math.max(1, Math.min(a, o)), r = Math.min(t, Math.max(a, o));
+				for (let t = e; t <= r; t++) n.add(t - 1);
+			}
+		} else {
+			let r = parseInt(e, 10);
+			!isNaN(r) && r >= 1 && r <= t && n.add(r - 1);
+		}
+	}
+	let i = Array.from(n).sort((e, t) => e - t);
+	return i.length ? i : Array.from({ length: t }, (e, t) => t);
+}
+async function jt(e, t = 150, n = .82) {
+	if (typeof window > "u" || !window.pdfjsLib) throw Error("PDF.js library is not loaded");
+	let r = await window.pdfjsLib.getDocument({ data: e }).promise, i = r.numPages, a = (t || 150) / 72, o = [];
+	for (let e = 1; e <= i; e++) {
+		let t = await r.getPage(e), i = t.getViewport({ scale: a }), s = document.createElement("canvas");
+		s.width = Math.floor(i.width), s.height = Math.floor(i.height);
+		let c = s.getContext("2d");
+		await t.render({
+			canvasContext: c,
+			viewport: i
+		}).promise;
+		let l = s.toDataURL("image/jpeg", n).split(",")[1], u = atob(l), d = new Uint8Array(u.length);
+		for (let e = 0; e < u.length; e++) d[e] = u.charCodeAt(e);
+		o.push({
+			bytes: d,
+			width: s.width,
+			height: s.height,
+			pageIndex: e
+		});
+	}
+	return o;
+}
 // tools/pdf_studio/pdf_studio_ui.js
-var kt = class {
+var Mt = class {
 	constructor() {
-		this.activeTool = "compress_pdf", this.files = [], this.isProcessing = !1;
+		this.activeTool = "compress_pdf", this.files = [], this.activeFolderPath = "", this.activeFolderName = "", this.targetKb = 256, this.jpgDpi = 150, this.splitPageRange = "", this.isProcessing = !1, this.lastOutputFolder = "", this.sortDesc = !0, this.draggedIndex = null, this.modalFileIdx = -1, this.modalPage = 1, this.modalTotalPages = 1, this.modalZoom = "fit", this.modalRotation = 0, this.modalPdfDoc = null, this.renderTask = null;
 	}
 	init() {
-		this._bindRibbonTools(), this._bindActions(), this._bindDropzone(), this.renderQueue(), console.info("[DocMitra PDF Studio] PDF Studio UI manager initialized.");
+		this._bindRibbonTools(), this._bindActions(), this._bindDropzone(), this._bindBentoDropdowns(), this._bindModalControls(), this._bindHotkeys(), this.renderQueue(), console.info("[DocMitra PDF Studio] Zero-Port Native UI Manager initialized.");
 	}
 	_bindRibbonTools() {
-		let e = document.querySelectorAll("#view-pdf-studio .tool-ribbon-btn"), t = [
-			"compress_pdf",
-			"merge_pdf",
-			"split_pdf",
-			"pdf_to_jpg",
-			"rotate_pdf",
-			"clean_pdf"
-		];
-		e.forEach((e, n) => {
-			e.addEventListener("click", (r) => {
-				r.preventDefault();
-				let i = t[n] || "compress_pdf";
-				this.setTool(i, e);
+		document.querySelectorAll("#view-pdf-studio .tool-ribbon-btn").forEach((e) => {
+			e.addEventListener("click", (t) => {
+				t.preventDefault();
+				let n = e.getAttribute("data-tool") || "compress_pdf";
+				this.setTool(n, e);
 			});
 		});
 	}
 	setTool(e, t = null) {
-		if (this.activeTool = e, document.querySelectorAll("#view-pdf-studio .tool-ribbon-btn").forEach((e) => {
+		this.activeTool = e, document.querySelectorAll("#view-pdf-studio .tool-ribbon-btn").forEach((e) => {
 			e.classList.remove("bg-primary-container", "text-on-primary", "font-semibold", "shadow-sm"), e.classList.add("text-on-surface-variant", "hover:bg-surface-container-low", "hover:text-on-surface");
-			let t = e.querySelector(".bg-primary\\/60");
+			let t = e.querySelector(".active-tool-badge");
 			t && t.remove();
-		}), t) {
-			t.classList.remove("text-on-surface-variant", "hover:bg-surface-container-low", "hover:text-on-surface"), t.classList.add("bg-primary-container", "text-on-primary", "font-semibold", "shadow-sm");
+		});
+		let n = t || document.querySelector(`#view-pdf-studio .tool-ribbon-btn[data-tool="${e}"]`);
+		if (n) {
+			n.classList.remove("text-on-surface-variant", "hover:bg-surface-container-low", "hover:text-on-surface"), n.classList.add("bg-primary-container", "text-on-primary", "font-semibold", "shadow-sm");
 			let e = document.createElement("span");
-			e.className = "bg-primary/60 text-on-primary text-[10px] font-mono-code px-1.5 py-0.5 rounded font-bold uppercase tracking-tight", e.textContent = "Active", t.appendChild(e);
+			e.className = "active-tool-badge bg-primary/60 text-on-primary text-[10px] font-mono-code px-1.5 py-0.5 rounded font-bold uppercase tracking-tight", e.textContent = "Active", n.appendChild(e);
 		}
-		this._updateProcessButtonLabel(), r.show("Tool Selected", this._getToolDisplayName(e), "info");
+		let i = document.getElementById("bentoCompressTargetWrapper"), a = document.getElementById("bentoJpgDpiWrapper"), o = document.getElementById("splitRangeWrapper");
+		i && i.classList.toggle("hidden", e !== "compress_pdf"), a && a.classList.toggle("hidden", e !== "pdf_to_jpg"), o && o.classList.toggle("hidden", e !== "split_pdf");
+		let s = kt(e), c = document.getElementById("sidebarOutputSubfolderText");
+		c && (c.textContent = s);
+		let l = document.getElementById("footerSubfolderOutputText");
+		l && (l.textContent = `${s}/`), this._updateProcessButtonLabel(), r.show("Tool Selected", this._getToolDisplayName(e), "info");
 	}
 	_getToolDisplayName(e) {
 		switch (e) {
-			case "compress_pdf": return "Compress PDF (<256 KB MahaDBT)";
+			case "compress_pdf": return `Compress PDF (<${this.targetKb} KB)`;
 			case "merge_pdf": return "Merge PDF Dossier";
 			case "split_pdf": return "Split / Extract Pages";
-			case "pdf_to_jpg": return "Convert PDF to JPG";
+			case "pdf_to_jpg": return `PDF to JPG (${this.jpgDpi} DPI)`;
+			case "jpg_to_pdf": return "JPG to PDF (A4 Compilation)";
 			case "rotate_pdf": return "Rotate All Pages 90°";
 			case "clean_pdf": return "Clean & Enhance";
 			default: return "Process Files";
@@ -10699,7 +10767,7 @@ var kt = class {
 		let t = e.querySelector("span:nth-of-type(2)");
 		if (t) {
 			let e = this.files.length, n = "Start Process";
-			this.activeTool === "compress_pdf" ? n = "Compress" : this.activeTool === "merge_pdf" ? n = "Merge" : this.activeTool === "split_pdf" ? n = "Split" : this.activeTool === "pdf_to_jpg" ? n = "Convert to JPG" : this.activeTool === "rotate_pdf" ? n = "Rotate" : this.activeTool === "clean_pdf" && (n = "Clean & Enhance"), t.textContent = `${n} (${e} Files)`;
+			this.activeTool === "compress_pdf" ? n = `Compress to <${this.targetKb}KB` : this.activeTool === "merge_pdf" ? n = "Merge Dossier" : this.activeTool === "split_pdf" ? n = "Split Pages" : this.activeTool === "pdf_to_jpg" ? n = `Convert to JPG (${this.jpgDpi} DPI)` : this.activeTool === "jpg_to_pdf" ? n = "Compile Images to PDF" : this.activeTool === "rotate_pdf" ? n = "Rotate 90°" : this.activeTool === "clean_pdf" && (n = "Clean & Enhance"), t.textContent = `${n} (${e} Files)`;
 		}
 	}
 	_bindActions() {
@@ -10709,12 +10777,77 @@ var kt = class {
 		t && t.addEventListener("click", () => this.handleAddFiles());
 		let n = document.getElementById("btnRotateAllPdf");
 		n && n.addEventListener("click", () => this.handleRotateAll());
-		let r = document.getElementById("btnClearPdfQueue");
-		r && r.addEventListener("click", () => this.handleClearQueue());
-		let i = document.getElementById("btnFilterOversizedPdf");
-		i && i.addEventListener("click", () => this.handleFilterOversized());
-		let a = document.getElementById("startCompressBtn");
-		a && a.addEventListener("click", () => this.handleStartProcess());
+		let i = document.getElementById("btnClearPdfQueue");
+		i && i.addEventListener("click", () => this.handleClearQueue());
+		let a = document.getElementById("btnFilterOversizedPdf");
+		a && a.addEventListener("click", () => this.handleFilterOversized());
+		let o = document.getElementById("btnOpenOutputFolder");
+		o && o.addEventListener("click", () => {
+			this.lastOutputFolder && b(this.lastOutputFolder);
+		});
+		let s = document.getElementById("btnPdfScrollLeft"), c = document.getElementById("btnPdfScrollRight"), l = document.getElementById("pdfCardsGrid");
+		s && l && s.addEventListener("click", () => {
+			l.scrollBy({
+				left: -300,
+				behavior: "smooth"
+			});
+		}), c && l && c.addEventListener("click", () => {
+			l.scrollBy({
+				left: 300,
+				behavior: "smooth"
+			});
+		});
+		let u = document.getElementById("btnPdfSortSize");
+		u && u.addEventListener("click", () => {
+			this.sortDesc = !this.sortDesc, this.files.sort((e, t) => this.sortDesc ? t.size - e.size : e.size - t.size), u.textContent = this.sortDesc ? "Size (Desc)" : "Size (Asc)", this.renderQueue();
+		});
+		let d = document.getElementById("btnPdfSortDocket");
+		d && d.addEventListener("click", () => {
+			this.files.sort((e, t) => e.name.localeCompare(t.name, void 0, {
+				numeric: !0,
+				sensitivity: "base"
+			})), this.renderQueue(), r.show("Queue Sorted", "Natural sorting (1-0, A-Z) applied.", "info");
+		});
+		let f = document.getElementById("inputSplitPageRange");
+		f && f.addEventListener("input", (e) => {
+			this.splitPageRange = e.target.value.trim();
+		});
+		let p = document.getElementById("startCompressBtn");
+		p && p.addEventListener("click", () => this.handleStartProcess());
+	}
+	_bindBentoDropdowns() {
+		let e = document.getElementById("btnBentoCompressTarget"), t = document.getElementById("menuBentoCompressTarget"), n = document.getElementById("labelCompressTarget"), i = document.getElementById("dockTargetLabel");
+		if (e && t) {
+			e.addEventListener("click", (e) => {
+				e.stopPropagation(), t.classList.toggle("hidden");
+			}), t.querySelectorAll("button[data-kb]").forEach((e) => {
+				e.addEventListener("click", (a) => {
+					a.stopPropagation();
+					let o = parseInt(e.getAttribute("data-kb"), 10) || 256;
+					this.targetKb = o;
+					let s = `< ${o} KB${o === 256 ? " (MahaDBT)" : o === 200 ? " (CET)" : ""}`;
+					n && (n.textContent = s), i && (i.textContent = `< ${o} KB`), t.classList.add("hidden"), this.updateStats(), this._updateProcessButtonLabel(), r.show("Target Updated", `Compress target set to < ${o} KB`, "info");
+				});
+			});
+			let a = document.getElementById("btnApplyCustomKb"), o = document.getElementById("inputCustomTargetKb");
+			a && o && a.addEventListener("click", (e) => {
+				e.stopPropagation();
+				let a = parseInt(o.value, 10);
+				a && a >= 50 && a <= 5e3 && (this.targetKb = a, n && (n.textContent = `< ${a} KB (Custom)`), i && (i.textContent = `< ${a} KB`), t.classList.add("hidden"), this.updateStats(), this._updateProcessButtonLabel(), r.show("Target Updated", `Custom target set to < ${a} KB`, "info"));
+			});
+		}
+		let a = document.getElementById("btnBentoJpgDpi"), o = document.getElementById("menuBentoJpgDpi"), s = document.getElementById("labelJpgDpi");
+		a && o && (a.addEventListener("click", (e) => {
+			e.stopPropagation(), o.classList.toggle("hidden");
+		}), o.querySelectorAll("button[data-dpi]").forEach((e) => {
+			e.addEventListener("click", (t) => {
+				t.stopPropagation();
+				let n = parseInt(e.getAttribute("data-dpi"), 10) || 150;
+				this.jpgDpi = n, s && (s.textContent = `${n} DPI ${n === 150 ? "(Fast)" : n === 300 ? "(High Quality)" : "(Web)"}`), o.classList.add("hidden"), this._updateProcessButtonLabel(), r.show("DPI Updated", `PDF to JPG resolution set to ${n} DPI`, "info");
+			});
+		})), document.addEventListener("click", () => {
+			t && !t.classList.contains("hidden") && t.classList.add("hidden"), o && !o.classList.contains("hidden") && o.classList.add("hidden");
+		});
 	}
 	_bindDropzone() {
 		let e = document.getElementById("view-pdf-studio");
@@ -10722,9 +10855,46 @@ var kt = class {
 			e.preventDefault(), e.stopPropagation();
 		}), e.addEventListener("drop", async (e) => {
 			e.preventDefault(), e.stopPropagation();
-			let t = Array.from(e.dataTransfer?.files || []).filter((e) => /\.pdf$/i.test(e.name));
-			t.length === 0 ? r.show("Invalid Files", "Please drop PDF files only.", "warning") : await this.loadDroppedFiles(t);
+			let t = Array.from(e.dataTransfer?.files || []), n = this.activeTool === "jpg_to_pdf" ? t.filter((e) => /\.(jpe?g|png|webp)$/i.test(e.name)) : t.filter((e) => /\.pdf$/i.test(e.name));
+			n.length === 0 ? r.show("Invalid Files", this.activeTool === "jpg_to_pdf" ? "Please drop JPG/PNG images only." : "Please drop PDF files only.", "warning") : await this.loadDroppedFiles(n);
 		}));
+	}
+	_bindHotkeys() {
+		window.addEventListener("keydown", (e) => {
+			let t = document.getElementById("view-pdf-studio");
+			if (!t || t.classList.contains("hidden")) return;
+			let n = document.getElementById("modalPdfStudioPreview");
+			if (n && !n.classList.contains("hidden")) {
+				if (e.key === "Escape") {
+					e.preventDefault(), this.closePreviewModal();
+					return;
+				}
+				if (e.key === "PageUp" || e.key === "ArrowLeft") {
+					e.preventDefault(), this.modalPrevPage();
+					return;
+				}
+				if (e.key === "PageDown" || e.key === "ArrowRight") {
+					e.preventDefault(), this.modalNextPage();
+					return;
+				}
+				if (e.key === "r" || e.key === "R") {
+					e.preventDefault(), this.modalRotate(90);
+					return;
+				}
+				if (e.ctrlKey && (e.key === "+" || e.key === "=")) {
+					e.preventDefault(), this.modalZoomIn();
+					return;
+				}
+				if (e.ctrlKey && e.key === "-") {
+					e.preventDefault(), this.modalZoomOut();
+					return;
+				}
+				if (e.ctrlKey && e.key === "0") {
+					e.preventDefault(), this.modalZoomFit();
+					return;
+				}
+			} else e.key === "F2" ? (e.preventDefault(), this.handleBrowseFolder()) : e.key === "F8" ? (e.preventDefault(), this.handleStartProcess()) : e.altKey && (e.key === "m" || e.key === "M") ? (e.preventDefault(), this.setTool("merge_pdf")) : e.altKey && (e.key === "s" || e.key === "S") ? (e.preventDefault(), this.setTool("split_pdf")) : e.altKey && (e.key === "j" || e.key === "J") ? (e.preventDefault(), this.setTool("pdf_to_jpg")) : e.altKey && (e.key === "p" || e.key === "P") ? (e.preventDefault(), this.setTool("jpg_to_pdf")) : e.altKey && (e.key === "r" || e.key === "R") ? (e.preventDefault(), this.setTool("rotate_pdf")) : e.key === "Escape" && this.handleClearQueue();
+		});
 	}
 	async handleBrowseFolder() {
 		r.show("Opening Folder Picker", "Navigating Windows Explorer...", "info");
@@ -10734,41 +10904,68 @@ var kt = class {
 				e.cancelled || r.show("Folder Select Error", e.error || "Failed to select folder", "error");
 				return;
 			}
-			let t = (e.files || []).filter((e) => /\.pdf$/i.test(e.name));
-			if (t.length === 0) {
-				r.show("No PDFs Found", "Selected directory contains 0 PDF files.", "warning");
+			this.activeFolderPath = e.path || "", this.activeFolderName = e.name || (e.path ? e.path.split(/[\/\\]/).pop() : "Selected Folder");
+			let t = document.getElementById("displayPdfFolderName");
+			t && (t.textContent = this.activeFolderName, t.title = this.activeFolderPath);
+			let n = this.activeTool === "jpg_to_pdf", i = (e.files || []).filter((e) => n ? /\.(jpe?g|png|webp)$/i.test(e.name) : /\.pdf$/i.test(e.name));
+			if (i.length === 0) {
+				r.show("No Files Found", `Folder contains 0 ${n ? "image" : "PDF"} files.`, "warning");
 				return;
 			}
-			await this.loadNativeFiles(t), r.show("PDFs Loaded", `${t.length} files added to execution queue.`, "success");
+			await this.loadNativeFiles(i), r.show("Files Loaded", `${i.length} files added from ${this.activeFolderName}.`, "success");
 		} catch (e) {
 			r.show("Folder Error", e.message, "error");
 		}
 	}
 	async handleAddFiles() {
+		try {
+			let e = this.activeTool === "jpg_to_pdf", t = await f(e ? "Images (*.jpg;*.jpeg;*.png;*.webp)|*.jpg;*.jpeg;*.png;*.webp" : "PDF Documents (*.pdf)|*.pdf", e ? "Select Images for PDF - DocMitra" : "Select PDF Files - DocMitra");
+			if (t && t.success && t.files && t.files.length) {
+				if (!this.activeFolderPath && t.files[0].path) {
+					let e = t.files[0].path.replace(/\\/g, "/").split("/");
+					e.pop(), this.activeFolderPath = e.join("/"), this.activeFolderName = e.pop() || "Selected Folder";
+					let n = document.getElementById("displayPdfFolderName");
+					n && (n.textContent = this.activeFolderName, n.title = this.activeFolderPath);
+				}
+				await this.loadNativeFiles(t.files), r.show("Files Added", `${t.files.length} files added to execution queue.`, "success");
+				return;
+			}
+		} catch (e) {
+			console.warn("Native select files fallback:", e);
+		}
 		let e = document.createElement("input");
-		e.type = "file", e.accept = ".pdf,application/pdf", e.multiple = !0, e.style.display = "none", e.addEventListener("change", async (t) => {
+		e.type = "file", e.accept = this.activeTool === "jpg_to_pdf" ? ".jpg,.jpeg,.png,.webp,image/*" : ".pdf,application/pdf", e.multiple = !0, e.style.display = "none", e.addEventListener("change", async (t) => {
 			let n = Array.from(t.target.files || []);
 			n.length > 0 && await this.loadDroppedFiles(n), document.body.removeChild(e);
 		}), document.body.appendChild(e), e.click();
 	}
 	async loadNativeFiles(e) {
 		for (let t of e) try {
-			let e = t.url || (t.path ? `http://localhost:3000/api/serve-file?path=${encodeURIComponent(t.path)}` : null), n = null;
-			if (e) {
-				let t = await (await fetch(e)).arrayBuffer();
-				n = new Uint8Array(t);
+			let e = null;
+			if (t.path) e = await _(t.path);
+			else if (t.fileObj) {
+				let n = await t.fileObj.arrayBuffer();
+				e = new Uint8Array(n);
+			}
+			let n = t.dir || (t.path ? t.path.substring(0, t.path.lastIndexOf(/[\/\\]/)) : this.activeFolderPath);
+			if (!this.activeFolderPath && n) {
+				this.activeFolderPath = n.replace(/\\/g, "/"), this.activeFolderName = this.activeFolderPath.split("/").pop() || "Folder";
+				let e = document.getElementById("displayPdfFolderName");
+				e && (e.textContent = this.activeFolderName, e.title = this.activeFolderPath);
 			}
 			this.files.push({
 				id: `pdf_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
 				name: t.name,
-				path: t.path,
-				size: t.size || (n ? n.length : 0),
-				bytes: n,
+				path: t.path || t.name,
+				dir: n,
+				size: t.size || (e ? e.length : 0),
+				bytes: e,
 				pageCount: 1,
+				rotation: 0,
 				status: "ready"
 			});
 		} catch (e) {
-			console.warn(`Failed to preload bytes for ${t.name}:`, e);
+			console.warn(`[PDF-STUDIO] Failed to read bytes for ${t.name} via Native IPC:`, e);
 		}
 		this.updateStats(), this.renderQueue();
 	}
@@ -10779,19 +10976,27 @@ var kt = class {
 				id: `pdf_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
 				name: t.name,
 				path: t.name,
+				dir: this.activeFolderPath || "",
 				size: t.size,
 				bytes: n,
 				pageCount: 1,
+				rotation: 0,
 				status: "ready"
 			});
 		}
-		this.updateStats(), this.renderQueue(), r.show("PDFs Added", `${e.length} files added to queue.`, "success");
+		this.updateStats(), this.renderQueue(), r.show("Files Queued", `${e.length} files added to execution queue.`, "success");
 	}
 	updateStats() {
-		let e = this.files.length, t = (this.files.reduce((e, t) => e + t.size, 0) / 1048576).toFixed(2), n = (e * 230 * 1024 / 1048576).toFixed(2), r = document.getElementById("pdfQueueCount");
-		r && (r.textContent = `${e} Files Loaded`);
-		let i = document.getElementById("pdfQueueStats");
-		i && (i.textContent = `Total: ${t} MB → Projected: ~${n} MB`), this._updateProcessButtonLabel();
+		let e = this.files.length, t = (this.files.reduce((e, t) => e + (t.size || 0), 0) / 1048576).toFixed(2), n = (e * this.targetKb * 1024 / 1048576).toFixed(2), r = document.getElementById("summaryPdfCount");
+		r && (r.textContent = `${e} Files`);
+		let i = document.getElementById("summaryPdfTotalSize");
+		i && (i.textContent = `${t} MB`);
+		let a = document.getElementById("summaryPdfProjected");
+		a && (a.textContent = `~${n} MB`);
+		let o = document.getElementById("pdfQueueCount");
+		o && (o.textContent = `${e} Files`);
+		let s = document.getElementById("pdfQueueStats");
+		s && (s.textContent = `Total: ${t} MB → Projected: ~${n} MB`), this._updateProcessButtonLabel();
 	}
 	renderQueue() {
 		let e = document.getElementById("pdfCardsGrid");
@@ -10801,68 +11006,94 @@ var kt = class {
 				let t = document.createElement("div");
 				t.className = "col-span-full p-8 text-center bg-surface-container-lowest rounded-xl border border-surface-container-high/80 flex flex-col items-center gap-2";
 				let n = document.createElement("span");
-				n.className = "material-symbols-outlined text-[40px] text-primary opacity-60", n.textContent = "picture_as_pdf", t.appendChild(n);
+				n.className = "material-symbols-outlined text-[40px] text-primary opacity-60", n.textContent = this.activeTool === "jpg_to_pdf" ? "add_photo_alternate" : "picture_as_pdf", t.appendChild(n);
 				let r = document.createElement("div");
-				r.className = "font-headline-sm font-bold text-on-surface", r.textContent = "No PDF Files in Execution Queue", t.appendChild(r);
+				r.className = "font-headline-sm font-bold text-on-surface", r.textContent = this.activeTool === "jpg_to_pdf" ? "No Images Loaded" : "No PDF Documents in Execution Queue", t.appendChild(r);
 				let i = document.createElement("div");
-				i.className = "text-body-sm text-secondary", i.textContent = "Drag & drop admission PDF documents here or click \"Browse Directory\" to get started.", t.appendChild(i), e.appendChild(t);
+				i.className = "text-body-sm text-secondary", i.textContent = this.activeTool === "jpg_to_pdf" ? "Click \"Select Folder\" (F2) or drop JPG/PNG image certificates to compile into A4 PDF." : "Drag & drop student admission PDF documents here or click \"Select Folder\" (F2) to start.", t.appendChild(i), e.appendChild(t);
 			} else this.files.forEach((t, n) => {
-				let r = document.createElement("div");
-				r.className = "bg-surface-container-lowest rounded-xl border border-surface-container-high/80 p-2.5 flex flex-col justify-between hover:shadow-md transition-shadow group relative";
 				let i = document.createElement("div");
-				i.className = "absolute top-1.5 right-1.5 z-10 flex items-center gap-1";
-				let a = document.createElement("button");
-				a.type = "button", a.className = "w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-primary transition-colors shadow-xs cursor-pointer", a.title = "Rotate 90°";
-				let o = document.createElement("span");
-				o.className = "material-symbols-outlined text-[13px]", o.textContent = "rotate_right", a.appendChild(o), a.addEventListener("click", (e) => {
+				i.className = "docket-card bg-surface-container-lowest rounded-xl border border-surface-container-high/80 p-2.5 flex flex-col justify-between hover:shadow-md transition-all group relative cursor-pointer", this.activeTool === "merge_pdf" && (i.setAttribute("draggable", "true"), i.addEventListener("dragstart", (e) => {
+					this.draggedIndex = n, i.classList.add("card-dragging"), e.dataTransfer.effectAllowed = "move";
+				}), i.addEventListener("dragend", () => {
+					i.classList.remove("card-dragging"), this.draggedIndex = null;
+				}), i.addEventListener("dragover", (e) => {
+					e.preventDefault(), e.dataTransfer.dropEffect = "move", i.classList.add("card-drag-over");
+				}), i.addEventListener("dragleave", () => {
+					i.classList.remove("card-drag-over");
+				}), i.addEventListener("drop", (e) => {
+					if (e.preventDefault(), i.classList.remove("card-drag-over"), this.draggedIndex !== null && this.draggedIndex !== n) {
+						let e = this.files.splice(this.draggedIndex, 1)[0];
+						this.files.splice(n, 0, e), this.renderQueue(), r.show("Reordered", `Moved "${e.name}" to position ${n + 1}.`, "info");
+					}
+				}));
+				let a = document.createElement("div");
+				a.className = "absolute top-1.5 right-1.5 z-10 flex items-center gap-1";
+				let o = document.createElement("button");
+				o.type = "button", o.className = "w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-primary transition-colors shadow-xs cursor-pointer", o.title = "Rotate 90° Clockwise";
+				let s = document.createElement("span");
+				s.className = "material-symbols-outlined text-[13px]", s.textContent = "rotate_right", o.appendChild(s), o.addEventListener("click", (e) => {
 					e.stopPropagation(), this.rotateSingleFile(n);
-				}), i.appendChild(a);
-				let s = document.createElement("button");
-				s.type = "button", s.className = "w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-error transition-colors shadow-xs cursor-pointer", s.title = "Remove";
-				let c = document.createElement("span");
-				c.className = "material-symbols-outlined text-[13px]", c.textContent = "close", s.appendChild(c), s.addEventListener("click", (e) => {
+				}), a.appendChild(o);
+				let c = document.createElement("button");
+				c.type = "button", c.className = "w-5 h-5 rounded flex items-center justify-center bg-surface-container-lowest/90 text-outline hover:text-error transition-colors shadow-xs cursor-pointer", c.title = "Remove File";
+				let l = document.createElement("span");
+				l.className = "material-symbols-outlined text-[13px]", l.textContent = "close", c.appendChild(l), c.addEventListener("click", (e) => {
 					e.stopPropagation(), this.removeFile(n);
-				}), i.appendChild(s), r.appendChild(i);
-				let l = document.createElement("div");
-				l.className = "relative w-full h-24 rounded-lg bg-surface-container-low overflow-hidden mb-2 border border-surface-container-high/60 flex items-center justify-center";
-				let u = document.createElement("canvas");
-				u.className = "w-full h-full object-contain", l.appendChild(u);
-				let d = document.createElement("div");
-				d.className = "absolute bottom-1 right-1 bg-inverse-surface/80 text-inverse-on-surface rounded px-1 text-[9px] font-mono-code", d.textContent = `${t.pageCount || 1}p`, t.bytes && window.pdfjsLib && window.pdfjsLib.getDocument({ data: t.bytes }).promise.then((e) => {
-					t.pageCount = e.numPages, d.textContent = `${e.numPages}p`, e.getPage(1).then((e) => {
-						let t = e.getViewport({ scale: .5 });
-						u.height = t.height, u.width = t.width, e.render({
-							canvasContext: u.getContext("2d"),
-							viewport: t
+				}), a.appendChild(c), i.appendChild(a);
+				let u = document.createElement("div");
+				u.className = "relative w-full h-24 rounded-lg bg-surface-container-low overflow-hidden mb-2 border border-surface-container-high/60 flex items-center justify-center";
+				let d = document.createElement("canvas");
+				d.className = "w-full h-full object-contain", u.appendChild(d);
+				let f = document.createElement("div");
+				if (f.className = "absolute bottom-1 right-1 bg-inverse-surface/80 text-inverse-on-surface rounded px-1 text-[9px] font-mono-code font-bold", f.textContent = `${t.pageCount || 1}p`, t.bytes && window.pdfjsLib && !t.name.match(/\.(jpe?g|png|webp)$/i)) window.pdfjsLib.getDocument({ data: t.bytes }).promise.then((e) => {
+					t.pageCount = e.numPages, f.textContent = `${e.numPages}p`, e.getPage(1).then((e) => {
+						let n = e.getViewport({
+							scale: .45,
+							rotation: t.rotation || 0
+						});
+						d.height = n.height, d.width = n.width, e.render({
+							canvasContext: d.getContext("2d"),
+							viewport: n
 						});
 					});
 				}).catch(() => {
-					u.style.display = "none";
+					d.style.display = "none";
 					let e = document.createElement("span");
-					e.className = "material-symbols-outlined text-[32px] text-primary opacity-50", e.textContent = "picture_as_pdf", l.appendChild(e);
-				}), l.appendChild(d), r.appendChild(l);
-				let f = document.createElement("div");
-				f.className = "font-headline-sm text-[12px] font-bold text-on-surface truncate mb-1", f.title = t.name, f.textContent = t.name, r.appendChild(f);
+					e.className = "material-symbols-outlined text-[32px] text-primary opacity-50", e.textContent = "picture_as_pdf", u.appendChild(e);
+				});
+				else if (t.bytes && t.name.match(/\.(jpe?g|png|webp)$/i)) {
+					let e = new Image(), n = new Blob([t.bytes], { type: "image/jpeg" });
+					e.src = URL.createObjectURL(n), e.onload = () => {
+						d.width = e.width, d.height = e.height, d.getContext("2d").drawImage(e, 0, 0), URL.revokeObjectURL(e.src);
+					}, f.textContent = "IMG";
+				}
+				u.appendChild(f), i.appendChild(u);
 				let p = document.createElement("div");
-				p.className = "bg-surface-container-low border border-surface-container-high/60 rounded-lg p-1.5 flex flex-col gap-0.5 font-mono-code text-[10px]";
+				p.className = "font-headline-sm text-[12px] font-bold text-on-surface truncate mb-1", p.title = t.name, p.textContent = `${n + 1}. ${t.name}`, i.appendChild(p);
 				let m = document.createElement("div");
-				m.className = "flex items-center justify-between text-outline";
-				let h = t.size > 1048576 ? `${(t.size / 1048576).toFixed(2)} MB` : `${(t.size / 1024).toFixed(0)} KB`, g = document.createElement("span");
-				g.textContent = `Old: ${h}`, m.appendChild(g);
-				let _ = t.size > 262144, v = document.createElement("span");
-				v.className = _ ? "text-emerald-700 font-bold" : "text-primary font-semibold", v.textContent = _ ? "-75%" : "Safe", m.appendChild(v), p.appendChild(m);
-				let y = document.createElement("div");
-				y.className = "flex items-center justify-between font-bold text-on-surface";
-				let b = document.createElement("span");
-				b.textContent = "Target:", y.appendChild(b);
+				m.className = "bg-surface-container-low border border-surface-container-high/60 rounded-lg p-1.5 flex flex-col gap-0.5 font-mono-code text-[10px]";
+				let h = document.createElement("div");
+				h.className = "flex items-center justify-between text-outline";
+				let g = t.size > 1048576 ? `${(t.size / 1048576).toFixed(2)} MB` : `${(t.size / 1024).toFixed(0)} KB`, _ = document.createElement("span");
+				_.textContent = `Size: ${g}`, h.appendChild(_);
+				let v = t.size > this.targetKb * 1024, y = document.createElement("span");
+				y.className = v ? "text-amber-600 font-bold" : "text-emerald-700 font-bold", y.textContent = v ? `>${this.targetKb}KB` : "Safe", h.appendChild(y), m.appendChild(h);
+				let b = document.createElement("div");
+				b.className = "flex items-center justify-between font-bold text-on-surface";
 				let x = document.createElement("span");
-				x.className = "text-primary font-bold", x.textContent = _ ? "< 256 KB" : h, y.appendChild(x), p.appendChild(y), r.appendChild(p), e.appendChild(r);
+				x.textContent = "Target:", b.appendChild(x);
+				let S = document.createElement("span");
+				S.className = "text-primary font-bold", S.textContent = v ? `< ${this.targetKb} KB` : g, b.appendChild(S), m.appendChild(b), i.appendChild(m), i.addEventListener("click", () => {
+					this.openPreviewModal(n);
+				}), e.appendChild(i);
 			});
 		}
 	}
 	rotateSingleFile(e) {
 		let t = this.files[e];
 		if (t && t.bytes) try {
+			t.rotation = ((t.rotation || 0) + 90) % 360;
 			let e = Dt(t.bytes, 90);
 			e.arrayBuffer().then((n) => {
 				t.bytes = new Uint8Array(n), t.size = e.size, this.renderQueue(), r.show("Page Rotated", `${t.name} rotated 90° clockwise.`, "info");
@@ -10882,6 +11113,7 @@ var kt = class {
 		let e = 0;
 		this.files.forEach((t) => {
 			if (t.bytes) try {
+				t.rotation = ((t.rotation || 0) + 90) % 360;
 				let n = Dt(t.bytes, 90);
 				n.arrayBuffer().then((i) => {
 					t.bytes = new Uint8Array(i), t.size = n.size, e++, e === this.files.length && (this.renderQueue(), r.show("All Rotated", `Rotated all ${this.files.length} PDFs by 90°.`, "success"));
@@ -10893,80 +11125,199 @@ var kt = class {
 		this.files = [], this.updateStats(), this.renderQueue(), r.show("Queue Cleared", "PDF workstation reset.", "info");
 	}
 	handleFilterOversized() {
-		let e = this.files.length;
-		this.files = this.files.filter((e) => e.size > 262144), this.updateStats(), this.renderQueue(), r.show("Filter Applied", `Kept ${this.files.length} oversized files (>256 KB) from ${e}.`, "info");
+		let e = this.targetKb * 1024, t = this.files.length;
+		this.files = this.files.filter((t) => t.size > e), this.updateStats(), this.renderQueue(), r.show("Filter Applied", `Kept ${this.files.length} oversized files (>${this.targetKb} KB) from ${t}.`, "info");
+	}
+	_bindModalControls() {
+		let e = document.getElementById("btnClosePdfModal");
+		e && e.addEventListener("click", () => this.closePreviewModal());
+		let t = document.getElementById("btnPdfModalPrev"), n = document.getElementById("btnPdfModalNext");
+		t && t.addEventListener("click", () => this.modalPrevPage()), n && n.addEventListener("click", () => this.modalNextPage());
+		let r = document.getElementById("btnPdfModalZoomIn"), i = document.getElementById("btnPdfModalZoomOut"), a = document.getElementById("btnPdfModalZoomFit"), o = document.getElementById("btnPdfModalZoomReset");
+		r && r.addEventListener("click", () => this.modalZoomIn()), i && i.addEventListener("click", () => this.modalZoomOut()), a && a.addEventListener("click", () => this.modalZoomFit()), o && o.addEventListener("click", () => this.modalZoomReset());
+		let s = document.getElementById("btnPdfModalRotateCCW"), c = document.getElementById("btnPdfModalRotateCW"), l = document.getElementById("btnPdfModalRotateFlip");
+		s && s.addEventListener("click", () => this.modalRotate(-90)), c && c.addEventListener("click", () => this.modalRotate(90)), l && l.addEventListener("click", () => this.modalRotate(180));
+	}
+	async openPreviewModal(e) {
+		let t = this.files[e];
+		if (!t || !t.bytes) return;
+		this.modalFileIdx = e, this.modalPage = 1, this.modalZoom = "fit", this.modalRotation = t.rotation || 0;
+		let n = document.getElementById("modalPdfStudioPreview");
+		n && n.classList.remove("hidden");
+		let r = document.getElementById("pdfModalDocTitle");
+		r && (r.textContent = t.name);
+		let i = document.getElementById("pdfModalDocMeta"), a = t.size > 1048576 ? `${(t.size / 1048576).toFixed(2)} MB` : `${(t.size / 1024).toFixed(0)} KB`;
+		if (i && (i.textContent = `Size: ${a} • Direct Output Ready`), window.pdfjsLib && !t.name.match(/\.(jpe?g|png|webp)$/i)) try {
+			this.modalPdfDoc = await window.pdfjsLib.getDocument({ data: t.bytes }).promise, this.modalTotalPages = this.modalPdfDoc.numPages, this.renderModalPage();
+		} catch (e) {
+			console.warn("PDF.js modal load failed:", e);
+		}
+		else this.modalTotalPages = 1, this.renderModalImage(t.bytes);
+	}
+	closePreviewModal() {
+		let e = document.getElementById("modalPdfStudioPreview");
+		if (e && e.classList.add("hidden"), this.renderTask) try {
+			this.renderTask.cancel();
+		} catch {}
+		this.modalPdfDoc = null, this.modalFileIdx = -1;
+	}
+	modalPrevPage() {
+		this.modalPage > 1 && (this.modalPage--, this.renderModalPage());
+	}
+	modalNextPage() {
+		this.modalPage < this.modalTotalPages && (this.modalPage++, this.renderModalPage());
+	}
+	modalZoomIn() {
+		let e = typeof this.modalZoom == "number" ? this.modalZoom : 1;
+		this.modalZoom = Math.min(3, e + .25), this.renderModalPage();
+	}
+	modalZoomOut() {
+		let e = typeof this.modalZoom == "number" ? this.modalZoom : 1;
+		this.modalZoom = Math.max(.4, e - .25), this.renderModalPage();
+	}
+	modalZoomFit() {
+		this.modalZoom = "fit", this.renderModalPage();
+	}
+	modalZoomReset() {
+		this.modalZoom = 1, this.renderModalPage();
+	}
+	modalRotate(e) {
+		this.modalRotation = (this.modalRotation + e + 360) % 360, this.modalFileIdx >= 0 && this.files[this.modalFileIdx] && (this.files[this.modalFileIdx].rotation = this.modalRotation), this.renderModalPage(), this.renderQueue();
+	}
+	async renderModalPage() {
+		if (!this.modalPdfDoc) return;
+		let e = document.getElementById("pdfModalPageIndicatorText");
+		e && (e.textContent = `Page ${this.modalPage} of ${this.modalTotalPages}`);
+		let t = document.getElementById("btnPdfModalPrev"), n = document.getElementById("btnPdfModalNext");
+		t && (t.disabled = this.modalPage <= 1), n && (n.disabled = this.modalPage >= this.modalTotalPages);
+		let r = document.getElementById("pdfModalZoomReadout");
+		r && (r.textContent = this.modalZoom === "fit" ? "Fit" : `${Math.round(this.modalZoom * 100)}%`);
+		let i = document.getElementById("pdfModalCanvas"), a = document.getElementById("pdfModalViewport");
+		if (i && a) try {
+			this.renderTask && this.renderTask.cancel();
+			let e = await this.modalPdfDoc.getPage(this.modalPage), t = e.getViewport({
+				scale: 1,
+				rotation: this.modalRotation
+			}), n = 1;
+			if (this.modalZoom === "fit") {
+				let e = a.clientWidth - 48, r = a.clientHeight - 48;
+				n = Math.min(e / t.width, r / t.height);
+			} else n = this.modalZoom;
+			let r = e.getViewport({
+				scale: n,
+				rotation: this.modalRotation
+			});
+			i.width = Math.floor(r.width), i.height = Math.floor(r.height);
+			let o = i.getContext("2d");
+			this.renderTask = e.render({
+				canvasContext: o,
+				viewport: r
+			}), await this.renderTask.promise;
+		} catch (e) {
+			e.name !== "RenderingCancelledException" && console.warn("Modal page render error:", e);
+		}
+	}
+	renderModalImage(e) {
+		let t = document.getElementById("pdfModalCanvas");
+		if (!t) return;
+		let n = new Image(), r = new Blob([e], { type: "image/jpeg" });
+		n.src = URL.createObjectURL(r), n.onload = () => {
+			t.width = n.width, t.height = n.height, t.getContext("2d").drawImage(n, 0, 0), URL.revokeObjectURL(n.src);
+		};
+	}
+	async saveOutputFile(e, t, n) {
+		let r;
+		if (n instanceof Uint8Array) r = n;
+		else if (n instanceof Blob) {
+			let e = await n.arrayBuffer();
+			r = new Uint8Array(e);
+		} else throw Error("Invalid output format");
+		let i = this.activeFolderPath ? `${this.activeFolderPath}/${e}` : `Output/${e}`, a = t.replace(/[<>:"/\\|?*]/g, "_"), o = a.lastIndexOf(".");
+		o !== -1 && a.slice(0, o), o !== -1 && a.slice(o);
+		let s = `${i}/${a}`, c = await v(s, r);
+		if (!c.success) throw Error(c.error || `Failed to write file ${s}`);
+		return this.lastOutputFolder = i, s;
 	}
 	async handleStartProcess() {
 		if (this.files.length === 0) {
-			r.show("No Files", "Please add PDF files to process.", "warning");
+			r.show("No Files", "Please add files to process.", "warning");
 			return;
 		}
 		if (this.isProcessing) return;
 		this.isProcessing = !0;
-		let e = this.activeTool;
-		r.show("Processing Started", `Running ${this._getToolDisplayName(e)} on ${this.files.length} files...`, "info");
+		let e = this.activeTool, t = kt(e);
+		r.show("Processing Started", `Running ${this._getToolDisplayName(e)} via Zero-Port Native IPC...`, "info");
 		try {
-			if (e === "merge_pdf") {
-				let e = Et(this.files.map((e) => e.bytes).filter(Boolean), "portrait");
-				this._downloadBlob(e, "Merged_Admission_Dossier.pdf"), r.show("Merge Complete!", "Merged PDF Dossier generated and saved.", "success");
-			} else if (e === "compress_pdf") {
-				let e = 0;
-				for (let t of this.files) {
-					if (!t.bytes) continue;
-					let n = $(t.bytes), r;
-					r = n.length > 0 ? Q(n, "portrait") : new Blob([t.bytes], { type: "application/pdf" });
-					let i = Ot(t.name, r.size);
-					this._downloadBlob(r, i), e++;
+			let n = 0;
+			if (e === "compress_pdf") {
+				for (let e of this.files) {
+					if (!e.bytes) continue;
+					let r = $(e.bytes);
+					r && r.length !== 0 || (r = await jt(e.bytes, 150, .78));
+					let i;
+					i = r.length > 0 ? Q(r, "portrait", e.rotation || 0) : new Blob([e.bytes], { type: "application/pdf" });
+					let a = Ot(e.name, i.size);
+					await this.saveOutputFile(t, a, i), n++;
 				}
-				r.show("Compression Complete!", `Compressed ${e} files to safe MahaDBT thresholds.`, "success");
+				r.show("Compression Complete!", `Saved ${n} files directly into ${t}/`, "success");
+			} else if (e === "merge_pdf") {
+				let e = Et(this.files.map((e) => e.bytes).filter(Boolean), "portrait"), i = this.activeFolderName ? `Merged_Admission_Dossier_${this.activeFolderName}.pdf` : "Merged_Admission_Dossier.pdf";
+				await this.saveOutputFile(t, i, e), n = 1, r.show("Merge Complete!", `Dossier saved to ${t}/${i}`, "success");
 			} else if (e === "split_pdf") {
-				let e = 0;
-				for (let t of this.files) t.bytes && Tt(t.bytes, t.name).forEach((t) => {
-					this._downloadBlob(t.blob, t.fileName), e++;
-				});
-				r.show("Split Complete!", `Extracted ${e} individual PDF pages.`, "success");
+				for (let e of this.files) {
+					if (!e.bytes) continue;
+					let r = $(e.bytes);
+					r && r.length !== 0 || (r = await jt(e.bytes, 150, .85));
+					let i = r.length || e.pageCount || 1, a = At(this.splitPageRange, i), o = Tt(e.bytes, e.name, a, r);
+					for (let e of o) await this.saveOutputFile(t, e.fileName, e.blob), n++;
+				}
+				r.show("Split Complete!", `Extracted ${n} pages into ${t}/`, "success");
 			} else if (e === "pdf_to_jpg") {
-				let e = 0;
-				for (let t of this.files) t.bytes && wt(t.bytes, t.name).forEach((t) => {
-					this._downloadBlob(t.blob, t.fileName), e++;
-				});
-				r.show("Conversion Complete!", `Extracted ${e} high-resolution JPG pages.`, "success");
+				for (let e of this.files) {
+					if (!e.bytes) continue;
+					let r = [], i = $(e.bytes);
+					i && i.length !== 0 || (r = await jt(e.bytes, this.jpgDpi, .85));
+					let a = wt(e.bytes, e.name, r);
+					for (let e of a) await this.saveOutputFile(t, e.fileName, e.blob || e.bytes), n++;
+				}
+				r.show("Conversion Complete!", `Saved ${n} high-res JPGs to ${t}/`, "success");
+			} else if (e === "jpg_to_pdf") {
+				let e = [];
+				for (let t of this.files) t.bytes && e.push({ bytes: t.bytes });
+				if (e.length > 0) {
+					let i = Q(e, "portrait"), a = this.activeFolderName ? `Compiled_Documents_${this.activeFolderName}.pdf` : "Compiled_Document.pdf";
+					await this.saveOutputFile(t, a, i), n = 1, r.show("Compilation Complete!", `Compiled ${e.length} images into ${t}/${a}`, "success");
+				}
 			} else if (e === "rotate_pdf") {
-				let e = 0;
-				for (let t of this.files) {
-					if (!t.bytes) continue;
-					let n = Dt(t.bytes, 90);
-					this._downloadBlob(n, t.name), e++;
+				for (let e of this.files) {
+					if (!e.bytes) continue;
+					let r = Dt(e.bytes, e.rotation || 90);
+					await this.saveOutputFile(t, e.name, r), n++;
 				}
-				r.show("Rotation Complete!", `Rotated and saved ${e} PDF documents.`, "success");
+				r.show("Rotation Complete!", `Saved ${n} rotated PDFs to ${t}/`, "success");
 			} else {
-				let e = 0;
-				for (let t of this.files) {
-					if (!t.bytes) continue;
-					let n = Q($(t.bytes), "portrait");
-					this._downloadBlob(n, t.name), e++;
+				for (let e of this.files) {
+					if (!e.bytes) continue;
+					let r = Q($(e.bytes), "portrait");
+					await this.saveOutputFile(t, e.name, r), n++;
 				}
-				r.show("Enhancement Complete!", `Watermarks filtered and ${e} PDFs enhanced.`, "success");
+				r.show("Enhancement Complete!", `Saved ${n} clean PDFs to ${t}/`, "success");
 			}
+			let i = document.getElementById("btnOpenOutputFolder");
+			i && i.classList.remove("hidden");
 		} catch (e) {
-			r.show("Operation Failed", e.message, "error");
+			console.error("[PDF-STUDIO] Process failed:", e), r.show("Operation Failed", e.message, "error");
 		} finally {
 			this.isProcessing = !1;
 		}
 	}
-	_downloadBlob(e, t) {
-		let n = URL.createObjectURL(e), r = document.createElement("a");
-		r.href = n, r.download = t, r.style.display = "none", document.body.appendChild(r), r.click(), setTimeout(() => {
-			document.body.removeChild(r), URL.revokeObjectURL(n);
-		}, 1e3);
-	}
 };
-function At() {
-	let e = new kt();
+function Nt() {
+	let e = new Mt();
 	return e.init(), e;
 }
 // src/modules/image-studio.js
-function jt(e, t, n, r = "magic_color") {
+function Pt(e, t, n, r = "magic_color") {
 	if (!e || r === "none" || r === "original") return;
 	let i = e.getImageData(0, 0, t, n), a = i.data;
 	for (let e = 0; e < a.length; e += 4) {
@@ -10983,13 +11334,13 @@ function jt(e, t, n, r = "magic_color") {
 	}
 	e.putImageData(i, 0, 0);
 }
-function Mt(e, t = 0) {
+function Ft(e, t = 0) {
 	let n = document.createElement("canvas"), r = (t % 360 + 360) % 360, i = r === 90 || r === 270, a = i ? e.height : e.width, o = i ? e.width : e.height;
 	n.width = a, n.height = o;
 	let s = n.getContext("2d");
 	return s.save(), s.translate(n.width / 2, n.height / 2), s.rotate(r * Math.PI / 180), s.drawImage(e, -e.width / 2, -e.height / 2), s.restore(), n;
 }
-async function Nt(e, t = 250, n = {}) {
+async function It(e, t = 250, n = {}) {
 	let { rotation: r = 0, filterMode: i = "none", outputMime: a = "image/jpeg", maxDimension: o = 2400 } = n;
 	return new Promise((n, s) => {
 		let c = new Image(), l = URL.createObjectURL(e);
@@ -11002,7 +11353,7 @@ async function Nt(e, t = 250, n = {}) {
 					e = Math.round(e * t), s = Math.round(s * t);
 				}
 				let l;
-				if (r === 0 ? (l = document.createElement("canvas"), l.width = e, l.height = s, l.getContext("2d").drawImage(c, 0, 0, e, s)) : l = Mt(c, r), i && i !== "none" && jt(l.getContext("2d"), l.width, l.height, i), !t || t <= 0) {
+				if (r === 0 ? (l = document.createElement("canvas"), l.width = e, l.height = s, l.getContext("2d").drawImage(c, 0, 0, e, s)) : l = Ft(c, r), i && i !== "none" && Pt(l.getContext("2d"), l.width, l.height, i), !t || t <= 0) {
 					let e = await new Promise((e) => l.toBlob(e, a, .9));
 					return n({
 						blob: e,
@@ -11046,7 +11397,7 @@ async function Nt(e, t = 250, n = {}) {
 		}, c.src = l;
 	});
 }
-async function Pt(e, t = "image/png") {
+async function Lt(e, t = "image/png") {
 	return new Promise((n, r) => {
 		let i = new Image(), a = URL.createObjectURL(e);
 		i.onload = () => {
@@ -11072,7 +11423,7 @@ async function Pt(e, t = "image/png") {
 	});
 }
 // src/ui/image-studio-ui.js
-var Ft = class {
+var Rt = class {
 	constructor() {
 		this.activeTool = "compress_photo_sign", this.files = [], this.isProcessing = !1;
 	}
@@ -11269,7 +11620,7 @@ var Ft = class {
 		if (!t || !t.url) return;
 		let n = new Image();
 		n.crossOrigin = "anonymous", n.onload = () => {
-			Mt(n, 90).toBlob((e) => {
+			Ft(n, 90).toBlob((e) => {
 				t.url = URL.createObjectURL(e), t.size = e.size, t.fileOrBlob = e, this.renderQueue(), r.show("Image Rotated", `${t.name} rotated 90° clockwise.`, "info");
 			}, "image/jpeg", .92);
 		}, n.src = t.url;
@@ -11302,13 +11653,13 @@ var Ft = class {
 				let r = n.fileOrBlob;
 				if (!r && n.url && (r = await (await fetch(n.url)).blob()), r) {
 					if (e === "compress_photo_sign") {
-						let e = /sign|signature|स्वाक्षरी/i.test(n.name) ? 18 : 45, i = await Nt(r, e);
+						let e = /sign|signature|स्वाक्षरी/i.test(n.name) ? 18 : 45, i = await It(r, e);
 						this._downloadBlob(i.blob, `Compressed_${n.name}`), t++;
 					} else if (e === "passport_crop") {
-						let e = await Nt(await this._cropPassport(r), 48);
+						let e = await It(await this._cropPassport(r), 48);
 						this._downloadBlob(e.blob, `Passport_${n.name}`), t++;
 					} else if (e === "sign_clean_invert") {
-						let e = await Nt(r, 18, { filterMode: "sharp_contrast" });
+						let e = await It(r, 18, { filterMode: "sharp_contrast" });
 						this._downloadBlob(e.blob, `Clean_Sign_${n.name}`), t++;
 					} else if (e === "image_to_pdf") {
 						let e = await r.arrayBuffer(), i = Q([{
@@ -11318,10 +11669,10 @@ var Ft = class {
 						}], "portrait"), a = n.name.replace(/\.[a-zA-Z0-9]+$/, "") + ".pdf";
 						this._downloadBlob(i, a), t++;
 					} else if (e === "magic_color") {
-						let e = await Nt(r, 240, { filterMode: "enhanced" });
+						let e = await It(r, 240, { filterMode: "enhanced" });
 						this._downloadBlob(e.blob, `Magic_${n.name}`), t++;
 					} else {
-						let e = await Pt(r, "image/jpeg");
+						let e = await Lt(r, "image/jpeg");
 						this._downloadBlob(e.blob, `Converted_${n.name.replace(/\.[a-zA-Z0-9]+$/, ".jpg")}`), t++;
 					}
 				}
@@ -11354,12 +11705,12 @@ var Ft = class {
 		}, 1e3);
 	}
 };
-function It() {
-	let e = new Ft();
+function zt() {
+	let e = new Rt();
 	return e.init(), e;
 }
 // src/libraries/document-matcher.js
-var Lt = [
+var Bt = [
 	{
 		id: "12th-marksheet-passing-combined",
 		outputName: "12TH MARKSHEET AND PASSING",
@@ -11669,7 +12020,7 @@ var Lt = [
 		]
 	}
 ];
-function Rt(e, t = null) {
+function Vt(e, t = null) {
 	if (!e || typeof e != "string") return {
 		docType: null,
 		percentage: 0,
@@ -11678,7 +12029,7 @@ function Rt(e, t = null) {
 		status: "none"
 	};
 	let n = e.trim().toLowerCase(), r = n.replace(/[-_.]+/g, " ");
-	for (let e of Lt) if (n === e.shortcut.toLowerCase() || r.trim() === e.shortcut.toLowerCase()) return {
+	for (let e of Bt) if (n === e.shortcut.toLowerCase() || r.trim() === e.shortcut.toLowerCase()) return {
 		docType: e.outputName,
 		percentage: 100,
 		badgeText: `100% Match: ${e.outputName}`,
@@ -11696,7 +12047,7 @@ function Rt(e, t = null) {
 			};
 		}
 	}
-	for (let e of Lt) for (let t of e.patterns) if (t.test(n) || t.test(r)) return {
+	for (let e of Bt) for (let t of e.patterns) if (t.test(n) || t.test(r)) return {
 		docType: e.outputName,
 		percentage: 100,
 		badgeText: `100% Match: ${e.outputName}`,
@@ -11724,16 +12075,16 @@ function Rt(e, t = null) {
 	};
 }
 ({ ...je });
-function zt(e) {
+function Ht(e) {
 	if (!e || typeof e != "string") return "";
-	let t = Rt(e);
+	let t = Vt(e);
 	if (t && t.docType) return t.docType;
 	let n = e.replace(/\.[^/.]+$/, "");
 	return n = n.replace(/\s*\(p\.\d+\)/i, ""), n.trim().toUpperCase();
 }
-function Bt(e) {
+function Ut(e) {
 	if (!e || typeof e != "string") return "";
-	let t = e.replace(/\.[^/.]+$/, "").trim(), n = Rt(t);
+	let t = e.replace(/\.[^/.]+$/, "").trim(), n = Vt(t);
 	if (n && n.docType) {
 		let e = n.docType, r = t, i = RegExp(`^${e}\\b`, "i");
 		if (i.test(r) ? r = r.replace(i, "").trim() : e.split(/\s+/).forEach((e) => {
@@ -11745,9 +12096,9 @@ function Bt(e) {
 	}
 	return t;
 }
-function Vt(e, t = []) {
+function Wt(e, t = []) {
 	return !Array.isArray(e) || e.length === 0 ? [] : !Array.isArray(t) || t.length === 0 ? [...e] : [...e].sort((e, n) => {
-		let r = e.docType || zt(e.label || e.name), i = n.docType || zt(n.label || n.name), a = t.findIndex((e) => {
+		let r = e.docType || Ht(e.label || e.name), i = n.docType || Ht(n.label || n.name), a = t.findIndex((e) => {
 			let t = e.toUpperCase(), n = r.toUpperCase();
 			return t === n || n.includes(t) || t.includes(n);
 		}), o = t.findIndex((e) => {
@@ -11758,7 +12109,7 @@ function Vt(e, t = []) {
 	});
 }
 // src/ui/print-studio-ui.js
-var Ht = class {
+var Gt = class {
 	constructor() {
 		this.presets = { ...je }, this.activePresetKey = "MAHA DBT FORM", this.documents = [], this.activeDocIndex = 0, this.zoomLevel = 100;
 	}
@@ -11905,7 +12256,7 @@ var Ht = class {
 	}
 	handleAutoOrder() {
 		let e = this.presets[this.activePresetKey] || [];
-		this.documents = Vt(this.documents, e), this.activeDocIndex = 0, this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), r.show("Sequence Applied", `Ordered according to ${this.activePresetKey} criteria.`, "success");
+		this.documents = Wt(this.documents, e), this.activeDocIndex = 0, this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), r.show("Sequence Applied", `Ordered according to ${this.activePresetKey} criteria.`, "success");
 	}
 	async handleBrowseFolder() {
 		r.show("Opening Folder Picker", "Navigating Windows Explorer...", "info");
@@ -11921,7 +12272,7 @@ var Ht = class {
 				return;
 			}
 			this.documents = t.map((e, t) => {
-				let n = zt(e.name), r = Bt(e.name);
+				let n = Ht(e.name), r = Ut(e.name);
 				return {
 					id: `print_doc_${Date.now()}_${t}`,
 					name: e.name,
@@ -12012,12 +12363,12 @@ var Ht = class {
 		}
 	}
 };
-function Ut() {
-	let e = new Ht();
+function Kt() {
+	let e = new Gt();
 	return e.init(), e;
 }
 // src/ui/followup-ui.js
-var Wt = class {
+var qt = class {
 	constructor() {
 		this.items = [], this.searchQuery = "";
 	}
@@ -12208,12 +12559,12 @@ var Wt = class {
 		Qe(e.folderName, e.documentName), e.status = "resolved", this.renderTable(), r.show("कागदपत्र प्राप्त!", `${e.documentName} for ${e.studentName} marked as received.`, "success");
 	}
 };
-function Gt() {
-	let e = new Wt();
+function Jt() {
+	let e = new qt();
 	return e.init(), e;
 }
 // src/ui/index.js
-function Kt() {
+function Yt() {
 	let e = new n();
 	e.init(), new a().init(), bt();
 	let t = gt();
@@ -12252,7 +12603,7 @@ function Kt() {
 		], t.state.currentIndex = 0, t.renderQueue();
 	}, 200)), e.onViewChange = (e, n) => {
 		n === "bulk-renamer" && e !== "bulk-renamer" && t.handleClearQueue(!0);
-	}, At(), It(), Ut(), Gt(), o();
+	}, Nt(), zt(), Kt(), Jt(), o();
 	let i = document.getElementById("themeToggleBtn");
 	i && i.addEventListener("click", () => {
 		document.documentElement.classList.toggle("dark");
@@ -12260,5 +12611,5 @@ function Kt() {
 		r.show(e ? "Dark Theme Enabled" : "Light Theme Enabled", "UI Preference Updated", "info");
 	}), console.info("[DocMitra] UI Shell & Modules initialized successfully.");
 }
-document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", Kt) : Kt();
-export { Kt as initAppShell };
+document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", Yt) : Yt();
+export { Yt as initAppShell };

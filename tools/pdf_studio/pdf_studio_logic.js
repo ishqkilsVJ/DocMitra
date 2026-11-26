@@ -242,13 +242,18 @@ export function getDocumentImagesFromPdf(pdfBytes) {
 }
 
 /**
- * Converts a PDF to one or multiple JPG blobs preserving canonical naming
+ * Converts a PDF to one or multiple JPG items preserving canonical naming.
+ * Accepts optional fallback document images (e.g. from PDF.js canvas render for vector PDFs).
  * @param {Uint8Array} pdfBytes
  * @param {string} originalFilename
- * @returns {Array<{ fileName: string, blob: Blob, size: number, pageIndex: number, width: number, height: number }>}
+ * @param {Array<{ bytes: Uint8Array, width?: number, height?: number }>} [fallbackImages=[]]
+ * @returns {Array<{ fileName: string, blob: Blob, bytes: Uint8Array, size: number, pageIndex: number, width: number, height: number }>}
  */
-export function convertPdfToJpg(pdfBytes, originalFilename = 'Document.pdf') {
-  const images = getDocumentImagesFromPdf(pdfBytes);
+export function convertPdfToJpg(pdfBytes, originalFilename = 'Document.pdf', fallbackImages = []) {
+  let images = getDocumentImagesFromPdf(pdfBytes);
+  if (!images.length && fallbackImages && fallbackImages.length) {
+    images = fallbackImages;
+  }
   const baseName = originalFilename.replace(/\.pdf$/i, '');
 
   if (!images.length) {
@@ -261,6 +266,7 @@ export function convertPdfToJpg(pdfBytes, originalFilename = 'Document.pdf') {
     return {
       fileName,
       blob,
+      bytes: img.bytes,
       size: blob.size,
       pageIndex: idx + 1,
       width: img.width,
@@ -270,29 +276,42 @@ export function convertPdfToJpg(pdfBytes, originalFilename = 'Document.pdf') {
 }
 
 /**
- * Splits a multi-page PDF into individual 1-page PDF blobs
+ * Splits a multi-page PDF into individual 1-page PDF blobs.
+ * Accepts optional page index filter (0-based) and optional fallback images.
  * @param {Uint8Array} pdfBytes
  * @param {string} originalFilename
- * @returns {Array<{ fileName: string, blob: Blob, size: number, pageIndex: number }>}
+ * @param {Array<number>} [allowedPageIndices=null] - 0-based page indices
+ * @param {Array<{ bytes: Uint8Array, width?: number, height?: number }>} [fallbackImages=[]]
+ * @returns {Array<{ fileName: string, blob: Blob, bytes: Uint8Array, size: number, pageIndex: number }>}
  */
-export function splitPdfDocument(pdfBytes, originalFilename = 'Document.pdf') {
-  const images = getDocumentImagesFromPdf(pdfBytes);
+export function splitPdfDocument(pdfBytes, originalFilename = 'Document.pdf', allowedPageIndices = null, fallbackImages = []) {
+  let images = getDocumentImagesFromPdf(pdfBytes);
+  if (!images.length && fallbackImages && fallbackImages.length) {
+    images = fallbackImages;
+  }
   const baseName = originalFilename.replace(/\.pdf$/i, '');
 
   if (!images.length) {
     return [];
   }
 
-  return images.map((img, idx) => {
+  const results = [];
+  images.forEach((img, idx) => {
+    if (allowedPageIndices && !allowedPageIndices.includes(idx)) {
+      return;
+    }
     const fileName = `${baseName}_page_${idx + 1}.pdf`;
     const blob = createPdfFromJpegs([img], 'portrait');
-    return {
+    results.push({
       fileName,
       blob,
+      bytes: img.bytes,
       size: blob.size,
       pageIndex: idx + 1
-    };
+    });
   });
+
+  return results;
 }
 
 /**
@@ -470,4 +489,93 @@ export function getSubfolderName(operation) {
     default:
       return 'Processed_Files';
   }
+}
+
+/**
+ * Parses user-entered page ranges like "1-3, 5, 8-10" into 0-based page indices array.
+ * @param {string} rangeStr
+ * @param {number} totalPages
+ * @returns {Array<number>} 0-based sorted unique indices
+ */
+export function parsePageRanges(rangeStr, totalPages) {
+  if (!rangeStr || !rangeStr.trim() || rangeStr.trim().toLowerCase() === 'all') {
+    return Array.from({ length: totalPages }, (_, i) => i);
+  }
+
+  const indices = new Set();
+  const parts = rangeStr.split(/[,;\s]+/);
+
+  for (const part of parts) {
+    if (!part) continue;
+    if (part.includes('-')) {
+      const [startStr, endStr] = part.split('-');
+      const start = parseInt(startStr, 10);
+      const end = parseInt(endStr, 10);
+      if (!isNaN(start) && !isNaN(end)) {
+        const min = Math.max(1, Math.min(start, end));
+        const max = Math.min(totalPages, Math.max(start, end));
+        for (let p = min; p <= max; p++) {
+          indices.add(p - 1);
+        }
+      }
+    } else {
+      const p = parseInt(part, 10);
+      if (!isNaN(p) && p >= 1 && p <= totalPages) {
+        indices.add(p - 1);
+      }
+    }
+  }
+
+  const result = Array.from(indices).sort((a, b) => a - b);
+  return result.length ? result : Array.from({ length: totalPages }, (_, i) => i);
+}
+
+/**
+ * Universal PDF.js Canvas Fallback: Renders any PDF (including vector / computer-generated)
+ * onto an offscreen canvas at the requested DPI and returns JPEG Uint8Arrays.
+ * @param {Uint8Array} pdfBytes
+ * @param {number} [dpi=150] - 150 (Fast/Standard) | 300 (High Quality) | 72 (Web)
+ * @param {number} [quality=0.82]
+ * @returns {Promise<Array<{ bytes: Uint8Array, width: number, height: number, pageIndex: number }>>}
+ */
+export async function renderPdfPagesToJpegs(pdfBytes, dpi = 150, quality = 0.82) {
+  if (typeof window === 'undefined' || !window.pdfjsLib) {
+    throw new Error('PDF.js library is not loaded');
+  }
+
+  const pdf = await window.pdfjsLib.getDocument({ data: pdfBytes }).promise;
+  const numPages = pdf.numPages;
+  const scale = (dpi || 150) / 72;
+  const images = [];
+
+  for (let i = 1; i <= numPages; i++) {
+    const page = await pdf.getPage(i);
+    const viewport = page.getViewport({ scale });
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.floor(viewport.width);
+    canvas.height = Math.floor(viewport.height);
+    const ctx = canvas.getContext('2d');
+
+    await page.render({
+      canvasContext: ctx,
+      viewport: viewport
+    }).promise;
+
+    const dataUrl = canvas.toDataURL('image/jpeg', quality);
+    const base64Data = dataUrl.split(',')[1];
+    const binaryStr = atob(base64Data);
+    const bytes = new Uint8Array(binaryStr.length);
+    for (let b = 0; b < binaryStr.length; b++) {
+      bytes[b] = binaryStr.charCodeAt(b);
+    }
+
+    images.push({
+      bytes,
+      width: canvas.width,
+      height: canvas.height,
+      pageIndex: i
+    });
+  }
+
+  return images;
 }

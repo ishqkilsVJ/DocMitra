@@ -8,7 +8,7 @@
 ---
 
 ## 1. Tool Status & Boundary
-- **Status:** **STRICTLY LOCKED & MODULAR MIGRATION COMPLETE**
+- **Status:** **STRICTLY LOCKED & VERIFIED (CP-043: 3-Phase Production Upgrade Complete)**
 - **Boundary:** Self-contained mini-app folder containing all backend operations, markup, styles, and logic for PDF Studio.
 - **Dependencies:** Consumes only common utilities from `shared/` (`toast.js`, `native-bridge.js`).
 - **Style Isolation:** All styles in `pdf_studio.css` are strictly scoped under the `.pdf-studio-scope` CSS namespace to guarantee zero styling leakage into other DocMitra tools.
@@ -19,24 +19,28 @@
 | File | Role | Description |
 | :--- | :--- | :--- |
 | `pdf_studio.py` | Python Backend | Disk-level PDF operations: Compression (<256 KB MahaDBT), Multi-Document Merge, Page Extraction / Splitting, Lossless Rotation, PDF to Image, and Image to PDF compilation (`pypdf` + `PIL`) |
-| `pdf_studio.html` | UI Component | Scoped Bento workstation markup with PDF tool ribbon, instant drag & drop dropzone, execution queue, and sticky execution dock (0 dummy data, 0 Marathi characters) |
-| `pdf_studio.css` | Scoped Stylesheet | Strict `.pdf-studio-scope` styling rules (scrollbars, tool ribbon transitions, docket cards, dropzone states, and pulse indicators) |
-| `pdf_studio_ui.js` | UI Manager | Interactive tool switcher (Compress, Merge, Split, PDF to JPG, Rotate, Clean & Enhance), directory picker, file drag & drop intake, first-page thumbnail rendering, oversized file filter, and batch execution |
-| `pdf_studio_logic.js`| Business Logic | Pure client-side ISO-32000 A4 PDF compilation (0 external dependencies), watermark-filtered image extraction, JPEG dimension parser, size-suffixing (`formatSizeSuffixFilename`), and subfolder routing |
+| `pdf_studio.html` | UI Component | Scoped Bento workstation markup with Dark Slate Folder Pill, Bento summary cards, PDF tool ribbon, queue grid, Bento preview modal, and execution dock (0 dummy data, 0 Marathi characters) |
+| `pdf_studio.css` | Scoped Stylesheet | Strict `.pdf-studio-scope` styling rules (scrollbars, tool ribbon transitions, docket cards, dropzone states, drag-to-reorder, and Bento preview viewport) |
+| `pdf_studio_ui.js` | UI Manager | Zero-Port Native IPC UI manager: tool switcher, native directory picker, direct disk subfolder writer, PDF.js thumbnail & modal preview, custom Bento dropdowns, hotkey listener, and batch execution |
+| `pdf_studio_logic.js`| Business Logic | Pure client-side ISO-32000 A4 PDF compilation, watermark-filtered image extraction, vector PDF.js canvas fallback engine, selective page range parser, size-suffixing, and subfolder routing |
+| `PDF_TOOL_AGENT.md`  | Dedicated Rulebook | Mandatory governance for PDF Studio agent: Unlock->Work->Re-Lock, /grill-me, zero-leakage, dual-MCP verification, zero-port native IPC bridge |
 | `README_LOCK.md` | Governance | Isolation boundaries, verification state, and tool unlock procedures |
 
 ---
 
 ## 3. Verified Working Features
-- [x] **Pure JS ISO-32000 PDF Compilation:** Compiles valid ISO-32000 compliant A4 PDFs with perfect xref tables, catalog, and image XObjects directly from binary JPEG streams with zero external dependencies.
-- [x] **Watermark-Filtered Document Image Extraction:** Automatically detects and filters out ribbon watermark banners (e.g., CamScanner, scanner app footers) while preserving full-resolution document pages.
-- [x] **Targeted Size-Suffix Naming:** Generates canonical filenames with size suffixes (`10TH MARKSHEET 187 KB.pdf`) ensuring repeated operations never stack redundant suffixes.
-- [x] **Multi-Document Merge & Dossier Compilation:** Merges multiple PDFs into unified admission dossiers with proper orientation and page hierarchy.
-- [x] **Page Extraction & Splitting:** Splits multi-page admission documents into separate 1-page PDF documents.
-- [x] **Lossless 90° / 180° / 270° Rotation:** Per-file and batch page rotation via client-side recompilation and backend Python engine.
-- [x] **Subfolder Routing:** Dedicated output subfolders (`Compressed_PDF`, `Merged_PDF`, `Split_PDF`, `Converted_JPG`, `Rotated_PDF`).
-- [x] **Clean Empty State:** Zero hardcoded student cards or dummy records in DOM templates; clean professional empty state.
-- [x] **Scoped CSS & Namespace Isolation:** 100% scoped under `.pdf-studio-scope` preventing style collisions across tools.
+- [x] **Zero-Port Native IPC Bridge:** Direct disk file read (`invoke('read_binary_file')`) and direct disk subfolder write (`invoke('write_binary_file')`) with 0 localhost:3000 dependency.
+- [x] **Direct Source Subfolder Routing (Zero-Overwrite):** Saves directly into `<source>/<Subfolder>/` (`Compressed_PDF`, `Merged_PDF`, `Split_PDF`, `Converted_JPG`, `Converted_PDF`, `Rotated_PDF`, `Enhanced_PDF`) with automatic collision numbering and Windows `:Zone.Identifier` auto-unlocking.
+- [x] **Dark Slate Folder Pill & Bento Summary Cards:** High-contrast folder pill with amber icon + real-time metrics cards (`LOADED FILES`, `CURRENT SIZE`, `PROJECTED OUTPUT`, `NATIVE ENGINE`).
+- [x] **Interactive Bento Preview Viewport (Modal):** High-DPI canvas preview with Zoom (`In / Out / Fit / Reset`), Multi-Page Navigation (`Prev / Next`), and 3-Way Rotation Group (`↺ -90°`, `↻ +90°`, `⇅ 180° Flip`).
+- [x] **Custom Bento Dropdowns (Zero Native `<select>`):** Sleek floating Dark Slate dropdowns for Compress Target (`< 256 KB MahaDBT`, `< 200 KB CET`, `< 500 KB`, `Custom KB`) and PDF to JPG DPI (`150 DPI Fast`, `300 DPI High Quality`, `72 DPI Web`).
+- [x] **Vector / Computer-Generated PDF Engine:** Automatic high-res `PDF.js` canvas fallback (`renderPdfPagesToJpegs`) ensuring 100% compression and JPG conversion success for vector/text PDFs without embedded JPEGs.
+- [x] **JPG to PDF Compilation Tool:** Integrated 7th ribbon tool allowing compilation of multiple `.jpg`, `.jpeg`, `.png`, `.webp` documents into clean A4 PDF dossiers.
+- [x] **Merge Drag-to-Reorder:** HTML5 drag-and-drop on docket cards allowing operators to visually reorder pages before merging.
+- [x] **Selective Page Range Split:** Supports parsing ranges (`1-3, 5` or `All`) extracting only requested pages into `Split_PDF/`.
+- [x] **1-Click Open Output Folder:** Instant Windows Explorer launcher (`#btnOpenOutputFolder`) upon batch completion.
+- [x] **Complete Keyboard Navigation:** Global hotkeys (`F2`, `F8`, `Alt+M/S/J/P/R`, `Esc`, `PageUp/Down`, `Ctrl +/-/0`, `R`).
+- [x] **100% Dual-MCP Verified:** Playwright MCP E2E test passed + Chrome DevTools MCP 0 console errors on live desktop release app.exe.
 
 ---
 
