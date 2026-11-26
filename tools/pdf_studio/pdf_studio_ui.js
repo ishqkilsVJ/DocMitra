@@ -61,9 +61,11 @@ export class PdfStudioUIManager {
     this._bindRibbonTools();
     this._bindActions();
     this._bindDropzone();
+    this._bindTargetSizeControls();
     this._bindBentoDropdowns();
     this._bindModalControls();
     this._bindHotkeys();
+    this.setTool('compress_pdf');
     this.renderQueue();
     console.info('[DocMitra PDF Studio] Zero-Port Native UI Manager initialized.');
   }
@@ -96,14 +98,18 @@ export class PdfStudioUIManager {
       targetBtn.classList.remove('text-on-surface-variant', 'hover:bg-surface-container-low', 'hover:text-on-surface');
       targetBtn.classList.add('bg-primary-container', 'text-on-primary', 'font-semibold', 'shadow-sm');
 
-      const badge = document.createElement('span');
-      badge.className = 'active-tool-badge bg-primary/60 text-on-primary text-[10px] font-mono-code px-1.5 py-0.5 rounded font-bold uppercase tracking-tight';
-      badge.textContent = 'Active';
-      targetBtn.appendChild(badge);
+      // Guarantee strictly ONE active badge exists
+      const existingBadge = targetBtn.querySelector('.active-tool-badge');
+      if (!existingBadge) {
+        const badge = document.createElement('span');
+        badge.className = 'active-tool-badge bg-primary/60 text-on-primary text-[10px] font-mono-code px-1.5 py-0.5 rounded font-bold uppercase tracking-tight';
+        badge.textContent = 'Active';
+        targetBtn.appendChild(badge);
+      }
     }
 
     // Toggle contextual controls visibility
-    const compWrapper = document.getElementById('bentoCompressTargetWrapper');
+    const compWrapper = document.getElementById('compressTargetControlBar');
     const dpiWrapper = document.getElementById('bentoJpgDpiWrapper');
     const splitWrapper = document.getElementById('splitRangeWrapper');
 
@@ -111,7 +117,7 @@ export class PdfStudioUIManager {
     if (dpiWrapper) dpiWrapper.classList.toggle('hidden', toolName !== 'pdf_to_jpg');
     if (splitWrapper) splitWrapper.classList.toggle('hidden', toolName !== 'split_pdf');
 
-    // Update subfolder telemetry text
+    // Update subfolder telemetry text if elements exist
     const subfolderName = getSubfolderName(toolName);
     const sideSub = document.getElementById('sidebarOutputSubfolderText');
     if (sideSub) sideSub.textContent = subfolderName;
@@ -124,14 +130,14 @@ export class PdfStudioUIManager {
 
   _getToolDisplayName(tool) {
     switch (tool) {
-      case 'compress_pdf': return `Compress PDF (<${this.targetKb} KB)`;
-      case 'merge_pdf': return 'Merge PDF Dossier';
-      case 'split_pdf': return 'Split / Extract Pages';
-      case 'pdf_to_jpg': return `PDF to JPG (${this.jpgDpi} DPI)`;
-      case 'jpg_to_pdf': return 'JPG to PDF (A4 Compilation)';
-      case 'rotate_pdf': return 'Rotate All Pages 90°';
+      case 'compress_pdf': return 'Compress PDF';
+      case 'merge_pdf': return 'Merge PDF';
+      case 'split_pdf': return 'Split PDF';
+      case 'pdf_to_jpg': return 'PDF to JPG';
+      case 'jpg_to_pdf': return 'JPG to PDF';
+      case 'rotate_pdf': return 'Rotate PDF';
       case 'clean_pdf': return 'Clean & Enhance';
-      default: return 'Process Files';
+      default: return 'Compress PDF';
     }
   }
 
@@ -139,20 +145,78 @@ export class PdfStudioUIManager {
     const btn = document.getElementById('startCompressBtn');
     if (!btn) return;
 
-    const span = btn.querySelector('span:nth-of-type(2)');
+    // Label matches the exact active tool title from left sidebar
+    const span = btn.querySelector('span:nth-of-type(2)') || btn.querySelector('span:last-of-type');
     if (span) {
-      const count = this.files.length;
-      let action = 'Start Process';
-      if (this.activeTool === 'compress_pdf') action = `Compress to <${this.targetKb}KB`;
-      else if (this.activeTool === 'merge_pdf') action = 'Merge Dossier';
-      else if (this.activeTool === 'split_pdf') action = 'Split Pages';
-      else if (this.activeTool === 'pdf_to_jpg') action = `Convert to JPG (${this.jpgDpi} DPI)`;
-      else if (this.activeTool === 'jpg_to_pdf') action = 'Compile Images to PDF';
-      else if (this.activeTool === 'rotate_pdf') action = 'Rotate 90°';
-      else if (this.activeTool === 'clean_pdf') action = 'Clean & Enhance';
-
-      span.textContent = `${action} (${count} Files)`;
+      span.textContent = this._getToolDisplayName(this.activeTool);
     }
+  }
+
+  _bindTargetSizeControls() {
+    const radioBtns = document.querySelectorAll('#compressTargetControlBar .target-radio-pill');
+    const slider = document.getElementById('sliderTargetKb');
+    const input = document.getElementById('inputTargetKbBox');
+
+    const updateActiveRadio = (kb) => {
+      radioBtns.forEach(btn => {
+        const btnKb = parseInt(btn.getAttribute('data-kb'), 10);
+        if (btnKb === kb) {
+          btn.classList.add('bg-slate-900', 'text-white', 'shadow-xs');
+          btn.classList.remove('text-on-surface-variant', 'hover:bg-surface-container-high');
+        } else {
+          btn.classList.remove('bg-slate-900', 'text-white', 'shadow-xs');
+          btn.classList.add('text-on-surface-variant', 'hover:bg-surface-container-high');
+        }
+      });
+    };
+
+    const setTargetKb = (val, source) => {
+      let kb = parseInt(val, 10);
+      if (isNaN(kb) || kb <= 0) kb = 256;
+      this.targetKb = kb;
+
+      if (source !== 'slider' && slider) {
+        slider.value = Math.min(Math.max(kb, 50), 1000);
+      }
+      if (source !== 'input' && input) {
+        input.value = kb;
+      }
+      updateActiveRadio(kb);
+      this.updateStats();
+    };
+
+    radioBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const kb = parseInt(btn.getAttribute('data-kb'), 10);
+        setTargetKb(kb, 'radio');
+        toast.show('Target Size', `Target set to < ${kb} KB`, 'info');
+      });
+    });
+
+    if (slider) {
+      slider.addEventListener('input', (e) => {
+        const kb = parseInt(e.target.value, 10);
+        setTargetKb(kb, 'slider');
+      });
+    }
+
+    if (input) {
+      input.addEventListener('input', (e) => {
+        const kb = parseInt(e.target.value, 10);
+        if (!isNaN(kb) && kb > 0) {
+          setTargetKb(kb, 'input');
+        }
+      });
+      input.addEventListener('change', (e) => {
+        let kb = parseInt(e.target.value, 10);
+        if (isNaN(kb) || kb < 30) kb = 30;
+        setTargetKb(kb, 'input');
+      });
+    }
+
+    // Set initial active radio
+    updateActiveRadio(this.targetKb);
   }
 
   _bindActions() {
@@ -248,52 +312,6 @@ export class PdfStudioUIManager {
   }
 
   _bindBentoDropdowns() {
-    // Compress Target dropdown
-    const btnTarget = document.getElementById('btnBentoCompressTarget');
-    const menuTarget = document.getElementById('menuBentoCompressTarget');
-    const labelTarget = document.getElementById('labelCompressTarget');
-    const dockLabel = document.getElementById('dockTargetLabel');
-
-    if (btnTarget && menuTarget) {
-      btnTarget.addEventListener('click', (e) => {
-        e.stopPropagation();
-        menuTarget.classList.toggle('hidden');
-      });
-
-      menuTarget.querySelectorAll('button[data-kb]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const kb = parseInt(btn.getAttribute('data-kb'), 10) || 256;
-          this.targetKb = kb;
-          const text = `< ${kb} KB${kb === 256 ? ' (MahaDBT)' : kb === 200 ? ' (CET)' : ''}`;
-          if (labelTarget) labelTarget.textContent = text;
-          if (dockLabel) dockLabel.textContent = `< ${kb} KB`;
-          menuTarget.classList.add('hidden');
-          this.updateStats();
-          this._updateProcessButtonLabel();
-          toast.show('Target Updated', `Compress target set to < ${kb} KB`, 'info');
-        });
-      });
-
-      const btnApplyCustom = document.getElementById('btnApplyCustomKb');
-      const inputCustom = document.getElementById('inputCustomTargetKb');
-      if (btnApplyCustom && inputCustom) {
-        btnApplyCustom.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const val = parseInt(inputCustom.value, 10);
-          if (val && val >= 50 && val <= 5000) {
-            this.targetKb = val;
-            if (labelTarget) labelTarget.textContent = `< ${val} KB (Custom)`;
-            if (dockLabel) dockLabel.textContent = `< ${val} KB`;
-            menuTarget.classList.add('hidden');
-            this.updateStats();
-            this._updateProcessButtonLabel();
-            toast.show('Target Updated', `Custom target set to < ${val} KB`, 'info');
-          }
-        });
-      }
-    }
-
     // PDF to JPG DPI dropdown
     const btnDpi = document.getElementById('btnBentoJpgDpi');
     const menuDpi = document.getElementById('menuBentoJpgDpi');
@@ -320,7 +338,6 @@ export class PdfStudioUIManager {
 
     // Document click to close menus
     document.addEventListener('click', () => {
-      if (menuTarget && !menuTarget.classList.contains('hidden')) menuTarget.classList.add('hidden');
       if (menuDpi && !menuDpi.classList.contains('hidden')) menuDpi.classList.add('hidden');
     });
   }
@@ -622,14 +639,12 @@ export class PdfStudioUIManager {
 
       const title = document.createElement('div');
       title.className = 'font-headline-sm font-bold text-on-surface';
-      title.textContent = this.activeTool === 'jpg_to_pdf' ? 'No Images Loaded' : 'No PDF Documents in Execution Queue';
+      title.textContent = 'Drag & Drop Files';
       emptyCard.appendChild(title);
 
       const desc = document.createElement('div');
       desc.className = 'text-body-sm text-secondary';
-      desc.textContent = this.activeTool === 'jpg_to_pdf'
-        ? 'Click "Select Folder" (F2) or drop JPG/PNG image certificates to compile into A4 PDF.'
-        : 'Drag & drop student admission PDF documents here or click "Select Folder" (F2) to start.';
+      desc.textContent = 'or use Add Files above to queue documents for processing.';
       emptyCard.appendChild(desc);
 
       grid.appendChild(emptyCard);

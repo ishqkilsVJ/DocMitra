@@ -10719,7 +10719,7 @@ var Mt = class {
 		this.activeTool = "compress_pdf", this.files = [], this.activeFolderPath = "", this.activeFolderName = "", this.targetKb = 256, this.jpgDpi = 150, this.splitPageRange = "", this.isProcessing = !1, this.lastOutputFolder = "", this.sortDesc = !0, this.draggedIndex = null, this.modalFileIdx = -1, this.modalPage = 1, this.modalTotalPages = 1, this.modalZoom = "fit", this.modalRotation = 0, this.modalPdfDoc = null, this.renderTask = null;
 	}
 	init() {
-		this._bindRibbonTools(), this._bindActions(), this._bindDropzone(), this._bindBentoDropdowns(), this._bindModalControls(), this._bindHotkeys(), this.renderQueue(), console.info("[DocMitra PDF Studio] Zero-Port Native UI Manager initialized.");
+		this._bindRibbonTools(), this._bindActions(), this._bindDropzone(), this._bindTargetSizeControls(), this._bindBentoDropdowns(), this._bindModalControls(), this._bindHotkeys(), this.setTool("compress_pdf"), this.renderQueue(), console.info("[DocMitra PDF Studio] Zero-Port Native UI Manager initialized.");
 	}
 	_bindRibbonTools() {
 		document.querySelectorAll("#view-pdf-studio .tool-ribbon-btn").forEach((e) => {
@@ -10737,12 +10737,11 @@ var Mt = class {
 			t && t.remove();
 		});
 		let n = t || document.querySelector(`#view-pdf-studio .tool-ribbon-btn[data-tool="${e}"]`);
-		if (n) {
-			n.classList.remove("text-on-surface-variant", "hover:bg-surface-container-low", "hover:text-on-surface"), n.classList.add("bg-primary-container", "text-on-primary", "font-semibold", "shadow-sm");
+		if (n && (n.classList.remove("text-on-surface-variant", "hover:bg-surface-container-low", "hover:text-on-surface"), n.classList.add("bg-primary-container", "text-on-primary", "font-semibold", "shadow-sm"), !n.querySelector(".active-tool-badge"))) {
 			let e = document.createElement("span");
 			e.className = "active-tool-badge bg-primary/60 text-on-primary text-[10px] font-mono-code px-1.5 py-0.5 rounded font-bold uppercase tracking-tight", e.textContent = "Active", n.appendChild(e);
 		}
-		let i = document.getElementById("bentoCompressTargetWrapper"), a = document.getElementById("bentoJpgDpiWrapper"), o = document.getElementById("splitRangeWrapper");
+		let i = document.getElementById("compressTargetControlBar"), a = document.getElementById("bentoJpgDpiWrapper"), o = document.getElementById("splitRangeWrapper");
 		i && i.classList.toggle("hidden", e !== "compress_pdf"), a && a.classList.toggle("hidden", e !== "pdf_to_jpg"), o && o.classList.toggle("hidden", e !== "split_pdf");
 		let s = kt(e), c = document.getElementById("sidebarOutputSubfolderText");
 		c && (c.textContent = s);
@@ -10751,24 +10750,47 @@ var Mt = class {
 	}
 	_getToolDisplayName(e) {
 		switch (e) {
-			case "compress_pdf": return `Compress PDF (<${this.targetKb} KB)`;
-			case "merge_pdf": return "Merge PDF Dossier";
-			case "split_pdf": return "Split / Extract Pages";
-			case "pdf_to_jpg": return `PDF to JPG (${this.jpgDpi} DPI)`;
-			case "jpg_to_pdf": return "JPG to PDF (A4 Compilation)";
-			case "rotate_pdf": return "Rotate All Pages 90°";
+			case "compress_pdf": return "Compress PDF";
+			case "merge_pdf": return "Merge PDF";
+			case "split_pdf": return "Split PDF";
+			case "pdf_to_jpg": return "PDF to JPG";
+			case "jpg_to_pdf": return "JPG to PDF";
+			case "rotate_pdf": return "Rotate PDF";
 			case "clean_pdf": return "Clean & Enhance";
-			default: return "Process Files";
+			default: return "Compress PDF";
 		}
 	}
 	_updateProcessButtonLabel() {
 		let e = document.getElementById("startCompressBtn");
 		if (!e) return;
-		let t = e.querySelector("span:nth-of-type(2)");
-		if (t) {
-			let e = this.files.length, n = "Start Process";
-			this.activeTool === "compress_pdf" ? n = `Compress to <${this.targetKb}KB` : this.activeTool === "merge_pdf" ? n = "Merge Dossier" : this.activeTool === "split_pdf" ? n = "Split Pages" : this.activeTool === "pdf_to_jpg" ? n = `Convert to JPG (${this.jpgDpi} DPI)` : this.activeTool === "jpg_to_pdf" ? n = "Compile Images to PDF" : this.activeTool === "rotate_pdf" ? n = "Rotate 90°" : this.activeTool === "clean_pdf" && (n = "Clean & Enhance"), t.textContent = `${n} (${e} Files)`;
-		}
+		let t = e.querySelector("span:nth-of-type(2)") || e.querySelector("span:last-of-type");
+		t && (t.textContent = this._getToolDisplayName(this.activeTool));
+	}
+	_bindTargetSizeControls() {
+		let e = document.querySelectorAll("#compressTargetControlBar .target-radio-pill"), t = document.getElementById("sliderTargetKb"), n = document.getElementById("inputTargetKbBox"), i = (t) => {
+			e.forEach((e) => {
+				parseInt(e.getAttribute("data-kb"), 10) === t ? (e.classList.add("bg-slate-900", "text-white", "shadow-xs"), e.classList.remove("text-on-surface-variant", "hover:bg-surface-container-high")) : (e.classList.remove("bg-slate-900", "text-white", "shadow-xs"), e.classList.add("text-on-surface-variant", "hover:bg-surface-container-high"));
+			});
+		}, a = (e, r) => {
+			let a = parseInt(e, 10);
+			(isNaN(a) || a <= 0) && (a = 256), this.targetKb = a, r !== "slider" && t && (t.value = Math.min(Math.max(a, 50), 1e3)), r !== "input" && n && (n.value = a), i(a), this.updateStats();
+		};
+		e.forEach((e) => {
+			e.addEventListener("click", (t) => {
+				t.preventDefault();
+				let n = parseInt(e.getAttribute("data-kb"), 10);
+				a(n, "radio"), r.show("Target Size", `Target set to < ${n} KB`, "info");
+			});
+		}), t && t.addEventListener("input", (e) => {
+			let t = parseInt(e.target.value, 10);
+			a(t, "slider");
+		}), n && (n.addEventListener("input", (e) => {
+			let t = parseInt(e.target.value, 10);
+			!isNaN(t) && t > 0 && a(t, "input");
+		}), n.addEventListener("change", (e) => {
+			let t = parseInt(e.target.value, 10);
+			(isNaN(t) || t < 30) && (t = 30), a(t, "input");
+		})), i(this.targetKb);
 	}
 	_bindActions() {
 		let e = document.getElementById("btnBrowsePdfDir");
@@ -10816,37 +10838,17 @@ var Mt = class {
 		p && p.addEventListener("click", () => this.handleStartProcess());
 	}
 	_bindBentoDropdowns() {
-		let e = document.getElementById("btnBentoCompressTarget"), t = document.getElementById("menuBentoCompressTarget"), n = document.getElementById("labelCompressTarget"), i = document.getElementById("dockTargetLabel");
-		if (e && t) {
-			e.addEventListener("click", (e) => {
-				e.stopPropagation(), t.classList.toggle("hidden");
-			}), t.querySelectorAll("button[data-kb]").forEach((e) => {
-				e.addEventListener("click", (a) => {
-					a.stopPropagation();
-					let o = parseInt(e.getAttribute("data-kb"), 10) || 256;
-					this.targetKb = o;
-					let s = `< ${o} KB${o === 256 ? " (MahaDBT)" : o === 200 ? " (CET)" : ""}`;
-					n && (n.textContent = s), i && (i.textContent = `< ${o} KB`), t.classList.add("hidden"), this.updateStats(), this._updateProcessButtonLabel(), r.show("Target Updated", `Compress target set to < ${o} KB`, "info");
-				});
-			});
-			let a = document.getElementById("btnApplyCustomKb"), o = document.getElementById("inputCustomTargetKb");
-			a && o && a.addEventListener("click", (e) => {
-				e.stopPropagation();
-				let a = parseInt(o.value, 10);
-				a && a >= 50 && a <= 5e3 && (this.targetKb = a, n && (n.textContent = `< ${a} KB (Custom)`), i && (i.textContent = `< ${a} KB`), t.classList.add("hidden"), this.updateStats(), this._updateProcessButtonLabel(), r.show("Target Updated", `Custom target set to < ${a} KB`, "info"));
-			});
-		}
-		let a = document.getElementById("btnBentoJpgDpi"), o = document.getElementById("menuBentoJpgDpi"), s = document.getElementById("labelJpgDpi");
-		a && o && (a.addEventListener("click", (e) => {
-			e.stopPropagation(), o.classList.toggle("hidden");
-		}), o.querySelectorAll("button[data-dpi]").forEach((e) => {
-			e.addEventListener("click", (t) => {
-				t.stopPropagation();
-				let n = parseInt(e.getAttribute("data-dpi"), 10) || 150;
-				this.jpgDpi = n, s && (s.textContent = `${n} DPI ${n === 150 ? "(Fast)" : n === 300 ? "(High Quality)" : "(Web)"}`), o.classList.add("hidden"), this._updateProcessButtonLabel(), r.show("DPI Updated", `PDF to JPG resolution set to ${n} DPI`, "info");
+		let e = document.getElementById("btnBentoJpgDpi"), t = document.getElementById("menuBentoJpgDpi"), n = document.getElementById("labelJpgDpi");
+		e && t && (e.addEventListener("click", (e) => {
+			e.stopPropagation(), t.classList.toggle("hidden");
+		}), t.querySelectorAll("button[data-dpi]").forEach((e) => {
+			e.addEventListener("click", (i) => {
+				i.stopPropagation();
+				let a = parseInt(e.getAttribute("data-dpi"), 10) || 150;
+				this.jpgDpi = a, n && (n.textContent = `${a} DPI ${a === 150 ? "(Fast)" : a === 300 ? "(High Quality)" : "(Web)"}`), t.classList.add("hidden"), this._updateProcessButtonLabel(), r.show("DPI Updated", `PDF to JPG resolution set to ${a} DPI`, "info");
 			});
 		})), document.addEventListener("click", () => {
-			t && !t.classList.contains("hidden") && t.classList.add("hidden"), o && !o.classList.contains("hidden") && o.classList.add("hidden");
+			t && !t.classList.contains("hidden") && t.classList.add("hidden");
 		});
 	}
 	_bindDropzone() {
@@ -11008,9 +11010,9 @@ var Mt = class {
 				let n = document.createElement("span");
 				n.className = "material-symbols-outlined text-[40px] text-primary opacity-60", n.textContent = this.activeTool === "jpg_to_pdf" ? "add_photo_alternate" : "picture_as_pdf", t.appendChild(n);
 				let r = document.createElement("div");
-				r.className = "font-headline-sm font-bold text-on-surface", r.textContent = this.activeTool === "jpg_to_pdf" ? "No Images Loaded" : "No PDF Documents in Execution Queue", t.appendChild(r);
+				r.className = "font-headline-sm font-bold text-on-surface", r.textContent = "Drag & Drop Files", t.appendChild(r);
 				let i = document.createElement("div");
-				i.className = "text-body-sm text-secondary", i.textContent = this.activeTool === "jpg_to_pdf" ? "Click \"Select Folder\" (F2) or drop JPG/PNG image certificates to compile into A4 PDF." : "Drag & drop student admission PDF documents here or click \"Select Folder\" (F2) to start.", t.appendChild(i), e.appendChild(t);
+				i.className = "text-body-sm text-secondary", i.textContent = "or use Add Files above to queue documents for processing.", t.appendChild(i), e.appendChild(t);
 			} else this.files.forEach((t, n) => {
 				let i = document.createElement("div");
 				i.className = "docket-card bg-surface-container-lowest rounded-xl border border-surface-container-high/80 p-2.5 flex flex-col justify-between hover:shadow-md transition-all group relative cursor-pointer", this.activeTool === "merge_pdf" && (i.setAttribute("draggable", "true"), i.addEventListener("dragstart", (e) => {
