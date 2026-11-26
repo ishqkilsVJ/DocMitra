@@ -825,26 +825,39 @@ var w = {
 	"MINORITY CERTIFICATE": "Minority Certificate",
 	"MINORITY DECLARATION": "Minority Certificate",
 	"RESIDENTIAL DOCUMENT": "Residential Document",
-	"ATTEMPT CERTIFICATE": "Attempt Certificate"
+	"ATTEMPT CERTIFICATE": "Attempt Certificate",
+	"12TH PASSING": "12th Passing Certificate",
+	"10TH PASSING": "10th Passing Certificate",
+	"CET CELL FORM": "CET Application Form",
+	"DOMICILE AND NATIONALITY": "Domicile and Nationality Certificate",
+	"NATIONALITY AND DOMICILE": "Domicile and Nationality Certificate",
+	"NATIONALITY AND DOMOCILE": "Domicile and Nationality Certificate",
+	"NATIONALITY DOMICILE": "Domicile and Nationality Certificate",
+	"DOMICILE NATIONALITY": "Domicile and Nationality Certificate"
 };
-function T(e, t) {
+function T(e) {
+	if (!e || typeof e != "string") return "";
+	let t = e.trim().toUpperCase();
+	return w[t] ? w[t].toUpperCase() : t;
+}
+function E(e, t) {
 	if (!e) return;
 	let n = e.trim().toUpperCase();
 	w[n] = t || e;
 }
-function E(e) {
+function D(e) {
 	if (!e) return;
 	let t = e.trim().toUpperCase();
 	delete w[t];
 }
-function D(e) {
+function O(e) {
 	if (e && Array.isArray(e)) for (let t of e) {
 		if (!t) continue;
 		let e = (typeof t == "string" ? t : t.name || t.canonical || "").trim();
 		e && (w[e.toUpperCase()] = e);
 	}
 }
-var O = {
+var ee = {
 	marskheet: "marksheet",
 	markshet: "marksheet",
 	markshit: "marksheet",
@@ -2187,7 +2200,7 @@ var A = [
 		outputName: "MINORITY CERTIFICATE"
 	}
 ];
-function ee(e = null) {
+function te(e = null) {
 	return e ? A.map((t) => {
 		let n = e[t.outputName];
 		return n && Array.isArray(n) && n.length > 0 ? {
@@ -2197,7 +2210,7 @@ function ee(e = null) {
 		} : t;
 	}) : A;
 }
-var te = {
+var ne = {
 	"10th": [
 		"ssc",
 		"10",
@@ -2450,7 +2463,7 @@ function j(e, t = []) {
 			t.length >= 2 && r.add(t);
 		}
 	}
-	for (let [e, t] of Object.entries(te)) {
+	for (let [e, t] of Object.entries(ne)) {
 		let a = RegExp(`\\b${e}\\b`, "i");
 		if (a.test(i)) for (let e of t) r.add(i.replace(a, e)), n.length <= 4 && r.add(e);
 	}
@@ -2469,7 +2482,7 @@ function M(e, t = null) {
 	if (!e || typeof e != "string") return null;
 	let n = e.toLowerCase().trim();
 	if (!n) return null;
-	let r = n.replace(/\s+/g, ""), i = ee(t);
+	let r = n.replace(/\s+/g, ""), i = te(t);
 	for (let e of i) {
 		let t = e.primaryShortcut.toLowerCase();
 		if (n === t || r.length >= 2 && r.length <= 6 && r === t) return e.outputName;
@@ -2488,7 +2501,7 @@ function M(e, t = null) {
 	}
 	return null;
 }
-var ne = [
+var re = [
 	{
 		id: "12th-marksheet-passing-combined",
 		outputName: "12TH MARKSHEET AND PASSING CERTIFICATE",
@@ -3127,9 +3140,9 @@ var ne = [
 		]
 	}
 ];
-function re(e, t, n = null) {
+function ie(e, t, n = null) {
 	if (!e || !t) return;
-	let r = e.toUpperCase().trim(), i = ne.find((e) => e.shortcut && e.shortcut.toUpperCase() === r);
+	let r = e.toUpperCase().trim(), i = re.find((e) => e.shortcut && e.shortcut.toUpperCase() === r);
 	if (i && (i.outputName = t.toUpperCase().trim(), n && Array.isArray(n))) for (let e of n) {
 		let t = e.trim().toLowerCase();
 		if (t.length >= 2) {
@@ -3153,7 +3166,7 @@ function N(e, t = null) {
 			matchedPattern: t
 		};
 	}
-	for (let e of ne) for (let t of e.patterns) if (t.test(n) || r.length >= 2 && r.length <= 6 && t.test(r)) return {
+	for (let e of re) for (let t of e.patterns) if (t.test(n) || r.length >= 2 && r.length <= 6 && t.test(r)) return {
 		docType: e.outputName,
 		confidence: 90,
 		matchedPattern: t.toString()
@@ -3172,7 +3185,7 @@ function P(e) {
 function F(e) {
 	return !e || typeof e != "string" ? "" : e.replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
 }
-function ie(e, t) {
+function ae(e, t) {
 	let n = N(e, t);
 	return n && n.docType ? n.docType : M(e, t) || null;
 }
@@ -3184,7 +3197,7 @@ function L(e, t, n, r = "preserve") {
 	let i = "", a = (e || "").trim().toUpperCase();
 	if (w[a]) i = w[a];
 	else {
-		let t = ie(e, n);
+		let t = ae(e, n);
 		i = t ? w[t.toUpperCase()] || t : F(e);
 	}
 	let o = i;
@@ -3275,21 +3288,21 @@ var B = new class {
 	clear() {
 		this.history = [];
 	}
-}(), ae = (e) => e.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-function oe(e, t) {
+}(), oe = (e) => e.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+function se(e, t) {
 	return e === e.toUpperCase() ? t.toUpperCase() : e === e.toLowerCase() ? t.toLowerCase() : e[0] === e[0].toUpperCase() ? t[0].toUpperCase() + t.slice(1).toLowerCase() : t;
 }
-function se(e, t) {
+function ce(e, t) {
 	if (!e || typeof e != "string") return e;
 	let n = e;
 	for (let [e, r] of Object.entries(t || {})) {
 		if (!e) continue;
-		let t = RegExp(`(^|[^a-zA-Z0-9])(${ae(e)})([^a-zA-Z0-9]|$)`, "gi");
-		n = n.replace(t, (e, t, n, i) => t + oe(n, r) + i);
+		let t = RegExp(`(^|[^a-zA-Z0-9])(${oe(e)})([^a-zA-Z0-9]|$)`, "gi");
+		n = n.replace(t, (e, t, n, i) => t + se(n, r) + i);
 	}
 	return n;
 }
-async function ce(e, t, n = null) {
+async function le(e, t, n = null) {
 	let r = [];
 	try {
 		let i = 0;
@@ -3367,7 +3380,7 @@ async function ce(e, t, n = null) {
 		throw e;
 	}
 }
-async function le(e, t, n = null) {
+async function ue(e, t, n = null) {
 	let r = [...t].reverse(), i = 0;
 	for (let t of r) {
 		let a = e && (e.nativePath || e.path) || "", o = t.file && (t.file.path || t.file.nativePath) || (a ? `${a}/${t.next}` : null) || (t.nativePath ? t.nativePath.replace(/[^\\\/]+$/, t.next) : null);
@@ -3406,7 +3419,7 @@ async function le(e, t, n = null) {
 		i++, n && n(Math.round(i / r.length * 100), `Undo: ${i}/${r.length}`);
 	}
 }
-var ue = [
+var de = [
 	{
 		canonical: "AADHAAR CARD",
 		code: "ADR",
@@ -3737,7 +3750,7 @@ var ue = [
 		]
 	}
 ];
-function de({ canonical: e, code: t = "", primaryKeywords: n = [], secondaryKeywords: r = [] }) {
+function fe({ canonical: e, code: t = "", primaryKeywords: n = [], secondaryKeywords: r = [] }) {
 	if (!e || typeof e != "string") return null;
 	let i = e.trim().toUpperCase(), a = (t || "").trim().toUpperCase() || i.slice(0, 3);
 	w[i] = i;
@@ -3760,10 +3773,10 @@ function de({ canonical: e, code: t = "", primaryKeywords: n = [], secondaryKeyw
 		patterns: s,
 		primaryKeywords: c,
 		secondaryKeywords: l
-	}, d = ue.findIndex((e) => e.canonical === i);
-	return d === -1 ? ue.push(u) : ue[d] = u, u;
+	}, d = de.findIndex((e) => e.canonical === i);
+	return d === -1 ? de.push(u) : de[d] = u, u;
 }
-function fe(e, t) {
+function pe(e, t) {
 	if (e === t) return 0;
 	if (!e || !e.length) return (t || "").length;
 	if (!t || !t.length) return e.length;
@@ -3776,20 +3789,20 @@ function fe(e, t) {
 	}
 	return i[n.length][r.length];
 }
-function pe(e, t) {
+function me(e, t) {
 	if (!e && !t) return 1;
 	if (!e || !t) return 0;
 	let n = e.toLowerCase().trim(), r = t.toLowerCase().trim();
 	if (n === r) return 1;
 	let i = Math.max(n.length, r.length);
 	if (i === 0) return 1;
-	let a = fe(n, r);
+	let a = pe(n, r);
 	return Math.max(0, 1 - a / i);
 }
 function V(e) {
 	return !e || typeof e != "string" ? [] : e.replace(/\.[a-zA-Z0-9]+$/i, "").replace(/[^a-zA-Z0-9]+/g, " ").toLowerCase().split(/\s+/).filter((e) => e.length > 0);
 }
-var me = [
+var he = [
 	{
 		id: "10",
 		tags: [
@@ -3863,20 +3876,20 @@ var me = [
 		]
 	}
 ];
-function he(e) {
+function ge(e) {
 	let t = (e || "").toLowerCase();
-	for (let e of me) if (e.tags.includes(t)) return e.id;
+	for (let e of he) if (e.tags.includes(t)) return e.id;
 	return null;
 }
-function ge(e) {
+function _e(e) {
 	let t = /* @__PURE__ */ new Set();
 	for (let n of e) {
-		let e = he(n);
+		let e = ge(n);
 		e && t.add(e);
 	}
 	return t;
 }
-function _e(e, t) {
+function ve(e, t) {
 	if (t && t.size > 0) {
 		for (let n of e) if (!t.has(n)) return !0;
 	}
@@ -3887,7 +3900,7 @@ function H(e) {
 	let t = e.toLowerCase().trim();
 	return t = t.replace(/(\.[a-zA-Z0-9]+)+$/i, ""), t = t.replace(/\bkc([aeiou])/gi, "k$1"), t = t.replace(/\bkn([aeiou])/gi, "n$1"), t = t.replace(/\bps([aeiou])/gi, "s$1"), t = t.replace(/w/gi, "v"), t = t.replace(/ph/gi, "f"), t = t.replace(/sh/gi, "s"), t = t.replace(/ee+/gi, "i"), t = t.replace(/oo+/gi, "u"), t = t.replace(/\b(sartificat|sartifiket|sartifakit|sartificet|certi|cert|dakhla|pramanpatra|praman\s*patra)\b/gi, "certificate"), t = t.replace(/\b(domisail|domicile|domicil|adivas|adhiwas|rehivasi|rahavasi)\b/gi, "domicile"), t = t.replace(/\b(incom|incm|utpanna|utpann)\b/gi, "income"), t = t.replace(/\b(bonafaid|bonafied|bonfide|bona\s*fide)\b/gi, "bonafide"), t = t.replace(/\b(non\s*crimiler|non\s*criminal|noncreamy|non\s*creamy|ncl)\b/gi, "non creamy layer"), t = t.replace(/\b(markshit|markshet|marskheet|mark\s*sheet|scorecard|score\s*card)\b/gi, "marksheet"), t = t.replace(/\b(pasing|pass\s*cert|sanad)\b/gi, "passing"), t = t.replace(/\b(adhar|aadhar|aadhhar|adhaar|uid|uidai)\b/gi, "aadhaar"), t = t.replace(/\b(rasan|rashan|shidha|patrika)\b/gi, "ration"), t = t.replace(/\b(skool|clg|college)\b/gi, "school"), t = t.replace(/\b(lc|tc|leaving|transfer)\b/gi, "leaving certificate"), t = t.replace(/\b(foto|pic|image|photograph)\b/gi, "photo"), t = t.replace(/\b(signatur|sahi|signature|st\s*sign)\b/gi, "signature"), t = t.replace(/\b(validiti|validty)\b/gi, "validity"), t = t.replace(/\b(dahavi|dahawi|ssc|tenth)\b/gi, "10th"), t = t.replace(/\b(baravi|barawi|hsc|twelfth)\b/gi, "12th"), t.replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
 }
-function ve(e) {
+function ye(e) {
 	if (!e || typeof e != "string") return ["", ""];
 	let t = e.toUpperCase().trim();
 	if (!t) return ["", ""];
@@ -3973,7 +3986,7 @@ function ve(e) {
 	}
 	return [n, r];
 }
-function ye(e, t) {
+function be(e, t) {
 	if (!e || !t) return 0;
 	let n = e.toLowerCase().trim(), r = t.toLowerCase().trim();
 	if (n === r) return 1;
@@ -3994,10 +4007,10 @@ function ye(e, t) {
 		"misc"
 	];
 	if (i.includes(n) || i.includes(r)) return 0;
-	let [a, o] = ve(n), [s, c] = ve(r);
+	let [a, o] = ye(n), [s, c] = ye(r);
 	return !a || !s ? 0 : a === s ? 1 : o && o === s || c && a === c || o && c && o === c ? .95 : a.length >= 3 && s.length >= 3 && (a.startsWith(s) || s.startsWith(a)) ? .85 : 0;
 }
-function be(e, t = "", n = null, r = null) {
+function xe(e, t = "", n = null, r = null) {
 	if (!e || typeof e != "string") return {
 		docType: null,
 		canonical: null,
@@ -4015,7 +4028,7 @@ function be(e, t = "", n = null, r = null) {
 		isConfident: !1,
 		reason: "Empty basename"
 	};
-	let a = H(i), o = se(i, O), s = o.replace(/[_\-\.\+,\(\)\[\]]+/g, " ").replace(/\s+/g, " ").trim().toLowerCase(), c = V(o), l = V(a), u = Array.from(/* @__PURE__ */ new Set([...c, ...l])), d = ge(u);
+	let a = H(i), o = ce(i, ee), s = o.replace(/[_\-\.\+,\(\)\[\]]+/g, " ").replace(/\s+/g, " ").trim().toLowerCase(), c = V(o), l = V(a), u = Array.from(/* @__PURE__ */ new Set([...c, ...l])), d = _e(u);
 	if (r) {
 		let e = Array.isArray(r) ? r : Object.values(r);
 		for (let t of e) {
@@ -4023,7 +4036,7 @@ function be(e, t = "", n = null, r = null) {
 			let e = (typeof t == "string" ? t : t.name || t.canonical || (Array.isArray(t) ? t[0] : "")).trim().toUpperCase();
 			if (!e) continue;
 			let n = (t.code || Array.isArray(t) && t[2] || "").trim().toUpperCase(), r = t.keywords || Array.isArray(t) && t[1] || [], c = Array.isArray(r) ? r : typeof r == "string" ? r.split(",").map((e) => e.trim()) : [];
-			if (_e(d, ge(V(e)))) continue;
+			if (ve(d, _e(V(e)))) continue;
 			if (n) {
 				let t = RegExp(`(^|[^a-z0-9])${n}([^a-z0-9]|$)`, "i");
 				if (t.test(o) || t.test(i) || t.test(a)) return {
@@ -5087,7 +5100,7 @@ function be(e, t = "", n = null, r = null) {
 			let n = (t.code || Array.isArray(t) && t[2] || "").toUpperCase(), r = t.keywords || Array.isArray(t) && t[1] || [], i = Array.isArray(r) ? r : typeof r == "string" ? r.split(",").map((e) => e.trim()) : [], a = m.find((t) => t.type === e || t.code && n && t.code.toUpperCase() === n);
 			if (a) a.type = e, a.code = n, a.tokens = [e.toLowerCase(), ...i.map((e) => e.toLowerCase())];
 			else {
-				let t = V(e), r = ge(t), a = r.size > 0 ? Array.from(r)[0] : null;
+				let t = V(e), r = _e(t), a = r.size > 0 ? Array.from(r)[0] : null;
 				m.push({
 					type: e,
 					code: n,
@@ -5106,7 +5119,7 @@ function be(e, t = "", n = null, r = null) {
 	}
 	let h = null, g = 0;
 	for (let e of m) {
-		if (_e(d, e.standard ? /* @__PURE__ */ new Set([e.standard]) : ge(V(e.type))) || e.type === "CASTE CERTIFICATE" && (/\b(validity|validiti|padtalni|padtalani|cvc|val)\b/i.test(s) || /\b(validity|validiti|padtalni|cvc|val)\b/i.test(a) || u.some((e) => [
+		if (ve(d, e.standard ? /* @__PURE__ */ new Set([e.standard]) : _e(V(e.type))) || e.type === "CASTE CERTIFICATE" && (/\b(validity|validiti|padtalni|padtalani|cvc|val)\b/i.test(s) || /\b(validity|validiti|padtalni|cvc|val)\b/i.test(a) || u.some((e) => [
 			"validity",
 			"validiti",
 			"padtalni",
@@ -5138,7 +5151,7 @@ function be(e, t = "", n = null, r = null) {
 		if (n.length > 0) {
 			let e = 0, r = 0;
 			for (let t of n) {
-				let n = he(t);
+				let n = ge(t);
 				if (n) {
 					d.has(n) && (e++, r += 1);
 					continue;
@@ -5160,9 +5173,9 @@ function be(e, t = "", n = null, r = null) {
 					}
 					let n = H(e), r = H(t);
 					(n === r || e === r || n === t) && (i = Math.max(i, .95));
-					let a = ye(e, t);
+					let a = be(e, t);
 					a > i && (i = a);
-					let o = pe(e, t);
+					let o = me(e, t);
 					o > i && (i = o);
 				}
 				i >= .8 && (e++, r += i);
@@ -5176,15 +5189,15 @@ function be(e, t = "", n = null, r = null) {
 				"receipt",
 				"form",
 				"letter"
-			].includes(n[0]) && u.some((e) => e === n[0] || ye(e, n[0]) >= .85 || H(e) === n[0]) && (t = Math.max(t, 85));
+			].includes(n[0]) && u.some((e) => e === n[0] || be(e, n[0]) >= .85 || H(e) === n[0]) && (t = Math.max(t, 85));
 		}
 		if (e.primary && e.qualifier) {
-			let n = e.primary.some((e) => u.some((t) => t === e || ye(t, e) >= .85 || H(t) === e || pe(t, e) >= .8)), r = e.qualifier.some((e) => {
+			let n = e.primary.some((e) => u.some((t) => t === e || be(t, e) >= .85 || H(t) === e || me(t, e) >= .8)), r = e.qualifier.some((e) => {
 				let t = RegExp(`(^|[^a-z0-9])${e}([^a-z0-9]|$)`, "i");
 				return t.test(s) || t.test(a);
 			});
 			n && r ? t = Math.max(t, 90) : n && !r && !e.standard && (t = Math.max(t, 50));
-		} else e.primary && e.primary.some((e) => u.some((t) => t === e || ye(t, e) >= .85 || H(t) === e || pe(t, e) >= .8)) && (t = Math.max(t, 85));
+		} else e.primary && e.primary.some((e) => u.some((t) => t === e || be(t, e) >= .85 || H(t) === e || me(t, e) >= .8)) && (t = Math.max(t, 85));
 		t > g && (g = t, h = e);
 	}
 	if (t && t.trim() && g > 0 && t.trim().toLowerCase().split(/\s+/).filter((e) => e.length > 2).some((e) => s.includes(e) || a.includes(e)) && (g = Math.min(100, g + 5)), h && g >= 50) {
@@ -5216,7 +5229,7 @@ function be(e, t = "", n = null, r = null) {
 function U(e) {
 	return e ? String(e).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;") : "";
 }
-function xe(e, t, n = "") {
+function Se(e, t, n = "") {
 	let r = F(e), i = F(t);
 	if (r === i) return {
 		oldHtml: U(r),
@@ -5249,21 +5262,21 @@ function xe(e, t, n = "") {
 		changeType: g
 	};
 }
-function Se(e, t, n = {}) {
+function Ce(e, t, n = {}) {
 	let { order: r = "doc_student", separator: i = " ", includeStudent: a = !0, casing: o = "upper" } = n, s = (e || "").trim(), c = (t || "").trim(), l = [];
 	return l = a && c ? r === "student_doc" ? [c, s] : [s, c] : [s], I(l.filter(Boolean).join(i), o);
-}
-function Ce(e) {
-	if (!e) return "";
-	let t = F(e);
-	return t = t.replace(/WhatsApp\s*Image\s*\d{4}[-_]\d{2}[-_]\d{2}\s*(at\s*[\d\.]+)?/gi, ""), t = t.replace(/(IMG|VID|DOC)[-_]\d{8}[-_]\d{4,6}/gi, ""), t = t.replace(/\bSCAN\s*\(\d+\)/gi, ""), t = t.replace(/\bSCAN[-_]?\d+/gi, ""), t = t.replace(/\(\s*\)/g, ""), t = t.replace(/[_\-]+/g, " "), t = t.replace(/\s+/g, " ").trim(), t;
 }
 function we(e) {
 	if (!e) return "";
 	let t = F(e);
+	return t = t.replace(/WhatsApp\s*Image\s*\d{4}[-_]\d{2}[-_]\d{2}\s*(at\s*[\d\.]+)?/gi, ""), t = t.replace(/(IMG|VID|DOC)[-_]\d{8}[-_]\d{4,6}/gi, ""), t = t.replace(/\bSCAN\s*\(\d+\)/gi, ""), t = t.replace(/\bSCAN[-_]?\d+/gi, ""), t = t.replace(/\(\s*\)/g, ""), t = t.replace(/[_\-]+/g, " "), t = t.replace(/\s+/g, " ").trim(), t;
+}
+function Te(e) {
+	if (!e) return "";
+	let t = F(e);
 	return t = t.replace(/[^a-zA-Z0-9\s\-_]/g, " "), t = t.replace(/\s+/g, " ").trim(), t;
 }
-function Te(e, t, n = "") {
+function Ee(e, t, n = "") {
 	if (!e || !t) return 0;
 	let r = F(e).trim(), i = F(t).trim(), a = (n || "").trim();
 	if (a) {
@@ -5275,12 +5288,12 @@ function Te(e, t, n = "") {
 	}
 	let o = r.toLowerCase().replace(/(\d+)\s+(th|st|nd|rd)\b/gi, "$1$2").replace(/\bmark\s+sheet\b/gi, "marksheet").replace(/[\s_\-]+/g, " ").trim(), s = i.toLowerCase().replace(/(\d+)\s+(th|st|nd|rd)\b/gi, "$1$2").replace(/\bmark\s+sheet\b/gi, "marksheet").replace(/[\s_\-]+/g, " ").trim();
 	if (!o || !s || o === s) return 0;
-	let c = fe(o, s), l = Math.max(o.length, s.length);
+	let c = pe(o, s), l = Math.max(o.length, s.length);
 	if (l === 0) return 0;
 	let u = Math.round(c / l * 100);
 	return Math.min(100, Math.max(0, u));
 }
-function Ee(e) {
+function De(e) {
 	let t = /* @__PURE__ */ new Map();
 	if (!Array.isArray(e) || e.length === 0) return t;
 	e.forEach((e) => {
@@ -5370,7 +5383,7 @@ function Ee(e) {
 	}), t;
 }
 // src/core/constants.js
-var De = {
+var Oe = {
 	marskheet: "marksheet",
 	markshet: "marksheet",
 	markshit: "marksheet",
@@ -5394,7 +5407,7 @@ var De = {
 	atempt: "attempt",
 	attmpt: "attempt",
 	phot: "photo"
-}, Oe = [
+}, ke = [
 	{
 		id: "12th-marksheet-passing-link",
 		part1: "12TH MARKSHEET",
@@ -5423,7 +5436,7 @@ var De = {
 		combined: "12TH LC",
 		type: "alias"
 	}
-], ke = "2026.11.passing_canonical_v2", W = {
+], Ae = "2026.11.passing_canonical_v2", W = {
 	"MAHA DBT FORM": [
 		["AADHAAR CARD", ["aadhaar card"]],
 		["PHOTO", ["photo"]],
@@ -5467,7 +5480,7 @@ var De = {
 		["PASSBOOK BANK", ["passbook bank", "bank passbook"]],
 		["BONAFIDE CERTIFICATE", ["bonafide certificate"]]
 	]
-}, Ae = {
+}, je = {
 	"MAHA DBT FORM": [
 		"AADHAAR CARD",
 		"PHOTO",
@@ -5518,7 +5531,7 @@ var De = {
 	version: 1,
 	store: "settings",
 	key: "current"
-}, je = [
+}, Me = [
 	{
 		id: "aadhaar-card",
 		displayName: "Aadhaar Card",
@@ -5730,13 +5743,13 @@ var De = {
 		outputName: "CAP ALLOTMENT LETTER"
 	}
 ];
-function Me(e = je) {
+function Ne(e = Me) {
 	let t = {};
 	for (let n of e) t[n.outputName] = [n.primaryShortcut.toLowerCase(), ...(n.alternateKeywords || []).map((e) => e.toLowerCase())];
 	return t;
 }
 // src/libraries/checklist-library.js
-function Ne(e) {
+function Pe(e) {
 	return Object.fromEntries(Object.entries(e).map(([e, t]) => [e, t.map((e) => Array.isArray(e) ? {
 		name: e[0],
 		keywords: e[1],
@@ -5744,20 +5757,20 @@ function Ne(e) {
 	} : e)]));
 }
 // src/services/storage-service.js
-var Pe = "v3_exact_single", Fe = Me(), Ie = {}, K = (e, t) => {
+var Fe = "v3_exact_single", Ie = Ne(), Le = {}, K = (e, t) => {
 	try {
 		if (typeof localStorage < "u" && localStorage.getItem) {
 			let t = localStorage.getItem(e);
 			if (t) return JSON.parse(t);
 		}
 	} catch {}
-	return Ie[e] === void 0 ? t : Ie[e];
+	return Le[e] === void 0 ? t : Le[e];
 }, q = (e, t) => {
 	try {
 		typeof localStorage < "u" && localStorage.setItem && localStorage.setItem(e, JSON.stringify(t));
 	} catch {}
-	Ie[e] = t;
-}, Le = (e) => {
+	Le[e] = t;
+}, Re = (e) => {
 	let t = {};
 	Object.entries(e || {}).forEach(([e, n]) => {
 		let r = /^12\s*LC$/i.test(e) || e === "12TH LEAVING CERTIFICATE" ? "12TH LC" : e;
@@ -5767,7 +5780,7 @@ var Pe = "v3_exact_single", Fe = Me(), Ie = {}, K = (e, t) => {
 	return Object.entries(t).forEach(([e, r]) => {
 		e !== "12TH MARKSHEET AND PASSING" && (n[e] = r, e === "12TH PASSING CERTIFICATE" && t["12TH MARKSHEET AND PASSING"] && (n["12TH MARKSHEET AND PASSING"] = t["12TH MARKSHEET AND PASSING"]));
 	}), n;
-}, Re = (e) => {
+}, ze = (e) => {
 	let t = e.name === "12TH LEAVING CERTIFICATE" ? "12TH LC" : e.name;
 	return {
 		...e,
@@ -5775,32 +5788,32 @@ var Pe = "v3_exact_single", Fe = Me(), Ie = {}, K = (e, t) => {
 		keywords: [...new Set(e.keywords || [])],
 		short: e.short || t.slice(0, 18)
 	};
-}, ze = (e) => {
+}, Be = (e) => {
 	let t = e.filter((e) => e.name === "12TH MARKSHEET AND PASSING");
 	if (!t.length) return e;
 	let n = e.filter((e) => e.name !== "12TH MARKSHEET AND PASSING"), r = n.findIndex((e) => e.name === "12TH PASSING CERTIFICATE");
 	return n.splice(r < 0 ? n.length : r + 1, 0, ...t), n;
-}, Be = (e) => {
-	let t = Ne(W), n = e || {}, r = {};
+}, Ve = (e) => {
+	let t = Pe(W), n = e || {}, r = {};
 	return Object.keys(t).forEach((e) => {
-		let i = Array.isArray(n[e]) ? n[e].map(Re) : [], a = new Map(i.map((e) => [e.name.toUpperCase(), e]));
+		let i = Array.isArray(n[e]) ? n[e].map(ze) : [], a = new Map(i.map((e) => [e.name.toUpperCase(), e]));
 		t[e].forEach((e) => {
-			let t = Re(e);
+			let t = ze(e);
 			a.has(t.name.toUpperCase()) || i.push(t);
-		}), r[e] = ze(i);
+		}), r[e] = Be(i);
 	}), Object.entries(n).forEach(([e, t]) => {
-		r[e] || (r[e] = ze(t.map(Re)));
+		r[e] || (r[e] = Be(t.map(ze)));
 	}), r;
 };
-function Ve() {
+function He() {
 	let e = localStorage.getItem("dictVersion"), t, n;
-	e === Pe ? (t = Le(K("renameSettings", Fe)), n = K("renameProfiles", { Default: Fe })) : (t = Fe, n = { Default: Fe }, q("renameSettings", t), q("renameProfiles", n), localStorage.setItem("dictVersion", Pe));
+	e === Fe ? (t = Re(K("renameSettings", Ie)), n = K("renameProfiles", { Default: Ie })) : (t = Ie, n = { Default: Ie }, q("renameSettings", t), q("renameProfiles", n), localStorage.setItem("dictVersion", Fe));
 	let r = localStorage.getItem("checklistVersion"), i;
-	r === "2026.11.passing_canonical_v2" ? i = Be(K("checklists", null)) : (i = Ne(W), q("checklists", i), localStorage.setItem("checklistVersion", ke));
+	r === "2026.11.passing_canonical_v2" ? i = Ve(K("checklists", null)) : (i = Pe(W), q("checklists", i), localStorage.setItem("checklistVersion", Ae));
 	let a = {
-		...De,
+		...Oe,
 		...K("spellingCorrections", {}) || {}
-	}, o = K("linkedRules", Oe);
+	}, o = K("linkedRules", ke);
 	return {
 		groups: t,
 		checklists: i,
@@ -5811,7 +5824,7 @@ function Ve() {
 		active: Object.keys(n)[0] || "Default"
 	};
 }
-function He() {
+function Ue() {
 	return new Promise((e, t) => {
 		if (!("indexedDB" in window)) return t(/* @__PURE__ */ Error("IndexedDB unavailable"));
 		let n = indexedDB.open(G.name, G.version);
@@ -5820,13 +5833,13 @@ function He() {
 		}, n.onsuccess = () => e(n.result), n.onerror = () => t(n.error || /* @__PURE__ */ Error("IndexedDB open failed"));
 	});
 }
-function Ue(e) {
-	return He().then((t) => new Promise((n, r) => {
+function We(e) {
+	return Ue().then((t) => new Promise((n, r) => {
 		let i = t.transaction(G.store, "readwrite");
 		i.objectStore(G.store).put(e, G.key), i.oncomplete = () => n(!0), i.onerror = () => r(i.error);
 	}));
 }
-function We(e) {
+function Ge(e) {
 	let t = {
 		groups: e.groups,
 		checklists: e.checklists,
@@ -5836,9 +5849,9 @@ function We(e) {
 		style: e.style,
 		savedAt: (/* @__PURE__ */ new Date()).toISOString()
 	};
-	q("renameSettings", t.groups), q("checklists", t.checklists), q("spellingCorrections", t.spelling), q("renameProfiles", t.profiles), q("linkedRules", t.linkedRules), localStorage.setItem("nameStyle", t.style), Ue(t).catch(() => {});
+	q("renameSettings", t.groups), q("checklists", t.checklists), q("spellingCorrections", t.spelling), q("renameProfiles", t.profiles), q("linkedRules", t.linkedRules), localStorage.setItem("nameStyle", t.style), We(t).catch(() => {});
 }
-async function Ge() {
+async function Ke() {
 	if (typeof window < "u" && window.DOCMITRA_ENABLE_REMOTE_BACKEND) try {
 		let e = await (await fetch("http://localhost:3000/api/load-document-presets")).json();
 		if (e && e.success && e.data && e.data.forms) return e.data;
@@ -5847,7 +5860,7 @@ async function Ge() {
 	}
 	return K("documentPresets", { forms: W });
 }
-async function Ke(e) {
+async function qe(e) {
 	if (q("documentPresets", e), typeof window < "u" && window.DOCMITRA_ENABLE_REMOTE_BACKEND) try {
 		await fetch("http://localhost:3000/api/save-document-presets", {
 			method: "POST",
@@ -5859,56 +5872,56 @@ async function Ke(e) {
 	}
 }
 // src/services/followup-service.js
-var qe = "studentDocumentFollowUps", Je = [];
+var Je = "studentDocumentFollowUps", Ye = [];
 function J() {
 	try {
 		if (typeof localStorage < "u") {
-			let e = localStorage.getItem(qe);
+			let e = localStorage.getItem(Je);
 			return e ? JSON.parse(e) : [];
 		}
-		return Je;
+		return Ye;
 	} catch {
-		return Je;
+		return Ye;
 	}
 }
-function Ye(e) {
+function Xe(e) {
 	try {
-		Je = e, typeof localStorage < "u" && localStorage.setItem(qe, JSON.stringify(e));
+		Ye = e, typeof localStorage < "u" && localStorage.setItem(Je, JSON.stringify(e));
 	} catch (e) {
 		console.error("Failed to save follow-ups:", e);
 	}
 }
-function Xe({ folderName: e, studentName: t, documentName: n, promisedDate: r, note: i = "" }) {
+function Ze({ folderName: e, studentName: t, documentName: n, promisedDate: r, note: i = "" }) {
 	let a = J(), o = (e || "").trim(), s = (n || "").trim().toUpperCase(), c = (t || e || "").trim(), l = a.findIndex((e) => e.folderName.toLowerCase() === o.toLowerCase() && e.documentName.toUpperCase() === s && e.status === "pending"), u = Date.now();
-	if (l >= 0) return a[l].promisedDate = r, a[l].note = i, a[l].updatedAt = u, Ye(a), a[l];
+	if (l >= 0) return a[l].promisedDate = r, a[l].note = i, a[l].updatedAt = u, Xe(a), a[l];
 	let d = {
 		id: `fu_${u}_${Math.random().toString(36).slice(2, 7)}`,
 		folderName: o,
 		studentName: c,
 		documentName: s,
-		promisedDate: r || nt(),
+		promisedDate: r || rt(),
 		note: i || "",
 		status: "pending",
 		createdAt: u,
 		resolvedAt: null
 	};
-	return a.push(d), Ye(a), d;
+	return a.push(d), Xe(a), d;
 }
-function Ze(e, t) {
+function Qe(e, t) {
 	let n = J(), r = (e || "").trim().toLowerCase(), i = (t || "").trim().toUpperCase(), a = !1;
 	return n.forEach((e) => {
 		e.folderName.trim().toLowerCase() === r && e.documentName.trim().toUpperCase() === i && e.status === "pending" && (e.status = "resolved", e.resolvedAt = Date.now(), a = !0);
-	}), a && Ye(n), a;
+	}), a && Xe(n), a;
 }
-function Qe(e, t) {
+function $e(e, t) {
 	let n = J(), r = (e || "").trim().toLowerCase(), i = (t || "").trim().toUpperCase();
 	return n.find((e) => e.folderName.trim().toLowerCase() === r && e.documentName.trim().toUpperCase() === i && e.status === "pending") || null;
 }
-function $e(e, t = tt()) {
-	let n = rt(e, t);
+function et(e, t = nt()) {
+	let n = it(e, t);
 	return n < 0 ? "overdue" : n === 0 ? "today" : "upcoming";
 }
-function et(e) {
+function tt(e) {
 	if (!e) return "";
 	let t = e.split("-");
 	return t.length === 3 ? new Date(Number(t[0]), Number(t[1]) - 1, Number(t[2])).toLocaleDateString("en-IN", {
@@ -5917,25 +5930,25 @@ function et(e) {
 		year: "numeric"
 	}) : e;
 }
-function tt() {
+function nt() {
 	let e = /* @__PURE__ */ new Date();
 	return `${e.getFullYear()}-${String(e.getMonth() + 1).padStart(2, "0")}-${String(e.getDate()).padStart(2, "0")}`;
 }
-function nt(e = 1) {
+function rt(e = 1) {
 	let t = /* @__PURE__ */ new Date();
 	return t.setDate(t.getDate() + e), `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`;
 }
-function rt(e, t) {
+function it(e, t) {
 	return e === t ? 0 : e < t ? -1 : 1;
 }
 // tools/rename_tool/missing_documents_modal.js
 function Y(e) {
 	return e ? String(e).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;") : "";
 }
-function it(e) {
+function at(e) {
 	return !e || e <= 0 ? "0 KB" : `${Math.round(e / 1024)} KB`;
 }
-function at(e) {
+function ot(e) {
 	if (!e) {
 		let e = /* @__PURE__ */ new Date();
 		return `${String(e.getDate()).padStart(2, "0")}-${String(e.getMonth() + 1).padStart(2, "0")}-${e.getFullYear()}`;
@@ -5943,7 +5956,7 @@ function at(e) {
 	let t = new Date(e);
 	return isNaN(t.getTime()) ? "25-11-2026" : `${String(t.getDate()).padStart(2, "0")}-${String(t.getMonth() + 1).padStart(2, "0")}-${t.getFullYear()}`;
 }
-var ot = class {
+var st = class {
 	constructor(e = {}) {
 		this.container = e.container || document.body, this.onImportFile = e.onImportFile || (() => {}), this.onSetFollowup = e.onSetFollowup || (() => {}), this.onPresetChange = e.onPresetChange || (() => {}), this.onRenameFolder = e.onRenameFolder || (() => {}), this.onViewDocument = e.onViewDocument || (() => {}), this.onClose = e.onClose || (() => {}), this.modalEl = null, this.contentEl = null, this.quickPreviewEl = null, this.isOpen = !1, this.currentProps = null, this._handleKeydown = this._handleKeydown.bind(this);
 	}
@@ -5972,7 +5985,7 @@ var ot = class {
 	async showQuickPreview(e) {
 		if (!this.quickPreviewEl) return;
 		let t = this.quickPreviewEl.querySelector("#quickPreviewTitle"), n = this.quickPreviewEl.querySelector("#quickPreviewBody"), r = e.docType || e.name || "Document";
-		if (t && (t.textContent = `${r} • ${it(e.size)}`), !n) return;
+		if (t && (t.textContent = `${r} • ${at(e.size)}`), !n) return;
 		n.innerHTML = "\n      <div class=\"flex flex-col items-center justify-center p-8 gap-2 text-slate-500 text-xs font-mono\">\n        <span class=\"material-symbols-outlined text-[28px] animate-spin text-blue-600\">sync</span>\n        <span>Loading document preview...</span>\n      </div>\n    ", this.quickPreviewEl.classList.remove("hidden");
 		let i = (e.ext || (e.name ? e.name.split(".").pop() : "pdf")).toLowerCase().replace(".", ""), a = [
 			"jpg",
@@ -6064,7 +6077,7 @@ var ot = class {
         <div class="flex flex-col items-center justify-center p-6 text-center text-slate-500 gap-2">
           <span class="material-symbols-outlined text-[32px] text-blue-500">description</span>
           <span class="text-xs font-semibold text-slate-700">${Y(r)}</span>
-          <span class="text-[11px] text-slate-400 font-mono">${Y(e.ext || "DOCUMENT")} • ${it(e.size)}</span>
+          <span class="text-[11px] text-slate-400 font-mono">${Y(e.ext || "DOCUMENT")} • ${at(e.size)}</span>
         </div>
       `;
 	}
@@ -6269,7 +6282,7 @@ var ot = class {
             <!-- Scrollable Present Documents List -->
             <div class="p-3.5 space-y-2.5 overflow-y-auto custom-pan-scroll" style="max-height: 440px;">
               ${o.length === 0 ? "\n                <div class=\"p-6 text-center text-slate-500 bg-white rounded-lg border border-slate-200 font-medium text-xs\">\n                  No verified documents found in this folder yet. Use [Import] on the left to add missing files.\n                </div>\n              " : o.map((e, t) => {
-			let n = e.docType || e.name || "Document", r = it(e.size), i = e.isCombined || !1, a = (e.ext || (e.name ? e.name.split(".").pop() : "PDF")).toUpperCase().replace(".", ""), o = at(e.dateCreated || e.ctime || e.birthtime || e.dateModified || e.lastModified), s = a === "JPG" || a === "JPEG" || a === "PNG";
+			let n = e.docType || e.name || "Document", r = at(e.size), i = e.isCombined || !1, a = (e.ext || (e.name ? e.name.split(".").pop() : "PDF")).toUpperCase().replace(".", ""), o = ot(e.dateCreated || e.ctime || e.birthtime || e.dateModified || e.lastModified), s = a === "JPG" || a === "JPEG" || a === "PNG";
 			return `
                   <div class="bg-white border border-emerald-200/90 border-l-[3.5px] border-l-emerald-500 rounded-lg p-3 shadow-xs hover:border-emerald-300 transition flex items-center justify-between gap-3">
                     <div class="min-w-0 space-y-1">
@@ -6378,7 +6391,7 @@ var ot = class {
 	}
 };
 // tools/rename_tool/rename_tool_ui.js
-function st() {
+function ct() {
 	if (typeof window < "u") {
 		if (window.__TAURI__?.core?.invoke) return window.__TAURI__.core.invoke;
 		if (window.__TAURI_INTERNALS__?.invoke) return window.__TAURI_INTERNALS__.invoke;
@@ -6417,7 +6430,7 @@ function Z(e) {
 	let t = e.toLowerCase().trim();
 	return !!(t === "thumbs.db" || t === "ehthumbs.db" || t === "desktop.ini" || t === ".ds_store" || t.startsWith(".") || t.startsWith("~$") || t.endsWith(".tmp"));
 }
-function ct(e) {
+function lt(e) {
 	let t = (e || "").toUpperCase().trim();
 	return [
 		"ADR",
@@ -6486,15 +6499,15 @@ function ct(e) {
 		"HST"
 	].includes(t) ? "bg-slate-700 text-white font-extrabold" : "bg-primary text-on-primary font-extrabold";
 }
-var lt = A.map((e) => ({
+var ut = A.map((e) => ({
 	code: e.primaryShortcut,
 	codes: [e.primaryShortcut],
 	label: e.outputName,
 	canonical: e.outputName,
 	keywords: Array.isArray(e.alternateKeywords) ? [...e.alternateKeywords] : []
-})), ut = new Map(lt.map((e) => [e.code, e])), dt = {
+})), dt = new Map(ut.map((e) => [e.code, e])), ft = {
 	"MAHA DBT": (/* @__PURE__ */ "PIC.SIG.ADR.10M.10P.12M.12P.12LC.PYM.CST.VAL.NCL.INC.DOM.NAT.RAT.BNK.CAP.BON.FEE.ATT.HST.GAP.SDC.PDC.DTH".split(".")).map((e) => {
-		let t = ut.get(e);
+		let t = dt.get(e);
 		return {
 			name: t.canonical,
 			code: t.code,
@@ -6525,7 +6538,7 @@ var lt = A.map((e) => ({
 		"PDC",
 		"DIS"
 	].map((e) => {
-		let t = ut.get(e);
+		let t = dt.get(e);
 		return {
 			name: t.canonical,
 			code: t.code,
@@ -6558,7 +6571,7 @@ var lt = A.map((e) => ({
 		"MED",
 		"BRT"
 	].map((e) => {
-		let t = ut.get(e);
+		let t = dt.get(e);
 		return {
 			name: t.canonical,
 			code: t.code,
@@ -6566,14 +6579,14 @@ var lt = A.map((e) => ({
 		};
 	}),
 	"EDUCATIONAL DOCUMENTS": (/* @__PURE__ */ "PIC.SIG.ADR.10M.10P.12M.12P.12LC.PYM.CST.VAL.NCL.INC.DOM.NAT.RAT.BNK.CAP.BON.FEE.ATT.HST.GAP.SDC.PDC.DTH.NHC.DIS.APR.CETAF.CETSC.SRF.EWS.MIG.MED.BRT.PAN.VOT.DL.11M.1YM.2YM.3YM.4YM.DPC.DEG.REG.INT.CHR.GAZ.MIN".split(".")).map((e) => {
-		let t = ut.get(e);
+		let t = dt.get(e);
 		return {
 			name: t.canonical,
 			code: t.code,
 			keywords: [...t.keywords]
 		};
 	})
-}, ft = class {
+}, pt = class {
 	constructor() {
 		this.state = {
 			folder: null,
@@ -6601,10 +6614,10 @@ var lt = A.map((e) => ({
 			isSmartScanning: !1,
 			isMissingDocsCollapsed: !0,
 			isMissingModalOpen: !1
-		}, this._scanAbortController = null, this.missingModal = null, this.shortcuts21 = JSON.parse(JSON.stringify(lt)), this._presetDocsSearchQuery = "", this._shortcutsSearchQuery = "", this._sortOrder = "asc", this._recentMoves = [];
+		}, this._scanAbortController = null, this.missingModal = null, this.shortcuts21 = JSON.parse(JSON.stringify(ut)), this._presetDocsSearchQuery = "", this._shortcutsSearchQuery = "", this._sortOrder = "asc", this._recentMoves = [];
 	}
 	init() {
-		this.state.settings = Ve(), this.loadPresetsAndSettings();
+		this.state.settings = He(), this.loadPresetsAndSettings();
 		let e = localStorage.getItem("docmitra_casing_style");
 		this.state.style = e && [
 			"upper",
@@ -6612,7 +6625,7 @@ var lt = A.map((e) => ({
 			"lower"
 		].includes(e.toLowerCase()) ? e.toLowerCase() : "upper", this._bindDOM(), this._bindKeyboardShortcuts(), this._startBackgroundWatcher(), window.addEventListener("storage", (e) => {
 			if (e.key === "docmitra_settings" || e.key === "docmitra_casing_style" || e.key === "docmitra_active_preset") {
-				this.state.settings = Ve();
+				this.state.settings = He();
 				let e = localStorage.getItem("docmitra_casing_style");
 				this.state.style = e && [
 					"upper",
@@ -6749,28 +6762,28 @@ var lt = A.map((e) => ({
 		D && D.addEventListener("click", () => this.closeAddLinkRuleModal());
 		let O = document.getElementById("btnSaveLinkRule");
 		O && O.addEventListener("click", () => this.handleSaveLinkRule());
-		let k = document.getElementById("inputSearchLinkedRules");
-		k && k.addEventListener("input", (e) => {
+		let ee = document.getElementById("inputSearchLinkedRules");
+		ee && ee.addEventListener("input", (e) => {
 			this._linkedRulesSearchQuery = e.target.value, this.renderLinkedRulesTable();
 		});
-		let A = document.getElementById("selectActivePreset");
-		A && A.addEventListener("change", (e) => this.handleSwitchActivePreset(e.target.value));
-		let ee = document.getElementById("btnNewPreset");
-		ee && ee.addEventListener("click", () => this.handleNewPreset());
+		let k = document.getElementById("selectActivePreset");
+		k && k.addEventListener("change", (e) => this.handleSwitchActivePreset(e.target.value));
+		let A = document.getElementById("btnNewPreset");
+		A && A.addEventListener("click", () => this.handleNewPreset());
 		let te = document.getElementById("btnCopyPreset");
 		te && te.addEventListener("click", () => this.handleCopyPreset());
-		let j = document.getElementById("btnRenamePreset");
-		j && j.addEventListener("click", () => this.handleRenamePreset());
-		let M = document.getElementById("btnDeletePreset");
-		M && M.addEventListener("click", () => this.handleDeletePreset());
-		let ne = document.getElementById("btnResetPresetsDefault");
-		ne && ne.addEventListener("click", () => this.handleResetPresetsDefault());
+		let ne = document.getElementById("btnRenamePreset");
+		ne && ne.addEventListener("click", () => this.handleRenamePreset());
+		let j = document.getElementById("btnDeletePreset");
+		j && j.addEventListener("click", () => this.handleDeletePreset());
+		let M = document.getElementById("btnResetPresetsDefault");
+		M && M.addEventListener("click", () => this.handleResetPresetsDefault());
 		let re = document.getElementById("btnAddDocToPreset");
 		re && re.addEventListener("click", () => this.openAddDocumentModal());
-		let N = document.getElementById("btnAddNewShortcut");
-		N && N.addEventListener("click", () => this.openAddDocumentModal(null, !0));
-		let P = document.getElementById("btnAddDocOrShortcut");
-		P && P.addEventListener("click", () => {
+		let ie = document.getElementById("btnAddNewShortcut");
+		ie && ie.addEventListener("click", () => this.openAddDocumentModal(null, !0));
+		let N = document.getElementById("btnAddDocOrShortcut");
+		N && N.addEventListener("click", () => {
 			let e = this.state.settingsActiveTab === "shortcuts" || document.getElementById("tabContentShortcuts") && !document.getElementById("tabContentShortcuts").classList.contains("hidden");
 			this.openAddDocumentModal(null, e);
 		}), document.addEventListener("keydown", (e) => {
@@ -6785,15 +6798,15 @@ var lt = A.map((e) => ({
 		}), document.addEventListener("click", (e) => {
 			e.target.closest(".keyword-popover-container") || document.querySelectorAll(".keyword-popover-card:not(.hidden)").forEach((e) => e.classList.add("hidden"));
 		});
-		let ie = document.getElementById("inputSearchPresetDocs");
-		ie && ie.addEventListener("input", (e) => {
+		let P = document.getElementById("inputSearchPresetDocs");
+		P && P.addEventListener("input", (e) => {
 			this._presetDocsSearchQuery = e.target.value.trim().toLowerCase(), this.renderPresetDocsTable();
 		});
-		let L = document.getElementById("inputSearchShortcuts");
-		L && L.addEventListener("input", (e) => {
+		let ae = document.getElementById("inputSearchShortcuts");
+		ae && ae.addEventListener("input", (e) => {
 			this._shortcutsSearchQuery = e.target.value.trim().toLowerCase(), this.renderShortcutsTable();
 		}), this._initCrossCheckEvents();
-		let R = () => {
+		let L = () => {
 			document.querySelectorAll("#casingRadiosGroup label").forEach((e) => {
 				let t = e.querySelector("input");
 				e.className = t && t.checked ? "flex items-center cursor-pointer text-white bg-primary font-mono-code text-[11px] px-2 py-0.5 rounded shadow-xs select-none font-bold transition-all casing-pill-active" : "flex items-center cursor-pointer text-secondary hover:text-on-surface font-mono-code text-[11px] px-2 py-0.5 rounded transition-all select-none";
@@ -6803,20 +6816,20 @@ var lt = A.map((e) => ({
 			e.value === (this.state.style || "upper") && (e.checked = !0), e.addEventListener("change", (e) => {
 				if (e.target.checked) {
 					let t = e.target.value;
-					this.state.style = t, localStorage.setItem("docmitra_casing_style", t), R();
+					this.state.style = t, localStorage.setItem("docmitra_casing_style", t), L();
 					for (let e of this.state.files) !e.isRenamed && !e.isKept && (e.userEditedName = I(e.userEditedName || F(e.name), t));
 					this._recalculateTargetNames(), this.renderQueue(), this.renderCurrentPreview();
 					let n = this.state.files.filter((e) => !e.isRenamed && !e.isKept).length, i = t.toUpperCase() === "UPPER" ? "UPPERCASE" : t.toUpperCase() === "LOWER" ? "LOWERCASE" : "TITLE CASE";
 					r.show("Case Style Changed", `Applied ${i} to ${n} pending files`, "info");
 				}
 			});
-		}), R();
-		let z = document.getElementById("btnClearWorkspace");
+		}), L();
+		let R = document.getElementById("btnClearWorkspace");
+		R && R.addEventListener("click", () => this.handleClearQueue());
+		let z = document.getElementById("btnClearQueue");
 		z && z.addEventListener("click", () => this.handleClearQueue());
-		let B = document.getElementById("btnClearQueue");
-		B && B.addEventListener("click", () => this.handleClearQueue());
-		let ae = document.getElementById("btnEmptySelectFolder");
-		ae && ae.addEventListener("click", () => this.handleSelectFolder());
+		let B = document.getElementById("btnEmptySelectFolder");
+		B && B.addEventListener("click", () => this.handleSelectFolder());
 		let oe = document.getElementById("btnEmptyAddFiles");
 		oe && oe.addEventListener("click", () => this.handleAddFiles());
 		let se = document.querySelector("#col-queue input");
@@ -7103,7 +7116,7 @@ var lt = A.map((e) => ({
 			}
 			this.state.folder?.path;
 			let n = new Set(this.state.files.map((e) => e.targetName)), i = t.map((e, t) => {
-				let r = e.ext || P(e.name), i = F(e.name), a = be(e.name, this.state.studentName, this.state.settings?.groups, this.getAllPresetDocuments()), o = a.docType, s = a.confidence >= 50, c = i;
+				let r = e.ext || P(e.name), i = F(e.name), a = xe(e.name, this.state.studentName, this.state.settings?.groups, this.getAllPresetDocuments()), o = a.docType, s = a.confidence >= 50, c = i;
 				c = o ? L(o, this.state.studentName, this.state.settings?.groups, this.state.style) : L(i, this.state.studentName, null, this.state.style);
 				let l = z(c.endsWith(r) ? c : c + r, e.name, n, this.state.studentName);
 				n.add(l);
@@ -7173,7 +7186,7 @@ var lt = A.map((e) => ({
 				isRenamed: o.isRenamed,
 				isKept: o.isKept
 			};
-			let s = be(e.name, u, this.state.settings?.groups, this.getAllPresetDocuments()), c = s.docType, d = s.confidence >= 50, f = a;
+			let s = xe(e.name, u, this.state.settings?.groups, this.getAllPresetDocuments()), c = s.docType, d = s.confidence >= 50, f = a;
 			f = c ? L(c, u, this.state.settings?.groups, this.state.style) : L(a, u, null, this.state.style);
 			let p = z(f.endsWith(i) ? f : f + i, e.name, l, u);
 			l.add(p);
@@ -7218,7 +7231,7 @@ var lt = A.map((e) => ({
 				e.sha256 || t.push(e);
 			});
 		}), t.length === 0) return;
-		let n = st(), r = !1;
+		let n = ct(), r = !1;
 		for (let e of t) try {
 			let t = null;
 			if (e.fileObj && typeof e.fileObj.arrayBuffer == "function") t = await e.fileObj.arrayBuffer();
@@ -7243,7 +7256,7 @@ var lt = A.map((e) => ({
 		let n = this.getEffectiveStudentName(), r = this.getAllPresetDocuments();
 		for (let i of this.state.files) if (!i.isRenamed && !i.isKept) {
 			if (e || !i.isMatched) {
-				let e = be(i.name, n, this.state.settings?.groups, r);
+				let e = xe(i.name, n, this.state.settings?.groups, r);
 				e.confidence >= 50 && (i.docType = e.docType, i.smartDocType = e.docType, i.smartConfidence = e.confidence, i.isMatched = !0, i.status = e.confidence >= 80 ? "matched" : "needs_review");
 			}
 			i.docType && (i.docType = I(i.docType, this.state.style), i.smartDocType = I(i.smartDocType || i.docType, this.state.style)), i.hasUserEdited && i.userEditedName && (i.userEditedName = I(i.userEditedName, this.state.style));
@@ -7402,7 +7415,7 @@ var lt = A.map((e) => ({
 			u.id = "activeFileLiveBadge", n.status === "needs_review" ? (u.className = "confidence-badge confidence-badge-med", u.textContent = "🟡 Needs Review") : n.smartConfidence !== void 0 && n.smartConfidence >= 50 ? n.smartConfidence >= 80 ? (u.className = "confidence-badge confidence-badge-high", u.textContent = `🟢 ${n.smartConfidence}% ${n.smartDocType || n.docType || "DOCUMENT"}`) : (u.className = "confidence-badge confidence-badge-med", u.textContent = `🟡 ${n.smartConfidence}% ${n.smartDocType || n.docType || "DOCUMENT"}`) : n.isMatched && n.docType ? (u.className = "confidence-badge confidence-badge-high", u.textContent = `🟢 Matched: ${n.docType}`) : (u.className = "confidence-badge confidence-badge-low", u.textContent = "🔴 Unmatched"), l.appendChild(u);
 			let d = F(n.name), f = F(n.targetName || n.suggestedName || "");
 			if (f && d.toLowerCase() !== f.toLowerCase()) {
-				let e = pe(d, f);
+				let e = me(d, f);
 				if (e >= .4 && e < .99) {
 					let t = Math.round((1 - e) * 100), n = document.createElement("span");
 					n.className = "px-1.5 py-0.5 rounded text-[10px] font-mono-code font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30", n.textContent = `~${t}% Typo/Diff`, l.appendChild(n);
@@ -7516,7 +7529,7 @@ var lt = A.map((e) => ({
 		l.className = "text-[10px] text-secondary font-medium", l.textContent = `${c} / ${this.state.files.length} Done`, a.appendChild(l), i.appendChild(a);
 		let u = document.createElement("div");
 		u.className = "flex flex-col gap-1 overflow-y-auto pr-0.5 custom-pan-scroll flex-1";
-		let d = Ee(this.state.files);
+		let d = De(this.state.files);
 		this.state.files.forEach((e, t) => {
 			let n = t === this.state.currentIndex, r = !!e.isRenamed, i = document.createElement("article");
 			i.dataset.index = String(t), i.className = n ? "h-8 px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/50 ring-1 ring-primary/30 shadow-xs flex items-center justify-between gap-2 transition-all cursor-pointer shrink-0 font-semibold active-queue-item" : r ? "h-8 px-2.5 py-1 rounded-lg bg-surface-container-lowest/80 border border-emerald-500/30 shadow-xs flex items-center justify-between gap-2 hover:bg-surface-container-low transition-colors cursor-pointer shrink-0 text-secondary" : "h-8 px-2.5 py-1 rounded-lg bg-surface-container-lowest shadow-xs flex items-center justify-between gap-2 hover:bg-surface-container-low transition-colors border border-outline-variant/30 cursor-pointer shrink-0", i.title = `Original: ${F(e.name)}\nTarget: ${F(e.targetName || e.name)} (Click to jump & edit)`, i.addEventListener("click", () => {
@@ -7789,7 +7802,7 @@ var lt = A.map((e) => ({
 			let r = document.createElement("div");
 			r.className = "flex items-center gap-2 min-w-0 flex-1";
 			let i = this.state.style || "upper", a = i === "lower" ? e.code.toLowerCase() : i === "title" ? e.code.length <= 4 && /\d/.test(e.code) ? e.code.toUpperCase() : I(e.code, "title") : e.code.toUpperCase(), o = I(e.label || e.canonical, i), s = document.createElement("span");
-			s.className = `px-2 py-0.5 rounded font-mono-code font-bold text-[11px] shrink-0 ${ct(e.code)}`, s.textContent = a, r.appendChild(s);
+			s.className = `px-2 py-0.5 rounded font-mono-code font-bold text-[11px] shrink-0 ${lt(e.code)}`, s.textContent = a, r.appendChild(s);
 			let c = document.createElement("span");
 			c.className = "text-[12px] font-semibold text-on-surface truncate flex-1", c.textContent = o, r.appendChild(c), n.appendChild(r);
 			let l = document.createElement("span");
@@ -7878,7 +7891,7 @@ var lt = A.map((e) => ({
 	}
 	getExtraDuplicateFiles() {
 		if (!this.state.files || this.state.files.length === 0) return [];
-		let e = Ee(this.state.files), t = [];
+		let e = De(this.state.files), t = [];
 		return this.state.files.forEach((n) => {
 			let r = e.get(n.id || n.name);
 			r && (r.status === "confirmed" || r.status === "probable") && !r.isMaster && t.push(n);
@@ -8124,7 +8137,7 @@ var lt = A.map((e) => ({
 		}));
 		r.show("Executing Batch Rename", `Processing ${t.length} files atomically...`, "info");
 		try {
-			await ce(this.state.folder, t, (e, t) => {
+			await le(this.state.folder, t, (e, t) => {
 				console.log(`[Rename Progress] ${e}%: ${t}`);
 			}), B.pushBatch(this.state.folder, t), e.forEach((e) => {
 				if (e.name = e.targetName, e.isRenamed = !0, e.status = "renamed", e.rotation = 0, e._pdfBytes = null, e._blobUrl && typeof URL < "u" && URL.revokeObjectURL) {
@@ -8149,7 +8162,7 @@ var lt = A.map((e) => ({
 		let e = B.pop();
 		r.show("Reverting Changes", `Restoring ${e.plan.length} files...`, "info");
 		try {
-			await le(e.dir, e.plan, (e, t) => {
+			await ue(e.dir, e.plan, (e, t) => {
 				console.log(`[Undo Progress] ${e}%: ${t}`);
 			}), e.plan.forEach((e) => {
 				let t = this.state.files.find((t) => t.targetName === e.next || t.name === e.next || e.file && t.id === e.file.id);
@@ -8220,7 +8233,7 @@ var lt = A.map((e) => ({
 				if (!r.isKept) {
 					if (r.isScanning = !0, n && (n.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-primary">sync</span><span>Scanning (${t + 1}/${s.length})...</span>`), this.renderQueue(), await new Promise((e) => setTimeout(e, 40)), e.aborted) break;
 					try {
-						let e = be(r.name, this.state.studentName, this.state.settings?.groups, this.getActivePresetDocuments());
+						let e = xe(r.name, this.state.studentName, this.state.settings?.groups, this.getActivePresetDocuments());
 						if (r.smartEvaluation = e, r.smartConfidence = e.confidence, r.smartDocType = e.docType, e.confidence >= 50 && e.docType) {
 							r.docType = e.docType, r.isMatched = !0, e.confidence >= 80 && o++;
 							let t = z(`${L(e.docType, this.state.studentName, this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim()}${r.ext || ("." + r.name.split(".").pop()).toLowerCase()}`, r.name, a, this.state.studentName);
@@ -8246,13 +8259,12 @@ var lt = A.map((e) => ({
 	}
 	loadPresetsAndSettings() {
 		let e = localStorage.getItem("docmitra_active_preset");
-		e ? e === "MAHA DBT FORM" || e === "MAHA DBT" ? this.state.activePreset = "MAHA DBT" : e === "SWAYAM FORM" || e === "SWAYAM" || e === "SWAYAM DEENDAYAL YOJANA" ? this.state.activePreset = "SWAYAM DEENDAYAL YOJANA" : e === "EDUCATIONAL" || e === "EDUCATIONAL DOCUMENTS" ? this.state.activePreset = "EDUCATIONAL DOCUMENTS" : e === "CET CELL" ? this.state.activePreset = "CET CELL" : this.state.activePreset = e : this.state.activePreset = "MAHA DBT";
-		try {
-			let e = localStorage.getItem("docmitra_rename_presets");
-			e && (this.state.documentPresets = JSON.parse(e));
-		} catch (e) {
-			console.warn("[DocMitra Renamer] Failed to parse local presets:", e);
-		}
+		e && [
+			"MAHA DBT",
+			"SWAYAM DEENDAYAL YOJANA",
+			"CET CELL",
+			"EDUCATIONAL DOCUMENTS"
+		].includes(e) ? this.state.activePreset = e : this.state.activePreset = "MAHA DBT", this.state.documentPresets = JSON.parse(JSON.stringify(ft)), this.savePresetsAndSettings();
 		try {
 			let e = localStorage.getItem("docmitra_custom_shortcuts");
 			if (e && (this.state.customShortcuts = JSON.parse(e), Array.isArray(this.state.customShortcuts))) for (let e of this.state.customShortcuts) {
@@ -8261,21 +8273,13 @@ var lt = A.map((e) => ({
 					code: t,
 					codes: e.codes || [t],
 					label: e.label || e.canonical || t,
-					canonical: (e.canonical || e.label || t).toUpperCase(),
+					canonical: T(e.canonical || e.label || t),
 					keywords: Array.isArray(e.keywords) ? e.keywords : []
 				};
 				n === -1 ? this.shortcuts21.push(r) : this.shortcuts21[n] = r;
 			}
 		} catch (e) {
 			console.warn("[DocMitra Renamer] Failed to parse custom shortcuts:", e);
-		}
-		if (this.state.documentPresets && typeof this.state.documentPresets == "object" && (this.state.documentPresets.SWAYAM && !this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] && (this.state.documentPresets["SWAYAM DEENDAYAL YOJANA"] = this.state.documentPresets.SWAYAM, delete this.state.documentPresets.SWAYAM), this.state.documentPresets.EDUCATIONAL && !this.state.documentPresets["EDUCATIONAL DOCUMENTS"] && (this.state.documentPresets["EDUCATIONAL DOCUMENTS"] = this.state.documentPresets.EDUCATIONAL, delete this.state.documentPresets.EDUCATIONAL)), !this.state.documentPresets || Object.keys(this.state.documentPresets).length === 0) this.state.documentPresets = JSON.parse(JSON.stringify(dt)), this.savePresetsAndSettings();
-		else for (let e of Object.keys(this.state.documentPresets)) {
-			let t = this.state.documentPresets[e];
-			Array.isArray(t) && (this.state.documentPresets[e] = t.filter((e) => {
-				let t = (e.name || e.label || e || "").toUpperCase().trim();
-				return t !== "10TH MARKSHEET AND PASSING CERTIFICATE" && t !== "12TH MARKSHEET AND PASSING CERTIFICATE";
-			}));
 		}
 		let t = !1, n = (e) => {
 			if (!e || typeof e != "string") return e;
@@ -8308,15 +8312,15 @@ var lt = A.map((e) => ({
 		if (Array.isArray(this.shortcuts21)) for (let e of this.shortcuts21) e && e.code && (e.code = n(e.code)), e && Array.isArray(e.codes) && (e.codes = e.codes.map((e) => n(e)));
 		t && this.savePresetsAndSettings(), this.syncPresetsToShortcuts();
 		let r = this.getAllPresetDocuments();
-		D(r);
-		for (let e of r) e && e.code && e.name && (re(e.code, e.name, e.keywords), T(e.name, e.name));
+		O(r);
+		for (let e of r) e && e.code && e.name && (ie(e.code, e.name, e.keywords), E(e.name, e.name));
 		try {
 			let e = localStorage.getItem("docmitra_rename_linked_rules");
 			e && (this.state.linkedRules = JSON.parse(e));
 		} catch (e) {
 			console.warn("[DocMitra Renamer] Failed to parse linked rules:", e);
 		}
-		!Array.isArray(this.state.linkedRules) || this.state.linkedRules.length === 0 ? (this.state.linkedRules = [
+		let i = [
 			{
 				id: "link_10th",
 				combined: "10TH MARKSHEET AND PASSING CERTIFICATE",
@@ -8335,11 +8339,26 @@ var lt = A.map((e) => ({
 				part1: "DOMICILE CERTIFICATE",
 				part2: "NATIONALITY CERTIFICATE"
 			}
-		], this.saveLinkedRules()) : this.updateLinkedRulesCountBadge();
+		];
+		if (!Array.isArray(this.state.linkedRules) || this.state.linkedRules.length === 0) this.state.linkedRules = JSON.parse(JSON.stringify(i)), this.saveLinkedRules();
+		else {
+			this.state.linkedRules = this.state.linkedRules.map((e) => {
+				let t = T(e.combined), n = T(e.part1), r = T(e.part2);
+				return (e.id === "link_domicile_nationality" || n === "DOMICILE CERTIFICATE" && (r.includes("DOMOCILE") || r.includes("DOMICILE"))) && (r = "NATIONALITY CERTIFICATE", t = "DOMICILE AND NATIONALITY CERTIFICATE"), (e.id === "link_12th" || n === "12TH MARKSHEET" && (r === "12TH PASSING" || r === "12TH PASSING CERTIFICATE")) && (r = "12TH PASSING CERTIFICATE", t = "12TH MARKSHEET AND PASSING CERTIFICATE"), (e.id === "link_10th" || n === "10TH MARKSHEET" && (r === "10TH PASSING" || r === "10TH PASSING CERTIFICATE")) && (r = "10TH PASSING CERTIFICATE", t = "10TH MARKSHEET AND PASSING CERTIFICATE"), {
+					id: e.id || `link_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+					combined: t,
+					part1: n,
+					part2: r
+				};
+			});
+			let e = new Set(this.state.linkedRules.map((e) => e.combined));
+			for (let t of i) e.has(t.combined) || this.state.linkedRules.push(t);
+			this.saveLinkedRules(), this.updateLinkedRulesCountBadge();
+		}
 	}
 	savePresetsAndSettings() {
 		try {
-			localStorage.setItem("docmitra_rename_presets", JSON.stringify(this.state.documentPresets)), localStorage.setItem("docmitra_active_preset", this.state.activePreset), this.state.linkedRules && localStorage.setItem("docmitra_rename_linked_rules", JSON.stringify(this.state.linkedRules)), this.state.settings && (this.state.settings.activeChecklist = this.state.activePreset, this.state.settings.checklists = this.state.documentPresets, We(this.state.settings)), this.state.customShortcuts && localStorage.setItem("docmitra_custom_shortcuts", JSON.stringify(this.state.customShortcuts)), Ke({ forms: this.state.documentPresets }).catch(() => {});
+			localStorage.setItem("docmitra_rename_presets", JSON.stringify(this.state.documentPresets)), localStorage.setItem("docmitra_active_preset", this.state.activePreset), this.state.linkedRules && localStorage.setItem("docmitra_rename_linked_rules", JSON.stringify(this.state.linkedRules)), this.state.settings && (this.state.settings.activeChecklist = this.state.activePreset, this.state.settings.checklists = this.state.documentPresets, Ge(this.state.settings)), this.state.customShortcuts && localStorage.setItem("docmitra_custom_shortcuts", JSON.stringify(this.state.customShortcuts)), qe({ forms: this.state.documentPresets }).catch(() => {});
 		} catch (e) {
 			console.warn("[DocMitra Renamer] Failed to persist presets and settings:", e);
 		}
@@ -8381,11 +8400,12 @@ var lt = A.map((e) => ({
 		];
 	}
 	isChecklistRuleSatisfied(e, t) {
-		if (t.has(e)) return !0;
-		let n = this.getLinkedRules();
-		for (let r of n) {
-			let n = (r.combined || "").toUpperCase(), i = (r.part1 || "").toUpperCase(), a = (r.part2 || "").toUpperCase();
-			if (n && t.has(n) && (e === i || e === a) || e === n && i && a && t.has(i) && t.has(a)) return !0;
+		let n = T(e), r = new Set(Array.from(t || []).map((e) => T(e)));
+		if (r.has(n)) return !0;
+		let i = this.getLinkedRules();
+		for (let e of i) {
+			let t = T(e.combined), i = T(e.part1), a = T(e.part2);
+			if (t && r.has(t) && (n === i || n === a) || n === t && i && a && r.has(i) && r.has(a)) return !0;
 		}
 		return !1;
 	}
@@ -8575,7 +8595,7 @@ var lt = A.map((e) => ({
 		} else i.forEach((t, n) => {
 			let r = document.createElement("tr");
 			r.className = "row-compact-42 hover:bg-surface-container-low transition-colors group";
-			let i = Array.isArray(t.codes) && t.codes.length > 0 ? t.codes : t.code ? [t.code] : [], a = i.map((e) => `<span class="px-1.5 py-0.5 rounded font-mono-code font-bold text-[10px] ${ct(e)}">${e}</span>`).join(" ");
+			let i = Array.isArray(t.codes) && t.codes.length > 0 ? t.codes : t.code ? [t.code] : [], a = i.map((e) => `<span class="px-1.5 py-0.5 rounded font-mono-code font-bold text-[10px] ${lt(e)}">${e}</span>`).join(" ");
 			r.innerHTML = `
         <td class="py-1 px-3 text-center text-secondary font-mono-code text-[11px]" style="width: 44px;">${n + 1}</td>
         <td class="py-1 px-3 whitespace-normal" style="width: 15%;"><div class="flex flex-wrap gap-1 max-h-[30px] overflow-hidden">${a}</div></td>
@@ -8728,47 +8748,26 @@ var lt = A.map((e) => ({
 	getMasterCanonicalDocuments() {
 		let e = /* @__PURE__ */ new Set();
 		if (Array.isArray(this.shortcuts21)) for (let t of this.shortcuts21) {
-			let n = (t.canonical || t.label || t.name || "").trim().toUpperCase();
-			n && e.add(n);
+			let n = (t.canonical || t.label || t.name || "").trim();
+			n && e.add(T(n));
 		}
 		if (Array.isArray(this.state.customShortcuts)) for (let t of this.state.customShortcuts) {
-			let n = (t.canonical || t.label || t.name || "").trim().toUpperCase();
-			n && e.add(n);
+			let n = (t.canonical || t.label || t.name || "").trim();
+			n && e.add(T(n));
 		}
 		if (this.state.documentPresets) {
 			for (let t of Object.values(this.state.documentPresets)) if (Array.isArray(t)) for (let n of t) {
-				let t = (n.name || n || "").trim().toUpperCase();
-				t && e.add(t);
+				let t = (n.name || n.label || n || "").trim();
+				t && e.add(T(t));
 			}
 		}
 		let t = this.getLinkedRules();
-		for (let n of t) n.combined && e.add(n.combined.trim().toUpperCase()), n.part1 && e.add(n.part1.trim().toUpperCase()), n.part2 && e.add(n.part2.trim().toUpperCase());
-		return [
-			"10TH MARKSHEET",
-			"10TH PASSING CERTIFICATE",
-			"10TH MARKSHEET AND PASSING CERTIFICATE",
-			"12TH MARKSHEET",
-			"12TH PASSING CERTIFICATE",
-			"12TH MARKSHEET AND PASSING CERTIFICATE",
-			"DOMICILE CERTIFICATE",
-			"NATIONALITY CERTIFICATE",
-			"DOMICILE AND NATIONALITY CERTIFICATE",
-			"CASTE CERTIFICATE",
-			"CASTE VALIDITY CERTIFICATE",
-			"NON CREAMY LAYER CERTIFICATE",
-			"INCOME CERTIFICATE",
-			"RATION CARD",
-			"AADHAAR CARD",
-			"PAN CARD",
-			"VOTER ID",
-			"BANK PASSBOOK",
-			"LEAVING CERTIFICATE",
-			"TRANSFER CERTIFICATE",
-			"GAP CERTIFICATE",
-			"MIGRATION CERTIFICATE",
-			"PHOTO",
-			"SIGNATURE"
-		].forEach((t) => e.add(t)), Array.from(e).filter(Boolean).sort((e, t) => e.localeCompare(t));
+		for (let n of t) n.combined && e.add(T(n.combined)), n.part1 && e.add(T(n.part1)), n.part2 && e.add(T(n.part2));
+		Object.values(w).forEach((t) => {
+			t && e.add(t.toUpperCase());
+		});
+		let n = /\b(test|anita|vijay|all document|2026)\b/i;
+		return Array.from(e).filter((e) => !!e && !n.test(e)).sort((e, t) => e.localeCompare(t));
 	}
 	openAddLinkRuleModal(e = null) {
 		let t = document.getElementById("modalAddLinkRule");
@@ -8861,7 +8860,7 @@ var lt = A.map((e) => ({
 			messageHtml: "Reset document presets to factory defaults? All custom presets will be removed and default 4 presets restored.",
 			confirmText: "Reset Presets",
 			onConfirm: () => {
-				this.state.documentPresets = JSON.parse(JSON.stringify(dt)), this.state.activePreset = "MAHA DBT", this.state.customShortcuts = [], this.shortcuts21 = JSON.parse(JSON.stringify(lt)), this.savePresetsAndSettings(), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal("presets"), r.show("Reset Complete", "Document presets restored to factory defaults.", "success");
+				this.state.documentPresets = JSON.parse(JSON.stringify(ft)), this.state.activePreset = "MAHA DBT", this.state.customShortcuts = [], this.shortcuts21 = JSON.parse(JSON.stringify(ut)), this.savePresetsAndSettings(), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal("presets"), r.show("Reset Complete", "Document presets restored to factory defaults.", "success");
 			}
 		});
 	}
@@ -8956,7 +8955,7 @@ var lt = A.map((e) => ({
 		let e = document.getElementById("containerPresetPills");
 		if (!e) return;
 		e.innerHTML = "";
-		let t = Object.keys(this.state.documentPresets || dt);
+		let t = Object.keys(this.state.documentPresets || ft);
 		t.length === 0 ? e.innerHTML = "<span class=\"text-secondary text-[11px] italic\">No presets available.</span>" : (t.forEach((t) => {
 			let n = this._selectedPresetKeys && this._selectedPresetKeys.has(t), r = document.createElement("button");
 			r.type = "button", r.className = n ? "inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-[#0037b0] text-white font-bold text-[11px] shadow-xs cursor-pointer transition-all border border-[#0037b0]" : "inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-surface text-secondary hover:text-on-surface font-medium text-[11px] cursor-pointer transition-all border border-outline-variant/50 hover:border-primary/50", r.innerHTML = `
@@ -9118,19 +9117,19 @@ var lt = A.map((e) => ({
 			keywords: c
 		};
 		if (this.shortcuts21.push(m), this.state.customShortcuts || (this.state.customShortcuts = []), this.state.customShortcuts.push(m), u.forEach((e) => {
-			de({
+			fe({
 				canonical: a,
 				code: e,
 				primaryKeywords: [a.toLowerCase(), e.toLowerCase()],
 				secondaryKeywords: c
 			});
-		}), T(a, a), re(d, a, c), ut.set(d, {
+		}), E(a, a), ie(d, a, c), dt.set(d, {
 			code: d,
 			canonical: a,
 			label: a,
 			keywords: c
 		}), f && f !== a) {
-			E(f), T(f, a);
+			D(f), E(f, a);
 			for (let e of this.state.files) e.docType && e.docType.toUpperCase() === f && (e.docType = a, e.smartDocType = a);
 		}
 		let h = this._selectedPresetKeys || /* @__PURE__ */ new Set();
@@ -9154,7 +9153,7 @@ var lt = A.map((e) => ({
 			}));
 		}
 		let g = this._fromShortcutsTab;
-		this.closeAddDocumentModal(), this.savePresetsAndSettings(), this.syncPresetsToShortcuts(), D(this.getAllPresetDocuments()), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal(g ? "shortcuts" : "presets"), h.size === 0 ? r.show("Shortcut Saved", `"${a}" saved purely as Keyboard Shortcut & Rename Rule.`, "success") : r.show("Document Type Saved", `"${a}" saved to Shortcuts & included in ${h.size} preset(s).`, "success");
+		this.closeAddDocumentModal(), this.savePresetsAndSettings(), this.syncPresetsToShortcuts(), O(this.getAllPresetDocuments()), this._recalculateTargetNames(!0), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this.renderSettingsModal(g ? "shortcuts" : "presets"), h.size === 0 ? r.show("Shortcut Saved", `"${a}" saved purely as Keyboard Shortcut & Rename Rule.`, "success") : r.show("Document Type Saved", `"${a}" saved to Shortcuts & included in ${h.size} preset(s).`, "success");
 	}
 	_initCrossCheckEvents() {
 		let e = document.getElementById("modalCrossCheck");
@@ -9211,7 +9210,7 @@ var lt = A.map((e) => ({
 		m && m.addEventListener("click", () => {
 			let e = 0;
 			this._getMatchedCrossCheckFiles().forEach((t) => {
-				let n = this._getCrossCheckTargetBase(t), r = Ce(n);
+				let n = this._getCrossCheckTargetBase(t), r = we(n);
 				r !== n && (this._crossCheckState.overrides.set(t.id, r), e++);
 			}), r.show("Junk Cleanup", `Cleaned scanner timestamps and prefixes in ${e} document(s).`, "success"), this._recalculateAndRenderCrossCheck(!0);
 		});
@@ -9219,7 +9218,7 @@ var lt = A.map((e) => ({
 		h && h.addEventListener("click", () => {
 			let e = 0;
 			this._getMatchedCrossCheckFiles().forEach((t) => {
-				let n = this._getCrossCheckTargetBase(t), r = we(n);
+				let n = this._getCrossCheckTargetBase(t), r = Te(n);
 				r !== n && (this._crossCheckState.overrides.set(t.id, r), e++);
 			}), r.show("Portal-Safe Cleaned", `Formatted ${e} document(s) for admission portals.`, "success"), this._recalculateAndRenderCrossCheck(!0);
 		});
@@ -9310,7 +9309,7 @@ var lt = A.map((e) => ({
 	}
 	_getCrossCheckTargetName(e) {
 		let t = (this.state.studentName || "").replace(/\.[a-zA-Z0-9]+$/i, "").trim(), n = e.ext || P(e.name) || "", r = this._getCrossCheckTargetBase(e), i = "";
-		return i = this._crossCheckState && this._crossCheckState.overrides && this._crossCheckState.overrides.has(e.id) ? I(r, this._crossCheckState.casing) : Se(r, t, {
+		return i = this._crossCheckState && this._crossCheckState.overrides && this._crossCheckState.overrides.has(e.id) ? I(r, this._crossCheckState.casing) : Ce(r, t, {
 			order: this._crossCheckState ? this._crossCheckState.order : "doc_student",
 			separator: this._crossCheckState ? this._crossCheckState.separator : " ",
 			includeStudent: !this._crossCheckState || this._crossCheckState.includeStudent,
@@ -9368,14 +9367,14 @@ var lt = A.map((e) => ({
 			].includes(t);
 		});
 		e && (e.innerHTML = ""), n && n.classList.toggle("hidden", s.length > 0);
-		let c = Ee(this.state.files), l = 0;
+		let c = De(this.state.files), l = 0;
 		this.state.files.forEach((e) => {
 			let t = c.get(e.id || e.name);
 			t && t.status === "confirmed" && !t.isMaster && l++;
 		});
 		let u = document.getElementById("btnModalMoveDuplicates"), d = document.getElementById("modalMoveDuplicatesLabel");
 		u && (l > 0 ? (u.classList.remove("hidden"), d && (d.textContent = `Move Duplicates (${l})`)) : u.classList.add("hidden")), s.forEach((t, n) => {
-			let r = this._getCrossCheckTargetName(t), i = F(t.name) === F(r), a = this._crossCheckState.userToggled.has(t.id) ? this._crossCheckState.userToggled.get(t.id) : !i, o = this._crossCheckState.focusedIndex === n, s = xe(t.name, r, this.state.studentName), l = document.createElement("div");
+			let r = this._getCrossCheckTargetName(t), i = F(t.name) === F(r), a = this._crossCheckState.userToggled.has(t.id) ? this._crossCheckState.userToggled.get(t.id) : !i, o = this._crossCheckState.focusedIndex === n, s = Se(t.name, r, this.state.studentName), l = document.createElement("div");
 			l.dataset.fileId = t.id;
 			let u = "grid grid-cols-[32px_minmax(0,1fr)_22px_minmax(0,1.1fr)_104px] items-center gap-2 px-3 min-h-[38px] py-1.5 rounded-lg border transition-all cursor-pointer ";
 			u += o ? "border-blue-600 bg-blue-50/35 shadow-2xs" : i && !a ? "border-transparent bg-slate-50/45 hover:bg-slate-100/60" : "border-transparent hover:bg-slate-50 border-b-slate-100", l.className = u;
@@ -9399,7 +9398,7 @@ var lt = A.map((e) => ({
 				let e = document.createElement("span");
 				e.className = "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold badge-dup-probable whitespace-nowrap select-none", e.textContent = "50% Dup", e.title = "Probable Duplicate (Exact same byte size & file extension)", h.appendChild(e);
 			}
-			let v = Te(t.name, r, this.state.studentName);
+			let v = Ee(t.name, r, this.state.studentName);
 			if (v > 0) {
 				let e = document.createElement("span");
 				e.className = `inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap select-none ${v >= 30 ? "badge-wrong-major" : "badge-wrong-minor"}`, e.textContent = `${v}% Wrong`, e.title = `${v}% difference from suggested document name`, h.appendChild(e);
@@ -9494,7 +9493,7 @@ var lt = A.map((e) => ({
 			});
 		}
 		try {
-			await ce(this.state.folder, i, (e, t) => {
+			await le(this.state.folder, i, (e, t) => {
 				console.log(`[Batch Rename Progress] ${e}%: ${t}`);
 			}), B.pushBatch(this.state.folder, i), i.forEach((e) => {
 				let t = e.file;
@@ -9609,7 +9608,7 @@ var lt = A.map((e) => ({
 				this._renderDocumentInfoFallback(r(), e);
 			}
 			else {
-				let a = st();
+				let a = ct();
 				if (e.path && a) n.innerHTML = "<div class=\"flex items-center justify-center w-full h-full text-secondary text-[12px]\"><span class=\"material-symbols-outlined text-[20px] animate-spin text-primary mr-2\">sync</span><span>Loading document preview...</span></div>", a("read_binary_file", { path: e.path }).then((t) => {
 					let n = e.name.toLowerCase().endsWith(".png") ? "image/png" : e.name.toLowerCase().endsWith(".webp") ? "image/webp" : "image/jpeg", r = new Blob([new Uint8Array(t)], { type: n });
 					i(URL.createObjectURL(r));
@@ -9648,7 +9647,7 @@ var lt = A.map((e) => ({
 				e._pdfBytes = new Uint8Array(t), i(e._pdfBytes);
 			}).catch(() => this._renderDocumentInfoFallback(r(), e));
 			else {
-				let t = st();
+				let t = ct();
 				if (e.path && t) n.innerHTML = "<div class=\"flex items-center justify-center w-full h-full text-secondary text-[12px]\"><span class=\"material-symbols-outlined text-[20px] animate-spin text-primary mr-2\">sync</span><span>Loading PDF preview...</span></div>", t("read_binary_file", { path: e.path }).then((t) => {
 					e._pdfBytes = new Uint8Array(t), i(e._pdfBytes);
 				}).catch((t) => {
@@ -9826,7 +9825,7 @@ var lt = A.map((e) => ({
 		}
 	}
 	openMissingDocumentsModal() {
-		this.missingModal ||= new ot({
+		this.missingModal ||= new st({
 			onImportFile: (e) => this.handleImportMissingDocument(e),
 			onRenameFolder: async (e) => {
 				await this.applyFolderRename(e);
@@ -9837,7 +9836,7 @@ var lt = A.map((e) => ({
 			},
 			onSetFollowup: ({ docName: e, date: t }) => {
 				let n = this.state.studentName || this.state.folder?.name || "Student";
-				Xe({
+				Ze({
 					folderName: n,
 					studentName: n,
 					documentName: e,
@@ -9887,35 +9886,38 @@ var lt = A.map((e) => ({
 			};
 		});
 		for (let e of i) {
-			let t = (e.name || e).toUpperCase();
+			let t = (e.name || e).toUpperCase(), n = T(t);
 			if (!a.has(t) && this.isChecklistRuleSatisfied(t, a)) {
-				let e = this.getLinkedRules().find((e) => e.part1 && e.part1.toUpperCase() === t || e.part2 && e.part2.toUpperCase() === t), n = e ? e.combined.toUpperCase() : "", r = this.state.files.find((e) => {
-					let t = (e.docType || e.targetName || e.name || "").toUpperCase();
-					return n && t.includes(n);
+				let e = this.getLinkedRules().find((e) => {
+					let t = T(e.part1), r = T(e.part2);
+					return t === n || r === n;
+				}), r = e ? T(e.combined) : "", i = this.state.files.find((e) => {
+					let t = T(e.docType || e.targetName || e.name || "");
+					return r && (t === r || t.includes(r) || r.includes(t));
 				}) || this.state.files[0];
-				if (r) {
-					let e = r.ext || P(r.name) || "pdf", n = r.path || r.filePath || r.nativePath || "";
+				if (i) {
+					let e = i.ext || P(i.name) || "pdf", n = i.path || i.filePath || i.nativePath || "";
 					s.push({
-						name: `${r.name} (${t})`,
+						name: `${i.name} (${t})`,
 						docType: t,
-						size: r.size || 0,
+						size: i.size || 0,
 						ext: e.toUpperCase().replace(".", ""),
-						dateModified: r.dateModified || Date.now(),
-						dateCreated: r.dateCreated || Date.now(),
+						dateModified: i.dateModified || Date.now(),
+						dateCreated: i.dateCreated || Date.now(),
 						isCombined: !0,
 						path: n,
 						nativePath: n,
-						rotation: r.rotation || 0,
-						_blobUrl: r._blobUrl || null,
-						_pdfBytes: r._pdfBytes || null,
-						fileObj: r.fileObj || null
+						rotation: i.rotation || 0,
+						_blobUrl: i._blobUrl || null,
+						_pdfBytes: i._pdfBytes || null,
+						fileObj: i.fileObj || null
 					});
 				}
 			}
 		}
 		let c = {};
 		o.forEach((t) => {
-			let n = typeof t == "string" ? t : t.name || "", r = Qe(e, n);
+			let n = typeof t == "string" ? t : t.name || "", r = $e(e, n);
 			r && r.promisedDate && (c[n] = r.promisedDate);
 		}), this.missingModal.open({
 			studentName: e,
@@ -9929,12 +9931,12 @@ var lt = A.map((e) => ({
 		});
 	}
 };
-function pt() {
-	let e = new ft();
+function mt() {
+	let e = new pt();
 	return e.init(), typeof window < "u" && (window.docmitraRenamer = e), e;
 }
 // src/services/export-import-service.js
-function mt(e) {
+function ht(e) {
 	let t = {
 		format: "BulkStudentRenamerSettings",
 		version: 1,
@@ -9947,7 +9949,7 @@ function mt(e) {
 	}, n = new Blob([JSON.stringify(t, null, 2)], { type: "application/json" }), r = URL.createObjectURL(n), i = document.createElement("a");
 	i.href = r, i.download = `student-renamer-settings-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.json`, i.click(), setTimeout(() => URL.revokeObjectURL(r), 1e3);
 }
-function ht(e, t) {
+function gt(e, t) {
 	return new Promise((n, r) => {
 		if (!e) return r(/* @__PURE__ */ Error("No backup file selected."));
 		if (e.size > 5242880) return r(/* @__PURE__ */ Error("Backup file exceeds maximum allowed size (5 MB)."));
@@ -9970,7 +9972,7 @@ function ht(e, t) {
 	});
 }
 // src/ui/settings-ui.js
-var gt = class {
+var _t = class {
 	constructor() {
 		this.state = null, this.initialState = null, this.activeChecklist = "MAHA DBT FORM";
 	}
@@ -9978,9 +9980,9 @@ var gt = class {
 		await this.loadState(), this._bindButtons(), this.renderAll(), console.info("[DocMitra Settings] Settings UI manager initialized.");
 	}
 	async loadState() {
-		this.state = Ve();
+		this.state = He();
 		try {
-			let e = await Ge();
+			let e = await Ke();
 			e && e.forms && Object.keys(e.forms).length > 0 && (this.state.checklists = e.forms);
 		} catch (e) {
 			console.warn("[SettingsUI] Could not load presets from server:", e);
@@ -9999,7 +10001,7 @@ var gt = class {
 		let a = document.getElementById("btnExportSettingsJSON");
 		a && a.addEventListener("click", () => {
 			try {
-				mt(this.state), r.show("Settings Exported", "Configuration JSON file downloaded.", "success");
+				ht(this.state), r.show("Settings Exported", "Configuration JSON file downloaded.", "success");
 			} catch (e) {
 				r.show("Export Error", e.message, "error");
 			}
@@ -10008,7 +10010,7 @@ var gt = class {
 		o && s && (o.addEventListener("click", () => s.click()), s.addEventListener("change", async (e) => {
 			let t = e.target.files?.[0];
 			if (t) try {
-				await ht(t, this.state), We(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Import Successful", "System configuration restored and verified.", "success");
+				await gt(t, this.state), Ge(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Import Successful", "System configuration restored and verified.", "success");
 			} catch (e) {
 				r.show("Import Failed", e.message || "Invalid settings JSON format.", "error");
 			} finally {
@@ -10039,7 +10041,7 @@ var gt = class {
 			d.className = "font-mono-code text-[10px] text-on-surface-variant", d.textContent = `TOKEN_${t.replace(/[^A-Z0-9]/gi, "_").toUpperCase()}`, l.appendChild(d), o.appendChild(l);
 			let f = document.createElement("div");
 			f.className = "col-span-2";
-			let p = je.find((e) => e.outputName.toUpperCase() === t.toUpperCase()), m = p ? p.primaryShortcut : (n[0] || "DOC").toUpperCase().slice(0, 4), h = document.createElement("span");
+			let p = Me.find((e) => e.outputName.toUpperCase() === t.toUpperCase()), m = p ? p.primaryShortcut : (n[0] || "DOC").toUpperCase().slice(0, 4), h = document.createElement("span");
 			h.className = "px-2 py-1 bg-surface-container-high rounded text-on-surface font-mono-code text-[12px] font-bold shadow-2xs", h.textContent = m, f.appendChild(h), o.appendChild(f);
 			let g = document.createElement("div");
 			g.className = "col-span-4 pr-space-sm";
@@ -10300,12 +10302,12 @@ var gt = class {
 		});
 	}
 	async handleSave() {
-		We(this.state), await Ke({ forms: this.state.checklists }), this.initialState = JSON.parse(JSON.stringify(this.state)), r.show("Settings Saved", "System rules updated and applied to workstation.", "success");
+		Ge(this.state), await qe({ forms: this.state.checklists }), this.initialState = JSON.parse(JSON.stringify(this.state)), r.show("Settings Saved", "System rules updated and applied to workstation.", "success");
 		let e = document.getElementById("settings-modal-overlay");
 		e && e.classList.add("hidden"), document.body.style.overflow = "";
 	}
 	handleReset() {
-		window.confirm("Reset all rules, shortcuts, and checklists to factory defaults?") && (this.state.groups = Me(), this.state.checklists = JSON.parse(JSON.stringify(W)), We(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Factory Defaults Restored", "All default rules loaded.", "info"));
+		window.confirm("Reset all rules, shortcuts, and checklists to factory defaults?") && (this.state.groups = Ne(), this.state.checklists = JSON.parse(JSON.stringify(W)), Ge(this.state), this.initialState = JSON.parse(JSON.stringify(this.state)), this.renderAll(), r.show("Factory Defaults Restored", "All default rules loaded.", "info"));
 	}
 	handleDiscard() {
 		this.state = JSON.parse(JSON.stringify(this.initialState)), this.renderAll(), r.show("Changes Discarded", "Reverted to previous configuration.", "info");
@@ -10313,12 +10315,12 @@ var gt = class {
 		e && e.classList.add("hidden"), document.body.style.overflow = "";
 	}
 };
-function _t() {
-	let e = new gt();
+function vt() {
+	let e = new _t();
 	return e.init(), e;
 }
 // tools/pdf_studio/pdf_studio_logic.js
-var vt = {
+var yt = {
 	A4_PORTRAIT: {
 		width: 595.28,
 		height: 841.89,
@@ -10330,7 +10332,7 @@ var vt = {
 		label: "A4 Landscape"
 	}
 };
-function yt(e) {
+function bt(e) {
 	let t = 2, n = e.length;
 	for (; t < n && e[t] === 255;) {
 		let r = e[t + 1];
@@ -10362,8 +10364,8 @@ function Q(e = [], t = "portrait", n = 0) {
 	for (let e = 0; e < c; e++) l.push(3 + e * 3);
 	r.push(i), s(a(`2 0 obj\n<< /Type /Pages /Kids [ ${l.map((e) => `${e} 0 R`).join(" ")} ] /Count ${c} >>\nendobj\n`));
 	for (let o = 0; o < c; o++) {
-		let c = e[o], l = 3 + o * 3, u = l + 1, d = l + 2, f = c.bytes, { width: p, height: m } = c.width && c.height ? c : yt(f), h = vt.A4_PORTRAIT.width, g = vt.A4_PORTRAIT.height;
-		(t === "landscape" || t === "fit" && p > m) && (h = vt.A4_LANDSCAPE.width, g = vt.A4_LANDSCAPE.height);
+		let c = e[o], l = 3 + o * 3, u = l + 1, d = l + 2, f = c.bytes, { width: p, height: m } = c.width && c.height ? c : bt(f), h = yt.A4_PORTRAIT.width, g = yt.A4_PORTRAIT.height;
+		(t === "landscape" || t === "fit" && p > m) && (h = yt.A4_LANDSCAPE.width, g = yt.A4_LANDSCAPE.height);
 		let _ = h - 36, v = g - 36, y = Math.min(_ / p, v / m), b = p * y, x = m * y, S = (h - b) / 2, C = (g - x) / 2, w = n ? ` /Rotate ${n}` : "";
 		r.push(i), s(a(`${l} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${h.toFixed(2)} ${g.toFixed(2)}]${w} /Contents ${u} 0 R /Resources << /XObject << /Im${o + 1} ${d} 0 R >> >> >>\nendobj\n`));
 		let T = `q ${b.toFixed(2)} 0 0 ${x.toFixed(2)} ${S.toFixed(2)} ${C.toFixed(2)} cm /Im${o + 1} Do Q\n`, E = T.length;
@@ -10374,13 +10376,13 @@ function Q(e = [], t = "portrait", n = 0) {
 	for (let e of r) s(a(`${String(e).padStart(10, "0")} 00000 n \n`));
 	return s(a(`trailer\n<< /Size ${d} /Root 1 0 R >>\nstartxref\n${u}\n%%EOF\n`)), new Blob(o, { type: "application/pdf" });
 }
-function bt(e) {
+function xt(e) {
 	let t = [], n = e.length, r = 0;
 	for (; r < n - 3;) if (e[r] === 255 && e[r + 1] === 216 && e[r + 2] === 255) {
 		let i = r;
 		for (r += 2; r < n - 1;) {
 			if (e[r] === 255 && e[r + 1] === 217) {
-				let n = r + 2, a = e.slice(i, n), o = yt(a);
+				let n = r + 2, a = e.slice(i, n), o = bt(a);
 				t.push({
 					bytes: a,
 					width: o.width,
@@ -10394,7 +10396,7 @@ function bt(e) {
 	return t;
 }
 function $(e) {
-	let t = bt(e);
+	let t = xt(e);
 	if (!t.length) return [];
 	if (t.length === 1) return t;
 	let n = Math.max(...t.map((e) => (e.width || 0) * (e.height || 0))), r = Math.max(...t.map((e) => e.bytes?.length || 0)), i = t.filter((e) => {
@@ -10406,7 +10408,7 @@ function $(e) {
 		return r === n ? (t.bytes?.length || 0) - (e.bytes?.length || 0) : r - n;
 	});
 }
-function xt(e, t = "Document.pdf") {
+function St(e, t = "Document.pdf") {
 	let n = $(e), r = t.replace(/\.pdf$/i, "");
 	return n.length ? n.map((e, t) => {
 		let i = n.length === 1 ? `${r}.jpg` : `${r}_page_${t + 1}.jpg`, a = new Blob([e.bytes], { type: "image/jpeg" });
@@ -10420,7 +10422,7 @@ function xt(e, t = "Document.pdf") {
 		};
 	}) : [];
 }
-function St(e, t = "Document.pdf") {
+function Ct(e, t = "Document.pdf") {
 	let n = $(e), r = t.replace(/\.pdf$/i, "");
 	return n.length ? n.map((e, t) => {
 		let n = `${r}_page_${t + 1}.pdf`, i = Q([e], "portrait");
@@ -10432,7 +10434,7 @@ function St(e, t = "Document.pdf") {
 		};
 	}) : [];
 }
-function Ct(e = [], t = "portrait") {
+function wt(e = [], t = "portrait") {
 	let n = [];
 	for (let t of e) {
 		let e = $(t);
@@ -10441,7 +10443,7 @@ function Ct(e = [], t = "portrait") {
 	if (!n.length) throw Error("No document images could be extracted to merge PDFs.");
 	return Q(n, t);
 }
-function wt(e, t = 90) {
+function Tt(e, t = 90) {
 	let n = (t % 360 + 360) % 360;
 	if (n === 0) return new Blob([e], { type: "application/pdf" });
 	let r = $(e);
@@ -10460,13 +10462,13 @@ function wt(e, t = 90) {
 	}
 	throw Error("No pages found in PDF to rotate.");
 }
-function Tt(e, t, n = "auto") {
+function Et(e, t, n = "auto") {
 	if (!e) return "document.pdf";
 	let r = e.lastIndexOf("."), i = r === -1 ? e : e.slice(0, r), a = r === -1 ? "" : e.slice(r), o = i.replace(/[\s_-]+\d+\s*(?:KB|MB)$/i, "").trim();
 	return n === "MB" || n === "auto" && t >= 10485760 ? `${o} ${Math.max(1, Math.round(Number(t || 0) / 1048576))} MB${a}` : `${o} ${Math.max(1, Math.round(Number(t || 0) / 1024))} KB${a}`;
 }
 // tools/pdf_studio/pdf_studio_ui.js
-var Et = class {
+var Dt = class {
 	constructor() {
 		this.activeTool = "compress_pdf", this.files = [], this.isProcessing = !1;
 	}
@@ -10683,7 +10685,7 @@ var Et = class {
 	rotateSingleFile(e) {
 		let t = this.files[e];
 		if (t && t.bytes) try {
-			let e = wt(t.bytes, 90);
+			let e = Tt(t.bytes, 90);
 			e.arrayBuffer().then((n) => {
 				t.bytes = new Uint8Array(n), t.size = e.size, this.renderQueue(), r.show("Page Rotated", `${t.name} rotated 90° clockwise.`, "info");
 			});
@@ -10702,7 +10704,7 @@ var Et = class {
 		let e = 0;
 		this.files.forEach((t) => {
 			if (t.bytes) try {
-				let n = wt(t.bytes, 90);
+				let n = Tt(t.bytes, 90);
 				n.arrayBuffer().then((i) => {
 					t.bytes = new Uint8Array(i), t.size = n.size, e++, e === this.files.length && (this.renderQueue(), r.show("All Rotated", `Rotated all ${this.files.length} PDFs by 90°.`, "success"));
 				});
@@ -10727,7 +10729,7 @@ var Et = class {
 		r.show("Processing Started", `Running ${this._getToolDisplayName(e)} on ${this.files.length} files...`, "info");
 		try {
 			if (e === "merge_pdf") {
-				let e = Ct(this.files.map((e) => e.bytes).filter(Boolean), "portrait");
+				let e = wt(this.files.map((e) => e.bytes).filter(Boolean), "portrait");
 				this._downloadBlob(e, "Merged_Admission_Dossier.pdf"), r.show("Merge Complete!", "Merged PDF Dossier generated and saved.", "success");
 			} else if (e === "compress_pdf") {
 				let e = 0;
@@ -10735,19 +10737,19 @@ var Et = class {
 					if (!t.bytes) continue;
 					let n = $(t.bytes), r;
 					r = n.length > 0 ? Q(n, "portrait") : new Blob([t.bytes], { type: "application/pdf" });
-					let i = Tt(t.name, r.size);
+					let i = Et(t.name, r.size);
 					this._downloadBlob(r, i), e++;
 				}
 				r.show("Compression Complete!", `Compressed ${e} files to safe MahaDBT thresholds.`, "success");
 			} else if (e === "split_pdf") {
 				let e = 0;
-				for (let t of this.files) t.bytes && St(t.bytes, t.name).forEach((t) => {
+				for (let t of this.files) t.bytes && Ct(t.bytes, t.name).forEach((t) => {
 					this._downloadBlob(t.blob, t.fileName), e++;
 				});
 				r.show("Split Complete!", `Extracted ${e} individual PDF pages.`, "success");
 			} else if (e === "pdf_to_jpg") {
 				let e = 0;
-				for (let t of this.files) t.bytes && xt(t.bytes, t.name).forEach((t) => {
+				for (let t of this.files) t.bytes && St(t.bytes, t.name).forEach((t) => {
 					this._downloadBlob(t.blob, t.fileName), e++;
 				});
 				r.show("Conversion Complete!", `Extracted ${e} high-resolution JPG pages.`, "success");
@@ -10755,7 +10757,7 @@ var Et = class {
 				let e = 0;
 				for (let t of this.files) {
 					if (!t.bytes) continue;
-					let n = wt(t.bytes, 90);
+					let n = Tt(t.bytes, 90);
 					this._downloadBlob(n, t.name), e++;
 				}
 				r.show("Rotation Complete!", `Rotated and saved ${e} PDF documents.`, "success");
@@ -10781,12 +10783,12 @@ var Et = class {
 		}, 1e3);
 	}
 };
-function Dt() {
-	let e = new Et();
+function Ot() {
+	let e = new Dt();
 	return e.init(), e;
 }
 // src/modules/image-studio.js
-function Ot(e, t, n, r = "magic_color") {
+function kt(e, t, n, r = "magic_color") {
 	if (!e || r === "none" || r === "original") return;
 	let i = e.getImageData(0, 0, t, n), a = i.data;
 	for (let e = 0; e < a.length; e += 4) {
@@ -10803,13 +10805,13 @@ function Ot(e, t, n, r = "magic_color") {
 	}
 	e.putImageData(i, 0, 0);
 }
-function kt(e, t = 0) {
+function At(e, t = 0) {
 	let n = document.createElement("canvas"), r = (t % 360 + 360) % 360, i = r === 90 || r === 270, a = i ? e.height : e.width, o = i ? e.width : e.height;
 	n.width = a, n.height = o;
 	let s = n.getContext("2d");
 	return s.save(), s.translate(n.width / 2, n.height / 2), s.rotate(r * Math.PI / 180), s.drawImage(e, -e.width / 2, -e.height / 2), s.restore(), n;
 }
-async function At(e, t = 250, n = {}) {
+async function jt(e, t = 250, n = {}) {
 	let { rotation: r = 0, filterMode: i = "none", outputMime: a = "image/jpeg", maxDimension: o = 2400 } = n;
 	return new Promise((n, s) => {
 		let c = new Image(), l = URL.createObjectURL(e);
@@ -10822,7 +10824,7 @@ async function At(e, t = 250, n = {}) {
 					e = Math.round(e * t), s = Math.round(s * t);
 				}
 				let l;
-				if (r === 0 ? (l = document.createElement("canvas"), l.width = e, l.height = s, l.getContext("2d").drawImage(c, 0, 0, e, s)) : l = kt(c, r), i && i !== "none" && Ot(l.getContext("2d"), l.width, l.height, i), !t || t <= 0) {
+				if (r === 0 ? (l = document.createElement("canvas"), l.width = e, l.height = s, l.getContext("2d").drawImage(c, 0, 0, e, s)) : l = At(c, r), i && i !== "none" && kt(l.getContext("2d"), l.width, l.height, i), !t || t <= 0) {
 					let e = await new Promise((e) => l.toBlob(e, a, .9));
 					return n({
 						blob: e,
@@ -10866,7 +10868,7 @@ async function At(e, t = 250, n = {}) {
 		}, c.src = l;
 	});
 }
-async function jt(e, t = "image/png") {
+async function Mt(e, t = "image/png") {
 	return new Promise((n, r) => {
 		let i = new Image(), a = URL.createObjectURL(e);
 		i.onload = () => {
@@ -10892,7 +10894,7 @@ async function jt(e, t = "image/png") {
 	});
 }
 // src/ui/image-studio-ui.js
-var Mt = class {
+var Nt = class {
 	constructor() {
 		this.activeTool = "compress_photo_sign", this.files = [], this.isProcessing = !1;
 	}
@@ -11089,7 +11091,7 @@ var Mt = class {
 		if (!t || !t.url) return;
 		let n = new Image();
 		n.crossOrigin = "anonymous", n.onload = () => {
-			kt(n, 90).toBlob((e) => {
+			At(n, 90).toBlob((e) => {
 				t.url = URL.createObjectURL(e), t.size = e.size, t.fileOrBlob = e, this.renderQueue(), r.show("Image Rotated", `${t.name} rotated 90° clockwise.`, "info");
 			}, "image/jpeg", .92);
 		}, n.src = t.url;
@@ -11122,13 +11124,13 @@ var Mt = class {
 				let r = n.fileOrBlob;
 				if (!r && n.url && (r = await (await fetch(n.url)).blob()), r) {
 					if (e === "compress_photo_sign") {
-						let e = /sign|signature|स्वाक्षरी/i.test(n.name) ? 18 : 45, i = await At(r, e);
+						let e = /sign|signature|स्वाक्षरी/i.test(n.name) ? 18 : 45, i = await jt(r, e);
 						this._downloadBlob(i.blob, `Compressed_${n.name}`), t++;
 					} else if (e === "passport_crop") {
-						let e = await At(await this._cropPassport(r), 48);
+						let e = await jt(await this._cropPassport(r), 48);
 						this._downloadBlob(e.blob, `Passport_${n.name}`), t++;
 					} else if (e === "sign_clean_invert") {
-						let e = await At(r, 18, { filterMode: "sharp_contrast" });
+						let e = await jt(r, 18, { filterMode: "sharp_contrast" });
 						this._downloadBlob(e.blob, `Clean_Sign_${n.name}`), t++;
 					} else if (e === "image_to_pdf") {
 						let e = await r.arrayBuffer(), i = Q([{
@@ -11138,10 +11140,10 @@ var Mt = class {
 						}], "portrait"), a = n.name.replace(/\.[a-zA-Z0-9]+$/, "") + ".pdf";
 						this._downloadBlob(i, a), t++;
 					} else if (e === "magic_color") {
-						let e = await At(r, 240, { filterMode: "enhanced" });
+						let e = await jt(r, 240, { filterMode: "enhanced" });
 						this._downloadBlob(e.blob, `Magic_${n.name}`), t++;
 					} else {
-						let e = await jt(r, "image/jpeg");
+						let e = await Mt(r, "image/jpeg");
 						this._downloadBlob(e.blob, `Converted_${n.name.replace(/\.[a-zA-Z0-9]+$/, ".jpg")}`), t++;
 					}
 				}
@@ -11174,12 +11176,12 @@ var Mt = class {
 		}, 1e3);
 	}
 };
-function Nt() {
-	let e = new Mt();
+function Pt() {
+	let e = new Nt();
 	return e.init(), e;
 }
 // src/libraries/document-matcher.js
-var Pt = [
+var Ft = [
 	{
 		id: "12th-marksheet-passing-combined",
 		outputName: "12TH MARKSHEET AND PASSING",
@@ -11489,7 +11491,7 @@ var Pt = [
 		]
 	}
 ];
-function Ft(e, t = null) {
+function It(e, t = null) {
 	if (!e || typeof e != "string") return {
 		docType: null,
 		percentage: 0,
@@ -11498,7 +11500,7 @@ function Ft(e, t = null) {
 		status: "none"
 	};
 	let n = e.trim().toLowerCase(), r = n.replace(/[-_.]+/g, " ");
-	for (let e of Pt) if (n === e.shortcut.toLowerCase() || r.trim() === e.shortcut.toLowerCase()) return {
+	for (let e of Ft) if (n === e.shortcut.toLowerCase() || r.trim() === e.shortcut.toLowerCase()) return {
 		docType: e.outputName,
 		percentage: 100,
 		badgeText: `100% Match: ${e.outputName}`,
@@ -11516,7 +11518,7 @@ function Ft(e, t = null) {
 			};
 		}
 	}
-	for (let e of Pt) for (let t of e.patterns) if (t.test(n) || t.test(r)) return {
+	for (let e of Ft) for (let t of e.patterns) if (t.test(n) || t.test(r)) return {
 		docType: e.outputName,
 		percentage: 100,
 		badgeText: `100% Match: ${e.outputName}`,
@@ -11543,17 +11545,17 @@ function Ft(e, t = null) {
 		status: "none"
 	};
 }
-({ ...Ae });
-function It(e) {
+({ ...je });
+function Lt(e) {
 	if (!e || typeof e != "string") return "";
-	let t = Ft(e);
+	let t = It(e);
 	if (t && t.docType) return t.docType;
 	let n = e.replace(/\.[^/.]+$/, "");
 	return n = n.replace(/\s*\(p\.\d+\)/i, ""), n.trim().toUpperCase();
 }
-function Lt(e) {
+function Rt(e) {
 	if (!e || typeof e != "string") return "";
-	let t = e.replace(/\.[^/.]+$/, "").trim(), n = Ft(t);
+	let t = e.replace(/\.[^/.]+$/, "").trim(), n = It(t);
 	if (n && n.docType) {
 		let e = n.docType, r = t, i = RegExp(`^${e}\\b`, "i");
 		if (i.test(r) ? r = r.replace(i, "").trim() : e.split(/\s+/).forEach((e) => {
@@ -11565,9 +11567,9 @@ function Lt(e) {
 	}
 	return t;
 }
-function Rt(e, t = []) {
+function zt(e, t = []) {
 	return !Array.isArray(e) || e.length === 0 ? [] : !Array.isArray(t) || t.length === 0 ? [...e] : [...e].sort((e, n) => {
-		let r = e.docType || It(e.label || e.name), i = n.docType || It(n.label || n.name), a = t.findIndex((e) => {
+		let r = e.docType || Lt(e.label || e.name), i = n.docType || Lt(n.label || n.name), a = t.findIndex((e) => {
 			let t = e.toUpperCase(), n = r.toUpperCase();
 			return t === n || n.includes(t) || t.includes(n);
 		}), o = t.findIndex((e) => {
@@ -11578,9 +11580,9 @@ function Rt(e, t = []) {
 	});
 }
 // src/ui/print-studio-ui.js
-var zt = class {
+var Bt = class {
 	constructor() {
-		this.presets = { ...Ae }, this.activePresetKey = "MAHA DBT FORM", this.documents = [], this.activeDocIndex = 0, this.zoomLevel = 100;
+		this.presets = { ...je }, this.activePresetKey = "MAHA DBT FORM", this.documents = [], this.activeDocIndex = 0, this.zoomLevel = 100;
 	}
 	init() {
 		this._seedDemoDocumentsIfEmpty(), this._bindControls(), this.renderPresetSelector(), this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), console.info("[DocMitra Print Studio] Print Studio UI manager initialized.");
@@ -11725,7 +11727,7 @@ var zt = class {
 	}
 	handleAutoOrder() {
 		let e = this.presets[this.activePresetKey] || [];
-		this.documents = Rt(this.documents, e), this.activeDocIndex = 0, this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), r.show("Sequence Applied", `Ordered according to ${this.activePresetKey} criteria.`, "success");
+		this.documents = zt(this.documents, e), this.activeDocIndex = 0, this.renderDocumentList(), this.renderActivePreview(), this.renderThumbnails(), r.show("Sequence Applied", `Ordered according to ${this.activePresetKey} criteria.`, "success");
 	}
 	async handleBrowseFolder() {
 		r.show("Opening Folder Picker", "Navigating Windows Explorer...", "info");
@@ -11741,7 +11743,7 @@ var zt = class {
 				return;
 			}
 			this.documents = t.map((e, t) => {
-				let n = It(e.name), r = Lt(e.name);
+				let n = Lt(e.name), r = Rt(e.name);
 				return {
 					id: `print_doc_${Date.now()}_${t}`,
 					name: e.name,
@@ -11832,12 +11834,12 @@ var zt = class {
 		}
 	}
 };
-function Bt() {
-	let e = new zt();
+function Vt() {
+	let e = new Bt();
 	return e.init(), e;
 }
 // src/ui/followup-ui.js
-var Vt = class {
+var Ht = class {
 	constructor() {
 		this.items = [], this.searchQuery = "";
 	}
@@ -11846,8 +11848,8 @@ var Vt = class {
 	}
 	_seedDemoDataIfEmpty() {
 		if (J().length === 0) {
-			let e = tt(), t = nt(2);
-			Ye([
+			let e = nt(), t = rt(2);
+			Xe([
 				{
 					id: "fu_demo_1",
 					folderName: "Vijay_Ramesh_Yadav",
@@ -11956,8 +11958,8 @@ var Vt = class {
 			c.appendChild(u), s.appendChild(c), n.appendChild(s);
 			let d = document.createElement("td");
 			d.className = "py-3.5 px-space-md";
-			let f = $e(t.promisedDate), p = document.createElement("div");
-			p.className = f === "overdue" ? "font-mono-code font-bold text-error" : f === "today" ? "font-mono-code font-bold text-amber-700" : "font-mono-code font-bold text-emerald-700", p.textContent = et(t.promisedDate), d.appendChild(p);
+			let f = et(t.promisedDate), p = document.createElement("div");
+			p.className = f === "overdue" ? "font-mono-code font-bold text-error" : f === "today" ? "font-mono-code font-bold text-amber-700" : "font-mono-code font-bold text-emerald-700", p.textContent = tt(t.promisedDate), d.appendChild(p);
 			let m = document.createElement("span");
 			f === "overdue" ? (m.className = "text-[10px] font-bold uppercase tracking-wider text-error bg-error-container/40 px-1.5 py-0.5 rounded", m.textContent = "OVERDUE") : f === "today" ? (m.className = "text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded", m.textContent = "DUE TODAY") : (m.className = "text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded", m.textContent = "UPCOMING"), d.appendChild(m), n.appendChild(d);
 			let h = document.createElement("td");
@@ -12003,7 +12005,7 @@ var Vt = class {
 		});
 	}
 	generateMarathiNotice(e) {
-		let t = et(e.promisedDate);
+		let t = tt(e.promisedDate);
 		return `सस्नेह नमस्कार,
 विद्यार्थी नाव: ${e.studentName} (${e.rollNo || "Admission 2026"})
 
@@ -12025,18 +12027,18 @@ var Vt = class {
 		window.open(i, "_blank"), r.show("WhatsApp उघडत आहे", `Opening WhatsApp for ${e.studentName}...`, "info");
 	}
 	markItemResolved(e) {
-		Ze(e.folderName, e.documentName), e.status = "resolved", this.renderTable(), r.show("कागदपत्र प्राप्त!", `${e.documentName} for ${e.studentName} marked as received.`, "success");
+		Qe(e.folderName, e.documentName), e.status = "resolved", this.renderTable(), r.show("कागदपत्र प्राप्त!", `${e.documentName} for ${e.studentName} marked as received.`, "success");
 	}
 };
-function Ht() {
-	let e = new Vt();
+function Ut() {
+	let e = new Ht();
 	return e.init(), e;
 }
 // src/ui/index.js
-function Ut() {
+function Wt() {
 	let e = new n();
-	e.init(), new a().init(), _t();
-	let t = pt();
+	e.init(), new a().init(), vt();
+	let t = mt();
 	typeof window < "u" && (window.renamerUI = t, window.location.search.includes("test_loaded=1") && setTimeout(() => {
 		t.state.folder = {
 			name: "Vijay_Ramesh_Yadav",
@@ -12072,7 +12074,7 @@ function Ut() {
 		], t.state.currentIndex = 0, t.renderQueue();
 	}, 200)), e.onViewChange = (e, n) => {
 		n === "bulk-renamer" && e !== "bulk-renamer" && t.handleClearQueue(!0);
-	}, Dt(), Nt(), Bt(), Ht(), o();
+	}, Ot(), Pt(), Vt(), Ut(), o();
 	let i = document.getElementById("themeToggleBtn");
 	i && i.addEventListener("click", () => {
 		document.documentElement.classList.toggle("dark");
@@ -12080,5 +12082,5 @@ function Ut() {
 		r.show(e ? "Dark Theme Enabled" : "Light Theme Enabled", "UI Preference Updated", "info");
 	}), console.info("[DocMitra] UI Shell & Modules initialized successfully.");
 }
-document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", Ut) : Ut();
-export { Ut as initAppShell };
+document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", Wt) : Wt();
+export { Wt as initAppShell };

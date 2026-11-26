@@ -93,8 +93,25 @@ export const CANONICAL_NAMES = {
   "MINORITY CERTIFICATE": "Minority Certificate",
   "MINORITY DECLARATION": "Minority Certificate",
   "RESIDENTIAL DOCUMENT": "Residential Document",
-  "ATTEMPT CERTIFICATE": "Attempt Certificate"
+  "ATTEMPT CERTIFICATE": "Attempt Certificate",
+  "12TH PASSING": "12th Passing Certificate",
+  "10TH PASSING": "10th Passing Certificate",
+  "CET CELL FORM": "CET Application Form",
+  "DOMICILE AND NATIONALITY": "Domicile and Nationality Certificate",
+  "NATIONALITY AND DOMICILE": "Domicile and Nationality Certificate",
+  "NATIONALITY AND DOMOCILE": "Domicile and Nationality Certificate",
+  "NATIONALITY DOMICILE": "Domicile and Nationality Certificate",
+  "DOMICILE NATIONALITY": "Domicile and Nationality Certificate"
 };
+
+export function getCanonicalDocumentUpper(name) {
+  if (!name || typeof name !== 'string') return '';
+  const upper = name.trim().toUpperCase();
+  if (CANONICAL_NAMES[upper]) {
+    return CANONICAL_NAMES[upper].toUpperCase();
+  }
+  return upper;
+}
 
 export function updateCanonicalName(key, canonical) {
   if (!key) return;
@@ -155,17 +172,17 @@ export const DEFAULT_SPELLING_RULES = {
 
 export const DEFAULT_LINKED_RULES = [
   {
-    id: "12th-marksheet-passing-link",
-    part1: "12TH MARKSHEET",
-    part2: "12TH PASSING CERTIFICATE",
-    combined: "12TH MARKSHEET AND PASSING",
-    type: "combined"
-  },
-  {
     id: "10th-marksheet-passing-link",
     part1: "10TH MARKSHEET",
     part2: "10TH PASSING CERTIFICATE",
-    combined: "10TH MARKSHEET AND PASSING",
+    combined: "10TH MARKSHEET AND PASSING CERTIFICATE",
+    type: "combined"
+  },
+  {
+    id: "12th-marksheet-passing-link",
+    part1: "12TH MARKSHEET",
+    part2: "12TH PASSING CERTIFICATE",
+    combined: "12TH MARKSHEET AND PASSING CERTIFICATE",
     type: "combined"
   },
   {
@@ -1706,19 +1723,27 @@ function fileMatchesKeyword(fileName, keyword, ruleName = '') {
 }
 
 export function evaluateChecklistRule(fileNames, rule, linkedRules = DEFAULT_LINKED_RULES) {
-  const normalizedRuleName = rule.name.trim().toUpperCase();
+  const rawRuleName = (rule.name || rule).trim().toUpperCase();
+  const normalizedRuleName = getCanonicalDocumentUpper(rawRuleName);
   const activeLinks = Array.isArray(linkedRules) ? linkedRules : DEFAULT_LINKED_RULES;
 
   // 1. Combined document link
   for (const link of activeLinks) {
-    if (link.type === 'combined' && (link.part1 === normalizedRuleName || link.part2 === normalizedRuleName)) {
-      const combinedClean = link.combined.toLowerCase();
+    const linkP1 = getCanonicalDocumentUpper(link.part1);
+    const linkP2 = getCanonicalDocumentUpper(link.part2);
+    const linkComb = getCanonicalDocumentUpper(link.combined);
+
+    if (link.type === 'combined' && (linkP1 === normalizedRuleName || linkP2 === normalizedRuleName)) {
+      const combinedClean = linkComb.toLowerCase();
       const matched = fileNames.find(fn => {
         const lower = fn.toLowerCase();
+        const canonLower = getCanonicalDocumentUpper(fn).toLowerCase();
         return lower.includes(combinedClean) ||
+          canonLower.includes(combinedClean) ||
           (lower.includes('12th') && lower.includes('marksheet') && lower.includes('passing')) ||
           (lower.includes('10th') && lower.includes('marksheet') && lower.includes('passing')) ||
-          (lower.includes('12mp') || lower.includes('10mp'));
+          (lower.includes('domicile') && lower.includes('nationality')) ||
+          (lower.includes('12mp') || lower.includes('10mp') || lower.includes('domnat'));
       });
       if (matched) {
         return {
@@ -1733,9 +1758,15 @@ export function evaluateChecklistRule(fileNames, rule, linkedRules = DEFAULT_LIN
 
   // 2. Alias document link
   for (const link of activeLinks) {
-    if (link.type === 'alias' && link.part1 === normalizedRuleName) {
-      const aliasClean = link.part2.toLowerCase();
-      const matched = fileNames.find(fn => fn.toLowerCase().includes(aliasClean));
+    const linkP1 = getCanonicalDocumentUpper(link.part1);
+    const linkP2 = getCanonicalDocumentUpper(link.part2);
+    if (link.type === 'alias' && linkP1 === normalizedRuleName) {
+      const aliasClean = linkP2.toLowerCase();
+      const matched = fileNames.find(fn => {
+        const lower = fn.toLowerCase();
+        const canonLower = getCanonicalDocumentUpper(fn).toLowerCase();
+        return lower.includes(aliasClean) || canonLower.includes(aliasClean);
+      });
       if (matched) {
         return {
           status: 'green',
@@ -1748,7 +1779,7 @@ export function evaluateChecklistRule(fileNames, rule, linkedRules = DEFAULT_LIN
   }
 
   // 3. Direct keyword matching
-  const keywords = Array.isArray(rule.keywords) ? rule.keywords : [rule.name];
+  const keywords = Array.isArray(rule.keywords) ? rule.keywords : [rawRuleName];
   for (const kw of keywords) {
     const matched = fileNames.find(fn => fileMatchesKeyword(fn, kw, normalizedRuleName));
     if (matched) {

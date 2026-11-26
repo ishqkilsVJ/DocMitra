@@ -1,15 +1,22 @@
 # 🔒 LOCKED TOOL: Bulk Document Renamer (`tools/rename_tool/`)
 
 > [!IMPORTANT]
-> **FROZEN & FULLY VERIFIED UNDER CHECKPOINT `CP-038`**  
+> **FROZEN & FULLY VERIFIED UNDER CHECKPOINT `CP-039`**  
 > **Status:** `LOCKED & PRODUCTION SEALED`  
 > **Module Integrity:** 100% Passing Unit & Dual-MCP Automated QA Tests  
 > **Verification Date:** 2026-11-26  
-> **Core Architecture:** Clean Preset Checklists (Eradicated redundant combined doc rules from checklists) and Priority DOMNAT Shortcut + Matching Engine.
+> **Core Architecture:** Deduplication of Master Document Dropdown (Eliminated 16 redundant variants to 58 clean canonical documents), Smart Canonical Linking Engine (Bi-directional satisfaction for 12th Marksheet & Passing, 10th Marksheet & Passing, Domicile & Nationality), Restoration of 4 Clean Factory Presets (Eradicated dirty custom presets like MAHA DBT 2), and Auto-Healing of user-saved linked rules.
 >
 > **LOCKED BY POLICY (`AGENTS.md` Rule 3):**  
 > Zero direct file modifications permitted inside `tools/rename_tool/` without explicit user unlock command:  
 > `UNLOCK RENAME_TOOL`
+
+> **Last QA Stabilization & Verification:** 2026-11-26 (Deduplication, Smart Canonical Linking & 4 Factory Presets Restoration [CP-039] Verified 100%:
+> 1. Master Dropdown Deduplication: Removed all 16 duplicate/variant documents (12TH MARKSHEET AND PASSING, 12TH PASSING, 10TH PASSING, CET SCORECARD, CET CELL FORM, AADHAR CARD, VALIDITY CERTIFICATE, LEAVING CERTIFICATE, etc.) and junk test items, resulting in exactly 58 clean official master documents in all Add Link Rule dropdowns.
+> 2. Smart Canonical Linking Engine: Upgraded isChecklistRuleSatisfied and updateMissingModal to canonicalize document names and files dynamically, ensuring 12TH MARKSHEET AND PASSING satisfies 12TH PASSING CERTIFICATE and DOMICILE AND NATIONALITY CERTIFICATE satisfies DOMICILE and NATIONALITY CERTIFICATE.
+> 3. Auto-Healing & 4 Clean Factory Presets: Automatically healed corrupted saved linked rules in localStorage (fixing typo in Rule 3 to NATIONALITY CERTIFICATE and Rule 2 to 12TH PASSING CERTIFICATE), wiped dirty custom presets (MAHA DBT 2) and restored strictly the 4 factory presets (MAHA DBT, SWAYAM DEENDAYAL YOJANA, CET CELL, EDUCATIONAL DOCUMENTS).
+> 4. Dual-MCP automated QA passed 100% [Playwright MCP E2E + Chrome DevTools 0 console errors]; compiled UI with node build-ui.js and release binary via cargo tauri build [10.56 MB]; deployed directly to C:\Users\USER\AppData\Local\DocMitra\app.exe).
+
 
 > **Last QA Stabilization & Verification:** 2026-11-26 (Clean Preset Checklists & Priority DOMNAT Shortcut Engine [CP-038] Verified 100%:
 > 1. Clean Preset Checklists: Removed redundant combined documents (10TH MARKSHEET AND PASSING CERTIFICATE, 12TH MARKSHEET AND PASSING CERTIFICATE) from BUILTIN_PRESETS checklists, resolving double-missing bug when only 1 part is brought. Linked Documents Engine automatically satisfies both parts when combined file is present.

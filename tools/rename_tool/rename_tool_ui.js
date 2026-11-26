@@ -54,6 +54,7 @@ import {
   generateBatchAuditCSV,
   downloadCSV,
   CANONICAL_NAMES,
+  getCanonicalDocumentUpper,
   DEFAULT_SPELLING_RULES,
   DEFAULT_LINKED_RULES,
   DEFAULT_CHECKLISTS_DATA,
@@ -3927,31 +3928,17 @@ export class RenamerUIManager {
   loadPresetsAndSettings() {
     // 1. Load active preset
     const savedActive = localStorage.getItem('docmitra_active_preset');
-    if (savedActive) {
-      if (savedActive === 'MAHA DBT FORM' || savedActive === 'MAHA DBT') {
-        this.state.activePreset = 'MAHA DBT';
-      } else if (savedActive === 'SWAYAM FORM' || savedActive === 'SWAYAM' || savedActive === 'SWAYAM DEENDAYAL YOJANA') {
-        this.state.activePreset = 'SWAYAM DEENDAYAL YOJANA';
-      } else if (savedActive === 'EDUCATIONAL' || savedActive === 'EDUCATIONAL DOCUMENTS') {
-        this.state.activePreset = 'EDUCATIONAL DOCUMENTS';
-      } else if (savedActive === 'CET CELL') {
-        this.state.activePreset = 'CET CELL';
-      } else {
-        this.state.activePreset = savedActive;
-      }
+    const FACTORY_PRESET_NAMES = ['MAHA DBT', 'SWAYAM DEENDAYAL YOJANA', 'CET CELL', 'EDUCATIONAL DOCUMENTS'];
+    if (savedActive && FACTORY_PRESET_NAMES.includes(savedActive)) {
+      this.state.activePreset = savedActive;
     } else {
       this.state.activePreset = 'MAHA DBT';
     }
 
-    // 2. Load presets from localStorage or default
-    try {
-      const storedPresets = localStorage.getItem('docmitra_rename_presets');
-      if (storedPresets) {
-        this.state.documentPresets = JSON.parse(storedPresets);
-      }
-    } catch (e) {
-      console.warn('[DocMitra Renamer] Failed to parse local presets:', e);
-    }
+    // 2. User Choice 3-C: Reset presets strictly to 4 clean factory presets
+    // Eradicate dirty custom presets (MAHA DBT 2, ALL DOCUMENT VIJAY, ANITA DOCUMENT, etc.)
+    this.state.documentPresets = JSON.parse(JSON.stringify(BUILTIN_PRESETS));
+    this.savePresetsAndSettings();
 
     // 3. Load custom shortcuts from localStorage
     try {
@@ -3967,7 +3954,7 @@ export class RenamerUIManager {
               code: codeUpper,
               codes: cs.codes || [codeUpper],
               label: cs.label || cs.canonical || codeUpper,
-              canonical: (cs.canonical || cs.label || codeUpper).toUpperCase(),
+              canonical: getCanonicalDocumentUpper(cs.canonical || cs.label || codeUpper),
               keywords: Array.isArray(cs.keywords) ? cs.keywords : []
             };
             if (existingIdx !== -1) {
@@ -3980,37 +3967,6 @@ export class RenamerUIManager {
       }
     } catch (e) {
       console.warn('[DocMitra Renamer] Failed to parse custom shortcuts:', e);
-    }
-
-    if (this.state.documentPresets && typeof this.state.documentPresets === 'object') {
-      if (this.state.documentPresets['SWAYAM'] && !this.state.documentPresets['SWAYAM DEENDAYAL YOJANA']) {
-        this.state.documentPresets['SWAYAM DEENDAYAL YOJANA'] = this.state.documentPresets['SWAYAM'];
-        delete this.state.documentPresets['SWAYAM'];
-      }
-      if (this.state.documentPresets['EDUCATIONAL'] && !this.state.documentPresets['EDUCATIONAL DOCUMENTS']) {
-        this.state.documentPresets['EDUCATIONAL DOCUMENTS'] = this.state.documentPresets['EDUCATIONAL'];
-        delete this.state.documentPresets['EDUCATIONAL'];
-      }
-    }
-
-    if (!this.state.documentPresets || Object.keys(this.state.documentPresets).length === 0) {
-      // Initialize with factory defaults from BUILTIN_PRESETS (MAHA DBT, SWAYAM DEENDAYAL YOJANA, CET CELL, EDUCATIONAL DOCUMENTS)
-      this.state.documentPresets = JSON.parse(JSON.stringify(BUILTIN_PRESETS));
-      this.savePresetsAndSettings();
-    } else {
-      // Sanitize stored preset checklists: remove redundant combined items (10MP, 12MP)
-      for (const presetKey of Object.keys(this.state.documentPresets)) {
-        const list = this.state.documentPresets[presetKey];
-        if (Array.isArray(list)) {
-          this.state.documentPresets[presetKey] = list.filter(d => {
-            const name = (d.name || d.label || d || '').toUpperCase().trim();
-            if (name === '10TH MARKSHEET AND PASSING CERTIFICATE' || name === '12TH MARKSHEET AND PASSING CERTIFICATE') {
-              return false;
-            }
-            return true;
-          });
-        }
-      }
     }
 
     // 4. Auto-migrate legacy shortcut codes with underscores (e.g., PIC_2 -> PIC2)
@@ -4104,29 +4060,67 @@ export class RenamerUIManager {
     } catch (e) {
       console.warn('[DocMitra Renamer] Failed to parse linked rules:', e);
     }
+    const DEFAULT_CANONICAL_LINKS = [
+      {
+        id: "link_10th",
+        combined: "10TH MARKSHEET AND PASSING CERTIFICATE",
+        part1: "10TH MARKSHEET",
+        part2: "10TH PASSING CERTIFICATE"
+      },
+      {
+        id: "link_12th",
+        combined: "12TH MARKSHEET AND PASSING CERTIFICATE",
+        part1: "12TH MARKSHEET",
+        part2: "12TH PASSING CERTIFICATE"
+      },
+      {
+        id: "link_domicile_nationality",
+        combined: "DOMICILE AND NATIONALITY CERTIFICATE",
+        part1: "DOMICILE CERTIFICATE",
+        part2: "NATIONALITY CERTIFICATE"
+      }
+    ];
+
     if (!Array.isArray(this.state.linkedRules) || this.state.linkedRules.length === 0) {
-      this.state.linkedRules = [
-        {
-          id: "link_10th",
-          combined: "10TH MARKSHEET AND PASSING CERTIFICATE",
-          part1: "10TH MARKSHEET",
-          part2: "10TH PASSING CERTIFICATE"
-        },
-        {
-          id: "link_12th",
-          combined: "12TH MARKSHEET AND PASSING CERTIFICATE",
-          part1: "12TH MARKSHEET",
-          part2: "12TH PASSING CERTIFICATE"
-        },
-        {
-          id: "link_domicile_nationality",
-          combined: "DOMICILE AND NATIONALITY CERTIFICATE",
-          part1: "DOMICILE CERTIFICATE",
-          part2: "NATIONALITY CERTIFICATE"
-        }
-      ];
+      this.state.linkedRules = JSON.parse(JSON.stringify(DEFAULT_CANONICAL_LINKS));
       this.saveLinkedRules();
     } else {
+      // Auto-heal and canonicalize existing linked rules, fixing user typos from screenshot
+      this.state.linkedRules = this.state.linkedRules.map(rule => {
+        let comb = getCanonicalDocumentUpper(rule.combined);
+        let p1 = getCanonicalDocumentUpper(rule.part1);
+        let p2 = getCanonicalDocumentUpper(rule.part2);
+
+        // Fix known user manual typo in Rule 3 from screenshot
+        if (rule.id === 'link_domicile_nationality' || (p1 === 'DOMICILE CERTIFICATE' && (p2.includes('DOMOCILE') || p2.includes('DOMICILE')))) {
+          p2 = 'NATIONALITY CERTIFICATE';
+          comb = 'DOMICILE AND NATIONALITY CERTIFICATE';
+        }
+        if (rule.id === 'link_12th' || (p1 === '12TH MARKSHEET' && (p2 === '12TH PASSING' || p2 === '12TH PASSING CERTIFICATE'))) {
+          p2 = '12TH PASSING CERTIFICATE';
+          comb = '12TH MARKSHEET AND PASSING CERTIFICATE';
+        }
+        if (rule.id === 'link_10th' || (p1 === '10TH MARKSHEET' && (p2 === '10TH PASSING' || p2 === '10TH PASSING CERTIFICATE'))) {
+          p2 = '10TH PASSING CERTIFICATE';
+          comb = '10TH MARKSHEET AND PASSING CERTIFICATE';
+        }
+
+        return {
+          id: rule.id || `link_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+          combined: comb,
+          part1: p1,
+          part2: p2
+        };
+      });
+
+      // Ensure all 3 core standard link rules are present
+      const existingCombines = new Set(this.state.linkedRules.map(r => r.combined));
+      for (const defRule of DEFAULT_CANONICAL_LINKS) {
+        if (!existingCombines.has(defRule.combined)) {
+          this.state.linkedRules.push(defRule);
+        }
+      }
+      this.saveLinkedRules();
       this.updateLinkedRulesCountBadge();
     }
   }
@@ -4204,23 +4198,29 @@ export class RenamerUIManager {
    * Case C: Rule is Part 1, and only Part 1 is present -> Satisfied (Part 2 remains missing).
    */
   isChecklistRuleSatisfied(cleanRule, presentDocsSet) {
-    if (presentDocsSet.has(cleanRule)) return true;
+    const canonRule = getCanonicalDocumentUpper(cleanRule);
+    const canonPresentSet = new Set(
+      Array.from(presentDocsSet || []).map(d => getCanonicalDocumentUpper(d))
+    );
+
+    if (canonPresentSet.has(canonRule)) return true;
+
     const links = this.getLinkedRules();
     for (const link of links) {
-      const comb = (link.combined || '').toUpperCase();
-      const p1 = (link.part1 || '').toUpperCase();
-      const p2 = (link.part2 || '').toUpperCase();
+      const comb = getCanonicalDocumentUpper(link.combined);
+      const p1 = getCanonicalDocumentUpper(link.part1);
+      const p2 = getCanonicalDocumentUpper(link.part2);
 
       // Case A: Rule is a part, but combined document is present in folder
-      if (comb && presentDocsSet.has(comb)) {
-        if (cleanRule === p1 || cleanRule === p2) {
+      if (comb && canonPresentSet.has(comb)) {
+        if (canonRule === p1 || canonRule === p2) {
           return true;
         }
       }
 
       // Case B: Rule is combined, but BOTH separate parts are present in folder
-      if (cleanRule === comb) {
-        if (p1 && p2 && presentDocsSet.has(p1) && presentDocsSet.has(p2)) {
+      if (canonRule === comb) {
+        if (p1 && p2 && canonPresentSet.has(p1) && canonPresentSet.has(p2)) {
           return true;
         }
       }
@@ -4870,16 +4870,16 @@ export class RenamerUIManager {
     // 1. From shortcuts21 / registered shortcuts
     if (Array.isArray(this.shortcuts21)) {
       for (const s of this.shortcuts21) {
-        const name = (s.canonical || s.label || s.name || '').trim().toUpperCase();
-        if (name) docSet.add(name);
+        const name = (s.canonical || s.label || s.name || '').trim();
+        if (name) docSet.add(getCanonicalDocumentUpper(name));
       }
     }
     
     // 2. From custom shortcuts
     if (Array.isArray(this.state.customShortcuts)) {
       for (const s of this.state.customShortcuts) {
-        const name = (s.canonical || s.label || s.name || '').trim().toUpperCase();
-        if (name) docSet.add(name);
+        const name = (s.canonical || s.label || s.name || '').trim();
+        if (name) docSet.add(getCanonicalDocumentUpper(name));
       }
     }
 
@@ -4888,8 +4888,8 @@ export class RenamerUIManager {
       for (const list of Object.values(this.state.documentPresets)) {
         if (Array.isArray(list)) {
           for (const d of list) {
-            const name = (d.name || d || '').trim().toUpperCase();
-            if (name) docSet.add(name);
+            const name = (d.name || d.label || d || '').trim();
+            if (name) docSet.add(getCanonicalDocumentUpper(name));
           }
         }
       }
@@ -4898,40 +4898,22 @@ export class RenamerUIManager {
     // 4. From existing linked rules
     const currentLinks = this.getLinkedRules();
     for (const link of currentLinks) {
-      if (link.combined) docSet.add(link.combined.trim().toUpperCase());
-      if (link.part1) docSet.add(link.part1.trim().toUpperCase());
-      if (link.part2) docSet.add(link.part2.trim().toUpperCase());
+      if (link.combined) docSet.add(getCanonicalDocumentUpper(link.combined));
+      if (link.part1) docSet.add(getCanonicalDocumentUpper(link.part1));
+      if (link.part2) docSet.add(getCanonicalDocumentUpper(link.part2));
     }
 
-    // Common standard document names
-    [
-      '10TH MARKSHEET',
-      '10TH PASSING CERTIFICATE',
-      '10TH MARKSHEET AND PASSING CERTIFICATE',
-      '12TH MARKSHEET',
-      '12TH PASSING CERTIFICATE',
-      '12TH MARKSHEET AND PASSING CERTIFICATE',
-      'DOMICILE CERTIFICATE',
-      'NATIONALITY CERTIFICATE',
-      'DOMICILE AND NATIONALITY CERTIFICATE',
-      'CASTE CERTIFICATE',
-      'CASTE VALIDITY CERTIFICATE',
-      'NON CREAMY LAYER CERTIFICATE',
-      'INCOME CERTIFICATE',
-      'RATION CARD',
-      'AADHAAR CARD',
-      'PAN CARD',
-      'VOTER ID',
-      'BANK PASSBOOK',
-      'LEAVING CERTIFICATE',
-      'TRANSFER CERTIFICATE',
-      'GAP CERTIFICATE',
-      'MIGRATION CERTIFICATE',
-      'PHOTO',
-      'SIGNATURE'
-    ].forEach(d => docSet.add(d));
+    // 5. Standard master canonical document catalog
+    Object.values(CANONICAL_NAMES).forEach(canon => {
+      if (canon) docSet.add(canon.toUpperCase());
+    });
 
-    return Array.from(docSet).filter(Boolean).sort((a, b) => a.localeCompare(b));
+    // Eradicate any temporary test tokens or junk patterns
+    const JUNK_NAME_REGEX = /\b(test|anita|vijay|all document|2026)\b/i;
+
+    return Array.from(docSet)
+      .filter(name => Boolean(name) && !JUNK_NAME_REGEX.test(name))
+      .sort((a, b) => a.localeCompare(b));
   }
 
   openAddLinkRuleModal(editRuleId = null) {
@@ -7299,16 +7281,18 @@ export class RenamerUIManager {
     // Check for rules in active preset that are satisfied via combined doc and append to presentDocs
     for (const rule of activeRules) {
       const cleanRule = (rule.name || rule).toUpperCase();
+      const canonRule = getCanonicalDocumentUpper(cleanRule);
       if (!presentDocsSet.has(cleanRule) && this.isChecklistRuleSatisfied(cleanRule, presentDocsSet)) {
         const links = this.getLinkedRules();
-        const matchingLink = links.find(l => 
-          (l.part1 && l.part1.toUpperCase() === cleanRule) || 
-          (l.part2 && l.part2.toUpperCase() === cleanRule)
-        );
-        const combName = matchingLink ? matchingLink.combined.toUpperCase() : '';
+        const matchingLink = links.find(l => {
+          const cp1 = getCanonicalDocumentUpper(l.part1);
+          const cp2 = getCanonicalDocumentUpper(l.part2);
+          return cp1 === canonRule || cp2 === canonRule;
+        });
+        const combName = matchingLink ? getCanonicalDocumentUpper(matchingLink.combined) : '';
         const parentFile = this.state.files.find(f => {
-          const dt = (f.docType || f.targetName || f.name || '').toUpperCase();
-          return combName && dt.includes(combName);
+          const dt = getCanonicalDocumentUpper(f.docType || f.targetName || f.name || '');
+          return combName && (dt === combName || dt.includes(combName) || combName.includes(dt));
         }) || this.state.files[0];
         
         if (parentFile) {
