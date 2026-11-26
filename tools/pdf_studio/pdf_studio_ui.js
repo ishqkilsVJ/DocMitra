@@ -33,6 +33,11 @@ import {
   renderPdfPagesToJpegs
 } from './pdf_studio_logic.js';
 import { rotateFilePhysicallyOnDisk } from './rotation_engine.js';
+import {
+  compressBatchParallel,
+  compressSingleDocumentPro,
+  formatProSizeSuffix
+} from './compress_pro_engine.js';
 
 export class PdfStudioUIManager {
   constructor() {
@@ -1346,6 +1351,13 @@ export class PdfStudioUIManager {
       throw new Error(res.error || `Failed to write file ${destPath}`);
     }
 
+    // Auto-unlock Windows file locks (:Zone.Identifier and Read-Only)
+    if (typeof window !== 'undefined' && window.__TAURI__?.invoke) {
+      try {
+        await window.__TAURI__.invoke('strip_windows_file_locks', { paths: [destPath] });
+      } catch (e) {}
+    }
+
     this.lastOutputFolder = targetDir;
     return destPath;
   }
@@ -1367,37 +1379,48 @@ export class PdfStudioUIManager {
       let savedCount = 0;
 
       if (opName === 'compress_pdf') {
-        // Compress PDF or auto-convert images to compressed PDF (< targetKb)
-        for (const f of this.files) {
-          if (!f.bytes) continue;
+        // Feature 11: Multi-Core Parallel Batch Engine with 12 Pro Compression Features
+        await compressBatchParallel(
+          this.files,
+          this.targetKb,
+          (fileId, pct) => {
+            const card = document.querySelector(`.docket-card[data-file-id="${fileId}"]`);
+            if (card) {
+              const compEl = card.querySelector('.badge-comp-size');
+              if (compEl) compEl.textContent = `Comp ~${pct}%...`;
+            }
+          },
+          async (file, res) => {
+            if (res && res.success) {
+              await this.saveOutputFile(subfolder, res.outName, res.finalBlob || res.finalBytes);
+              savedCount++;
 
-          let outputBlob;
-          if (f.name.match(/\.(jpe?g|png|webp)$/i)) {
-            // Image input: auto-convert to PDF
-            outputBlob = createPdfFromJpegs([f.bytes], 'portrait', f.rotation || 0);
-            const baseName = f.name.replace(/\.[^/.]+$/, "") + '.pdf';
-            const outName = formatSizeSuffixFilename(baseName, outputBlob.size);
-            await this.saveOutputFile(subfolder, outName, outputBlob);
-            savedCount++;
-            continue;
+              // Update card in real-time
+              const card = document.querySelector(`.docket-card[data-file-id="${file.id}"]`);
+              if (card) {
+                const compEl = card.querySelector('.badge-comp-size');
+                if (compEl) {
+                  const finalKbStr = res.finalSize >= 1024 * 1024
+                    ? `${(res.finalSize / (1024 * 1024)).toFixed(2)} MB`
+                    : `${Math.round(res.finalSize / 1024)} KB`;
+                  compEl.textContent = `Comp ${finalKbStr}`;
+                  compEl.className = 'badge-comp-size px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-300 rounded font-mono text-[10px] font-bold truncate';
+                }
+
+                // Feature 10 (A3): If reached minimum readability floor, display amber warning badge!
+                if (res.isAtFloor) {
+                  let floorBadge = card.querySelector('.badge-floor-limit');
+                  if (!floorBadge) {
+                    floorBadge = document.createElement('div');
+                    floorBadge.className = 'badge-floor-limit mt-1 px-1.5 py-0.5 bg-amber-50 border border-amber-300 text-amber-800 rounded font-mono text-[9px] font-bold text-center';
+                    card.appendChild(floorBadge);
+                  }
+                  floorBadge.textContent = `⚠ Min readable limit: ${res.floorKb} KB`;
+                }
+              }
+            }
           }
-
-          let images = getDocumentImagesFromPdf(f.bytes);
-          // Vector PDF Fallback: Render via PDF.js canvas if 0 embedded JPEGs found
-          if (!images || images.length === 0) {
-            images = await renderPdfPagesToJpegs(f.bytes, 150, 0.78);
-          }
-
-          if (images.length > 0) {
-            outputBlob = createPdfFromJpegs(images, 'portrait', f.rotation || 0);
-          } else {
-            outputBlob = new Blob([f.bytes], { type: 'application/pdf' });
-          }
-
-          const outName = formatSizeSuffixFilename(f.name, outputBlob.size);
-          await this.saveOutputFile(subfolder, outName, outputBlob);
-          savedCount++;
-        }
+        );
         toast.show('Compression Complete!', `Saved ${savedCount} files directly into ${subfolder}/`, 'success');
 
       } else if (opName === 'merge_pdf') {

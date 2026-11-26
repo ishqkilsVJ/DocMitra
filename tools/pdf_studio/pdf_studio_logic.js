@@ -437,9 +437,9 @@ export function formatSizeSuffixFilename(originalName, sizeInBytes, preferredUni
   const base = dotIdx !== -1 ? originalName.slice(0, dotIdx) : originalName;
   const ext = dotIdx !== -1 ? originalName.slice(dotIdx) : '';
 
-  // Strip any existing trailing size suffix like " 187 KB", "_187KB", " 50 MB", etc.
+  // Strip any existing trailing size suffix like " 187 KB", "_187KB", " 1.4 MB", " 50 MB", etc.
   // so repeated compressions never create "Pramod 200 KB 150 KB.pdf"
-  const cleanedBase = base.replace(/[\s_-]+\d+\s*(?:KB|MB)$/i, '').trim();
+  const cleanedBase = base.replace(/[\s_-]+\d+(?:\.\d+)?\s*(?:KB|MB)$/i, '').trim();
 
   // If explicitly preferred MB or file is very large (>= 10 MB in auto mode)
   if (preferredUnit === 'MB' || (preferredUnit === 'auto' && sizeInBytes >= 10 * 1024 * 1024)) {
