@@ -8769,27 +8769,105 @@ var ut = A.map((e) => ({
 		let n = /\b(test|anita|vijay|all document|2026)\b/i;
 		return Array.from(e).filter((e) => !!e && !n.test(e)).sort((e, t) => e.localeCompare(t));
 	}
+	_renderSearchableCombobox(e, t, { placeholder: n, selectedVal: r, excludedDocs: i = [], onChange: a }) {
+		let o = document.getElementById(e), s = document.getElementById(t);
+		if (!o || !s) return;
+		s.value = r || "", o.innerHTML = "";
+		let c = this.getMasterCanonicalDocuments(), l = new Set((i || []).map((e) => (e || "").trim().toUpperCase())), u = c.filter((e) => !l.has(e.trim().toUpperCase())), d = document.createElement("div");
+		d.className = "combobox-trigger w-full h-10 px-3 rounded-xl bg-surface border border-outline-variant/60 hover:border-primary/60 focus:border-primary focus:ring-2 focus:ring-primary/20 flex items-center justify-between cursor-pointer transition-all shadow-2xs select-none";
+		let f = document.createElement("span");
+		f.className = `truncate font-mono-code text-[12px] font-bold ${r ? "text-on-surface" : "text-secondary/70"}`, f.textContent = r || n, d.appendChild(f);
+		let p = document.createElement("span");
+		p.className = "material-symbols-outlined text-[18px] text-secondary shrink-0 transition-transform duration-150", p.textContent = "expand_more", d.appendChild(p), o.appendChild(d);
+		let m = document.createElement("div");
+		m.className = "combobox-panel hidden absolute top-[calc(100%+4px)] left-0 right-0 bg-white border border-slate-200 rounded-xl shadow-2xl z-[10000] overflow-hidden flex flex-col animate-in fade-in duration-100";
+		let h = document.createElement("div");
+		h.className = "p-2 border-b border-slate-100 bg-slate-50/90 sticky top-0 z-10 flex items-center gap-1.5", h.innerHTML = `
+      <span class="material-symbols-outlined text-[16px] text-slate-400 shrink-0">search</span>
+      <input type="text" class="combobox-search-input w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-[12px] font-mono-code font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all" placeholder="Type to filter ${u.length} documents...">
+    `, m.appendChild(h);
+		let g = h.querySelector("input"), _ = document.createElement("div");
+		_.className = "combobox-items-list max-h-52 overflow-y-auto divide-y divide-slate-50 py-1", m.appendChild(_), o.appendChild(m);
+		let v = (e = "") => {
+			_.innerHTML = "";
+			let t = e.trim().toLowerCase(), n = t ? u.filter((e) => e.toLowerCase().includes(t)) : u;
+			if (n.length === 0) {
+				let e = document.createElement("div");
+				e.className = "p-4 text-center text-[12px] text-slate-400 italic", e.textContent = "No matching documents found", _.appendChild(e);
+			} else n.forEach((e) => {
+				let t = r && e.toUpperCase() === r.toUpperCase(), n = document.createElement("div");
+				n.className = `combobox-item px-3.5 py-2 text-[12px] font-mono-code font-semibold cursor-pointer flex items-center justify-between transition-colors ${t ? "bg-blue-50 text-blue-700 font-bold" : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"}`;
+				let i = document.createElement("span");
+				if (i.className = "truncate mr-2", i.textContent = e, n.appendChild(i), t) {
+					let e = document.createElement("span");
+					e.className = "material-symbols-outlined text-[16px] text-blue-600 shrink-0", e.textContent = "check", n.appendChild(e);
+				}
+				n.addEventListener("click", (t) => {
+					t.stopPropagation(), s.value = e, b(), typeof a == "function" && a(e);
+				}), _.appendChild(n);
+			});
+		};
+		v(""), g && (g.addEventListener("input", (e) => {
+			v(e.target.value);
+		}), g.addEventListener("click", (e) => e.stopPropagation()));
+		let y = () => {
+			document.querySelectorAll(".combobox-panel").forEach((e) => {
+				e !== m && e.classList.add("hidden");
+			}), m.classList.remove("hidden"), p.style.transform = "rotate(180deg)", g && (g.value = "", v(""), setTimeout(() => g.focus(), 50));
+		}, b = () => {
+			m.classList.add("hidden"), p.style.transform = "rotate(0deg)";
+		};
+		d.addEventListener("click", (e) => {
+			e.stopPropagation(), m.classList.contains("hidden") ? y() : b();
+		});
+		let x = (e) => {
+			o.contains(e.target) || (b(), document.removeEventListener("click", x));
+		};
+		document.addEventListener("click", x);
+	}
 	openAddLinkRuleModal(e = null) {
 		let t = document.getElementById("modalAddLinkRule");
 		if (!t) return;
-		let n = document.getElementById("modalAddLinkRuleTitle"), r = document.getElementById("inputEditLinkRuleId"), i = document.getElementById("selectLinkCombined"), a = document.getElementById("selectLinkPart1"), o = document.getElementById("selectLinkPart2"), s = this.getMasterCanonicalDocuments(), c = (e, t, n = "") => {
-			e && (e.innerHTML = `<option value="">-- ${t} --</option>`, s.forEach((t) => {
-				let r = document.createElement("option");
-				r.value = t, r.textContent = t, n && t.toUpperCase() === n.toUpperCase() && (r.selected = !0), e.appendChild(r);
-			}));
-		}, l = null;
-		e && (l = this.getLinkedRules().find((t) => t.id === e)), l ? (n && (n.textContent = "Edit Link Rule"), r && (r.value = l.id), c(i, "Select Combined Document", l.combined), c(a, "Select Part 1 Document", l.part1), c(o, "Select Part 2 Document", l.part2)) : (n && (n.textContent = "Add Link Rule"), r && (r.value = ""), c(i, "Select Combined Document", ""), c(a, "Select Part 1 Document", ""), c(o, "Select Part 2 Document", "")), t.classList.remove("hidden"), i?.focus();
+		let n = document.getElementById("modalAddLinkRuleTitle"), r = document.getElementById("inputEditLinkRuleId"), i = null;
+		e && (i = this.getLinkedRules().find((t) => t.id === e));
+		let a = i && i.part1 || "", o = i && i.part2 || "", s = i && i.combined || "";
+		i ? (n && (n.textContent = "Edit Link Rule"), r && (r.value = i.id)) : (n && (n.textContent = "Add Link Rule"), r && (r.value = ""));
+		let c = () => {
+			this._renderSearchableCombobox("comboboxContainerPart1", "selectLinkPart1", {
+				placeholder: "-- Select Document No. 1 --",
+				selectedVal: a,
+				excludedDocs: [],
+				onChange: (e) => {
+					a = e, o && o.toUpperCase() === a.toUpperCase() && (o = ""), s && s.toUpperCase() === a.toUpperCase() && (s = ""), c();
+				}
+			}), this._renderSearchableCombobox("comboboxContainerPart2", "selectLinkPart2", {
+				placeholder: "-- Select Document No. 2 --",
+				selectedVal: o,
+				excludedDocs: a ? [a] : [],
+				onChange: (e) => {
+					o = e, s && s.toUpperCase() === o.toUpperCase() && (s = ""), c();
+				}
+			}), this._renderSearchableCombobox("comboboxContainerCombined", "selectLinkCombined", {
+				placeholder: "-- Select Combined Document --",
+				selectedVal: s,
+				excludedDocs: [a, o].filter(Boolean),
+				onChange: (e) => {
+					s = e, c();
+				}
+			});
+		};
+		c(), t.classList.remove("hidden");
 	}
 	closeAddLinkRuleModal() {
 		let e = document.getElementById("modalAddLinkRule");
 		e && e.classList.add("hidden");
 		let t = document.getElementById("inputEditLinkRuleId");
-		t && (t.value = "");
+		t && (t.value = ""), document.querySelectorAll(".combobox-panel").forEach((e) => e.classList.add("hidden"));
 	}
 	handleSaveLinkRule() {
 		let e = document.getElementById("inputEditLinkRuleId"), t = document.getElementById("selectLinkCombined"), n = document.getElementById("selectLinkPart1"), i = document.getElementById("selectLinkPart2"), a = e ? e.value.trim() : "", o = t ? t.value.trim().toUpperCase() : "", s = n ? n.value.trim().toUpperCase() : "", c = i ? i.value.trim().toUpperCase() : "";
-		if (!o || !s || !c) r.show("Missing Selection", "Please select Combined, Part 1, and Part 2 documents.", "warning");
-		else if (s === c) r.show("Invalid Rule", "Part 1 and Part 2 cannot be the same document.", "warning");
+		if (!o || !s || !c) r.show("Missing Selection", "Please select Document No. 1, Document No. 2, and Combined Document.", "warning");
+		else if (s === c) r.show("Invalid Rule", "Document No. 1 and Document No. 2 cannot be the same document.", "warning");
 		else if (o === s || o === c) r.show("Invalid Rule", "Combined document cannot be identical to its component parts.", "warning");
 		else if (this.getLinkedRules().find((e) => {
 			if (a && e.id === a) return !1;

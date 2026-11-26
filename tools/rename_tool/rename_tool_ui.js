@@ -4916,53 +4916,221 @@ export class RenamerUIManager {
       .sort((a, b) => a.localeCompare(b));
   }
 
+  _renderSearchableCombobox(containerId, hiddenInputId, { placeholder, selectedVal, excludedDocs = [], onChange }) {
+    const container = document.getElementById(containerId);
+    const hiddenInput = document.getElementById(hiddenInputId);
+    if (!container || !hiddenInput) return;
+
+    hiddenInput.value = selectedVal || '';
+    container.innerHTML = '';
+
+    const canonicalDocs = this.getMasterCanonicalDocuments();
+    const excludedSet = new Set((excludedDocs || []).map(d => (d || '').trim().toUpperCase()));
+    const availableDocs = canonicalDocs.filter(d => !excludedSet.has(d.trim().toUpperCase()));
+
+    // Trigger Box
+    const trigger = document.createElement('div');
+    trigger.className = 'combobox-trigger w-full h-10 px-3 rounded-xl bg-surface border border-outline-variant/60 hover:border-primary/60 focus:border-primary focus:ring-2 focus:ring-primary/20 flex items-center justify-between cursor-pointer transition-all shadow-2xs select-none';
+    
+    const triggerLabel = document.createElement('span');
+    triggerLabel.className = `truncate font-mono-code text-[12px] font-bold ${selectedVal ? 'text-on-surface' : 'text-secondary/70'}`;
+    triggerLabel.textContent = selectedVal || placeholder;
+    trigger.appendChild(triggerLabel);
+
+    const chevron = document.createElement('span');
+    chevron.className = 'material-symbols-outlined text-[18px] text-secondary shrink-0 transition-transform duration-150';
+    chevron.textContent = 'expand_more';
+    trigger.appendChild(chevron);
+
+    container.appendChild(trigger);
+
+    // Floating Search & List Panel (Option 2-B: Search box + clean plain text)
+    const panel = document.createElement('div');
+    panel.className = 'combobox-panel hidden absolute top-[calc(100%+4px)] left-0 right-0 bg-white border border-slate-200 rounded-xl shadow-2xl z-[10000] overflow-hidden flex flex-col animate-in fade-in duration-100';
+
+    // Sticky Search Bar with Live Filter Input
+    const searchBar = document.createElement('div');
+    searchBar.className = 'p-2 border-b border-slate-100 bg-slate-50/90 sticky top-0 z-10 flex items-center gap-1.5';
+    searchBar.innerHTML = `
+      <span class="material-symbols-outlined text-[16px] text-slate-400 shrink-0">search</span>
+      <input type="text" class="combobox-search-input w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-[12px] font-mono-code font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all" placeholder="Type to filter ${availableDocs.length} documents...">
+    `;
+    panel.appendChild(searchBar);
+
+    const searchInput = searchBar.querySelector('input');
+
+    // Scrollable List Container (Clean Plain Text - Option 2-B)
+    const listContainer = document.createElement('div');
+    listContainer.className = 'combobox-items-list max-h-52 overflow-y-auto divide-y divide-slate-50 py-1';
+    panel.appendChild(listContainer);
+
+    container.appendChild(panel);
+
+    const renderItems = (filterQuery = '') => {
+      listContainer.innerHTML = '';
+      const q = filterQuery.trim().toLowerCase();
+      const filtered = q ? availableDocs.filter(d => d.toLowerCase().includes(q)) : availableDocs;
+
+      if (filtered.length === 0) {
+        const emptyEl = document.createElement('div');
+        emptyEl.className = 'p-4 text-center text-[12px] text-slate-400 italic';
+        emptyEl.textContent = 'No matching documents found';
+        listContainer.appendChild(emptyEl);
+        return;
+      }
+
+      filtered.forEach(docName => {
+        const isSelected = selectedVal && docName.toUpperCase() === selectedVal.toUpperCase();
+        const itemEl = document.createElement('div');
+        itemEl.className = `combobox-item px-3.5 py-2 text-[12px] font-mono-code font-semibold cursor-pointer flex items-center justify-between transition-colors ${
+          isSelected ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+        }`;
+
+        const textSpan = document.createElement('span');
+        textSpan.className = 'truncate mr-2';
+        textSpan.textContent = docName;
+        itemEl.appendChild(textSpan);
+
+        if (isSelected) {
+          const checkIcon = document.createElement('span');
+          checkIcon.className = 'material-symbols-outlined text-[16px] text-blue-600 shrink-0';
+          checkIcon.textContent = 'check';
+          itemEl.appendChild(checkIcon);
+        }
+
+        itemEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          hiddenInput.value = docName;
+          closePanel();
+          if (typeof onChange === 'function') {
+            onChange(docName);
+          }
+        });
+
+        listContainer.appendChild(itemEl);
+      });
+    };
+
+    renderItems('');
+
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        renderItems(e.target.value);
+      });
+      searchInput.addEventListener('click', (e) => e.stopPropagation());
+    }
+
+    const openPanel = () => {
+      // Close other open combobox panels first
+      document.querySelectorAll('.combobox-panel').forEach(p => {
+        if (p !== panel) p.classList.add('hidden');
+      });
+      panel.classList.remove('hidden');
+      chevron.style.transform = 'rotate(180deg)';
+      if (searchInput) {
+        searchInput.value = '';
+        renderItems('');
+        setTimeout(() => searchInput.focus(), 50);
+      }
+    };
+
+    const closePanel = () => {
+      panel.classList.add('hidden');
+      chevron.style.transform = 'rotate(0deg)';
+    };
+
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (panel.classList.contains('hidden')) {
+        openPanel();
+      } else {
+        closePanel();
+      }
+    });
+
+    // Close on outside click
+    const handleOutsideClick = (e) => {
+      if (!container.contains(e.target)) {
+        closePanel();
+        document.removeEventListener('click', handleOutsideClick);
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+  }
+
   openAddLinkRuleModal(editRuleId = null) {
     const modal = document.getElementById('modalAddLinkRule');
     if (!modal) return;
 
     const titleEl = document.getElementById('modalAddLinkRuleTitle');
     const inputId = document.getElementById('inputEditLinkRuleId');
-    const selComb = document.getElementById('selectLinkCombined');
-    const selP1 = document.getElementById('selectLinkPart1');
-    const selP2 = document.getElementById('selectLinkPart2');
-
-    const canonicalDocs = this.getMasterCanonicalDocuments();
-
-    const populateSelect = (selectEl, defaultPlaceholder, selectedVal = '') => {
-      if (!selectEl) return;
-      selectEl.innerHTML = `<option value="">-- ${defaultPlaceholder} --</option>`;
-      canonicalDocs.forEach(docName => {
-        const opt = document.createElement('option');
-        opt.value = docName;
-        opt.textContent = docName;
-        if (selectedVal && docName.toUpperCase() === selectedVal.toUpperCase()) {
-          opt.selected = true;
-        }
-        selectEl.appendChild(opt);
-      });
-    };
 
     let targetRule = null;
     if (editRuleId) {
       targetRule = this.getLinkedRules().find(r => r.id === editRuleId);
     }
 
+    let currentP1 = targetRule ? (targetRule.part1 || '') : '';
+    let currentP2 = targetRule ? (targetRule.part2 || '') : '';
+    let currentComb = targetRule ? (targetRule.combined || '') : '';
+
     if (targetRule) {
       if (titleEl) titleEl.textContent = 'Edit Link Rule';
       if (inputId) inputId.value = targetRule.id;
-      populateSelect(selComb, 'Select Combined Document', targetRule.combined);
-      populateSelect(selP1, 'Select Part 1 Document', targetRule.part1);
-      populateSelect(selP2, 'Select Part 2 Document', targetRule.part2);
     } else {
       if (titleEl) titleEl.textContent = 'Add Link Rule';
       if (inputId) inputId.value = '';
-      populateSelect(selComb, 'Select Combined Document', '');
-      populateSelect(selP1, 'Select Part 1 Document', '');
-      populateSelect(selP2, 'Select Part 2 Document', '');
     }
 
+    const refreshComboboxes = () => {
+      // 1. Document No. 1 (Part 1 Document - No exclusions)
+      this._renderSearchableCombobox('comboboxContainerPart1', 'selectLinkPart1', {
+        placeholder: '-- Select Document No. 1 --',
+        selectedVal: currentP1,
+        excludedDocs: [],
+        onChange: (newP1) => {
+          currentP1 = newP1;
+          // If Doc 2 was identical to new Doc 1, clear Doc 2
+          if (currentP2 && currentP2.toUpperCase() === currentP1.toUpperCase()) {
+            currentP2 = '';
+          }
+          // If Combined was identical to new Doc 1, clear Combined
+          if (currentComb && currentComb.toUpperCase() === currentP1.toUpperCase()) {
+            currentComb = '';
+          }
+          refreshComboboxes();
+        }
+      });
+
+      // 2. Document No. 2 (Part 2 Document - Excludes Document No. 1)
+      this._renderSearchableCombobox('comboboxContainerPart2', 'selectLinkPart2', {
+        placeholder: '-- Select Document No. 2 --',
+        selectedVal: currentP2,
+        excludedDocs: currentP1 ? [currentP1] : [],
+        onChange: (newP2) => {
+          currentP2 = newP2;
+          // If Combined was identical to new Doc 2, clear Combined
+          if (currentComb && currentComb.toUpperCase() === currentP2.toUpperCase()) {
+            currentComb = '';
+          }
+          refreshComboboxes();
+        }
+      });
+
+      // 3. Combined Document (Excludes BOTH Document No. 1 and Document No. 2)
+      this._renderSearchableCombobox('comboboxContainerCombined', 'selectLinkCombined', {
+        placeholder: '-- Select Combined Document --',
+        selectedVal: currentComb,
+        excludedDocs: [currentP1, currentP2].filter(Boolean),
+        onChange: (newComb) => {
+          currentComb = newComb;
+          refreshComboboxes();
+        }
+      });
+    };
+
+    refreshComboboxes();
     modal.classList.remove('hidden');
-    selComb?.focus();
   }
 
   closeAddLinkRuleModal() {
@@ -4970,6 +5138,7 @@ export class RenamerUIManager {
     if (modal) modal.classList.add('hidden');
     const inputId = document.getElementById('inputEditLinkRuleId');
     if (inputId) inputId.value = '';
+    document.querySelectorAll('.combobox-panel').forEach(p => p.classList.add('hidden'));
   }
 
   handleSaveLinkRule() {
@@ -4984,12 +5153,12 @@ export class RenamerUIManager {
     const p2 = selP2 ? selP2.value.trim().toUpperCase() : '';
 
     if (!comb || !p1 || !p2) {
-      toast.show('Missing Selection', 'Please select Combined, Part 1, and Part 2 documents.', 'warning');
+      toast.show('Missing Selection', 'Please select Document No. 1, Document No. 2, and Combined Document.', 'warning');
       return;
     }
 
     if (p1 === p2) {
-      toast.show('Invalid Rule', 'Part 1 and Part 2 cannot be the same document.', 'warning');
+      toast.show('Invalid Rule', 'Document No. 1 and Document No. 2 cannot be the same document.', 'warning');
       return;
     }
 

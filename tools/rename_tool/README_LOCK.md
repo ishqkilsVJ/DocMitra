@@ -1,15 +1,22 @@
 # 🔒 LOCKED TOOL: Bulk Document Renamer (`tools/rename_tool/`)
 
 > [!IMPORTANT]
-> **FROZEN & FULLY VERIFIED UNDER CHECKPOINT `CP-039`**  
+> **FROZEN & FULLY VERIFIED UNDER CHECKPOINT `CP-040`**  
 > **Status:** `LOCKED & PRODUCTION SEALED`  
 > **Module Integrity:** 100% Passing Unit & Dual-MCP Automated QA Tests  
 > **Verification Date:** 2026-11-26  
-> **Core Architecture:** Deduplication of Master Document Dropdown (Eliminated 16 redundant variants to 58 clean canonical documents), Smart Canonical Linking Engine (Bi-directional satisfaction for 12th Marksheet & Passing, 10th Marksheet & Passing, Domicile & Nationality), Restoration of 4 Clean Factory Presets (Eradicated dirty custom presets like MAHA DBT 2), and Auto-Healing of user-saved linked rules.
+> **Core Architecture:** Smart Link Rule Builder (Natural 1 -> 2 -> Combined Flow, Clean Searchable Bento Comboboxes with Live Filter across 58 Canonical Documents, Dynamic Zero-Error Exclusion: Doc 1 excluded from Doc 2, Doc 1 & Doc 2 excluded from Combined, and High-Contrast DOC 1, DOC 2, COMBINED Badges).
 >
 > **LOCKED BY POLICY (`AGENTS.md` Rule 3):**  
 > Zero direct file modifications permitted inside `tools/rename_tool/` without explicit user unlock command:  
 > `UNLOCK RENAME_TOOL`
+
+> **Last QA Stabilization & Verification:** 2026-11-26 (Smart Link Rule Builder & Dynamic Exclusion Filtering [CP-040] Verified 100%:
+> 1. Natural Hierarchical Flow: Restructured Add/Edit Link Rule builder to Document No. 1 (DOC 1 green badge) -> Document No. 2 (DOC 2 amber badge) -> Combined Document (COMBINED indigo badge).
+> 2. Clean Searchable Bento Comboboxes: Implemented live instant search filter with sticky search input (Type to filter 58 documents) and clean plain-text list typography (Option 2-B).
+> 3. Dynamic Zero-Error Exclusion: Selecting Document No. 1 automatically excludes it from Document No. 2's dropdown; selecting Document No. 1 and Document No. 2 automatically excludes both from Combined Document's dropdown, preventing duplicate and cyclic selections by design.
+> 4. Dual-MCP automated QA passed 100% [Playwright MCP E2E + Chrome DevTools 0 console errors]; compiled UI with node build-ui.js and release binary via cargo tauri build [10.56 MB]; deployed directly to C:\Users\USER\AppData\Local\DocMitra\app.exe).
+
 
 > **Last QA Stabilization & Verification:** 2026-11-26 (Deduplication, Smart Canonical Linking & 4 Factory Presets Restoration [CP-039] Verified 100%:
 > 1. Master Dropdown Deduplication: Removed all 16 duplicate/variant documents (12TH MARKSHEET AND PASSING, 12TH PASSING, 10TH PASSING, CET SCORECARD, CET CELL FORM, AADHAR CARD, VALIDITY CERTIFICATE, LEAVING CERTIFICATE, etc.) and junk test items, resulting in exactly 58 clean official master documents in all Add Link Rule dropdowns.

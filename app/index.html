@@ -759,50 +759,53 @@
                 </button>
               </div>
 
-              <!-- Modal Body (STRICT DROPDOWN ONLY - ZERO FREE TEXT TYPING) -->
+              <!-- Modal Body (SMART SEARCHABLE COMBOBOXES - ZERO ERROR EXCLUSION) -->
               <form autocomplete="off" onsubmit="return false;" class="p-5 flex flex-col gap-4 text-label-md m-0">
                 <input type="hidden" id="inputEditLinkRuleId" value="">
 
-                <!-- Dropdown 1: Combined Document -->
+                <!-- Step 1: Document No. 1 (Part 1 Document) -->
                 <div class="flex flex-col gap-1.5">
                   <label class="font-semibold text-on-surface text-[12px] flex items-center justify-between">
-                    <span>Combined Document *</span>
-                    <span class="text-secondary font-mono-code text-[10px]">Select single united file</span>
+                    <span class="flex items-center gap-1.5">
+                      <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">DOC 1</span>
+                      <span>Document No. 1 *</span>
+                    </span>
+                    <span class="text-secondary font-mono-code text-[10px]">First component</span>
                   </label>
-                  <select id="selectLinkCombined"
-                    class="w-full h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary font-mono-code text-[12px] font-bold text-on-surface outline-none cursor-pointer">
-                    <option value="">-- Select Combined Document --</option>
-                  </select>
+                  <div id="comboboxContainerPart1" class="relative"></div>
+                  <input type="hidden" id="selectLinkPart1" value="">
                 </div>
 
-                <!-- Dropdown 2: Part 1 Document -->
+                <!-- Step 2: Document No. 2 (Part 2 Document) -->
                 <div class="flex flex-col gap-1.5">
                   <label class="font-semibold text-on-surface text-[12px] flex items-center justify-between">
-                    <span>Part 1 Document *</span>
-                    <span class="text-secondary font-mono-code text-[10px]">Select first component</span>
+                    <span class="flex items-center gap-1.5">
+                      <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300">DOC 2</span>
+                      <span>Document No. 2 *</span>
+                    </span>
+                    <span class="text-secondary font-mono-code text-[10px]">Second component (Excludes Doc 1)</span>
                   </label>
-                  <select id="selectLinkPart1"
-                    class="w-full h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary font-mono-code text-[12px] font-bold text-on-surface outline-none cursor-pointer">
-                    <option value="">-- Select Part 1 Document --</option>
-                  </select>
+                  <div id="comboboxContainerPart2" class="relative"></div>
+                  <input type="hidden" id="selectLinkPart2" value="">
                 </div>
 
-                <!-- Dropdown 3: Part 2 Document -->
+                <!-- Step 3: Combined Document (Result) -->
                 <div class="flex flex-col gap-1.5">
                   <label class="font-semibold text-on-surface text-[12px] flex items-center justify-between">
-                    <span>Part 2 Document *</span>
-                    <span class="text-secondary font-mono-code text-[10px]">Select second component</span>
+                    <span class="flex items-center gap-1.5">
+                      <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-indigo-100 text-indigo-800 border border-indigo-300">COMBINED</span>
+                      <span>Combined Document *</span>
+                    </span>
+                    <span class="text-secondary font-mono-code text-[10px]">United single file (Excludes Doc 1 &amp; 2)</span>
                   </label>
-                  <select id="selectLinkPart2"
-                    class="w-full h-9 px-3 rounded-lg bg-surface border border-outline-variant/50 focus:border-primary focus:ring-1 focus:ring-primary font-mono-code text-[12px] font-bold text-on-surface outline-none cursor-pointer">
-                    <option value="">-- Select Part 2 Document --</option>
-                  </select>
+                  <div id="comboboxContainerCombined" class="relative"></div>
+                  <input type="hidden" id="selectLinkCombined" value="">
                 </div>
 
                 <!-- Dynamic Feedback Notice -->
                 <div id="linkRuleFeedbackNotice" class="p-3 rounded-xl bg-blue-50/80 border border-blue-200 text-blue-900 text-[11px] leading-relaxed flex items-start gap-2">
                   <span class="material-symbols-outlined text-[16px] text-blue-600 shrink-0 mt-0.5">info</span>
-                  <span><strong>Bi-Directional Rule:</strong> If either the Combined document OR both separate components are present in the folder, all requirements will be automatically satisfied!</span>
+                  <span><strong>Bi-Directional Engine:</strong> When <strong>Document 1 + Document 2</strong> are present, <strong>Combined Document</strong> is satisfied. When <strong>Combined Document</strong> is present, both <strong>Document 1 and Document 2</strong> are satisfied!</span>
                 </div>
 
                 <!-- Actions -->
