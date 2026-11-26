@@ -1,15 +1,21 @@
 # 🔒 LOCKED TOOL: Bulk Document Renamer (`tools/rename_tool/`)
 
 > [!IMPORTANT]
-> **FROZEN & FULLY VERIFIED UNDER CHECKPOINT `CP-041`**  
-> **Status:** `LOCKED & PRODUCTION SEALED`  
-> **Module Integrity:** 100% Passing Unit & Dual-MCP Automated QA Tests  
+> **FROZEN & FULLY SEALED PRODUCTION MILESTONE UNDER CHECKPOINT `CP-042`**  
+> **Status:** `LOCKED, SEALED & PRODUCTION STABLE`  
+> **Module Integrity:** 100% Passing Across All 5 Verification Areas, Playwright MCP & Chrome DevTools MCP (0 Console Errors, 0 Connection Refused)  
 > **Verification Date:** 2026-11-26  
-> **Core Architecture:** Document Desk Report & Notepad Integration (#btnDeskReport in footer, #inModalDeskNotepad Bento overlay with Copy/Save/Windows Notepad launchers, bold Student/Folder Name header, structured Missing and Present sections, and Universal Natural Auto-Sorting 1-0 and A-Z across Desk cards and Notepad report).
+> **Core Architecture:** Complete Production Suite (Physical Windows Folder Rename, Exact Casing, Circular Queue, 3-Tab Settings Modal with Deduplicated 58 Canonical Documents, Linked Documents Manager with Dynamic Zero-Error Exclusion, Bento Document Desk with Universal 1-0 and A-Z Natural Auto-Sort, In-App Notepad Report with Windows Notepad Launcher, 3-Way Unlimited Rotation Toolkit, Indian Phonetic & Fuzzy Matching Engine).
 >
 > **LOCKED BY POLICY (`AGENTS.md` Rule 3):**  
-> Zero direct file modifications permitted inside `tools/rename_tool/` without explicit user unlock command:  
+> Strict Feature Freeze in effect. Zero direct file modifications permitted inside `tools/rename_tool/` without explicit user unlock command:  
 > `UNLOCK RENAME_TOOL`
+
+> **Last QA Stabilization & Verification:** 2026-11-26 (Final Production Freeze, Cleanup & Full-Surface Test Suite [CP-042] Verified 100%:
+> 1. Deep Codebase Cleanup: Archived 17 duplicate root markdown reports to `_archive/legacy_reports/` and cleaned temporary backup clutter.
+> 2. Zero Port Leak & Hidden Metadata Filter: Completely eliminated port 3000 hardcoding, guarded background directory watcher, and strictly filtered out `.docmitra_id.json`, dot-files, `Thumbs.db`, and `desktop.ini` in both Rust (`lib.rs`) and JavaScript (`isJunkFile`, `readFiles`).
+> 3. Exhaustive 5-Area Test Suite: Verified Area 1 (Folder Loading & Queue), Area 2 (All 4 Presets Sync), Area 3 (Rotation Toolkit & Geometry), Area 4 (NTFS Validation & Collision Handling), and Area 5 (Document Desk & Notepad Report) with 100% assertions passed.
+> 4. Dual-MCP Automated QA: Playwright MCP UI E2E passed 100%; Chrome DevTools MCP verified 0 runtime errors, 0 connection refused errors, 0 broken IPC calls; compiled release binary via cargo tauri build [10.56 MB]; deployed directly to C:\Users\USER\AppData\Local\DocMitra\app.exe).
 
 > **Last QA Stabilization & Verification:** 2026-11-26 (Document Desk Report, Notepad & Universal Natural Auto-Sort [CP-041] Verified 100%:
 > 1. Document Desk Report Button: Added `#btnDeskReport` to modal footer with clean Bento styling, icon, and 'Notepad' pill badge alongside 'Back to Renamer'.

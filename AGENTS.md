@@ -56,3 +56,10 @@ After EVERY code change, UI tweak, feature addition, or bug fix across ANY DocMi
    - Always include a short **Dual-MCP Verification Report** (Playwright: PASS/FAIL + Chrome DevTools: 0 Console Errors) in the final Marathi summary.
    - This is a permanent global rule—execute it automatically every time without asking the user.
 
+---
+
+## 🔒 RULE 7 — RENAME_TOOL_LOCKED Governance Policy (Strict Production Freeze)
+- The Bulk Document Renamer (`tools/rename_tool/`) is **100% PRODUCTION SEALED & FROZEN** under checkpoint `CP-042`.
+- All development on the Rename Tool is strictly terminated; zero modifications, feature additions, or refactors are permitted in `tools/rename_tool/` unless the user explicitly executes `UNLOCK RENAME_TOOL`.
+- Active development focus is now permanently transitioned to **PDF Studio** (`tools/pdf_studio/`).
+

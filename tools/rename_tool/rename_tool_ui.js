@@ -155,7 +155,7 @@ export function isJunkFile(filename) {
   if (!filename) return true;
   const lower = filename.toLowerCase().trim();
   if (lower === 'thumbs.db' || lower === 'ehthumbs.db' || lower === 'desktop.ini' || lower === '.ds_store') return true;
-  if (lower.startsWith('.') || lower.startsWith('~$') || lower.endsWith('.tmp')) return true;
+  if (lower.startsWith('.') || lower.startsWith('~$') || lower.endsWith('.tmp') || lower.includes('.docmitra_id')) return true;
   return false;
 }
 
@@ -1167,7 +1167,7 @@ export class RenamerUIManager {
 
   _startBackgroundWatcher() {
     setInterval(async () => {
-      if (!this.state.watcherActive || !this.state.folder?.path) return;
+      if (!this.state.watcherActive || !this.state.folder?.path || (typeof window !== 'undefined' && !window.__TAURI__ && !window.__DOCMITRA_HAS_BACKEND__)) return;
       try {
         const res = await listNativeDirectory(this.state.folder.path);
         if (res.success && Array.isArray(res.files)) {
@@ -3712,7 +3712,7 @@ export class RenamerUIManager {
           if (restoredPath) {
             f.path = restoredPath;
             f.nativePath = restoredPath;
-            f.url = `http://localhost:3000/api/serve-file?path=${encodeURIComponent(restoredPath)}`;
+            f.url = resolveFilePreviewUrl(f);
           }
         }
       });

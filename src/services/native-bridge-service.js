@@ -23,8 +23,9 @@ export function isTauriEnvironment() {
 
 export async function isNativeAvailable() {
   if (isTauriEnvironment()) return true;
+  if (typeof window !== 'undefined' && !window.__DOCMITRA_HAS_BACKEND__) return false;
   try {
-    const res = await fetch(`${BACKEND_BASE}/api/license-status`, { signal: AbortSignal.timeout(2000) });
+    const res = await fetch(`${BACKEND_BASE}/api/license-status`, { signal: AbortSignal.timeout(1000) });
     return res.ok;
   } catch {
     return false;
@@ -243,6 +244,10 @@ export async function listNativeDirectory(dirPath) {
     } catch (err) {
       console.warn('[NativeBridge] Tauri list_native_directory failed, trying backend:', err);
     }
+  }
+
+  if (typeof window !== 'undefined' && !window.__TAURI__ && !window.__DOCMITRA_HAS_BACKEND__) {
+    return { success: false, error: 'Native directory access unavailable in browser environment.' };
   }
 
   try {

@@ -34,7 +34,7 @@ export async function readFiles(handle) {
     if (item.kind === 'file') {
       const lower = name.toLowerCase();
       // फक्त लपवलेल्या व सिस्टीम तात्पुरत्या फाइल्स वगळणे, बाकी सर्व फाइल्स दाखवणे
-      if (lower.startsWith('.') || lower.startsWith('~$') || SYSTEM_IGNORE.includes(lower)) {
+      if (lower.startsWith('.') || lower.startsWith('~$') || lower.includes('.docmitra_id') || SYSTEM_IGNORE.includes(lower)) {
         continue;
       }
       try {

@@ -122,6 +122,9 @@ fn pick_native_files() -> Result<FilesResult, String> {
                 if let Ok(meta) = fs::metadata(&p) {
                     if meta.is_file() {
                         let name = p.file_name().unwrap_or_default().to_string_lossy().to_string();
+                        if name.starts_with('.') || name.contains(".docmitra_id") || name.eq_ignore_ascii_case("Thumbs.db") || name.eq_ignore_ascii_case("desktop.ini") {
+                            continue;
+                        }
                         let ext = p.extension().map(|e| format!(".{}", e.to_string_lossy().to_lowercase())).unwrap_or_default();
                         let mtime = meta.modified().ok()
                             .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
@@ -133,7 +136,7 @@ fn pick_native_files() -> Result<FilesResult, String> {
                             .unwrap_or(mtime);
                         let dir = p.parent().unwrap_or(Path::new("")).to_string_lossy().replace('\\', "/");
                         let path_str = p.to_string_lossy().replace('\\', "/");
-                        let url = format!("http://localhost:3000/api/serve-file?path={}", simple_url_encode(&path_str));
+                        let url = String::new();
                         files.push(FileEntry {
                             name,
                             path: path_str,
@@ -189,7 +192,12 @@ fn list_native_directory(path: String) -> Result<DirectoryResult, String> {
             if let Ok(entry) = entry_res {
                 let p = entry.path();
                 let file_name = entry.file_name().to_string_lossy().to_string();
-                if file_name.starts_with('.') || file_name.eq_ignore_ascii_case("Duplicate Files") {
+                if file_name.starts_with('.') 
+                    || file_name.contains(".docmitra_id")
+                    || file_name.eq_ignore_ascii_case("Duplicate Files") 
+                    || file_name.eq_ignore_ascii_case("Thumbs.db")
+                    || file_name.eq_ignore_ascii_case("desktop.ini")
+                {
                     continue;
                 }
                 if let Ok(meta) = entry.metadata() {
@@ -210,7 +218,7 @@ fn list_native_directory(path: String) -> Result<DirectoryResult, String> {
                             .unwrap_or(mtime);
                         let dir = p.parent().unwrap_or(Path::new("")).to_string_lossy().replace('\\', "/");
                         let path_str = p.to_string_lossy().replace('\\', "/");
-                        let url = format!("http://localhost:3000/api/serve-file?path={}", simple_url_encode(&path_str));
+                        let url = String::new();
                         files.push(FileEntry {
                             name: file_name,
                             path: path_str,
@@ -582,7 +590,7 @@ fn import_native_file(
         .unwrap_or(mtime);
 
     let target_path_str = dest_path.to_string_lossy().replace('\\', "/");
-    let url = format!("http://localhost:3000/api/serve-file?path={}", simple_url_encode(&target_path_str));
+    let url = String::new();
 
     Ok(ImportNativeResult {
         success: true,

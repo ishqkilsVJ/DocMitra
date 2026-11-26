@@ -315,8 +315,9 @@ function l() {
 }
 async function u() {
 	if (l()) return !0;
+	if (typeof window < "u" && !window.__DOCMITRA_HAS_BACKEND__) return !1;
 	try {
-		return (await fetch(`${s}/api/license-status`, { signal: AbortSignal.timeout(2e3) })).ok;
+		return (await fetch(`${s}/api/license-status`, { signal: AbortSignal.timeout(1e3) })).ok;
 	} catch {
 		return !1;
 	}
@@ -466,6 +467,10 @@ async function p(e) {
 	} catch (e) {
 		console.warn("[NativeBridge] Tauri list_native_directory failed, trying backend:", e);
 	}
+	if (typeof window < "u" && !window.__TAURI__ && !window.__DOCMITRA_HAS_BACKEND__) return {
+		success: !1,
+		error: "Native directory access unavailable in browser environment."
+	};
 	try {
 		let t = await fetch(`${s}/api/list-directory?path=${encodeURIComponent(e)}`);
 		return t.ok ? await t.json() : {
@@ -6523,7 +6528,7 @@ function X(e) {
 function Z(e) {
 	if (!e) return !0;
 	let t = e.toLowerCase().trim();
-	return !!(t === "thumbs.db" || t === "ehthumbs.db" || t === "desktop.ini" || t === ".ds_store" || t.startsWith(".") || t.startsWith("~$") || t.endsWith(".tmp"));
+	return !!(t === "thumbs.db" || t === "ehthumbs.db" || t === "desktop.ini" || t === ".ds_store" || t.startsWith(".") || t.startsWith("~$") || t.endsWith(".tmp") || t.includes(".docmitra_id"));
 }
 function dt(e) {
 	let t = (e || "").toUpperCase().trim();
@@ -7126,7 +7131,7 @@ var ft = A.map((e) => ({
 	}
 	_startBackgroundWatcher() {
 		setInterval(async () => {
-			if (this.state.watcherActive && this.state.folder?.path) try {
+			if (this.state.watcherActive && this.state.folder?.path && (typeof window > "u" || window.__TAURI__ || window.__DOCMITRA_HAS_BACKEND__)) try {
 				let e = await p(this.state.folder.path);
 				if (e.success && Array.isArray(e.files)) {
 					let t = e.files.filter((e) => !Z(e.name)), n = new Set(this.state.files.map((e) => e.name)), r = new Set(t.map((e) => e.name)), i = !1;
@@ -8264,7 +8269,7 @@ var ft = A.map((e) => ({
 				if (t) {
 					t.name = e.old, t.targetName = e.old, t.isRenamed = !1, t.status = "pending";
 					let n = e.nativePath || (this.state.folder?.path ? `${this.state.folder.path}/${e.old}` : t.path?.replace(/[^\\\/]+$/, e.old));
-					n && (t.path = n, t.nativePath = n, t.url = `http://localhost:3000/api/serve-file?path=${encodeURIComponent(n)}`);
+					n && (t.path = n, t.nativePath = n, t.url = X(t));
 				}
 			}), r.show("Undo Successful", `Restored ${e.plan.length} files to original names.`, "success"), this.updateTelemetry(), this.renderQueue(), this.renderCurrentPreview(), this._computeDuplicateHashesAsync();
 		} catch (e) {
