@@ -1,16 +1,23 @@
 # 🔒 LOCKED TOOL: Bulk Document Renamer (`tools/rename_tool/`)
 
 > [!IMPORTANT]
-> **FROZEN & FULLY SEALED PRODUCTION MILESTONE UNDER CHECKPOINT `CP-042`**  
+> **FROZEN & FULLY SEALED PRODUCTION MILESTONE UNDER CHECKPOINT `CP-059`**  
 > **Status:** `LOCKED — PRODUCTION STABLE`  
 > **Governance Policy:** `AGENTS.md` (RULE 7) & `RENAME_TOOL_AGENT.md`  
-> **Module Integrity:** 100% Passing Across All 5 Verification Phases via Dual-MCP QA (Playwright MCP + Chrome DevTools MCP: 0 Console Errors)  
-> **Verification Date:** 2026-11-26  
-> **Core Architecture:** Complete Production Suite (Physical Windows Folder Rename, Exact Casing, Circular Queue, 3-Tab Settings Modal with Deduplicated 58 Canonical Documents, Linked Documents Manager with Dynamic Zero-Error Exclusion, Bento Document Desk with Universal 1-0 and A-Z Natural Auto-Sort, In-App Notepad Report with Windows Notepad Launcher, 3-Way Unlimited Rotation Toolkit, Indian Phonetic & Fuzzy Matching Engine).
+> **Module Integrity:** 100% Passing Across All Verification Tests via Dual-MCP QA (Playwright MCP 8/8 Tests Passed + Chrome DevTools MCP: 0 Console Errors)  
+> **Verification Date:** 2026-11-27  
+> **Core Architecture:** Complete Production Suite (Physical Windows Folder Rename, Exact Casing, Circular Queue, 3-Tab Settings Modal with Deduplicated 58 Canonical Documents, Linked Documents Manager with Dynamic Zero-Error Exclusion, Bento Document Desk with Universal 1-0 and A-Z Natural Auto-Sort, In-App Notepad Report with Windows Notepad Launcher, 3-Way Unlimited Rotation Toolkit, Indian Phonetic & Fuzzy Matching Engine, Choice 1-B Direct Typed Word + Student Name Appending Engine).
 >
 > **LOCKED BY POLICY (`AGENTS.md` Rule 3):**  
 > Strict Feature Freeze in effect. Zero direct file modifications permitted inside `tools/rename_tool/` without explicit user unlock command:  
 > `UNLOCK RENAME_TOOL`
+
+> **Last QA Stabilization & Verification:** 2026-11-27 (Direct Custom Typed Word + Student Name Appending Engine [CP-059] Verified 100%:
+> 1. Choice 1-B Direct Typed Word Preservation: When user types custom/unlinked words (e.g. `VALIDITY`, `AFFIDAVIT`, `ABC`), the exact typed word is preserved with the active case and the student/folder name is cleanly appended (e.g., `VALIDITY VIJAY RAMESH YADAV.pdf`, `AFFIDAVIT VIJAY RAMESH YADAV.pdf`) without forcing canonical name conversion.
+> 2. Registered Shortcode Expansion: When user enters shortcodes (e.g. `VLD`, `VAL`, `PIC`, `ADR`, `10M`), it expands into the full canonical formula + student name (e.g., `CASTE VALIDITY CERTIFICATE VIJAY RAMESH YADAV.pdf`). Added `VLD` and `CVC` to Caste Validity shortcode aliases.
+> 3. Duplicate Student Name Prevention: Strict word-boundary regex (`(^|\s)${escapedStudent}(\s|$)`) prevents duplicate student names if the user manually types or pastes the student name.
+> 4. Include Student Name Checkbox Sync: When `chkIncludeFolderName` is unchecked, custom names cleanly omit student name (e.g., `VALIDITY.pdf`).
+> 5. Dual-MCP Verification: 100% PASS across Playwright MCP (8/8 test cases) and Chrome DevTools MCP (0 console errors); deployed to `C:\Users\USER\AppData\Local\DocMitra\app.exe`).
 
 > **Last QA Stabilization & Verification:** 2026-11-26 (Final Production Freeze, Cleanup & Full-Surface Test Suite [CP-042] Verified 100%:
 > 1. Deep Codebase Cleanup: Archived 17 duplicate root markdown reports to `_archive/legacy_reports/` and cleaned temporary backup clutter.
