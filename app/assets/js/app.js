@@ -11581,7 +11581,7 @@ var Jt = class {
 					let v = document.createElement("div");
 					v.className = "card-limit-badge absolute top-2 left-2 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm flex items-center gap-1 hidden pointer-events-none z-10", v.innerHTML = "<span class=\"material-symbols-outlined text-[12px]\">check_circle</span><span>✓ Already in Limit</span>", g.appendChild(v);
 					let y = document.createElement("div");
-					if (y.className = "card-blur-warning absolute inset-x-2 bottom-2 bg-amber-500/95 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm flex items-center justify-center gap-1 backdrop-blur-xs hidden pointer-events-none z-10", y.innerHTML = "<span class=\"material-symbols-outlined text-[13px]\">warning</span><span>⚠️ Blur Warning — Low Readability</span>", g.appendChild(y), t.thumbUrl) {
+					if (y.className = "card-blur-warning absolute inset-x-2 bottom-2 bg-slate-950/85 border border-amber-500/40 text-amber-200 text-[10px] font-semibold px-2 py-1 rounded-lg shadow-lg flex items-center justify-center gap-1.5 backdrop-blur-md hidden pointer-events-none z-10 transition-all", y.innerHTML = "\n          <span class=\"material-symbols-outlined text-[13px] text-amber-400 animate-pulse\">warning</span>\n          <span class=\"font-mono text-[9px] font-bold uppercase tracking-wider text-amber-300 bg-amber-950/80 px-1 py-0.5 rounded border border-amber-500/30\">Blur Alert</span>\n          <span class=\"text-[10px] text-slate-200 font-medium\">Text may be degraded</span>\n        ", g.appendChild(y), t.thumbUrl) {
 						let e = new Image();
 						e.onload = () => {
 							_.width = e.width, _.height = e.height, _.getContext("2d").drawImage(e, 0, 0);

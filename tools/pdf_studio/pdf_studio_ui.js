@@ -1156,10 +1156,14 @@ export class PdfStudioUIManager {
         limitBadge.innerHTML = '<span class="material-symbols-outlined text-[12px]">check_circle</span><span>✓ Already in Limit</span>';
         thumbBox.appendChild(limitBadge);
 
-        // Low Readability / Blur Warning Overlay (Bottom of Preview)
+        // Low Readability / Blur Warning Overlay (Bottom of Preview - Choice 1-A)
         const blurWarning = document.createElement('div');
-        blurWarning.className = 'card-blur-warning absolute inset-x-2 bottom-2 bg-amber-500/95 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm flex items-center justify-center gap-1 backdrop-blur-xs hidden pointer-events-none z-10';
-        blurWarning.innerHTML = '<span class="material-symbols-outlined text-[13px]">warning</span><span>⚠️ Blur Warning — Low Readability</span>';
+        blurWarning.className = 'card-blur-warning absolute inset-x-2 bottom-2 bg-slate-950/85 border border-amber-500/40 text-amber-200 text-[10px] font-semibold px-2 py-1 rounded-lg shadow-lg flex items-center justify-center gap-1.5 backdrop-blur-md hidden pointer-events-none z-10 transition-all';
+        blurWarning.innerHTML = `
+          <span class="material-symbols-outlined text-[13px] text-amber-400 animate-pulse">warning</span>
+          <span class="font-mono text-[9px] font-bold uppercase tracking-wider text-amber-300 bg-amber-950/80 px-1 py-0.5 rounded border border-amber-500/30">Blur Alert</span>
+          <span class="text-[10px] text-slate-200 font-medium">Text may be degraded</span>
+        `;
         thumbBox.appendChild(blurWarning);
 
         // Render thumbnail with cache check and buffer cloning (No 1p/2p badges)
