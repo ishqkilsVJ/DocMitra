@@ -355,9 +355,9 @@ DEFAULT_CHECKLISTS_DATA["EDUCATIONAL"] = DEFAULT_CHECKLISTS_DATA["EDUCATIONAL DO
    ========================================================================== */
 
 export const DEFAULT_SHORTCUT_DICTIONARY = [
-  { id: "photo", displayName: "PHOTO", primaryShortcut: "PIC", alternateKeywords: ["photo", "pic", "passport photo", "photograph"], outputName: "PHOTO" },
-  { id: "signature", displayName: "Signature", primaryShortcut: "SIG", alternateKeywords: ["signature", "sign", "student sign"], outputName: "SIGNATURE" },
-  { id: "aadhaar-card", displayName: "Aadhaar Card", primaryShortcut: "ADR", alternateKeywords: ["aadhaar card", "aadhar", "adhar", "uid"], outputName: "AADHAAR CARD" },
+  { id: "photo", displayName: "PHOTO", primaryShortcut: "PIC", alternateShortcuts: ["PHO"], alternateKeywords: ["photo", "pic", "passport photo", "photograph"], outputName: "PHOTO" },
+  { id: "signature", displayName: "Signature", primaryShortcut: "SIG", alternateShortcuts: ["SIGN"], alternateKeywords: ["signature", "sign", "student sign"], outputName: "SIGNATURE" },
+  { id: "aadhaar-card", displayName: "Aadhaar Card", primaryShortcut: "ADR", alternateShortcuts: ["ADH", "UID"], alternateKeywords: ["aadhaar card", "aadhar", "adhar", "uid"], outputName: "AADHAAR CARD" },
   { id: "10th-marksheet", displayName: "10th Marksheet", primaryShortcut: "10M", alternateKeywords: ["10th marksheet", "ssc marksheet", "10 mark sheet", "10th mark"], outputName: "10TH MARKSHEET" },
   { id: "10th-passing", displayName: "10th Passing Certificate", primaryShortcut: "10P", alternateKeywords: ["10th passing certificate", "ssc passing", "10 passing", "10 pasing"], outputName: "10TH PASSING CERTIFICATE" },
   { id: "10th-marksheet-passing", displayName: "10th Marksheet & Passing", primaryShortcut: "10MP", alternateKeywords: ["10th marksheet and passing certificate", "10th combined", "ssc marksheet passing"], outputName: "10TH MARKSHEET AND PASSING CERTIFICATE" },
@@ -366,8 +366,8 @@ export const DEFAULT_SHORTCUT_DICTIONARY = [
   { id: "12th-marksheet-passing", displayName: "12th Marksheet & Passing", primaryShortcut: "12MP", alternateKeywords: ["12th marksheet and passing certificate", "12th combined", "hsc marksheet passing"], outputName: "12TH MARKSHEET AND PASSING CERTIFICATE" },
   { id: "12th-lc", displayName: "12th LC", primaryShortcut: "12LC", alternateKeywords: ["12th lc", "12 lc", "12 l", "leaving certificate", "school leaving", "tc", "transfer certificate"], outputName: "12TH LC" },
   { id: "previous-year-marksheet", displayName: "Previous Year Marksheet", primaryShortcut: "PYM", alternateKeywords: ["previous year marksheet", "last exam marksheet", "prev marksheet"], outputName: "PREVIOUS YEAR MARKSHEET" },
-  { id: "caste-certificate", displayName: "Caste Certificate", primaryShortcut: "CST", alternateKeywords: ["caste certificate", "cast", "jati pramanpatra"], outputName: "CASTE CERTIFICATE" },
-  { id: "caste-validity", displayName: "Caste Validity Certificate", primaryShortcut: "VAL", alternateKeywords: ["caste validity certificate", "validity", "cvc", "tribe validity"], outputName: "CASTE VALIDITY CERTIFICATE" },
+  { id: "caste-certificate", displayName: "Caste Certificate", primaryShortcut: "CST", alternateShortcuts: ["CAST", "JATI"], alternateKeywords: ["caste certificate", "cast", "jati pramanpatra"], outputName: "CASTE CERTIFICATE" },
+  { id: "caste-validity", displayName: "Caste Validity Certificate", primaryShortcut: "VAL", alternateShortcuts: ["VLD", "CVC"], alternateKeywords: ["caste validity certificate", "validity", "cvc", "vld", "tribe validity"], outputName: "CASTE VALIDITY CERTIFICATE" },
   { id: "non-creamy-layer", displayName: "Non Creamy Layer Certificate", primaryShortcut: "NCL", alternateKeywords: ["non creamy layer", "ncl", "non criminal", "non-creamy"], outputName: "NON CREAMY LAYER CERTIFICATE" },
   { id: "income-certificate", displayName: "Income Certificate", primaryShortcut: "INC", alternateKeywords: ["income certificate", "utpanna dakhla", "tahsildar income", "form 16"], outputName: "INCOME CERTIFICATE" },
   { id: "domicile-certificate", displayName: "Domicile Certificate", primaryShortcut: "DOM", alternateKeywords: ["domicile certificate", "adhiwas", "maharashtra domicile"], outputName: "DOMICILE CERTIFICATE" },

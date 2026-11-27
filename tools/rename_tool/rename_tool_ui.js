@@ -174,7 +174,7 @@ export function getShortcutBadgeColor(code) {
 
 export const DEFAULT_SHORTCUTS = DEFAULT_SHORTCUT_DICTIONARY.map(item => ({
   code: item.primaryShortcut,
-  codes: [item.primaryShortcut],
+  codes: [item.primaryShortcut, ...(item.alternateShortcuts || [])],
   label: item.outputName,
   canonical: item.outputName,
   keywords: Array.isArray(item.alternateKeywords) ? [...item.alternateKeywords] : []
@@ -1402,6 +1402,26 @@ export class RenamerUIManager {
     return this.state.studentName || '';
   }
 
+  formatCustomTypedName(rawInput, studentName, style = 'upper') {
+    const cleanRaw = cleanName((rawInput || '').trim());
+    if (!cleanRaw) return '';
+    let combined = cleanRaw;
+    if (studentName && studentName.trim()) {
+      const normStudent = studentName.trim().replace(/[_\-]+/g, ' ').replace(/\s+/g, ' ');
+      const normBase = cleanRaw.replace(/[_\-]+/g, ' ').replace(/\s+/g, ' ');
+
+      // Word boundary check to prevent duplicate student name
+      const escapedStudent = normStudent.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const wordBoundaryRegex = new RegExp(`(^|\\s)${escapedStudent}(\\s|$)`, 'i');
+      if (!wordBoundaryRegex.test(normBase)) {
+        combined = `${cleanRaw} ${normStudent}`;
+      } else {
+        combined = cleanRaw;
+      }
+    }
+    return applyCase(combined, style);
+  }
+
   loadFolderData(data, preservedEdits = null) {
     const folderPath = data.path || '';
     const folderName = data.name || (folderPath ? folderPath.split(/[\\/]/).pop() : 'Selected Folder');
@@ -2071,17 +2091,21 @@ export class RenamerUIManager {
         if (e.key === 'Tab' && !e.shiftKey) {
           e.preventDefault();
           const typedVal = targetInput.value.trim();
+          const effStudent = this.getEffectiveStudentName();
           const shortcutMatch = this.resolveShortcut(typedVal);
           if (shortcutMatch) {
             const canonical = shortcutMatch.canonical || shortcutMatch.label;
-            const effStudent = this.getEffectiveStudentName();
             const formulaBase = buildName(canonical, effStudent, this.state.settings?.groups, this.state.style);
             const cleanBase = formulaBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
             targetInput.value = cleanBase;
             this.handleConfirmCurrentName(cleanBase);
           } else {
-            const targetToConfirm = typedVal || currentFile.targetName || currentFile.suggestedName || cleanName(currentFile.name);
-            this.handleConfirmCurrentName(targetToConfirm);
+            const rawBase = typedVal || currentFile.targetName || currentFile.suggestedName || cleanName(currentFile.name);
+            const cleanRaw = rawBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+            // User choice 1-B: Exact typed word + student name (zero canonical force)
+            const cleanBase = this.formatCustomTypedName(cleanRaw, effStudent, this.state.style);
+            targetInput.value = cleanBase;
+            this.handleConfirmCurrentName(cleanBase);
           }
           return;
         }
@@ -2097,17 +2121,21 @@ export class RenamerUIManager {
         if (e.key === 'Enter') {
           e.preventDefault();
           const typedVal = targetInput.value.trim();
+          const effStudent = this.getEffectiveStudentName();
           const shortcutMatch = this.resolveShortcut(typedVal);
           if (shortcutMatch) {
             const canonical = shortcutMatch.canonical || shortcutMatch.label;
-            const effStudent = this.getEffectiveStudentName();
             const formulaBase = buildName(canonical, effStudent, this.state.settings?.groups, this.state.style);
             const cleanBase = formulaBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
             targetInput.value = cleanBase;
             this.handleConfirmCurrentName(cleanBase);
           } else {
-            const targetToConfirm = typedVal || currentFile.targetName || currentFile.suggestedName || cleanName(currentFile.name);
-            this.handleConfirmCurrentName(targetToConfirm);
+            const rawBase = typedVal || currentFile.targetName || currentFile.suggestedName || cleanName(currentFile.name);
+            const cleanRaw = rawBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+            // User choice 1-B: Exact typed word + student name (zero canonical force)
+            const cleanBase = this.formatCustomTypedName(cleanRaw, effStudent, this.state.style);
+            targetInput.value = cleanBase;
+            this.handleConfirmCurrentName(cleanBase);
           }
           return;
         }
@@ -2148,31 +2176,9 @@ export class RenamerUIManager {
           return;
         }
 
-        // Exact-Match or Compact Shortcut Rule (e.g. "PIC", "PHO", "PAN", "CAS")
+        // Exact-Match or Compact Shortcut Rule (e.g. "PIC", "PHO", "PAN", "CAS", "VLD", "VAL")
         const compactVal = trimmedVal.replace(/\s+/g, '').toLowerCase();
         let exactShortcut = this.resolveShortcut(trimmedVal) || this.resolveShortcut(compactVal);
-
-        if (!exactShortcut) {
-          // Check by keywords
-          for (const s of (this.shortcuts21 || [])) {
-            const kws = Array.isArray(s.keywords) ? s.keywords : [];
-            if (kws.some(k => k.toLowerCase() === trimmedVal.toLowerCase() || k.toLowerCase() === compactVal)) {
-              exactShortcut = s;
-              break;
-            }
-          }
-        }
-
-        if (!exactShortcut) {
-          const allDocs = this.getAllPresetDocuments();
-          const docMatch = allDocs.find(d =>
-            (d.code && (d.code.toLowerCase() === trimmedVal.toLowerCase() || d.code.toLowerCase() === compactVal)) ||
-            (Array.isArray(d.keywords) && d.keywords.some(k => k.toLowerCase() === trimmedVal.toLowerCase() || k.toLowerCase() === compactVal))
-          );
-          if (docMatch) {
-            exactShortcut = { code: docMatch.code, codes: [docMatch.code], canonical: docMatch.name.toUpperCase(), label: docMatch.name };
-          }
-        }
 
         if (exactShortcut) {
           const canonical = exactShortcut.canonical || exactShortcut.label;
@@ -2196,8 +2202,8 @@ export class RenamerUIManager {
             liveBadge.textContent = `✏️ Custom: ${trimmedVal}`;
           }
 
-          const formulaBase = buildName(trimmedVal, this.state.studentName, null, this.state.style);
-          const cleanBase = formulaBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+          const effStudent = this.getEffectiveStudentName();
+          const cleanBase = this.formatCustomTypedName(trimmedVal, effStudent, this.state.style);
           currentFile.targetName = `${cleanBase}${currentExt}`;
         }
 
@@ -3003,10 +3009,11 @@ export class RenamerUIManager {
 
     // 4. Check DEFAULT_SHORTCUT_DICTIONARY
     for (const item of (DEFAULT_SHORTCUT_DICTIONARY || [])) {
-      if (item.primaryShortcut && item.primaryShortcut.toUpperCase() === cleanCode) {
+      const allCodes = [item.primaryShortcut, ...(item.alternateShortcuts || [])];
+      if (allCodes.some(c => c && c.toUpperCase() === cleanCode)) {
         return {
           code: item.primaryShortcut,
-          codes: [item.primaryShortcut],
+          codes: allCodes,
           canonical: item.outputName,
           label: item.outputName,
           keywords: item.alternateKeywords
@@ -3385,15 +3392,20 @@ export class RenamerUIManager {
     }
 
     let baseWithoutExt = cleanTarget.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+    const effStudent = this.getEffectiveStudentName();
     // Double protection: Check if baseWithoutExt is a registered shortcode (e.g. PIC, PHO, 10MP)
     const shortcutMatch = this.resolveShortcut(baseWithoutExt);
     if (shortcutMatch) {
       const canonical = shortcutMatch.canonical || shortcutMatch.label;
-      const effStudent = this.getEffectiveStudentName();
       const formulaBase = buildName(canonical, effStudent, this.state.settings?.groups, this.state.style);
       baseWithoutExt = formulaBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
       current.docType = canonical;
       current.isMatched = true;
+    } else {
+      // User choice 1-B: For direct custom/unlinked words, append student name without canonical conversion
+      baseWithoutExt = this.formatCustomTypedName(baseWithoutExt, effStudent, this.state.style);
+      current.docType = cleanTarget.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+      current.isMatched = false;
     }
     let finalName = `${baseWithoutExt}${fileExt}`;
 
@@ -3409,7 +3421,6 @@ export class RenamerUIManager {
       }
     }
 
-    const effStudent = this.getEffectiveStudentName();
     const uniqueCandidate = uniqueDestination(finalName, current.name, usedDestinations, effStudent);
     const wasDuplicateAdjusted = (uniqueCandidate.toLowerCase() !== finalName.toLowerCase());
     finalName = uniqueCandidate;
@@ -3532,7 +3543,17 @@ export class RenamerUIManager {
       const inputEl = document.getElementById('inputRenameTarget');
       if (inputEl && inputEl.value.trim()) {
         const fileExt = targetFile.ext || ext(targetFile.name);
-        const baseWithoutExt = inputEl.value.trim().replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+        const rawBase = inputEl.value.trim().replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+        const effStudent = this.getEffectiveStudentName();
+        const shortcutMatch = this.resolveShortcut(rawBase);
+        let baseWithoutExt = rawBase;
+        if (shortcutMatch) {
+          const canonical = shortcutMatch.canonical || shortcutMatch.label;
+          const formulaBase = buildName(canonical, effStudent, this.state.settings?.groups, this.state.style);
+          baseWithoutExt = formulaBase.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+        } else {
+          baseWithoutExt = this.formatCustomTypedName(rawBase, effStudent, this.state.style);
+        }
         targetFile.targetName = `${baseWithoutExt}${fileExt}`;
         targetFile.userEditedName = baseWithoutExt;
         targetFile.hasUserEdited = true;

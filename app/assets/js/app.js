@@ -1616,6 +1616,7 @@ var A = [
 		id: "photo",
 		displayName: "PHOTO",
 		primaryShortcut: "PIC",
+		alternateShortcuts: ["PHO"],
 		alternateKeywords: [
 			"photo",
 			"pic",
@@ -1628,6 +1629,7 @@ var A = [
 		id: "signature",
 		displayName: "Signature",
 		primaryShortcut: "SIG",
+		alternateShortcuts: ["SIGN"],
 		alternateKeywords: [
 			"signature",
 			"sign",
@@ -1639,6 +1641,7 @@ var A = [
 		id: "aadhaar-card",
 		displayName: "Aadhaar Card",
 		primaryShortcut: "ADR",
+		alternateShortcuts: ["ADH", "UID"],
 		alternateKeywords: [
 			"aadhaar card",
 			"aadhar",
@@ -1746,6 +1749,7 @@ var A = [
 		id: "caste-certificate",
 		displayName: "Caste Certificate",
 		primaryShortcut: "CST",
+		alternateShortcuts: ["CAST", "JATI"],
 		alternateKeywords: [
 			"caste certificate",
 			"cast",
@@ -1757,10 +1761,12 @@ var A = [
 		id: "caste-validity",
 		displayName: "Caste Validity Certificate",
 		primaryShortcut: "VAL",
+		alternateShortcuts: ["VLD", "CVC"],
 		alternateKeywords: [
 			"caste validity certificate",
 			"validity",
 			"cvc",
+			"vld",
 			"tribe validity"
 		],
 		outputName: "CASTE VALIDITY CERTIFICATE"
@@ -6607,7 +6613,7 @@ function ft(e) {
 }
 var pt = A.map((e) => ({
 	code: e.primaryShortcut,
-	codes: [e.primaryShortcut],
+	codes: [e.primaryShortcut, ...e.alternateShortcuts || []],
 	label: e.outputName,
 	canonical: e.outputName,
 	keywords: Array.isArray(e.alternateKeywords) ? [...e.alternateKeywords] : []
@@ -7260,6 +7266,16 @@ var pt = A.map((e) => ({
 		let e = document.getElementById("chkIncludeFolderName");
 		return e && !e.checked ? "" : this.state.studentName || "";
 	}
+	formatCustomTypedName(e, t, n = "upper") {
+		let r = F((e || "").trim());
+		if (!r) return "";
+		let i = r;
+		if (t && t.trim()) {
+			let e = t.trim().replace(/[_\-]+/g, " ").replace(/\s+/g, " "), n = r.replace(/[_\-]+/g, " ").replace(/\s+/g, " "), a = e.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+			i = RegExp(`(^|\\s)${a}(\\s|$)`, "i").test(n) ? r : `${r} ${e}`;
+		}
+		return I(i, n);
+	}
 	loadFolderData(e, t = null) {
 		let n = e.path || "", r = e.name || (n ? n.split(/[\\/]/).pop() : "Selected Folder"), i = r.replace(/\.[a-zA-Z0-9]+$/i, "").replace(/^(?:roll\s*no\.?|student|candidate|sr\.?\s*no\.?)\s*[\d\w]*[\s_\.\-]+/i, "").replace(/^[0-9]+[_\.\s-]+/, "").replace(/\s*[\(\[][^\)\]]*(?:final|new|copy|admission|cet|dbt|\d{4})[^\)\]]*[\)\]]/gi, "").trim(), a = i.replace(/\.[a-zA-Z0-9]+$/i, "").replace(/_/g, " ").replace(/\s+/g, " ").trim();
 		/^\d+$/.test(a) && (a = ""), this.state.folder = {
@@ -7559,24 +7575,24 @@ var pt = A.map((e) => ({
 				else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) e.preventDefault(), this.handleRenameSingleFile(n);
 				else if (e.key === "Tab" && !e.shiftKey) {
 					e.preventDefault();
-					let t = w.value.trim(), r = this.resolveShortcut(t);
-					if (r) {
-						let e = L(r.canonical || r.label, this.getEffectiveStudentName(), this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
+					let t = w.value.trim(), r = this.getEffectiveStudentName(), i = this.resolveShortcut(t);
+					if (i) {
+						let e = L(i.canonical || i.label, r, this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
 						w.value = e, this.handleConfirmCurrentName(e);
 					} else {
-						let e = t || n.targetName || n.suggestedName || F(n.name);
-						this.handleConfirmCurrentName(e);
+						let e = (t || n.targetName || n.suggestedName || F(n.name)).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim(), i = this.formatCustomTypedName(e, r, this.state.style);
+						w.value = i, this.handleConfirmCurrentName(i);
 					}
 				} else if (e.key === "Tab" && e.shiftKey) e.preventDefault(), this.handleNavigateBackward();
 				else if (e.key === "Enter") {
 					e.preventDefault();
-					let t = w.value.trim(), r = this.resolveShortcut(t);
-					if (r) {
-						let e = L(r.canonical || r.label, this.getEffectiveStudentName(), this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
+					let t = w.value.trim(), r = this.getEffectiveStudentName(), i = this.resolveShortcut(t);
+					if (i) {
+						let e = L(i.canonical || i.label, r, this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
 						w.value = e, this.handleConfirmCurrentName(e);
 					} else {
-						let e = t || n.targetName || n.suggestedName || F(n.name);
-						this.handleConfirmCurrentName(e);
+						let e = (t || n.targetName || n.suggestedName || F(n.name)).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim(), i = this.formatCustomTypedName(e, r, this.state.style);
+						w.value = i, this.handleConfirmCurrentName(i);
 					}
 				} else /[\\/:*?"<>|]/.test(e.key) && (e.preventDefault(), r.show("Character Not Allowed", `Windows filenames cannot contain ${e.key}`, "warning"));
 			}), w.addEventListener("input", (e) => {
@@ -7588,21 +7604,6 @@ var pt = A.map((e) => ({
 					return;
 				}
 				let s = a.replace(/\s+/g, "").toLowerCase(), c = this.resolveShortcut(a) || this.resolveShortcut(s);
-				if (!c) {
-					for (let e of this.shortcuts21 || []) if ((Array.isArray(e.keywords) ? e.keywords : []).some((e) => e.toLowerCase() === a.toLowerCase() || e.toLowerCase() === s)) {
-						c = e;
-						break;
-					}
-				}
-				if (!c) {
-					let e = this.getAllPresetDocuments().find((e) => e.code && (e.code.toLowerCase() === a.toLowerCase() || e.code.toLowerCase() === s) || Array.isArray(e.keywords) && e.keywords.some((e) => e.toLowerCase() === a.toLowerCase() || e.toLowerCase() === s));
-					e && (c = {
-						code: e.code,
-						codes: [e.code],
-						canonical: e.name.toUpperCase(),
-						label: e.name
-					});
-				}
 				if (c) {
 					let e = c.canonical || c.label;
 					n.docType = e, n.isMatched = !0, o && (o.className = "confidence-badge confidence-badge-high", o.textContent = `🟢 Matched: ${e}`);
@@ -7610,8 +7611,8 @@ var pt = A.map((e) => ({
 					n.targetName = `${t}${i}`;
 				} else {
 					n.docType = a, n.isMatched = !1, o && (o.className = "confidence-badge confidence-badge-med", o.textContent = `✏️ Custom: ${a}`);
-					let e = L(a, this.state.studentName, null, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
-					n.targetName = `${e}${i}`;
+					let e = this.getEffectiveStudentName(), t = this.formatCustomTypedName(a, e, this.state.style);
+					n.targetName = `${t}${i}`;
 				}
 				this.updateTelemetry();
 				let l = document.querySelector("#previewContainerStage .font-headline-sm");
@@ -7931,13 +7932,16 @@ var pt = A.map((e) => ({
 			label: e.name,
 			keywords: e.keywords
 		};
-		for (let e of A || []) if (e.primaryShortcut && e.primaryShortcut.toUpperCase() === t) return {
-			code: e.primaryShortcut,
-			codes: [e.primaryShortcut],
-			canonical: e.outputName,
-			label: e.outputName,
-			keywords: e.alternateKeywords
-		};
+		for (let e of A || []) {
+			let n = [e.primaryShortcut, ...e.alternateShortcuts || []];
+			if (n.some((e) => e && e.toUpperCase() === t)) return {
+				code: e.primaryShortcut,
+				codes: n,
+				canonical: e.outputName,
+				label: e.outputName,
+				keywords: e.alternateKeywords
+			};
+		}
 		return null;
 	}
 	applyShortcutToCurrentFile(e) {
@@ -8119,51 +8123,51 @@ var pt = A.map((e) => ({
 			r.show("Document Name Required", "Please provide a valid filename.", "warning");
 			return;
 		}
-		let a = i.replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim(), o = this.resolveShortcut(a);
-		if (o) {
-			let e = o.canonical || o.label;
-			a = L(e, this.getEffectiveStudentName(), this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim(), t.docType = e, t.isMatched = !0;
-		}
-		let s = `${a}${n}`, c = /* @__PURE__ */ new Set();
-		for (let e of this.state.files) e !== t && (e.isRenamed || e.isKept ? c.add(e.targetName || e.name) : e.name && c.add(e.name));
-		let l = this.getEffectiveStudentName(), u = z(s, t.name, c, l), d = u.toLowerCase() !== s.toLowerCase();
-		s = u;
-		let f = F(s), p = R(s);
+		let a = i.replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim(), o = this.getEffectiveStudentName(), s = this.resolveShortcut(a);
+		if (s) {
+			let e = s.canonical || s.label;
+			a = L(e, o, this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim(), t.docType = e, t.isMatched = !0;
+		} else a = this.formatCustomTypedName(a, o, this.state.style), t.docType = i.replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim(), t.isMatched = !1;
+		let c = `${a}${n}`, l = /* @__PURE__ */ new Set();
+		for (let e of this.state.files) e !== t && (e.isRenamed || e.isKept ? l.add(e.targetName || e.name) : e.name && l.add(e.name));
+		let u = z(c, t.name, l, o), d = u.toLowerCase() !== c.toLowerCase();
+		c = u;
+		let f = F(c), p = R(c);
 		if (p) {
 			r.show("Validation Error", `${f}: ${p}`, "error");
 			return;
 		}
 		let h = this.state.folder && (this.state.folder.nativePath || this.state.folder.path) || "", g = t.nativePath || t.path || (h ? `${h}/${t.name}` : null), _ = F(t.name) !== f, v = t.rotation && t.rotation % 360 != 0, y = typeof window < "u" && (window.location?.search?.includes("test_mode=1") || window.__DOCMITRA_TEST_MODE__);
 		if (g && (_ || v)) {
-			let e = l || t.studentName || "", i = t.rotation || 0;
+			let e = o || t.studentName || "", i = t.rotation || 0;
 			r.show("Renaming Document", `Renaming to ${f}...`, "info");
 			try {
 				let o;
 				if (o = y ? {
 					success: !0,
-					name: s,
-					path: g.replace(/[^\\\/]+$/, s)
-				} : await m(g, s, e, i), !o.success) throw Error(o.error || `Failed to rename ${t.name}`);
-				let c = o.name || s, l = o.path || o.newPath || g.replace(/[^\\\/]+$/, c), u = {
+					name: c,
+					path: g.replace(/[^\\\/]+$/, c)
+				} : await m(g, c, e, i), !o.success) throw Error(o.error || `Failed to rename ${t.name}`);
+				let s = o.name || c, l = o.path || o.newPath || g.replace(/[^\\\/]+$/, s), u = {
 					old: t.name,
-					next: c,
+					next: s,
 					file: t,
 					nativePath: g,
 					studentName: e,
 					rotation: i
 				};
-				if (B.pushBatch(this.state.folder, [u]), t.name = c, t.targetName = c, t.userEditedName = F(c), t.path = l, t.nativePath = l, t.isRenamed = !0, t.status = "renamed", t.smartConfidence = 100, t.hasUserEdited = !0, t.rotation = 0, t._pdfBytes = null, t._blobUrl && typeof URL < "u" && URL.revokeObjectURL) {
+				if (B.pushBatch(this.state.folder, [u]), t.name = s, t.targetName = s, t.userEditedName = F(s), t.path = l, t.nativePath = l, t.isRenamed = !0, t.status = "renamed", t.smartConfidence = 100, t.hasUserEdited = !0, t.rotation = 0, t._pdfBytes = null, t._blobUrl && typeof URL < "u" && URL.revokeObjectURL) {
 					try {
 						URL.revokeObjectURL(t._blobUrl);
 					} catch {}
 					t._blobUrl = null;
 				}
-				t.url = `${typeof window < "u" && window.location?.origin && !window.location.origin.startsWith("file:") && !window.location.origin.includes("tauri") ? window.location.origin : "http://localhost:3000"}/api/serve-file?path=${encodeURIComponent(l)}`, d || c.toLowerCase() !== `${a}${n}`.toLowerCase() ? r.show("Duplicate Auto-Numbered", `Saved as: ${F(c)}`, "info") : r.show("Renamed Successfully", F(c), "success");
+				t.url = `${typeof window < "u" && window.location?.origin && !window.location.origin.startsWith("file:") && !window.location.origin.includes("tauri") ? window.location.origin : "http://localhost:3000"}/api/serve-file?path=${encodeURIComponent(l)}`, d || s.toLowerCase() !== `${a}${n}`.toLowerCase() ? r.show("Duplicate Auto-Numbered", `Saved as: ${F(s)}`, "info") : r.show("Renamed Successfully", F(s), "success");
 			} catch (e) {
 				r.show("Rename Error", e.message, "error");
 				return;
 			}
-		} else t.targetName = s, t.userEditedName = f, t.hasUserEdited = !0, t.isMatched = !0, t.status = "ready", t.smartConfidence = 100, t.smartDocType = t.docType || t.smartDocType || f, d ? r.show("Duplicate Auto-Numbered", `Saved as: ${f}`, "info") : r.show("Name Confirmed", f, "info");
+		} else t.targetName = c, t.userEditedName = f, t.hasUserEdited = !0, t.isMatched = !0, t.status = "ready", t.smartConfidence = 100, t.smartDocType = t.docType || t.smartDocType || f, d ? r.show("Duplicate Auto-Numbered", `Saved as: ${f}`, "info") : r.show("Name Confirmed", f, "info");
 		if (this.state.files.length > 0) {
 			let e = this.state.currentIndex, t = (e + 1) % this.state.files.length;
 			this.state.currentIndex = t, e === this.state.files.length - 1 && t === 0 && (this.handleSortDocuments("asc"), this.state.currentIndex = 0, r.show("Queue Auto-Sorted", "Cycle complete: documents sorted 1–0 & A–Z", "info"));
@@ -8176,8 +8180,8 @@ var pt = A.map((e) => ({
 		if (!t.targetName || t.targetName === t.name) {
 			let e = document.getElementById("inputRenameTarget");
 			if (e && e.value.trim()) {
-				let n = t.ext || P(t.name), r = e.value.trim().replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
-				t.targetName = `${r}${n}`, t.userEditedName = r, t.hasUserEdited = !0, t.isMatched = !0, t.status = "ready", t.smartConfidence = 100, t.smartDocType = t.docType || t.smartDocType || r;
+				let n = t.ext || P(t.name), r = e.value.trim().replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim(), i = this.getEffectiveStudentName(), a = this.resolveShortcut(r), o = r;
+				o = a ? L(a.canonical || a.label, i, this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim() : this.formatCustomTypedName(r, i, this.state.style), t.targetName = `${o}${n}`, t.userEditedName = o, t.hasUserEdited = !0, t.isMatched = !0, t.status = "ready", t.smartConfidence = 100, t.smartDocType = t.docType || t.smartDocType || o;
 			}
 		}
 		if (!t.targetName) {
@@ -11865,17 +11869,62 @@ var Jt = class {
 		this.isProcessing = !0;
 		let e = this.activeTool, t = Ot(e);
 		r.show("Processing Started", `Running ${this._getToolDisplayName(e)} via Zero-Port Native IPC...`, "info");
-		let n = document.getElementById("startCompressBtn"), i = document.getElementById("pdfCardsGridContainer"), a = document.getElementById("pdfCenterProgressOverlay"), o = document.getElementById("pdfCenterProgressBar"), s = document.getElementById("pdfCenterProgressCount"), c = document.getElementById("pdfCenterProgressEta"), l = document.getElementById("pdfCenterProgressFileName");
+		let n = document.getElementById("startCompressBtn"), i = document.getElementById("pdfCardsGridContainer"), a = document.getElementById("pdfCardsGrid");
 		if (n) {
 			n.disabled = !0, n.classList.add("opacity-50", "cursor-not-allowed");
 			let e = n.querySelector("span:last-child");
 			e && (e.textContent = "Compressing...");
 		}
-		i && (i.style.overflow = "hidden"), a && e === "compress_pdf" && (a.classList.remove("hidden"), o && (o.style.width = "0%"), s && (s.textContent = `Compressing: 0 / ${this.files.length} Files (0%)`), c && (c.textContent = "Estimating..."), l && (l.textContent = "Preparing batch compression..."));
+		i && (i.scrollTop = 0, i.style.overflow = "hidden");
+		let o = null, s = null, c = null, l = null, u = null;
+		if (e === "compress_pdf" && a) {
+			let e = this.files.length, t = this.files.reduce((e, t) => e + (t.size || 0), 0), n = t >= 1048576 ? `${(t / 1048576).toFixed(2)} MB` : `${Math.round(t / 1024)} KB`, r = this.targetKb >= 1024 ? `${(this.targetKb / 1024).toFixed(1)} MB` : `${this.targetKb} KB`;
+			a.className = "flex items-center justify-center min-h-[380px] w-full", a.innerHTML = `
+        <div id="pdfCenterProgressCard" class="col-span-full max-w-xl w-full mx-auto bg-white rounded-2xl border-2 border-blue-500/30 shadow-xl p-7 flex flex-col items-center text-center">
+          <div class="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center mb-3 shadow-xs">
+            <span class="material-symbols-outlined text-[32px] animate-spin">sync</span>
+          </div>
+          <h3 class="text-xl font-bold text-slate-800 tracking-tight">Compressing Documents</h3>
+          <p id="pdfCenterProgressFileName" class="text-xs text-blue-600 font-mono mt-1 mb-5 truncate max-w-sm">Preparing batch compression...</p>
+
+          <div class="grid grid-cols-3 gap-3 w-full mb-5 text-center font-mono">
+            <div class="bg-slate-50 rounded-xl p-2.5 border border-slate-200/80">
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Processed</div>
+              <div id="pdfCenterProgressCount" class="text-sm font-extrabold text-slate-800 mt-0.5">0 / ${e} Files</div>
+              <div class="text-[10px] text-blue-600 font-semibold mt-0.5">Batch Active</div>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-2.5 border border-slate-200/80">
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Before Size</div>
+              <div class="text-sm font-extrabold text-slate-700 mt-0.5">${n}</div>
+              <div class="text-[10px] text-slate-400 font-medium mt-0.5">Original</div>
+            </div>
+            <div class="bg-blue-50/60 rounded-xl p-2.5 border border-blue-200">
+              <div class="text-[10px] font-bold text-blue-700 uppercase tracking-wider">Time Left</div>
+              <div id="pdfCenterProgressEta" class="text-sm font-extrabold text-blue-700 mt-0.5">Estimating...</div>
+              <div class="text-[10px] text-blue-600 font-bold mt-0.5">Speed: Fast</div>
+            </div>
+          </div>
+
+          <div class="w-full bg-slate-100 rounded-full h-3.5 overflow-hidden p-0.5 border border-slate-200/80 mb-2">
+            <div id="pdfCenterProgressBar" class="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-400 rounded-full transition-all duration-200 shadow-xs" style="width: 0%;"></div>
+          </div>
+
+          <div class="w-full flex items-center justify-between text-xs font-mono text-slate-500 px-1 mb-4">
+            <span id="pdfCenterProgressPct" class="font-bold text-slate-800">0% Completed</span>
+            <span class="text-slate-400">Target: ${r}</span>
+          </div>
+
+          <div class="flex items-center gap-2 text-[11px] text-slate-400">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Zero-Port Native IPC Engine Active</span>
+          </div>
+        </div>
+      `, o = document.getElementById("pdfCenterProgressBar"), s = document.getElementById("pdfCenterProgressCount"), c = document.getElementById("pdfCenterProgressEta"), l = document.getElementById("pdfCenterProgressFileName"), u = document.getElementById("pdfCenterProgressPct");
+		}
 		try {
 			let n = 0;
 			if (e === "compress_pdf") {
-				let e = this.files.length, u = this.files.reduce((e, t) => e + (t.size || 0), 0), d = 0, f = 0, p = Date.now();
+				let e = this.files.length, a = this.files.reduce((e, t) => e + (t.size || 0), 0), d = 0, f = 0, p = Date.now();
 				await qt(this.files, this.targetKb, (e, t) => {
 					let n = document.querySelector(`.docket-card[data-file-id="${e}"]`);
 					if (n) {
@@ -11885,26 +11934,26 @@ var Jt = class {
 				}, async (r, i) => {
 					if (i && i.success) {
 						await this.saveOutputFile(t, i.outName, i.finalBlob || i.finalBytes), n++, f++, d += i.finalSize || 0;
-						let a = Math.round(f / e * 100), u = (Date.now() - p) / 1e3 / f, m = e - f, h = Math.max(0, Math.ceil(m * u)), g = m > 0 ? `Est. ~${h}s left` : "Finalizing...";
-						o && (o.style.width = `${a}%`), s && (s.textContent = `Compressing: ${f} / ${e} Files (${a}%)`), c && (c.textContent = g), l && (l.textContent = r.name);
-						let _ = document.querySelector(`.docket-card[data-file-id="${r.id}"]`);
-						if (_) {
-							let e = _.querySelector(".badge-comp-size");
+						let a = Math.round(f / e * 100), m = (Date.now() - p) / 1e3 / f, h = e - f, g = Math.max(0, Math.ceil(h * m)), _ = h > 0 ? `Est. ~${g}s left` : "Finalizing...";
+						o && (o.style.width = `${a}%`), s && (s.textContent = `${f} / ${e} Files`), c && (c.textContent = _), l && (l.textContent = r.name), u && (u.textContent = `${a}% Completed`);
+						let v = document.querySelector(`.docket-card[data-file-id="${r.id}"]`);
+						if (v) {
+							let e = v.querySelector(".badge-comp-size");
 							if (e && (e.textContent = `Comp ${i.finalSize >= 1048576 ? `${(i.finalSize / 1048576).toFixed(2)} MB` : `${Math.round(i.finalSize / 1024)} KB`}`, e.className = "badge-comp-size px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-300 rounded font-mono text-[10px] font-bold truncate"), i.isAtFloor) {
-								let e = _.querySelector(".badge-floor-limit");
-								e || (e = document.createElement("div"), e.className = "badge-floor-limit mt-1 px-1.5 py-0.5 bg-amber-50 border border-amber-300 text-amber-800 rounded font-mono text-[9px] font-bold text-center", _.appendChild(e)), e.textContent = `⚠ Min readable limit: ${i.floorKb} KB`;
+								let e = v.querySelector(".badge-floor-limit");
+								e || (e = document.createElement("div"), e.className = "badge-floor-limit mt-1 px-1.5 py-0.5 bg-amber-50 border border-amber-300 text-amber-800 rounded font-mono text-[9px] font-bold text-center", v.appendChild(e)), e.textContent = `⚠ Min readable limit: ${i.floorKb} KB`;
 							}
 						}
 					}
 				});
-				let m = u > 0 && u > d ? Math.round((u - d) / u * 100) : 0, h = this.lastOutputFolder || (this.activeFolderPath ? `${this.activeFolderPath}/${t}` : `Output/${t}`);
+				let m = a > 0 && a > d ? Math.round((a - d) / a * 100) : 0, h = this.lastOutputFolder || (this.activeFolderPath ? `${this.activeFolderPath}/${t}` : `Output/${t}`);
 				this.completionSummary = {
 					totalFiles: n,
-					origTotalBytes: u,
+					origTotalBytes: a,
 					outTotalBytes: d,
 					savedPct: m,
 					outFolderPath: h
-				}, i && (i.style.overflow = ""), a && a.classList.add("hidden"), this.files = [], this.updateStats(), this.renderQueue(), r.show("Compression Complete!", `Saved ${n} files directly into ${t}/`, "success"), h && b(h);
+				}, i && (i.style.overflow = ""), this.files = [], this.updateStats(), this.renderQueue(), r.show("Compression Complete!", `Saved ${n} files directly into ${t}/`, "success"), h && b(h);
 			} else if (e === "merge_pdf") {
 				let e = Et(this.files.map((e) => e.bytes).filter(Boolean), "portrait"), i = this.activeFolderName ? `Merged_Admission_Dossier_${this.activeFolderName}.pdf` : "Merged_Admission_Dossier.pdf";
 				await this.saveOutputFile(t, i, e), n = 1, r.show("Merge Complete!", `Dossier saved to ${t}/${i}`, "success");
@@ -11949,9 +11998,9 @@ var Jt = class {
 				r.show("Enhancement Complete!", `Saved ${n} clean PDFs to ${t}/`, "success");
 			}
 		} catch (e) {
-			console.error("[PDF-STUDIO] Process failed:", e), r.show("Operation Failed", e.message, "error");
+			console.error("[PDF-STUDIO] Process failed:", e), r.show("Operation Failed", e.message, "error"), i && (i.style.overflow = ""), this.renderQueue();
 		} finally {
-			this.isProcessing = !1, i && (i.style.overflow = ""), a && a.classList.add("hidden"), n && (n.disabled = !1, n.classList.remove("opacity-50", "cursor-not-allowed")), this._updateProcessButtonLabel();
+			this.isProcessing = !1, i && (i.style.overflow = ""), n && (n.disabled = !1, n.classList.remove("opacity-50", "cursor-not-allowed")), this._updateProcessButtonLabel();
 		}
 	}
 };

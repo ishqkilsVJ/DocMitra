@@ -1776,13 +1776,7 @@ export class PdfStudioUIManager {
 
     const btnStart = document.getElementById('startCompressBtn');
     const gridContainer = document.getElementById('pdfCardsGridContainer');
-
-    // Viewport-Pinned Center Processing Modal (Choice 2-A)
-    const centerOverlay = document.getElementById('pdfCenterProgressOverlay');
-    const centerBar = document.getElementById('pdfCenterProgressBar');
-    const centerCount = document.getElementById('pdfCenterProgressCount');
-    const centerEta = document.getElementById('pdfCenterProgressEta');
-    const centerFileName = document.getElementById('pdfCenterProgressFileName');
+    const grid = document.getElementById('pdfCardsGrid');
 
     if (btnStart) {
       btnStart.disabled = true;
@@ -1793,15 +1787,75 @@ export class PdfStudioUIManager {
 
     // Lock Screen Scroll to prevent user scrolling during execution (Choice 2-A)
     if (gridContainer) {
+      gridContainer.scrollTop = 0;
       gridContainer.style.overflow = 'hidden';
     }
 
-    if (centerOverlay && opName === 'compress_pdf') {
-      centerOverlay.classList.remove('hidden');
-      if (centerBar) centerBar.style.width = '0%';
-      if (centerCount) centerCount.textContent = `Compressing: 0 / ${this.files.length} Files (0%)`;
-      if (centerEta) centerEta.textContent = 'Estimating...';
-      if (centerFileName) centerFileName.textContent = 'Preparing batch compression...';
+    // Sample 1: In-Place Bento Progress Transformation directly inside grid
+    let centerBar = null;
+    let centerCount = null;
+    let centerEta = null;
+    let centerFileName = null;
+    let centerPct = null;
+
+    if (opName === 'compress_pdf' && grid) {
+      const totalFiles = this.files.length;
+      const origTotalBytes = this.files.reduce((acc, f) => acc + (f.size || 0), 0);
+      const origStr = origTotalBytes >= 1024 * 1024
+        ? `${(origTotalBytes / (1024 * 1024)).toFixed(2)} MB`
+        : `${Math.round(origTotalBytes / 1024)} KB`;
+      const targetStr = this.targetKb >= 1024
+        ? `${(this.targetKb / 1024).toFixed(1)} MB`
+        : `${this.targetKb} KB`;
+
+      grid.className = 'flex items-center justify-center min-h-[380px] w-full';
+      grid.innerHTML = `
+        <div id="pdfCenterProgressCard" class="col-span-full max-w-xl w-full mx-auto bg-white rounded-2xl border-2 border-blue-500/30 shadow-xl p-7 flex flex-col items-center text-center">
+          <div class="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center mb-3 shadow-xs">
+            <span class="material-symbols-outlined text-[32px] animate-spin">sync</span>
+          </div>
+          <h3 class="text-xl font-bold text-slate-800 tracking-tight">Compressing Documents</h3>
+          <p id="pdfCenterProgressFileName" class="text-xs text-blue-600 font-mono mt-1 mb-5 truncate max-w-sm">Preparing batch compression...</p>
+
+          <div class="grid grid-cols-3 gap-3 w-full mb-5 text-center font-mono">
+            <div class="bg-slate-50 rounded-xl p-2.5 border border-slate-200/80">
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Processed</div>
+              <div id="pdfCenterProgressCount" class="text-sm font-extrabold text-slate-800 mt-0.5">0 / ${totalFiles} Files</div>
+              <div class="text-[10px] text-blue-600 font-semibold mt-0.5">Batch Active</div>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-2.5 border border-slate-200/80">
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Before Size</div>
+              <div class="text-sm font-extrabold text-slate-700 mt-0.5">${origStr}</div>
+              <div class="text-[10px] text-slate-400 font-medium mt-0.5">Original</div>
+            </div>
+            <div class="bg-blue-50/60 rounded-xl p-2.5 border border-blue-200">
+              <div class="text-[10px] font-bold text-blue-700 uppercase tracking-wider">Time Left</div>
+              <div id="pdfCenterProgressEta" class="text-sm font-extrabold text-blue-700 mt-0.5">Estimating...</div>
+              <div class="text-[10px] text-blue-600 font-bold mt-0.5">Speed: Fast</div>
+            </div>
+          </div>
+
+          <div class="w-full bg-slate-100 rounded-full h-3.5 overflow-hidden p-0.5 border border-slate-200/80 mb-2">
+            <div id="pdfCenterProgressBar" class="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-400 rounded-full transition-all duration-200 shadow-xs" style="width: 0%;"></div>
+          </div>
+
+          <div class="w-full flex items-center justify-between text-xs font-mono text-slate-500 px-1 mb-4">
+            <span id="pdfCenterProgressPct" class="font-bold text-slate-800">0% Completed</span>
+            <span class="text-slate-400">Target: ${targetStr}</span>
+          </div>
+
+          <div class="flex items-center gap-2 text-[11px] text-slate-400">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Zero-Port Native IPC Engine Active</span>
+          </div>
+        </div>
+      `;
+
+      centerBar = document.getElementById('pdfCenterProgressBar');
+      centerCount = document.getElementById('pdfCenterProgressCount');
+      centerEta = document.getElementById('pdfCenterProgressEta');
+      centerFileName = document.getElementById('pdfCenterProgressFileName');
+      centerPct = document.getElementById('pdfCenterProgressPct');
     }
 
     try {
@@ -1839,11 +1893,12 @@ export class PdfStudioUIManager {
               const estLeft = Math.max(0, Math.ceil(remaining * avgTime));
               const etaText = remaining > 0 ? `Est. ~${estLeft}s left` : 'Finalizing...';
 
-              // Update Viewport-Pinned Center Processing Modal
+              // Update In-Place Bento Progress Card (Sample 1)
               if (centerBar) centerBar.style.width = `${overallPct}%`;
-              if (centerCount) centerCount.textContent = `Compressing: ${completedFiles} / ${totalFiles} Files (${overallPct}%)`;
+              if (centerCount) centerCount.textContent = `${completedFiles} / ${totalFiles} Files`;
               if (centerEta) centerEta.textContent = etaText;
               if (centerFileName) centerFileName.textContent = file.name;
+              if (centerPct) centerPct.textContent = `${overallPct}% Completed`;
 
               // Update card in real-time
               const card = document.querySelector(`.docket-card[data-file-id="${file.id}"]`);
@@ -1886,9 +1941,8 @@ export class PdfStudioUIManager {
           outFolderPath: outFolderPath
         };
 
-        // Unlock Screen Scroll
+        // Unlock Screen Scroll & seamlessly transform in-place to Batch Compression Complete Bento Card
         if (gridContainer) gridContainer.style.overflow = '';
-        if (centerOverlay) centerOverlay.classList.add('hidden');
         this.files = [];
         this.updateStats();
         this.renderQueue();
@@ -1996,10 +2050,11 @@ export class PdfStudioUIManager {
     } catch (err) {
       console.error('[PDF-STUDIO] Process failed:', err);
       toast.show('Operation Failed', err.message, 'error');
+      if (gridContainer) gridContainer.style.overflow = '';
+      this.renderQueue();
     } finally {
       this.isProcessing = false;
       if (gridContainer) gridContainer.style.overflow = '';
-      if (centerOverlay) centerOverlay.classList.add('hidden');
       if (btnStart) {
         btnStart.disabled = false;
         btnStart.classList.remove('opacity-50', 'cursor-not-allowed');

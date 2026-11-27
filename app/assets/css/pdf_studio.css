@@ -222,13 +222,22 @@
 }
 
 /* ==========================================================================
-   11. Center Frosted Blue Progress Overlay (Choice 2-A)
+   11. Center Bento Processing Card (Sample 1)
    ========================================================================== */
 
-.pdf-studio-scope #pdfCenterProgressOverlay {
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  background: radial-gradient(circle at center, rgba(15, 23, 42, 0.85) 0%, rgba(2, 6, 23, 0.95) 100%);
+.pdf-studio-scope #pdfCenterProgressCard {
+  animation: pdfFadeInScale 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes pdfFadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 
