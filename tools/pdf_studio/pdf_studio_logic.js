@@ -16,12 +16,26 @@ export const PDF_PAGE_SIZES = {
 };
 
 /**
- * Read width and height from raw JPEG binary stream
- * @param {Uint8Array} bytes
+ * Read width and height from raw JPEG binary stream.
+ * Defensively handles Uint8Array, ArrayBuffer, or wrapper objects.
+ * @param {Uint8Array|ArrayBuffer|object} bytesInput
  * @returns {{ width: number, height: number }}
  */
-export function getJpegDimensions(bytes) {
-  if (!bytes || bytes.length < 4) {
+export function getJpegDimensions(bytesInput) {
+  let bytes = null;
+  if (bytesInput instanceof Uint8Array) {
+    bytes = bytesInput;
+  } else if (bytesInput instanceof ArrayBuffer) {
+    bytes = new Uint8Array(bytesInput);
+  } else if (bytesInput?.bytes instanceof Uint8Array) {
+    bytes = bytesInput.bytes;
+  } else if (bytesInput?.bytes instanceof ArrayBuffer) {
+    bytes = new Uint8Array(bytesInput.bytes);
+  } else if (bytesInput?.buffer instanceof ArrayBuffer) {
+    bytes = new Uint8Array(bytesInput.buffer);
+  }
+
+  if (!bytes || !bytes.length || bytes.length < 4) {
     return { width: 1240, height: 1754 };
   }
   let offset = 2; // Skip 0xFFD8 SOI
@@ -59,9 +73,10 @@ export function getJpegDimensions(bytes) {
  * @param {Array<{ bytes: Uint8Array, width?: number, height?: number }>} imageList
  * @param {string} orientation - 'portrait' | 'landscape' | 'fit'
  * @param {number} rotation - 0 | 90 | 180 | 270
+ * @param {object} [options={}] - { margin: number }
  * @returns {Blob} Valid ISO 32000 PDF Blob
  */
-export function createPdfFromJpegs(imageList = [], orientation = 'portrait', rotation = 0) {
+export function createPdfFromJpegs(imageList = [], orientation = 'portrait', rotation = 0, options = {}) {
   if (!imageList.length) {
     throw new Error('No images provided for PDF creation.');
   }
@@ -101,7 +116,20 @@ export function createPdfFromJpegs(imageList = [], orientation = 'portrait', rot
     const contentId = pageId + 1;
     const imageId = pageId + 2;
 
-    const rawBytes = imgData instanceof Uint8Array ? imgData : (imgData?.bytes || imgData);
+    let rawBytes;
+    if (imgData instanceof Uint8Array) {
+      rawBytes = imgData;
+    } else if (imgData instanceof ArrayBuffer) {
+      rawBytes = new Uint8Array(imgData);
+    } else if (imgData?.bytes instanceof Uint8Array) {
+      rawBytes = imgData.bytes;
+    } else if (imgData?.bytes instanceof ArrayBuffer) {
+      rawBytes = new Uint8Array(imgData.bytes);
+    } else if (imgData?.buffer instanceof ArrayBuffer) {
+      rawBytes = new Uint8Array(imgData.buffer);
+    } else {
+      rawBytes = new Uint8Array(imgData?.bytes || imgData || 0);
+    }
     let imgW = imgData?.width;
     let imgH = imgData?.height;
     if (!imgW || !imgH) {
@@ -118,8 +146,8 @@ export function createPdfFromJpegs(imageList = [], orientation = 'portrait', rot
       pageH = PDF_PAGE_SIZES.A4_LANDSCAPE.height;
     }
 
-    // Scale image proportionally to fit page with small 18pt margin
-    const margin = 18;
+    // Scale image proportionally to fit page (margin defaults to 0 for true edge-to-edge A4 scans)
+    const margin = (options && typeof options.margin === 'number') ? options.margin : 0;
     const availW = pageW - margin * 2;
     const availH = pageH - margin * 2;
     const scale = Math.min(availW / imgW, availH / imgH);

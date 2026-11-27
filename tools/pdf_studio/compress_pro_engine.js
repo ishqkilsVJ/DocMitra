@@ -217,7 +217,10 @@ export async function loadImageToBitmap(blob) {
 
 /**
  * Feature 8: Auto-A4 Page Fit for JPG/PNG Intake
- * Proportional scale into ISO A4 dimensions (595.28 x 841.89 pt) with 18pt white margins.
+ * Proportional scale into ISO A4 dimensions (595.28 x 841.89 pt) edge-to-edge for scanned docs.
+ * Automatically handles Portrait and Landscape, eliminates artificial double margins,
+ * and safeguards small photos/signatures from over-stretching (Choice 2-A).
+ *
  * @param {ImageBitmap|HTMLImageElement} img
  * @param {number} [targetDpi=150]
  * @returns {HTMLCanvasElement}
@@ -226,13 +229,13 @@ export function autoFitA4Canvas(img, targetDpi = 150) {
   const canvas = document.createElement('canvas');
   const dpr = (targetDpi || 150) / 72;
 
-  // Standard A4 dimensions in pixels at target DPI
-  const a4W = Math.round(595.28 * dpr);
-  const a4H = Math.round(841.89 * dpr);
-  const margin = Math.round(18 * dpr);
+  const imgW = img.naturalWidth || img.width;
+  const imgH = img.naturalHeight || img.height;
+  const isLandscape = imgW > imgH;
 
-  const availW = a4W - (margin * 2);
-  const availH = a4H - (margin * 2);
+  // Standard A4 dimensions in pixels at target DPI
+  const a4W = isLandscape ? Math.round(841.89 * dpr) : Math.round(595.28 * dpr);
+  const a4H = isLandscape ? Math.round(595.28 * dpr) : Math.round(841.89 * dpr);
 
   canvas.width = a4W;
   canvas.height = a4H;
@@ -242,16 +245,48 @@ export function autoFitA4Canvas(img, targetDpi = 150) {
   ctx.fillStyle = '#FFFFFF';
   ctx.fillRect(0, 0, a4W, a4H);
 
-  // Proportional fit calculation (no stretching, no cropping)
-  const imgW = img.naturalWidth || img.width;
-  const imgH = img.naturalHeight || img.height;
-  const scale = Math.min(availW / imgW, availH / imgH, 1.0);
+  // Check aspect ratio vs A4 ratio (841.89 / 595.28 = 1.41427)
+  const a4Ratio = 841.89 / 595.28;
+  const imgRatio = isLandscape ? (imgW / imgH) : (imgH / imgW);
+  const ratioDiff = Math.abs(imgRatio - a4Ratio) / a4Ratio;
 
-  const drawW = Math.round(imgW * scale);
-  const drawH = Math.round(imgH * scale);
-  const offsetX = Math.round(margin + (availW - drawW) / 2);
-  const offsetY = Math.round(margin + (availH - drawH) / 2);
+  // Safeguard for small photos/signatures vs full documents (Choice 2-A)
+  // e.g. passport photos (128x184), signatures (150x60)
+  const isSmallPhotoOrStamp = imgW < 320 && imgH < 320;
 
+  let drawW, drawH, offsetX, offsetY;
+
+  if (isSmallPhotoOrStamp) {
+    // Keep small photo / stamp natural and centered, do not blow up to full A4
+    drawW = imgW;
+    drawH = imgH;
+    offsetX = Math.round((a4W - drawW) / 2);
+    offsetY = Math.round((a4H - drawH) / 2);
+  } else if (ratioDiff < 0.04) {
+    // True A4 document scan (within 4% aspect match): 100.00% seamless full-bleed A4
+    drawW = a4W;
+    drawH = a4H;
+    offsetX = 0;
+    offsetY = 0;
+  } else if (ratioDiff < 0.08) {
+    // Near-A4 scan: proportional fit without clipping
+    const scale = Math.min(a4W / imgW, a4H / imgH);
+    drawW = Math.round(imgW * scale);
+    drawH = Math.round(imgH * scale);
+    offsetX = Math.round((a4W - drawW) / 2);
+    offsetY = Math.round((a4H - drawH) / 2);
+  } else {
+    // Other documents (e.g. wide ID cards, PAN slips): proportional fit without distortion
+    const scale = Math.min(a4W / imgW, a4H / imgH);
+    drawW = Math.round(imgW * scale);
+    drawH = Math.round(imgH * scale);
+    offsetX = Math.round((a4W - drawW) / 2);
+    offsetY = Math.round((a4H - drawH) / 2);
+  }
+
+  // Ensure high quality image rendering
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
   return canvas;
 }
@@ -361,6 +396,9 @@ export async function optimizeCanvasesToTarget({ canvases, targetKb, hasQr = fal
   const lowerBand = targetBytes * 0.94;
   const upperBand = targetBytes * 0.99;
 
+  const isLandscape = canvases.length > 0 && (canvases[0].width > canvases[0].height);
+  const docOrientation = isLandscape ? 'landscape' : 'portrait';
+
   // 3 to 4 fast binary search passes
   for (let pass = 1; pass <= 4; pass++) {
     const qMid = (qLow + qHigh) / 2;
@@ -371,7 +409,7 @@ export async function optimizeCanvasesToTarget({ canvases, targetKb, hasQr = fal
       jpegs.push(b);
     }
 
-    const compiledBlob = createPdfFromJpegs(jpegs, 'portrait', rotation);
+    const compiledBlob = createPdfFromJpegs(jpegs, docOrientation, rotation, { margin: 0 });
     const compiledSize = compiledBlob.size;
 
     if (!bestBlob || compiledSize <= targetBytes || (compiledSize < bestBlob.size && bestBlob.size > targetBytes)) {
@@ -411,7 +449,7 @@ export async function optimizeCanvasesToTarget({ canvases, targetKb, hasQr = fal
         const b = await canvasToJpegBytes(cv, qMid);
         jpegs.push(b);
       }
-      const grayBlob = createPdfFromJpegs(jpegs, 'portrait', rotation);
+      const grayBlob = createPdfFromJpegs(jpegs, docOrientation, rotation, { margin: 0 });
       if (grayBlob.size < bestBlob.size) {
         bestBlob = grayBlob;
         const buf = await grayBlob.arrayBuffer();
@@ -464,7 +502,8 @@ export async function compressSingleDocumentPro(file, targetKb = 300) {
       const imgBitmap = await loadImageToBitmap(blob);
       const a4Cv = autoFitA4Canvas(imgBitmap, 150);
       const jpegBytes = await canvasToJpegBytes(a4Cv, 0.94);
-      const pdfBlob = createPdfFromJpegs([jpegBytes], 'portrait', file.rotation || 0);
+      const isCvLandscape = a4Cv.width > a4Cv.height;
+      const pdfBlob = createPdfFromJpegs([jpegBytes], isCvLandscape ? 'landscape' : 'portrait', file.rotation || 0, { margin: 0 });
       const buf = await pdfBlob.arrayBuffer();
       const bytes = new Uint8Array(buf);
       const basePdfName = file.name.replace(/\.[^/.]+$/, "") + '.pdf';
@@ -608,12 +647,12 @@ export async function compressBatchParallel(files, targetKb, onProgress, onFileC
         const res = await compressSingleDocumentPro(file, targetKb);
         if (onProgress) onProgress(file.id, 100);
         results.push({ file, res });
-        if (onFileComplete) onFileComplete(file, res);
+        if (onFileComplete) await onFileComplete(file, res);
       } catch (err) {
         console.error('[CompressProEngine] File failed:', file.name, err);
         const failRes = { success: false, error: err.message };
         results.push({ file, res: failRes });
-        if (onFileComplete) onFileComplete(file, failRes);
+        if (onFileComplete) await onFileComplete(file, failRes);
       }
     }
   });

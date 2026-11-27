@@ -10511,57 +10511,60 @@ var xt = {
 	}
 };
 function St(e) {
-	if (!e || e.length < 4) return {
+	let t = null;
+	if (e instanceof Uint8Array ? t = e : e instanceof ArrayBuffer ? t = new Uint8Array(e) : e?.bytes instanceof Uint8Array ? t = e.bytes : e?.bytes instanceof ArrayBuffer ? t = new Uint8Array(e.bytes) : e?.buffer instanceof ArrayBuffer && (t = new Uint8Array(e.buffer)), !t || !t.length || t.length < 4) return {
 		width: 1240,
 		height: 1754
 	};
-	let t = 2, n = e.length;
-	for (; t < n && e[t] === 255;) {
-		let r = e[t + 1];
-		t += 2;
-		let i = r >= 192 && r <= 195 || r >= 197 && r <= 199 || r >= 201 && r <= 203 || r >= 205 && r <= 207;
-		if (t + 1 >= n) break;
-		let a = e[t] << 8 | e[t + 1];
-		if (i && t + 6 < n) {
-			let n = e[t + 3] << 8 | e[t + 4];
+	let n = 2, r = t.length;
+	for (; n < r && t[n] === 255;) {
+		let e = t[n + 1];
+		n += 2;
+		let i = e >= 192 && e <= 195 || e >= 197 && e <= 199 || e >= 201 && e <= 203 || e >= 205 && e <= 207;
+		if (n + 1 >= r) break;
+		let a = t[n] << 8 | t[n + 1];
+		if (i && n + 6 < r) {
+			let e = t[n + 3] << 8 | t[n + 4];
 			return {
-				width: e[t + 5] << 8 | e[t + 6],
-				height: n
+				width: t[n + 5] << 8 | t[n + 6],
+				height: e
 			};
 		}
-		t += a;
+		n += a;
 	}
 	return {
 		width: 595,
 		height: 842
 	};
 }
-function Q(e = [], t = "portrait", n = 0) {
+function Q(e = [], t = "portrait", n = 0, r = {}) {
 	if (!e.length) throw Error("No images provided for PDF creation.");
-	let r = [], i = 0, a = (e) => new TextEncoder().encode(e), o = [], s = (e) => {
-		o.push(e), i += e.length;
+	let i = [], a = 0, o = (e) => new TextEncoder().encode(e), s = [], c = (e) => {
+		s.push(e), a += e.length;
 	};
-	s(a("%PDF-1.4\n%âãÏÓ\n")), r.push(i), s(a("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n"));
-	let c = e.length, l = [];
-	for (let e = 0; e < c; e++) l.push(3 + e * 3);
-	r.push(i), s(a(`2 0 obj\n<< /Type /Pages /Kids [ ${l.map((e) => `${e} 0 R`).join(" ")} ] /Count ${c} >>\nendobj\n`));
-	for (let o = 0; o < c; o++) {
-		let c = e[o], l = 3 + o * 3, u = l + 1, d = l + 2, f = c instanceof Uint8Array ? c : c?.bytes || c, p = c?.width, m = c?.height;
-		if (!p || !m) {
-			let e = St(f);
-			p = e.width || 1240, m = e.height || 1754;
+	c(o("%PDF-1.4\n%âãÏÓ\n")), i.push(a), c(o("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n"));
+	let l = e.length, u = [];
+	for (let e = 0; e < l; e++) u.push(3 + e * 3);
+	i.push(a), c(o(`2 0 obj\n<< /Type /Pages /Kids [ ${u.map((e) => `${e} 0 R`).join(" ")} ] /Count ${l} >>\nendobj\n`));
+	for (let s = 0; s < l; s++) {
+		let l = e[s], u = 3 + s * 3, d = u + 1, f = u + 2, p;
+		p = l instanceof Uint8Array ? l : l instanceof ArrayBuffer ? new Uint8Array(l) : l?.bytes instanceof Uint8Array ? l.bytes : l?.bytes instanceof ArrayBuffer ? new Uint8Array(l.bytes) : l?.buffer instanceof ArrayBuffer ? new Uint8Array(l.buffer) : new Uint8Array(l?.bytes || l || 0);
+		let m = l?.width, h = l?.height;
+		if (!m || !h) {
+			let e = St(p);
+			m = e.width || 1240, h = e.height || 1754;
 		}
-		let h = xt.A4_PORTRAIT.width, g = xt.A4_PORTRAIT.height;
-		(t === "landscape" || t === "fit" && p > m) && (h = xt.A4_LANDSCAPE.width, g = xt.A4_LANDSCAPE.height);
-		let _ = h - 36, v = g - 36, y = Math.min(_ / p, v / m), b = p * y, x = m * y, S = (h - b) / 2, C = (g - x) / 2, w = n ? ` /Rotate ${n}` : "";
-		r.push(i), s(a(`${l} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${h.toFixed(2)} ${g.toFixed(2)}]${w} /Contents ${u} 0 R /Resources << /XObject << /Im${o + 1} ${d} 0 R >> >> >>\nendobj\n`));
-		let T = `q ${b.toFixed(2)} 0 0 ${x.toFixed(2)} ${S.toFixed(2)} ${C.toFixed(2)} cm /Im${o + 1} Do Q\n`, E = T.length;
-		r.push(i), s(a(`${u} 0 obj\n<< /Length ${E} >>\nstream\n${T}endstream\nendobj\n`)), r.push(i), s(a(`${d} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${p} /Height ${m} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${f.length} >>\nstream\n`)), s(f), s(a("\nendstream\nendobj\n"));
+		let g = xt.A4_PORTRAIT.width, _ = xt.A4_PORTRAIT.height;
+		(t === "landscape" || t === "fit" && m > h) && (g = xt.A4_LANDSCAPE.width, _ = xt.A4_LANDSCAPE.height);
+		let v = r && typeof r.margin == "number" ? r.margin : 0, y = g - v * 2, b = _ - v * 2, x = Math.min(y / m, b / h), S = m * x, C = h * x, w = (g - S) / 2, T = (_ - C) / 2, E = n ? ` /Rotate ${n}` : "";
+		i.push(a), c(o(`${u} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${g.toFixed(2)} ${_.toFixed(2)}]${E} /Contents ${d} 0 R /Resources << /XObject << /Im${s + 1} ${f} 0 R >> >> >>\nendobj\n`));
+		let D = `q ${S.toFixed(2)} 0 0 ${C.toFixed(2)} ${w.toFixed(2)} ${T.toFixed(2)} cm /Im${s + 1} Do Q\n`, O = D.length;
+		i.push(a), c(o(`${d} 0 obj\n<< /Length ${O} >>\nstream\n${D}endstream\nendobj\n`)), i.push(a), c(o(`${f} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${m} /Height ${h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${p.length} >>\nstream\n`)), c(p), c(o("\nendstream\nendobj\n"));
 	}
-	let u = i, d = 3 + c * 3;
-	s(a(`xref\n0 ${d}\n0000000000 65535 f \n`));
-	for (let e of r) s(a(`${String(e).padStart(10, "0")} 00000 n \n`));
-	return s(a(`trailer\n<< /Size ${d} /Root 1 0 R >>\nstartxref\n${u}\n%%EOF\n`)), new Blob(o, { type: "application/pdf" });
+	let d = a, f = 3 + l * 3;
+	c(o(`xref\n0 ${f}\n0000000000 65535 f \n`));
+	for (let e of i) c(o(`${String(e).padStart(10, "0")} 00000 n \n`));
+	return c(o(`trailer\n<< /Size ${f} /Root 1 0 R >>\nstartxref\n${d}\n%%EOF\n`)), new Blob(s, { type: "application/pdf" });
 }
 function Ct(e) {
 	let t = [], n = e.length, r = 0;
@@ -10889,12 +10892,21 @@ async function Bt(e) {
 	});
 }
 function Vt(e, t = 150) {
-	let n = document.createElement("canvas"), r = (t || 150) / 72, i = Math.round(595.28 * r), a = Math.round(841.89 * r), o = Math.round(18 * r), s = i - o * 2, c = a - o * 2;
-	n.width = i, n.height = a;
+	let n = document.createElement("canvas"), r = (t || 150) / 72, i = e.naturalWidth || e.width, a = e.naturalHeight || e.height, o = i > a, s = Math.round(o ? 841.89 * r : 595.28 * r), c = Math.round(o ? 595.28 * r : 841.89 * r);
+	n.width = s, n.height = c;
 	let l = n.getContext("2d");
-	l.fillStyle = "#FFFFFF", l.fillRect(0, 0, i, a);
-	let u = e.naturalWidth || e.width, d = e.naturalHeight || e.height, f = Math.min(s / u, c / d, 1), p = Math.round(u * f), m = Math.round(d * f), h = Math.round(o + (s - p) / 2), g = Math.round(o + (c - m) / 2);
-	return l.drawImage(e, h, g, p, m), n;
+	l.fillStyle = "#FFFFFF", l.fillRect(0, 0, s, c);
+	let u = 841.89 / 595.28, d = o ? i / a : a / i, f = Math.abs(d - u) / u, p = i < 320 && a < 320, m, h, g, _;
+	if (p) m = i, h = a, g = Math.round((s - m) / 2), _ = Math.round((c - h) / 2);
+	else if (f < .04) m = s, h = c, g = 0, _ = 0;
+	else if (f < .08) {
+		let e = Math.min(s / i, c / a);
+		m = Math.round(i * e), h = Math.round(a * e), g = Math.round((s - m) / 2), _ = Math.round((c - h) / 2);
+	} else {
+		let e = Math.min(s / i, c / a);
+		m = Math.round(i * e), h = Math.round(a * e), g = Math.round((s - m) / 2), _ = Math.round((c - h) / 2);
+	}
+	return l.imageSmoothingEnabled = !0, l.imageSmoothingQuality = "high", l.drawImage(e, g, _, m, h), n;
 }
 function Ht(e) {
 	try {
@@ -10932,20 +10944,21 @@ async function Gt({ canvases: e, targetKb: t, hasQr: n = !1, rotation: r = 0 }) 
 	n && (o = Math.max(o, .45));
 	let u = i * .94;
 	i * .99;
+	let d = e.length > 0 && e[0].width > e[0].height ? "landscape" : "portrait";
 	for (let t = 1; t <= 4; t++) {
 		let t = (o + s) / 2, n = [];
 		for (let r of e) {
 			let e = await Wt(r, t);
 			n.push(e);
 		}
-		let a = Q(n, "portrait", r), d = a.size;
-		if (!c || d <= i || d < c.size && c.size > i) {
+		let a = Q(n, d, r, { margin: 0 }), f = a.size;
+		if (!c || f <= i || f < c.size && c.size > i) {
 			c = a;
 			let e = await a.arrayBuffer();
 			l = new Uint8Array(e);
 		}
-		if (d >= u && d <= i) break;
-		d > i ? s = t : o = t;
+		if (f >= u && f <= i) break;
+		f > i ? s = t : o = t;
 	}
 	if (c && c.size > i && a >= 1) {
 		for (let t of e) zt(t.getContext("2d"), t.width, t.height);
@@ -10956,7 +10969,7 @@ async function Gt({ canvases: e, targetKb: t, hasQr: n = !1, rotation: r = 0 }) 
 				let e = await Wt(r, t);
 				n.push(e);
 			}
-			let a = Q(n, "portrait", r);
+			let a = Q(n, d, r, { margin: 0 });
 			if (a.size < c.size) {
 				c = a;
 				let e = await a.arrayBuffer();
@@ -10966,13 +10979,13 @@ async function Gt({ canvases: e, targetKb: t, hasQr: n = !1, rotation: r = 0 }) 
 			s = t;
 		}
 	}
-	let d = !1, f = 0;
-	return c && c.size > i && (d = !0, f = Math.round(c.size / 1024)), {
+	let f = !1, p = 0;
+	return c && c.size > i && (f = !0, p = Math.round(c.size / 1024)), {
 		blob: c,
 		finalBytes: l,
 		size: c ? c.size : 0,
-		isAtFloor: d,
-		floorKb: f
+		isAtFloor: f,
+		floorKb: p
 	};
 }
 async function Kt(e, t = 300) {
@@ -10983,13 +10996,13 @@ async function Kt(e, t = 300) {
 	let n = /\.(jpe?g|png|webp)$/i.test(e.name), r = t * 1024;
 	if (It(e.size, t)) {
 		if (n) {
-			let t = Q([await Wt(Vt(await Bt(new Blob([e.bytes.slice()], { type: e.name.match(/\.png$/i) ? "image/png" : "image/jpeg" })), 150), .94)], "portrait", e.rotation || 0), n = await t.arrayBuffer(), r = new Uint8Array(n), i = Ft(e.name.replace(/\.[^/.]+$/, "") + ".pdf", r.length);
+			let t = Vt(await Bt(new Blob([e.bytes.slice()], { type: e.name.match(/\.png$/i) ? "image/png" : "image/jpeg" })), 150), n = await Wt(t, .94), r = t.width > t.height, i = Q([n], r ? "landscape" : "portrait", e.rotation || 0, { margin: 0 }), a = await i.arrayBuffer(), o = new Uint8Array(a), s = Ft(e.name.replace(/\.[^/.]+$/, "") + ".pdf", o.length);
 			return {
 				success: !0,
-				finalBytes: r,
-				finalBlob: t,
-				finalSize: r.length,
-				outName: i,
+				finalBytes: o,
+				finalBlob: i,
+				finalSize: o.length,
+				outName: s,
 				isAtFloor: !1,
 				floorKb: 0,
 				skippedSmaller: !0
@@ -11070,7 +11083,7 @@ async function qt(e, t, n, r) {
 				n && n(e.id, 100), i.push({
 					file: e,
 					res: a
-				}), r && r(e, a);
+				}), r && await r(e, a);
 			} catch (t) {
 				console.error("[CompressProEngine] File failed:", e.name, t);
 				let n = {
@@ -11080,7 +11093,7 @@ async function qt(e, t, n, r) {
 				i.push({
 					file: e,
 					res: n
-				}), r && r(e, n);
+				}), r && await r(e, n);
 			}
 		}
 	});
