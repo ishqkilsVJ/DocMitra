@@ -1,16 +1,24 @@
 # 🔒 LOCKED TOOL: Bulk Document Renamer (`tools/rename_tool/`)
 
 > [!IMPORTANT]
-> **FROZEN & FULLY SEALED PRODUCTION MILESTONE UNDER CHECKPOINT `CP-059`**  
+> **FROZEN & FULLY SEALED PRODUCTION MILESTONE UNDER CHECKPOINT `CP-060`**  
 > **Status:** `LOCKED — PRODUCTION STABLE`  
 > **Governance Policy:** `AGENTS.md` (RULE 7) & `RENAME_TOOL_AGENT.md`  
-> **Module Integrity:** 100% Passing Across All Verification Tests via Dual-MCP QA (Playwright MCP 8/8 Tests Passed + Chrome DevTools MCP: 0 Console Errors)  
+> **Module Integrity:** 100% Passing Across All Verification Tests via Dual-MCP QA (Playwright MCP + Chrome DevTools MCP: 0 Console Errors)  
 > **Verification Date:** 2026-11-27  
-> **Core Architecture:** Complete Production Suite (Physical Windows Folder Rename, Exact Casing, Circular Queue, 3-Tab Settings Modal with Deduplicated 58 Canonical Documents, Linked Documents Manager with Dynamic Zero-Error Exclusion, Bento Document Desk with Universal 1-0 and A-Z Natural Auto-Sort, In-App Notepad Report with Windows Notepad Launcher, 3-Way Unlimited Rotation Toolkit, Indian Phonetic & Fuzzy Matching Engine, Choice 1-B Direct Typed Word + Student Name Appending Engine).
+> **Core Architecture:** Complete Production Suite (Physical Windows Folder Rename, Exact Casing, Circular Queue, 3-Tab Settings Modal with Deduplicated 58 Canonical Documents, Linked Documents Manager with Dynamic Zero-Error Exclusion, Bento Document Desk with Universal 1-0 and A-Z Natural Auto-Sort, In-App Notepad Report with Windows Notepad Launcher, 3-Way Unlimited Rotation Toolkit, Indian Phonetic & Fuzzy Matching Engine, Choice 1-B Direct Typed Word + Student Name Appending Engine, Choice 1-A & 2-B Strict Stop-Word Isolation & Word-Boundary Keyword Matching).
 >
 > **LOCKED BY POLICY (`AGENTS.md` Rule 3):**  
 > Strict Feature Freeze in effect. Zero direct file modifications permitted inside `tools/rename_tool/` without explicit user unlock command:  
 > `UNLOCK RENAME_TOOL`
+
+> **Last QA Stabilization & Verification:** 2026-11-27 (Strict Stop-Word Isolation & Word-Boundary Keyword Matching [CP-060] Verified 100%:
+> 1. Stop-Word Isolation (Choice 1-A): Defined `GENERIC_STOP_KEYWORDS` (`certificate`, `pramanpatra`, `dakhla`, `sanad`, `patrika`, `card`, `doc`, `paper`, etc.) ensuring standalone generic administrative terms can NEVER match on their own as keywords.
+> 2. Specific Synonyms: Replaced generic `'pramanpatra'` in `INDIAN_ACADEMIC_SYNONYMS['validity']` with `'padtalani pramanpatra'`.
+> 3. Word-Boundary Regex Keyword Guard: Upgraded keyword matching from loose substring `.includes()` to strict word boundary regex (`\b<kw>\b`) preventing sub-word contamination.
+> 4. Preset Keyword Sanitizer (Choice 2-B): Added automatic stop-word stripping during `loadPresetsAndSettings()`, cleaning legacy dirty keywords from `documentPresets` and `shortcuts` without disrupting user preset structures.
+> 5. Eradicated False Match & False Duplicate: Verified `MEDICAL FITNESS CERTIFICATE` and `INCOME CERTIFICATE` are never hijacked to `VALIDITY` and do not falsely trigger Duplicate badges.
+> 6. Dual-MCP Verification: 100% PASS across Playwright MCP and Chrome DevTools MCP (0 console errors); deployed to `C:\Users\USER\AppData\Local\DocMitra\app.exe`; re-sealed under `CP-060`).
 
 > **Last QA Stabilization & Verification:** 2026-11-27 (Direct Custom Typed Word + Student Name Appending Engine [CP-059] Verified 100%:
 > 1. Choice 1-B Direct Typed Word Preservation: When user types custom/unlinked words (e.g. `VALIDITY`, `AFFIDAVIT`, `ABC`), the exact typed word is preserved with the active case and the student/folder name is cleanly appended (e.g., `VALIDITY VIJAY RAMESH YADAV.pdf`, `AFFIDAVIT VIJAY RAMESH YADAV.pdf`) without forcing canonical name conversion.

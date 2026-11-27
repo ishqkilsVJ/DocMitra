@@ -471,7 +471,7 @@ export const INDIAN_ACADEMIC_SYNONYMS = {
   'tc': ['transfer certificate', 'leaving certificate', 'lc', 'school leaving'],
   // Caste & Validity
   'caste': ['cast', 'jati', 'samaj', 'jati pramanpatra'],
-  'validity': ['caste validity', 'cvc', 'validity certificate', 'padtalani', 'pramanpatra'],
+  'validity': ['caste validity', 'cvc', 'validity certificate', 'padtalani', 'padtalani pramanpatra'],
   'non creamy': ['ncl', 'non creamy layer', 'non criminal', 'non-creamy', 'unnath va pragat'],
   'ncl': ['non creamy layer', 'non creamy', 'non criminal'],
   // Income & Domicile
@@ -508,6 +508,12 @@ export const INDIAN_ACADEMIC_SYNONYMS = {
   'hostel': ['hostel certificate', 'hostel receipt', 'vasatigruh dakhla']
 };
 
+// Choice 1-A: Generic Administrative Stop-Words that must NEVER match as standalone keywords
+export const GENERIC_STOP_KEYWORDS = new Set([
+  'certificate', 'pramanpatra', 'dakhla', 'sanad', 'patrika', 'card', 'kard',
+  'doc', 'document', 'paper', 'form', 'letter', 'receipt', 'praman', 'patra'
+]);
+
 export function generateSmartKeywords(docName, shortCodes = []) {
   if (!docName || typeof docName !== 'string') return '';
   const raw = docName.toLowerCase().trim().replace(/[^a-z0-9\s_-]/g, ' ');
@@ -525,7 +531,7 @@ export function generateSmartKeywords(docName, shortCodes = []) {
     for (const sc of shortCodes) {
       if (sc && typeof sc === 'string') {
         const c = sc.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
-        if (c.length >= 2) results.add(c);
+        if (c.length >= 2 && !GENERIC_STOP_KEYWORDS.has(c)) results.add(c);
       }
     }
   }
@@ -537,7 +543,10 @@ export function generateSmartKeywords(docName, shortCodes = []) {
       for (const syn of synList) {
         results.add(cleanBase.replace(regex, syn));
         if (words.length <= 4) {
-          results.add(syn);
+          const synClean = syn.trim().toLowerCase();
+          if (!GENERIC_STOP_KEYWORDS.has(synClean)) {
+            results.add(syn);
+          }
         }
       }
     }
@@ -616,9 +625,9 @@ export function generateSmartKeywords(docName, shortCodes = []) {
     results.add('bonfide');
   }
 
-  // 6. Individual meaningful words
+  // 6. Individual meaningful words (Strictly excluding generic stop-words)
   for (const w of words) {
-    if (w.length >= 3 && !['and', 'for', 'the', 'from', 'with'].includes(w)) {
+    if (w.length >= 3 && !['and', 'for', 'the', 'from', 'with'].includes(w) && !GENERIC_STOP_KEYWORDS.has(w)) {
       results.add(w);
     }
   }
@@ -626,7 +635,7 @@ export function generateSmartKeywords(docName, shortCodes = []) {
   // Clean, trim, unique and format as comma-separated string
   const cleanTokens = Array.from(results)
     .map(s => s.trim().toLowerCase().replace(/[^a-z0-9\s_-]/g, '').replace(/\s+/g, ' '))
-    .filter(s => s.length >= 2);
+    .filter(s => s.length >= 2 && !GENERIC_STOP_KEYWORDS.has(s));
 
   return Array.from(new Set(cleanTokens)).slice(0, 25).join(', ');
 }
@@ -3042,6 +3051,12 @@ export function matchFilenameSmart(filename, studentName = '', groups = null, pr
         const kwClean = kw.toLowerCase().trim();
         if (!kwClean) continue;
         const kwNorm = normalizeIndianText(kwClean);
+
+        // Choice 1-A Strict Stop-Word Isolation: Never match generic stop-words as standalone keyword
+        if (GENERIC_STOP_KEYWORDS.has(kwClean) || GENERIC_STOP_KEYWORDS.has(kwNorm)) {
+          continue;
+        }
+
         if (kwClean.length <= 3) {
           const kwPat = new RegExp(`(^|[^a-z0-9])${kwClean}([^a-z0-9]|$)`, 'i');
           if (kwPat.test(spellingFixed) || kwPat.test(baseOriginal) || kwPat.test(indianNormalized)) {
@@ -3054,15 +3069,32 @@ export function matchFilenameSmart(filename, studentName = '', groups = null, pr
               reason: `Preset keyword match (${kwClean})`
             };
           }
-        } else if (normalized.includes(kwClean) || indianNormalized.includes(kwClean) || indianNormalized.includes(kwNorm)) {
-          return {
-            docType: docName,
-            canonical: CANONICAL_NAMES[docName] || docName,
-            code: docCode || null,
-            confidence: 90,
-            isConfident: true,
-            reason: `Preset keyword match (${kwClean})`
-          };
+        } else {
+          // Word boundary check for kwClean and kwNorm to prevent false substring collisions
+          const kwCleanEsc = kwClean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const kwCleanPat = new RegExp(`(^|[^a-z0-9])${kwCleanEsc}([^a-z0-9]|$)`, 'i');
+          let matchedKw = false;
+
+          if (kwCleanPat.test(normalized) || kwCleanPat.test(indianNormalized)) {
+            matchedKw = true;
+          } else if (kwNorm && kwNorm.length >= 4 && !GENERIC_STOP_KEYWORDS.has(kwNorm)) {
+            const kwNormEsc = kwNorm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const kwNormPat = new RegExp(`(^|[^a-z0-9])${kwNormEsc}([^a-z0-9]|$)`, 'i');
+            if (kwNormPat.test(indianNormalized)) {
+              matchedKw = true;
+            }
+          }
+
+          if (matchedKw) {
+            return {
+              docType: docName,
+              canonical: CANONICAL_NAMES[docName] || docName,
+              code: docCode || null,
+              confidence: 90,
+              isConfident: true,
+              reason: `Preset keyword match (${kwClean})`
+            };
+          }
         }
       }
     }

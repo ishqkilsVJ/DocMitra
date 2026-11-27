@@ -40,6 +40,26 @@
   ],
   "licenses": [
     {
+      "id": "LIC-1795773898695",
+      "customerName": "DEOGRA NARSING",
+      "hwid": "DM-HW-873D-80C3-71F0-53E2",
+      "plan": "TRIAL_7D",
+      "planTitle": "7 Days Tester Trial",
+      "modules": [
+        "Bulk Renamer",
+        "Missing & Follow-up Desk",
+        "PDF Studio",
+        "Image Studio"
+      ],
+      "moduleCode": "RFPI",
+      "issuedAt": "2026-11-27 15:34:58",
+      "expiresAt": "2026-12-04 15:34:58",
+      "licenseKey": "DM-ACT-RFPI-20261204-16C4-F473-0501-9F40",
+      "legacyKey": "DM-LIC-C68E-7490-8D1A-0B01",
+      "status": "ACTIVE",
+      "notes": ""
+    },
+    {
       "id": "LIC-1795748998056",
       "customerName": "VIJAY",
       "hwid": "DM-HW-9245-0181-E965-89D1",
@@ -201,6 +221,26 @@
     }
   ],
   "customers": [
+    {
+      "id": "LIC-1795773898695",
+      "customerName": "DEOGRA NARSING",
+      "hwid": "DM-HW-873D-80C3-71F0-53E2",
+      "plan": "TRIAL_7D",
+      "planTitle": "7 Days Tester Trial",
+      "modules": [
+        "Bulk Renamer",
+        "Missing & Follow-up Desk",
+        "PDF Studio",
+        "Image Studio"
+      ],
+      "moduleCode": "RFPI",
+      "issuedAt": "2026-11-27 15:34:58",
+      "expiresAt": "2026-12-04 15:34:58",
+      "licenseKey": "DM-ACT-RFPI-20261204-16C4-F473-0501-9F40",
+      "legacyKey": "DM-LIC-C68E-7490-8D1A-0B01",
+      "status": "ACTIVE",
+      "notes": ""
+    },
     {
       "id": "LIC-1795748998056",
       "customerName": "VIJAY",
@@ -375,6 +415,14 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "LOG-1795773898695",
+      "timestamp": "2026-11-27 15:34:58",
+      "action": "KEY_GENERATED",
+      "customerName": "DEOGRA NARSING",
+      "hwid": "DM-HW-873D-80C3-71F0-53E2",
+      "details": "Issued 7 Days Tester Trial (DM-ACT-RFPI-20261204-16C4-F473-0501-9F40)"
+    },
     {
       "id": "LOG-1795748998056",
       "timestamp": "2026-11-27 08:39:58",

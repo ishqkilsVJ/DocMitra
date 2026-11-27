@@ -75,6 +75,7 @@ import {
   computeOldNameErrorPercent,
   detectDuplicateFiles,
   generateSmartKeywords,
+  GENERIC_STOP_KEYWORDS,
   updateCanonicalName,
   removeCanonicalName,
   syncCanonicalNames,
@@ -4020,6 +4021,16 @@ export class RenamerUIManager {
                 migratedAny = true;
               }
             }
+            // Sanitize preset keywords: eradicate generic stop-words (e.g. pramanpatra, certificate)
+            if (doc && Array.isArray(doc.keywords)) {
+              const origLen = doc.keywords.length;
+              doc.keywords = doc.keywords.filter(k => {
+                if (!k || typeof k !== 'string') return false;
+                const clean = k.trim().toLowerCase();
+                return !GENERIC_STOP_KEYWORDS.has(clean);
+              });
+              if (doc.keywords.length !== origLen) migratedAny = true;
+            }
           }
         }
       }
@@ -4041,6 +4052,15 @@ export class RenamerUIManager {
             migratedAny = true;
           }
         }
+        if (cs && Array.isArray(cs.keywords)) {
+          const origLen = cs.keywords.length;
+          cs.keywords = cs.keywords.filter(k => {
+            if (!k || typeof k !== 'string') return false;
+            const clean = k.trim().toLowerCase();
+            return !GENERIC_STOP_KEYWORDS.has(clean);
+          });
+          if (cs.keywords.length !== origLen) migratedAny = true;
+        }
       }
     }
 
@@ -4051,6 +4071,13 @@ export class RenamerUIManager {
         }
         if (s && Array.isArray(s.codes)) {
           s.codes = s.codes.map(c => migrateLegacyCode(c));
+        }
+        if (s && Array.isArray(s.keywords)) {
+          s.keywords = s.keywords.filter(k => {
+            if (!k || typeof k !== 'string') return false;
+            const clean = k.trim().toLowerCase();
+            return !GENERIC_STOP_KEYWORDS.has(clean);
+          });
         }
       }
     }
