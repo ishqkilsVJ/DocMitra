@@ -52,6 +52,8 @@ export class PdfStudioUIManager {
     this.lastOutputFolder = '';
     this.sortDesc = true;
     this.draggedIndex = null;
+    this.targetSizeMode = 'kb'; // 'kb' | 'mb' (Strict Mutual-Exclusive Lock)
+    this.completionSummary = null; // Stored on 100% completion
 
     // Bento Preview Modal state (Choice 3-B)
     this.modalFileIdx = -1;
@@ -159,15 +161,24 @@ export class PdfStudioUIManager {
   }
 
   _bindTargetSizeControls() {
+    const radioGroup = document.getElementById('targetRadioGroup');
     const radioBtns = document.querySelectorAll('#compressTargetControlBar .target-radio-pill');
     const slider = document.getElementById('sliderTargetKb');
     const inputKb = document.getElementById('inputManualTargetKb');
     const inputMb = document.getElementById('inputManualTargetMb');
+    const wrapKb = document.getElementById('wrapManualKb');
+    const wrapMb = document.getElementById('wrapManualMb');
+    const btnLockKb = document.getElementById('btnLockKb');
+    const btnLockMb = document.getElementById('btnLockMb');
+    const badgeUnitKb = document.getElementById('badgeUnitKb');
+    const badgeUnitMb = document.getElementById('badgeUnitMb');
+    const modeLabel = document.getElementById('targetModeLabel');
+    const modeIcon = document.getElementById('targetModeIcon');
 
     const updatePills = (kb) => {
       radioBtns.forEach(btn => {
         const btnKb = parseInt(btn.getAttribute('data-kb'), 10);
-        if (btnKb === kb) {
+        if (this.targetSizeMode === 'kb' && btnKb === kb) {
           if (btnKb === 300) {
             btn.className = 'target-radio-pill relative px-3 py-0.5 text-xs font-bold text-white bg-blue-600 rounded-md shadow-md ring-2 ring-blue-500/50 flex items-center gap-1.5 transition cursor-pointer';
             btn.innerHTML = `
@@ -188,6 +199,94 @@ export class PdfStudioUIManager {
       });
     };
 
+    const setMode = (mode) => {
+      this.targetSizeMode = mode;
+      if (mode === 'kb') {
+        // Unlock KB
+        if (wrapKb) {
+          wrapKb.className = 'group flex items-center bg-white border border-blue-500 ring-2 ring-blue-100 rounded-lg p-0.5 shadow-inner transition-all cursor-pointer';
+          wrapKb.title = 'KB Mode Active';
+        }
+        if (btnLockKb) btnLockKb.classList.add('hidden');
+        if (inputKb) {
+          inputKb.disabled = false;
+          inputKb.className = 'px-1 text-center font-mono text-xs font-bold text-slate-800 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-text';
+        }
+        if (badgeUnitKb) {
+          badgeUnitKb.className = 'px-1.5 py-0.5 bg-blue-100/70 text-blue-700 font-mono text-[10px] font-bold rounded';
+        }
+        if (radioGroup) {
+          radioGroup.classList.remove('opacity-50', 'opacity-40', 'pointer-events-none');
+        }
+        if (slider) {
+          slider.disabled = false;
+          slider.classList.remove('opacity-50', 'opacity-40', 'cursor-not-allowed');
+        }
+
+        // Lock MB
+        if (wrapMb) {
+          wrapMb.className = 'group flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 shadow-inner transition-all opacity-70 cursor-pointer';
+          wrapMb.title = 'Click to unlock MB Mode (up to 100 MB)';
+        }
+        if (btnLockMb) btnLockMb.classList.remove('hidden');
+        if (inputMb) {
+          inputMb.disabled = true;
+          inputMb.className = 'px-1 text-center font-mono text-xs font-bold text-slate-400 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-not-allowed';
+        }
+        if (badgeUnitMb) {
+          badgeUnitMb.className = 'px-1.5 py-0.5 bg-slate-200 text-slate-500 font-mono text-[10px] font-bold rounded';
+        }
+        if (modeLabel) modeLabel.textContent = 'KB Active';
+        if (modeIcon) modeIcon.className = 'material-symbols-outlined text-[14px] text-blue-600';
+
+        updatePills(this.targetKb);
+      } else {
+        // Lock KB
+        if (wrapKb) {
+          wrapKb.className = 'group flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 shadow-inner transition-all opacity-70 cursor-pointer';
+          wrapKb.title = 'Click to switch back to KB Mode';
+        }
+        if (btnLockKb) btnLockKb.classList.remove('hidden');
+        if (inputKb) {
+          inputKb.disabled = true;
+          inputKb.className = 'px-1 text-center font-mono text-xs font-bold text-slate-400 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-not-allowed';
+        }
+        if (badgeUnitKb) {
+          badgeUnitKb.className = 'px-1.5 py-0.5 bg-slate-200 text-slate-500 font-mono text-[10px] font-bold rounded';
+        }
+        if (radioGroup) {
+          radioGroup.classList.add('opacity-50');
+        }
+        if (slider) {
+          slider.classList.add('opacity-50');
+        }
+
+        // Unlock MB
+        if (wrapMb) {
+          wrapMb.className = 'group flex items-center bg-white border border-indigo-500 ring-2 ring-indigo-100 rounded-lg p-0.5 shadow-inner transition-all cursor-pointer';
+          wrapMb.title = 'MB Mode Active';
+        }
+        if (btnLockMb) btnLockMb.classList.add('hidden');
+        if (inputMb) {
+          inputMb.disabled = false;
+          inputMb.className = 'px-1 text-center font-mono text-xs font-bold text-slate-800 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-text';
+          inputMb.focus();
+        }
+        if (badgeUnitMb) {
+          badgeUnitMb.className = 'px-1.5 py-0.5 bg-indigo-100 text-indigo-700 font-mono text-[10px] font-bold rounded';
+        }
+        if (modeLabel) modeLabel.textContent = 'MB Active';
+        if (modeIcon) modeIcon.className = 'material-symbols-outlined text-[14px] text-indigo-600';
+
+        // Dim pills in MB mode but keep them clickable to switch back to KB
+        radioBtns.forEach(btn => {
+          const btnKb = parseInt(btn.getAttribute('data-kb'), 10);
+          btn.className = 'target-radio-pill px-2.5 py-0.5 text-xs font-medium text-slate-400 rounded-md transition cursor-pointer hover:bg-slate-200';
+          btn.textContent = `${btnKb} KB`;
+        });
+      }
+    };
+
     const setTargetKb = (val, source) => {
       let kb = parseInt(val, 10);
       if (isNaN(kb) || kb <= 0) kb = 300;
@@ -200,32 +299,70 @@ export class PdfStudioUIManager {
       if (source !== 'inputKb' && inputKb) {
         inputKb.value = kb;
       }
-      if (source !== 'inputMb' && inputMb) {
-        inputMb.value = (kb / 1024).toFixed(2);
-      }
+      // Note: Mutual-Exclusive Rule: In KB Mode, DO NOT live-change inputMb!
       updatePills(kb);
       this.updateStats();
       this.updateCardsProjectedSize();
     };
 
+    const setTargetMb = (val) => {
+      let mb = parseFloat(val);
+      if (isNaN(mb) || mb <= 0) mb = 1;
+      if (mb > 100) mb = 100;
+      this.targetKb = Math.round(mb * 1024);
+      // Note: Mutual-Exclusive Rule: In MB Mode, DO NOT live-change inputKb or slider!
+      this.updateStats();
+      this.updateCardsProjectedSize();
+    };
+
+    // Preset pills click -> switch to KB mode and set target
     radioBtns.forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
+        if (this.targetSizeMode !== 'kb') setMode('kb');
         const kb = parseInt(btn.getAttribute('data-kb'), 10);
         setTargetKb(kb, 'radio');
         toast.show('Target Size', `Target set to < ${kb} KB`, 'info');
       });
     });
 
+    // Slider input -> switch to KB mode and set target
     if (slider) {
+      slider.addEventListener('mousedown', () => {
+        if (this.targetSizeMode !== 'kb') setMode('kb');
+      });
       slider.addEventListener('input', (e) => {
+        if (this.targetSizeMode !== 'kb') setMode('kb');
         const kb = parseInt(e.target.value, 10);
         setTargetKb(kb, 'slider');
       });
     }
 
+    // KB Input container click / focus / lock -> switch to KB mode
+    if (wrapKb) {
+      wrapKb.addEventListener('click', () => {
+        if (this.targetSizeMode !== 'kb') {
+          setMode('kb');
+          if (inputKb) inputKb.focus();
+          toast.show('KB Mode', 'Switched to KB preset mode.', 'info');
+        }
+      });
+    }
+
+    if (btnLockKb) {
+      btnLockKb.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (this.targetSizeMode !== 'kb') {
+          setMode('kb');
+          if (inputKb) inputKb.focus();
+          toast.show('KB Mode', 'Switched to KB preset mode.', 'info');
+        }
+      });
+    }
+
     if (inputKb) {
       inputKb.addEventListener('input', (e) => {
+        if (this.targetSizeMode !== 'kb') setMode('kb');
         const kb = parseInt(e.target.value, 10);
         if (!isNaN(kb) && kb > 0) {
           setTargetKb(kb, 'inputKb');
@@ -238,24 +375,48 @@ export class PdfStudioUIManager {
       });
     }
 
+    // MB Input container / lock click -> switch to MB mode
+    if (wrapMb) {
+      wrapMb.addEventListener('click', () => {
+        if (this.targetSizeMode !== 'mb') {
+          setMode('mb');
+          const mb = parseFloat(inputMb?.value || 0.29);
+          setTargetMb(mb);
+          toast.show('MB Mode Active', 'KB controls locked. Direct MB sizing enabled.', 'info');
+        }
+      });
+    }
+
+    if (btnLockMb) {
+      btnLockMb.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (this.targetSizeMode !== 'mb') {
+          setMode('mb');
+          const mb = parseFloat(inputMb?.value || 0.29);
+          setTargetMb(mb);
+          toast.show('MB Mode Active', 'KB controls locked. Direct MB sizing enabled.', 'info');
+        }
+      });
+    }
+
     if (inputMb) {
       inputMb.addEventListener('input', (e) => {
         const mb = parseFloat(e.target.value);
         if (!isNaN(mb) && mb > 0) {
-          const kb = Math.round(mb * 1024);
-          setTargetKb(kb, 'inputMb');
+          setTargetMb(mb);
         }
       });
       inputMb.addEventListener('change', (e) => {
         let mb = parseFloat(e.target.value);
-        if (isNaN(mb) || mb < 0.05) mb = 0.05;
+        if (isNaN(mb) || mb < 0.01) mb = 0.01;
         if (mb > 100) mb = 100;
-        const kb = Math.round(mb * 1024);
-        setTargetKb(kb, 'inputMb');
+        inputMb.value = mb;
+        setTargetMb(mb);
       });
     }
 
-    // Set initial active state (300 KB default)
+    // Initial state: KB mode active, 300 KB default, MB locked
+    setMode('kb');
     setTargetKb(300, 'init');
   }
 
@@ -551,7 +712,7 @@ export class PdfStudioUIManager {
 
       const res = await selectNativeFiles(filter, title);
       if (res && res.success && res.files && res.files.length) {
-        if (!this.activeFolderPath && res.files[0].path) {
+        if (res.files[0].path) {
           const parts = res.files[0].path.replace(/\\/g, '/').split('/');
           parts.pop();
           this.activeFolderPath = parts.join('/');
@@ -563,6 +724,7 @@ export class PdfStudioUIManager {
             pill.title = this.activeFolderPath;
           }
         }
+        this.completionSummary = null;
         await this.loadNativeFiles(res.files);
         toast.show('Files Added', `${res.files.length} files added to execution queue.`, 'success');
         return;
@@ -591,6 +753,7 @@ export class PdfStudioUIManager {
         toast.show('Unsupported File Skipped', `Skipped ${invalidFiles.length} unsupported file(s). Only PDF, JPG, and PNG are allowed.`, 'warning');
       }
       if (validFiles.length > 0) {
+        this.completionSummary = null;
         await this.loadDroppedFiles(validFiles);
       }
       document.body.removeChild(input);
@@ -626,7 +789,7 @@ export class PdfStudioUIManager {
 
         const lastSlash = f.path ? Math.max(f.path.lastIndexOf('/'), f.path.lastIndexOf('\\')) : -1;
         const dir = f.dir || (f.path && lastSlash !== -1 ? f.path.substring(0, lastSlash) : this.activeFolderPath);
-        if (!this.activeFolderPath && dir) {
+        if (dir) {
           this.activeFolderPath = dir.replace(/\\/g, '/');
           this.activeFolderName = this.activeFolderPath.split('/').pop() || 'Folder';
           const pill = document.getElementById('displayPdfFolderName');
@@ -654,13 +817,10 @@ export class PdfStudioUIManager {
 
     this.updateStats();
     this.renderQueue();
-    if (this.activeFolderPath) {
-      const btnOpen = document.getElementById('btnOpenOutputFolder');
-      if (btnOpen) btnOpen.classList.remove('hidden');
-    }
   }
 
   async loadDroppedFiles(fileList) {
+    this.completionSummary = null;
     for (const f of fileList) {
       const buf = await f.arrayBuffer();
       const bytes = new Uint8Array(buf);
@@ -680,10 +840,6 @@ export class PdfStudioUIManager {
 
     this.updateStats();
     this.renderQueue();
-    if (this.activeFolderPath) {
-      const btnOpen = document.getElementById('btnOpenOutputFolder');
-      if (btnOpen) btnOpen.classList.remove('hidden');
-    }
     toast.show('Files Queued', `${fileList.length} files added to execution queue.`, 'success');
   }
 
@@ -744,6 +900,78 @@ export class PdfStudioUIManager {
     }
 
     if (this.files.length === 0) {
+      if (this.completionSummary) {
+        grid.className = 'flex items-center justify-center min-h-[380px] w-full';
+        const s = this.completionSummary;
+        const origStr = s.origTotalBytes >= 1024 * 1024
+          ? `${(s.origTotalBytes / (1024 * 1024)).toFixed(2)} MB`
+          : `${Math.round(s.origTotalBytes / 1024)} KB`;
+        const outStr = s.outTotalBytes >= 1024 * 1024
+          ? `${(s.outTotalBytes / (1024 * 1024)).toFixed(2)} MB`
+          : `${Math.round(s.outTotalBytes / 1024)} KB`;
+
+        const summaryCard = document.createElement('div');
+        summaryCard.className = 'col-span-full max-w-xl w-full mx-auto bg-white rounded-2xl border-2 border-emerald-500/30 shadow-xl p-8 flex flex-col items-center text-center';
+        summaryCard.innerHTML = `
+          <div class="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mb-4 shadow-xs">
+            <span class="material-symbols-outlined text-[36px]">task_alt</span>
+          </div>
+          <h3 class="text-xl font-bold text-slate-800 tracking-tight">Batch Compression Complete!</h3>
+          <p class="text-xs text-slate-500 mt-1 mb-6">All documents were optimized and saved directly into the source folder.</p>
+
+          <div class="grid grid-cols-3 gap-3 w-full mb-6">
+            <div class="bg-slate-50 rounded-xl p-3 border border-slate-200/80 text-center">
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Total Files</div>
+              <div class="text-base font-extrabold text-slate-800 mt-1 font-mono">${s.totalFiles} Files</div>
+              <div class="text-[10px] text-emerald-600 font-semibold mt-0.5">100% Succeeded</div>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-3 border border-slate-200/80 text-center">
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Before Size</div>
+              <div class="text-base font-extrabold text-slate-700 mt-1 font-mono">${origStr}</div>
+              <div class="text-[10px] text-slate-400 font-medium mt-0.5">Original Total</div>
+            </div>
+            <div class="bg-emerald-50/60 rounded-xl p-3 border border-emerald-200 text-center">
+              <div class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider font-mono">Output Size</div>
+              <div class="text-base font-extrabold text-emerald-700 mt-1 font-mono">${outStr}</div>
+              <div class="text-[10px] text-emerald-700 font-bold mt-0.5">-${s.savedPct}% Saved</div>
+            </div>
+          </div>
+
+          <div class="w-full bg-slate-100/90 rounded-lg px-3 py-2 border border-slate-200 flex items-center gap-2 mb-6 text-left">
+            <span class="material-symbols-outlined text-slate-400 text-base flex-shrink-0">folder</span>
+            <span class="text-[11px] font-mono text-slate-600 truncate flex-1" title="${s.outFolderPath}">${s.outFolderPath}</span>
+          </div>
+
+          <button id="btnCenterOpenFolder" type="button" class="w-full py-3 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98">
+            <span class="material-symbols-outlined text-[20px]">folder_open</span>
+            <span>Open Output Folder</span>
+          </button>
+
+          <div class="mt-4 text-[11px] text-slate-400 flex items-center gap-1.5">
+            <span>Click</span>
+            <button id="btnResetBatchLink" type="button" class="text-blue-600 hover:underline font-semibold cursor-pointer">Clear Queue</button>
+            <span>or <b>Add Files</b> above to start a new batch.</span>
+          </div>
+        `;
+
+        grid.appendChild(summaryCard);
+
+        const btnOpen = summaryCard.querySelector('#btnCenterOpenFolder');
+        if (btnOpen) {
+          btnOpen.addEventListener('click', () => {
+            openFolderInExplorer(s.outFolderPath);
+          });
+        }
+        const btnReset = summaryCard.querySelector('#btnResetBatchLink');
+        if (btnReset) {
+          btnReset.addEventListener('click', () => {
+            this.handleClearQueue();
+          });
+        }
+        return;
+      }
+
+      grid.className = 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 min-h-[300px]';
       const emptyCard = document.createElement('div');
       emptyCard.className = 'col-span-full p-8 text-center bg-surface-container-lowest rounded-xl border border-surface-container-high/80 flex flex-col items-center gap-2';
 
@@ -765,6 +993,8 @@ export class PdfStudioUIManager {
       grid.appendChild(emptyCard);
       return;
     }
+
+    grid.className = 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 min-h-[300px]';
 
     this.files.forEach((file, idx) => {
       try {
@@ -1097,10 +1327,6 @@ export class PdfStudioUIManager {
     this.files.splice(idx, 1);
     this.updateStats();
     this.renderQueue();
-    if (this.activeFolderPath) {
-      const btnOpen = document.getElementById('btnOpenOutputFolder');
-      if (btnOpen) btnOpen.classList.remove('hidden');
-    }
   }
 
   handleRotateAll() {
@@ -1131,10 +1357,17 @@ export class PdfStudioUIManager {
 
   handleClearQueue() {
     this.files = [];
+    this.activeFolderPath = '';
+    this.activeFolderName = '';
+    this.lastOutputFolder = '';
+    this.completionSummary = null;
+    const pill = document.getElementById('displayPdfFolderName');
+    if (pill) {
+      pill.textContent = 'All Documents';
+      pill.title = '';
+    }
     this.updateStats();
     this.renderQueue();
-    const btnOpen = document.getElementById('btnOpenOutputFolder');
-    if (btnOpen && !this.lastOutputFolder) btnOpen.classList.add('hidden');
     toast.show('Queue Cleared', 'PDF workstation reset.', 'info');
   }
 
@@ -1144,10 +1377,6 @@ export class PdfStudioUIManager {
     this.files = this.files.filter(f => f.size > threshold);
     this.updateStats();
     this.renderQueue();
-    if (this.activeFolderPath) {
-      const btnOpen = document.getElementById('btnOpenOutputFolder');
-      if (btnOpen) btnOpen.classList.remove('hidden');
-    }
     toast.show('Filter Applied', `Kept ${this.files.length} oversized files (>${this.targetKb} KB) from ${initialCount}.`, 'info');
   }
 
@@ -1401,10 +1630,36 @@ export class PdfStudioUIManager {
     const subfolder = getSubfolderName(opName);
     toast.show('Processing Started', `Running ${this._getToolDisplayName(opName)} via Zero-Port Native IPC...`, 'info');
 
+    const btnStart = document.getElementById('startCompressBtn');
+    const progressWrap = document.getElementById('pdfExecutionProgressWrap');
+    const progressBar = document.getElementById('pdfProgressBar');
+    const progressCount = document.getElementById('pdfProgressCount');
+    const progressEta = document.getElementById('pdfProgressEta');
+
+    if (btnStart) {
+      btnStart.disabled = true;
+      btnStart.classList.add('opacity-50', 'cursor-not-allowed');
+      const labelSpan = btnStart.querySelector('span:last-child');
+      if (labelSpan) labelSpan.textContent = 'Compressing...';
+    }
+
+    if (progressWrap) {
+      progressWrap.classList.remove('hidden');
+      if (progressBar) progressBar.style.width = '0%';
+      if (progressCount) progressCount.textContent = `Compressing: 0 / ${this.files.length} Files (0%)`;
+      if (progressEta) progressEta.textContent = 'Estimating...';
+    }
+
     try {
       let savedCount = 0;
 
       if (opName === 'compress_pdf') {
+        const totalFiles = this.files.length;
+        const origTotalBytes = this.files.reduce((acc, f) => acc + (f.size || 0), 0);
+        let outTotalBytes = 0;
+        let completedFiles = 0;
+        const startTime = Date.now();
+
         // Feature 11: Multi-Core Parallel Batch Engine with 12 Pro Compression Features
         await compressBatchParallel(
           this.files,
@@ -1420,6 +1675,18 @@ export class PdfStudioUIManager {
             if (res && res.success) {
               await this.saveOutputFile(subfolder, res.outName, res.finalBlob || res.finalBytes);
               savedCount++;
+              completedFiles++;
+              outTotalBytes += (res.finalSize || 0);
+
+              const overallPct = Math.round((completedFiles / totalFiles) * 100);
+              if (progressBar) progressBar.style.width = `${overallPct}%`;
+              if (progressCount) progressCount.textContent = `Compressing: ${completedFiles} / ${totalFiles} Files (${overallPct}%)`;
+
+              const elapsedSec = (Date.now() - startTime) / 1000;
+              const avgTime = elapsedSec / completedFiles;
+              const remaining = totalFiles - completedFiles;
+              const estLeft = Math.max(0, Math.ceil(remaining * avgTime));
+              if (progressEta) progressEta.textContent = remaining > 0 ? `Est. ~${estLeft}s left` : 'Finalizing...';
 
               // Update card in real-time
               const card = document.querySelector(`.docket-card[data-file-id="${file.id}"]`);
@@ -1447,6 +1714,25 @@ export class PdfStudioUIManager {
             }
           }
         );
+
+        const savedPct = origTotalBytes > 0 && origTotalBytes > outTotalBytes
+          ? Math.round(((origTotalBytes - outTotalBytes) / origTotalBytes) * 100)
+          : 0;
+
+        const outFolderPath = this.lastOutputFolder || (this.activeFolderPath ? `${this.activeFolderPath}/${subfolder}` : `Output/${subfolder}`);
+
+        this.completionSummary = {
+          totalFiles: savedCount,
+          origTotalBytes: origTotalBytes,
+          outTotalBytes: outTotalBytes,
+          savedPct: savedPct,
+          outFolderPath: outFolderPath
+        };
+
+        this.files = [];
+        this.updateStats();
+        this.renderQueue();
+
         toast.show('Compression Complete!', `Saved ${savedCount} files directly into ${subfolder}/`, 'success');
 
       } else if (opName === 'merge_pdf') {
@@ -1542,17 +1828,17 @@ export class PdfStudioUIManager {
         toast.show('Enhancement Complete!', `Saved ${savedCount} clean PDFs to ${subfolder}/`, 'success');
       }
 
-      // Show 1-click Open Output Folder button on completion
-      const btnOpen = document.getElementById('btnOpenOutputFolder');
-      if (btnOpen) {
-        btnOpen.classList.remove('hidden');
-      }
-
     } catch (err) {
       console.error('[PDF-STUDIO] Process failed:', err);
       toast.show('Operation Failed', err.message, 'error');
     } finally {
       this.isProcessing = false;
+      if (progressWrap) progressWrap.classList.add('hidden');
+      if (btnStart) {
+        btnStart.disabled = false;
+        btnStart.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+      this._updateProcessButtonLabel();
     }
   }
 }

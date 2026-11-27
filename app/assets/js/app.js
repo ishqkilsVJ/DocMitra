@@ -11102,7 +11102,7 @@ async function qt(e, t, n, r) {
 // tools/pdf_studio/pdf_studio_ui.js
 var Jt = class {
 	constructor() {
-		this.activeTool = "compress_pdf", this.files = [], this.activeFolderPath = "", this.activeFolderName = "", this.targetKb = 300, this.jpgDpi = 150, this.splitPageRange = "", this.isProcessing = !1, this.lastOutputFolder = "", this.sortDesc = !0, this.draggedIndex = null, this.modalFileIdx = -1, this.modalPage = 1, this.modalTotalPages = 1, this.modalZoom = "fit", this.modalRotation = 0, this.modalPdfDoc = null, this.renderTask = null;
+		this.activeTool = "compress_pdf", this.files = [], this.activeFolderPath = "", this.activeFolderName = "", this.targetKb = 300, this.jpgDpi = 150, this.splitPageRange = "", this.isProcessing = !1, this.lastOutputFolder = "", this.sortDesc = !0, this.draggedIndex = null, this.targetSizeMode = "kb", this.completionSummary = null, this.modalFileIdx = -1, this.modalPage = 1, this.modalTotalPages = 1, this.modalZoom = "fit", this.modalRotation = 0, this.modalPdfDoc = null, this.renderTask = null;
 	}
 	init() {
 		this._bindRibbonTools(), this._bindActions(), this._bindDropzone(), this._bindTargetSizeControls(), this._bindBentoDropdowns(), this._bindModalControls(), this._bindHotkeys(), this.setTool("compress_pdf"), this.renderQueue(), console.info("[DocMitra PDF Studio] Zero-Port Native UI Manager initialized.");
@@ -11153,42 +11153,65 @@ var Jt = class {
 		t && (t.textContent = this._getToolDisplayName(this.activeTool));
 	}
 	_bindTargetSizeControls() {
-		let e = document.querySelectorAll("#compressTargetControlBar .target-radio-pill"), t = document.getElementById("sliderTargetKb"), n = document.getElementById("inputManualTargetKb"), i = document.getElementById("inputManualTargetMb"), a = (t) => {
-			e.forEach((e) => {
-				let n = parseInt(e.getAttribute("data-kb"), 10);
-				n === t ? n === 300 ? (e.className = "target-radio-pill relative px-3 py-0.5 text-xs font-bold text-white bg-blue-600 rounded-md shadow-md ring-2 ring-blue-500/50 flex items-center gap-1.5 transition cursor-pointer", e.innerHTML = "\n              <span class=\"relative flex h-1.5 w-1.5\">\n                <span class=\"animate-beacon-ping absolute inline-flex h-full w-full rounded-full bg-sky-300 opacity-75\"></span>\n                <span class=\"relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400\"></span>\n              </span>\n              <span class=\"tracking-wide\">300 KB</span>\n            ") : (e.className = "target-radio-pill px-2.5 py-0.5 text-xs font-bold text-white bg-blue-600 rounded-md shadow-xs transition cursor-pointer", e.textContent = `${n} KB`) : (e.className = "target-radio-pill px-2.5 py-0.5 text-xs font-medium text-slate-600 rounded-md hover:bg-white hover:text-slate-900 transition cursor-pointer", e.textContent = `${n} KB`);
+		let e = document.getElementById("targetRadioGroup"), t = document.querySelectorAll("#compressTargetControlBar .target-radio-pill"), n = document.getElementById("sliderTargetKb"), i = document.getElementById("inputManualTargetKb"), a = document.getElementById("inputManualTargetMb"), o = document.getElementById("wrapManualKb"), s = document.getElementById("wrapManualMb"), c = document.getElementById("btnLockKb"), l = document.getElementById("btnLockMb"), u = document.getElementById("badgeUnitKb"), d = document.getElementById("badgeUnitMb"), f = document.getElementById("targetModeLabel"), p = document.getElementById("targetModeIcon"), m = (e) => {
+			t.forEach((t) => {
+				let n = parseInt(t.getAttribute("data-kb"), 10);
+				this.targetSizeMode === "kb" && n === e ? n === 300 ? (t.className = "target-radio-pill relative px-3 py-0.5 text-xs font-bold text-white bg-blue-600 rounded-md shadow-md ring-2 ring-blue-500/50 flex items-center gap-1.5 transition cursor-pointer", t.innerHTML = "\n              <span class=\"relative flex h-1.5 w-1.5\">\n                <span class=\"animate-beacon-ping absolute inline-flex h-full w-full rounded-full bg-sky-300 opacity-75\"></span>\n                <span class=\"relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400\"></span>\n              </span>\n              <span class=\"tracking-wide\">300 KB</span>\n            ") : (t.className = "target-radio-pill px-2.5 py-0.5 text-xs font-bold text-white bg-blue-600 rounded-md shadow-xs transition cursor-pointer", t.textContent = `${n} KB`) : (t.className = "target-radio-pill px-2.5 py-0.5 text-xs font-medium text-slate-600 rounded-md hover:bg-white hover:text-slate-900 transition cursor-pointer", t.textContent = `${n} KB`);
 			});
-		}, o = (e, r) => {
-			let o = parseInt(e, 10);
-			(isNaN(o) || o <= 0) && (o = 300), o > 102400 && (o = 102400), this.targetKb = o, r !== "slider" && t && (t.value = Math.min(Math.max(o, 50), 1e3)), r !== "inputKb" && n && (n.value = o), r !== "inputMb" && i && (i.value = (o / 1024).toFixed(2)), a(o), this.updateStats(), this.updateCardsProjectedSize();
+		}, h = (r) => {
+			this.targetSizeMode = r, r === "kb" ? (o && (o.className = "group flex items-center bg-white border border-blue-500 ring-2 ring-blue-100 rounded-lg p-0.5 shadow-inner transition-all cursor-pointer", o.title = "KB Mode Active"), c && c.classList.add("hidden"), i && (i.disabled = !1, i.className = "px-1 text-center font-mono text-xs font-bold text-slate-800 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-text"), u && (u.className = "px-1.5 py-0.5 bg-blue-100/70 text-blue-700 font-mono text-[10px] font-bold rounded"), e && e.classList.remove("opacity-50", "opacity-40", "pointer-events-none"), n && (n.disabled = !1, n.classList.remove("opacity-50", "opacity-40", "cursor-not-allowed")), s && (s.className = "group flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 shadow-inner transition-all opacity-70 cursor-pointer", s.title = "Click to unlock MB Mode (up to 100 MB)"), l && l.classList.remove("hidden"), a && (a.disabled = !0, a.className = "px-1 text-center font-mono text-xs font-bold text-slate-400 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-not-allowed"), d && (d.className = "px-1.5 py-0.5 bg-slate-200 text-slate-500 font-mono text-[10px] font-bold rounded"), f && (f.textContent = "KB Active"), p && (p.className = "material-symbols-outlined text-[14px] text-blue-600"), m(this.targetKb)) : (o && (o.className = "group flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 shadow-inner transition-all opacity-70 cursor-pointer", o.title = "Click to switch back to KB Mode"), c && c.classList.remove("hidden"), i && (i.disabled = !0, i.className = "px-1 text-center font-mono text-xs font-bold text-slate-400 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-not-allowed"), u && (u.className = "px-1.5 py-0.5 bg-slate-200 text-slate-500 font-mono text-[10px] font-bold rounded"), e && e.classList.add("opacity-50"), n && n.classList.add("opacity-50"), s && (s.className = "group flex items-center bg-white border border-indigo-500 ring-2 ring-indigo-100 rounded-lg p-0.5 shadow-inner transition-all cursor-pointer", s.title = "MB Mode Active"), l && l.classList.add("hidden"), a && (a.disabled = !1, a.className = "px-1 text-center font-mono text-xs font-bold text-slate-800 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-text", a.focus()), d && (d.className = "px-1.5 py-0.5 bg-indigo-100 text-indigo-700 font-mono text-[10px] font-bold rounded"), f && (f.textContent = "MB Active"), p && (p.className = "material-symbols-outlined text-[14px] text-indigo-600"), t.forEach((e) => {
+				let t = parseInt(e.getAttribute("data-kb"), 10);
+				e.className = "target-radio-pill px-2.5 py-0.5 text-xs font-medium text-slate-400 rounded-md transition cursor-pointer hover:bg-slate-200", e.textContent = `${t} KB`;
+			}));
+		}, g = (e, t) => {
+			let r = parseInt(e, 10);
+			(isNaN(r) || r <= 0) && (r = 300), r > 102400 && (r = 102400), this.targetKb = r, t !== "slider" && n && (n.value = Math.min(Math.max(r, 50), 1e3)), t !== "inputKb" && i && (i.value = r), m(r), this.updateStats(), this.updateCardsProjectedSize();
+		}, _ = (e) => {
+			let t = parseFloat(e);
+			(isNaN(t) || t <= 0) && (t = 1), t > 100 && (t = 100), this.targetKb = Math.round(t * 1024), this.updateStats(), this.updateCardsProjectedSize();
 		};
-		e.forEach((e) => {
+		t.forEach((e) => {
 			e.addEventListener("click", (t) => {
-				t.preventDefault();
+				t.preventDefault(), this.targetSizeMode !== "kb" && h("kb");
 				let n = parseInt(e.getAttribute("data-kb"), 10);
-				o(n, "radio"), r.show("Target Size", `Target set to < ${n} KB`, "info");
+				g(n, "radio"), r.show("Target Size", `Target set to < ${n} KB`, "info");
 			});
-		}), t && t.addEventListener("input", (e) => {
+		}), n && (n.addEventListener("mousedown", () => {
+			this.targetSizeMode !== "kb" && h("kb");
+		}), n.addEventListener("input", (e) => {
+			this.targetSizeMode !== "kb" && h("kb");
 			let t = parseInt(e.target.value, 10);
-			o(t, "slider");
-		}), n && (n.addEventListener("input", (e) => {
+			g(t, "slider");
+		})), o && o.addEventListener("click", () => {
+			this.targetSizeMode !== "kb" && (h("kb"), i && i.focus(), r.show("KB Mode", "Switched to KB preset mode.", "info"));
+		}), c && c.addEventListener("click", (e) => {
+			e.stopPropagation(), this.targetSizeMode !== "kb" && (h("kb"), i && i.focus(), r.show("KB Mode", "Switched to KB preset mode.", "info"));
+		}), i && (i.addEventListener("input", (e) => {
+			this.targetSizeMode !== "kb" && h("kb");
 			let t = parseInt(e.target.value, 10);
-			!isNaN(t) && t > 0 && o(t, "inputKb");
-		}), n.addEventListener("change", (e) => {
-			let t = parseInt(e.target.value, 10);
-			(isNaN(t) || t < 30) && (t = 30), o(t, "inputKb");
-		})), i && (i.addEventListener("input", (e) => {
-			let t = parseFloat(e.target.value);
-			if (!isNaN(t) && t > 0) {
-				let e = Math.round(t * 1024);
-				o(e, "inputMb");
-			}
+			!isNaN(t) && t > 0 && g(t, "inputKb");
 		}), i.addEventListener("change", (e) => {
+			let t = parseInt(e.target.value, 10);
+			(isNaN(t) || t < 30) && (t = 30), g(t, "inputKb");
+		})), s && s.addEventListener("click", () => {
+			if (this.targetSizeMode !== "mb") {
+				h("mb");
+				let e = parseFloat(a?.value || .29);
+				_(e), r.show("MB Mode Active", "KB controls locked. Direct MB sizing enabled.", "info");
+			}
+		}), l && l.addEventListener("click", (e) => {
+			if (e.stopPropagation(), this.targetSizeMode !== "mb") {
+				h("mb");
+				let e = parseFloat(a?.value || .29);
+				_(e), r.show("MB Mode Active", "KB controls locked. Direct MB sizing enabled.", "info");
+			}
+		}), a && (a.addEventListener("input", (e) => {
 			let t = parseFloat(e.target.value);
-			(isNaN(t) || t < .05) && (t = .05), t > 100 && (t = 100);
-			let n = Math.round(t * 1024);
-			o(n, "inputMb");
-		})), o(300, "init");
+			!isNaN(t) && t > 0 && _(t);
+		}), a.addEventListener("change", (e) => {
+			let t = parseFloat(e.target.value);
+			(isNaN(t) || t < .01) && (t = .01), t > 100 && (t = 100), a.value = t, _(t);
+		})), h("kb"), g(300, "init");
 	}
 	_bindActions() {
 		let e = document.getElementById("btnBrowsePdfDir");
@@ -11322,13 +11345,13 @@ var Jt = class {
 		try {
 			let e = this.activeTool === "compress_pdf", t = this.activeTool === "jpg_to_pdf", n = await f(e ? "Documents & Images (*.pdf;*.jpg;*.jpeg;*.png)|*.pdf;*.jpg;*.jpeg;*.png" : t ? "Images (*.jpg;*.jpeg;*.png)|*.jpg;*.jpeg;*.png" : "PDF Documents (*.pdf)|*.pdf", e ? "Select Documents (PDF, JPG, PNG) - DocMitra" : t ? "Select Images for PDF - DocMitra" : "Select PDF Files - DocMitra");
 			if (n && n.success && n.files && n.files.length) {
-				if (!this.activeFolderPath && n.files[0].path) {
+				if (n.files[0].path) {
 					let e = n.files[0].path.replace(/\\/g, "/").split("/");
 					e.pop(), this.activeFolderPath = e.join("/"), this.activeFolderName = e.pop() || "Selected Folder";
 					let t = document.getElementById("displayPdfFolderName");
 					t && (t.textContent = this.activeFolderName, t.title = this.activeFolderPath);
 				}
-				await this.loadNativeFiles(n.files), r.show("Files Added", `${n.files.length} files added to execution queue.`, "success");
+				this.completionSummary = null, await this.loadNativeFiles(n.files), r.show("Files Added", `${n.files.length} files added to execution queue.`, "success");
 				return;
 			}
 		} catch (e) {
@@ -11337,7 +11360,7 @@ var Jt = class {
 		let e = document.createElement("input");
 		e.type = "file", e.accept = this.activeTool === "compress_pdf" || this.activeTool === "jpg_to_pdf" ? ".pdf,.jpg,.jpeg,.png,image/jpeg,image/png,application/pdf" : ".pdf,application/pdf", e.multiple = !0, e.style.display = "none", e.addEventListener("change", async (t) => {
 			let n = Array.from(t.target.files || []), i = this.activeTool === "compress_pdf" || this.activeTool === "jpg_to_pdf" ? this.activeTool === "jpg_to_pdf" ? /\.(jpe?g|png)$/i : /\.(pdf|jpe?g|png)$/i : /\.pdf$/i, a = n.filter((e) => i.test(e.name)), o = n.filter((e) => !i.test(e.name));
-			o.length > 0 && r.show("Unsupported File Skipped", `Skipped ${o.length} unsupported file(s). Only PDF, JPG, and PNG are allowed.`, "warning"), a.length > 0 && await this.loadDroppedFiles(a), document.body.removeChild(e);
+			o.length > 0 && r.show("Unsupported File Skipped", `Skipped ${o.length} unsupported file(s). Only PDF, JPG, and PNG are allowed.`, "warning"), a.length > 0 && (this.completionSummary = null, await this.loadDroppedFiles(a)), document.body.removeChild(e);
 		}), document.body.appendChild(e), e.click();
 	}
 	async loadNativeFiles(e) {
@@ -11351,7 +11374,7 @@ var Jt = class {
 					t = new Uint8Array(n);
 				}
 				let n = e.path ? Math.max(e.path.lastIndexOf("/"), e.path.lastIndexOf("\\")) : -1, r = e.dir || (e.path && n !== -1 ? e.path.substring(0, n) : this.activeFolderPath);
-				if (!this.activeFolderPath && r) {
+				if (r) {
 					this.activeFolderPath = r.replace(/\\/g, "/"), this.activeFolderName = this.activeFolderPath.split("/").pop() || "Folder";
 					let e = document.getElementById("displayPdfFolderName");
 					e && (e.textContent = this.activeFolderName, e.title = this.activeFolderPath);
@@ -11370,13 +11393,11 @@ var Jt = class {
 			} catch (t) {
 				console.warn(`[PDF-STUDIO] Failed to read bytes for ${e.name} via Native IPC:`, t);
 			}
-			if (this.updateStats(), this.renderQueue(), this.activeFolderPath) {
-				let e = document.getElementById("btnOpenOutputFolder");
-				e && e.classList.remove("hidden");
-			}
+			this.updateStats(), this.renderQueue();
 		}
 	}
 	async loadDroppedFiles(e) {
+		this.completionSummary = null;
 		for (let t of e) {
 			let e = await t.arrayBuffer(), n = new Uint8Array(e);
 			this.files.push({
@@ -11391,11 +11412,7 @@ var Jt = class {
 				status: "ready"
 			});
 		}
-		if (this.updateStats(), this.renderQueue(), this.activeFolderPath) {
-			let e = document.getElementById("btnOpenOutputFolder");
-			e && e.classList.remove("hidden");
-		}
-		r.show("Files Queued", `${e.length} files added to execution queue.`, "success");
+		this.updateStats(), this.renderQueue(), r.show("Files Queued", `${e.length} files added to execution queue.`, "success");
 	}
 	updateStats() {
 		let e = this.files.length, t = this.files.reduce((e, t) => e + (t.size || 0), 0), n = (t / 1048576).toFixed(2), r = this.files.reduce((e, t) => e + Math.min(t.size || 0, this.targetKb * 1024), 0), i = (r / 1048576).toFixed(2), a = t > 0 && t > r ? Math.max(0, Math.round((t - r) / t * 100)) : 0, o = document.getElementById("summaryPdfCount");
@@ -11416,6 +11433,61 @@ var Jt = class {
 		if (e) {
 			for (; e.firstChild;) e.removeChild(e.firstChild);
 			if (this.files.length === 0) {
+				if (this.completionSummary) {
+					e.className = "flex items-center justify-center min-h-[380px] w-full";
+					let t = this.completionSummary, n = t.origTotalBytes >= 1048576 ? `${(t.origTotalBytes / 1048576).toFixed(2)} MB` : `${Math.round(t.origTotalBytes / 1024)} KB`, r = t.outTotalBytes >= 1048576 ? `${(t.outTotalBytes / 1048576).toFixed(2)} MB` : `${Math.round(t.outTotalBytes / 1024)} KB`, i = document.createElement("div");
+					i.className = "col-span-full max-w-xl w-full mx-auto bg-white rounded-2xl border-2 border-emerald-500/30 shadow-xl p-8 flex flex-col items-center text-center", i.innerHTML = `
+          <div class="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mb-4 shadow-xs">
+            <span class="material-symbols-outlined text-[36px]">task_alt</span>
+          </div>
+          <h3 class="text-xl font-bold text-slate-800 tracking-tight">Batch Compression Complete!</h3>
+          <p class="text-xs text-slate-500 mt-1 mb-6">All documents were optimized and saved directly into the source folder.</p>
+
+          <div class="grid grid-cols-3 gap-3 w-full mb-6">
+            <div class="bg-slate-50 rounded-xl p-3 border border-slate-200/80 text-center">
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Total Files</div>
+              <div class="text-base font-extrabold text-slate-800 mt-1 font-mono">${t.totalFiles} Files</div>
+              <div class="text-[10px] text-emerald-600 font-semibold mt-0.5">100% Succeeded</div>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-3 border border-slate-200/80 text-center">
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Before Size</div>
+              <div class="text-base font-extrabold text-slate-700 mt-1 font-mono">${n}</div>
+              <div class="text-[10px] text-slate-400 font-medium mt-0.5">Original Total</div>
+            </div>
+            <div class="bg-emerald-50/60 rounded-xl p-3 border border-emerald-200 text-center">
+              <div class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider font-mono">Output Size</div>
+              <div class="text-base font-extrabold text-emerald-700 mt-1 font-mono">${r}</div>
+              <div class="text-[10px] text-emerald-700 font-bold mt-0.5">-${t.savedPct}% Saved</div>
+            </div>
+          </div>
+
+          <div class="w-full bg-slate-100/90 rounded-lg px-3 py-2 border border-slate-200 flex items-center gap-2 mb-6 text-left">
+            <span class="material-symbols-outlined text-slate-400 text-base flex-shrink-0">folder</span>
+            <span class="text-[11px] font-mono text-slate-600 truncate flex-1" title="${t.outFolderPath}">${t.outFolderPath}</span>
+          </div>
+
+          <button id="btnCenterOpenFolder" type="button" class="w-full py-3 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98">
+            <span class="material-symbols-outlined text-[20px]">folder_open</span>
+            <span>Open Output Folder</span>
+          </button>
+
+          <div class="mt-4 text-[11px] text-slate-400 flex items-center gap-1.5">
+            <span>Click</span>
+            <button id="btnResetBatchLink" type="button" class="text-blue-600 hover:underline font-semibold cursor-pointer">Clear Queue</button>
+            <span>or <b>Add Files</b> above to start a new batch.</span>
+          </div>
+        `, e.appendChild(i);
+					let a = i.querySelector("#btnCenterOpenFolder");
+					a && a.addEventListener("click", () => {
+						b(t.outFolderPath);
+					});
+					let o = i.querySelector("#btnResetBatchLink");
+					o && o.addEventListener("click", () => {
+						this.handleClearQueue();
+					});
+					return;
+				}
+				e.className = "grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 min-h-[300px]";
 				let t = document.createElement("div");
 				t.className = "col-span-full p-8 text-center bg-surface-container-lowest rounded-xl border border-surface-container-high/80 flex flex-col items-center gap-2";
 				let n = document.createElement("span");
@@ -11424,7 +11496,7 @@ var Jt = class {
 				r.className = "font-headline-sm font-bold text-on-surface", r.textContent = "Drag & Drop Files", t.appendChild(r);
 				let i = document.createElement("div");
 				i.className = "text-body-sm text-secondary", i.textContent = "or use Add Files above to queue documents for processing.", t.appendChild(i), e.appendChild(t);
-			} else this.files.forEach((t, n) => {
+			} else e.className = "grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 min-h-[300px]", this.files.forEach((t, n) => {
 				try {
 					let i = document.createElement("div");
 					i.className = "docket-card relative bg-white rounded-xl border border-slate-200/90 p-2.5 flex flex-col justify-between hover:border-blue-400 hover:shadow-lg transition-all group cursor-pointer stitch-paper-shadow", i.setAttribute("data-file-id", t.id), this.activeTool === "merge_pdf" && (i.setAttribute("draggable", "true"), i.addEventListener("dragstart", (e) => {
@@ -11583,10 +11655,7 @@ var Jt = class {
 		}
 	}
 	removeFile(e) {
-		if (this.files.splice(e, 1), this.updateStats(), this.renderQueue(), this.activeFolderPath) {
-			let e = document.getElementById("btnOpenOutputFolder");
-			e && e.classList.remove("hidden");
-		}
+		this.files.splice(e, 1), this.updateStats(), this.renderQueue();
 	}
 	handleRotateAll() {
 		if (this.files.length === 0) {
@@ -11605,17 +11674,13 @@ var Jt = class {
 		});
 	}
 	handleClearQueue() {
-		this.files = [], this.updateStats(), this.renderQueue();
-		let e = document.getElementById("btnOpenOutputFolder");
-		e && !this.lastOutputFolder && e.classList.add("hidden"), r.show("Queue Cleared", "PDF workstation reset.", "info");
+		this.files = [], this.activeFolderPath = "", this.activeFolderName = "", this.lastOutputFolder = "", this.completionSummary = null;
+		let e = document.getElementById("displayPdfFolderName");
+		e && (e.textContent = "All Documents", e.title = ""), this.updateStats(), this.renderQueue(), r.show("Queue Cleared", "PDF workstation reset.", "info");
 	}
 	handleFilterOversized() {
 		let e = this.targetKb * 1024, t = this.files.length;
-		if (this.files = this.files.filter((t) => t.size > e), this.updateStats(), this.renderQueue(), this.activeFolderPath) {
-			let e = document.getElementById("btnOpenOutputFolder");
-			e && e.classList.remove("hidden");
-		}
-		r.show("Filter Applied", `Kept ${this.files.length} oversized files (>${this.targetKb} KB) from ${t}.`, "info");
+		this.files = this.files.filter((t) => t.size > e), this.updateStats(), this.renderQueue(), r.show("Filter Applied", `Kept ${this.files.length} oversized files (>${this.targetKb} KB) from ${t}.`, "info");
 	}
 	_bindModalControls() {
 		let e = document.getElementById("btnClosePdfModal");
@@ -11739,28 +11804,49 @@ var Jt = class {
 		this.isProcessing = !0;
 		let e = this.activeTool, t = Ot(e);
 		r.show("Processing Started", `Running ${this._getToolDisplayName(e)} via Zero-Port Native IPC...`, "info");
+		let n = document.getElementById("startCompressBtn"), i = document.getElementById("pdfExecutionProgressWrap"), a = document.getElementById("pdfProgressBar"), o = document.getElementById("pdfProgressCount"), s = document.getElementById("pdfProgressEta");
+		if (n) {
+			n.disabled = !0, n.classList.add("opacity-50", "cursor-not-allowed");
+			let e = n.querySelector("span:last-child");
+			e && (e.textContent = "Compressing...");
+		}
+		i && (i.classList.remove("hidden"), a && (a.style.width = "0%"), o && (o.textContent = `Compressing: 0 / ${this.files.length} Files (0%)`), s && (s.textContent = "Estimating..."));
 		try {
 			let n = 0;
-			if (e === "compress_pdf") await qt(this.files, this.targetKb, (e, t) => {
-				let n = document.querySelector(`.docket-card[data-file-id="${e}"]`);
-				if (n) {
-					let e = n.querySelector(".badge-comp-size");
-					e && (e.textContent = `Comp ~${t}%...`);
-				}
-			}, async (e, r) => {
-				if (r && r.success) {
-					await this.saveOutputFile(t, r.outName, r.finalBlob || r.finalBytes), n++;
-					let i = document.querySelector(`.docket-card[data-file-id="${e.id}"]`);
-					if (i) {
-						let e = i.querySelector(".badge-comp-size");
-						if (e && (e.textContent = `Comp ${r.finalSize >= 1048576 ? `${(r.finalSize / 1048576).toFixed(2)} MB` : `${Math.round(r.finalSize / 1024)} KB`}`, e.className = "badge-comp-size px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-300 rounded font-mono text-[10px] font-bold truncate"), r.isAtFloor) {
-							let e = i.querySelector(".badge-floor-limit");
-							e || (e = document.createElement("div"), e.className = "badge-floor-limit mt-1 px-1.5 py-0.5 bg-amber-50 border border-amber-300 text-amber-800 rounded font-mono text-[9px] font-bold text-center", i.appendChild(e)), e.textContent = `⚠ Min readable limit: ${r.floorKb} KB`;
+			if (e === "compress_pdf") {
+				let e = this.files.length, i = this.files.reduce((e, t) => e + (t.size || 0), 0), c = 0, l = 0, u = Date.now();
+				await qt(this.files, this.targetKb, (e, t) => {
+					let n = document.querySelector(`.docket-card[data-file-id="${e}"]`);
+					if (n) {
+						let e = n.querySelector(".badge-comp-size");
+						e && (e.textContent = `Comp ~${t}%...`);
+					}
+				}, async (r, i) => {
+					if (i && i.success) {
+						await this.saveOutputFile(t, i.outName, i.finalBlob || i.finalBytes), n++, l++, c += i.finalSize || 0;
+						let d = Math.round(l / e * 100);
+						a && (a.style.width = `${d}%`), o && (o.textContent = `Compressing: ${l} / ${e} Files (${d}%)`);
+						let f = (Date.now() - u) / 1e3 / l, p = e - l, m = Math.max(0, Math.ceil(p * f));
+						s && (s.textContent = p > 0 ? `Est. ~${m}s left` : "Finalizing...");
+						let h = document.querySelector(`.docket-card[data-file-id="${r.id}"]`);
+						if (h) {
+							let e = h.querySelector(".badge-comp-size");
+							if (e && (e.textContent = `Comp ${i.finalSize >= 1048576 ? `${(i.finalSize / 1048576).toFixed(2)} MB` : `${Math.round(i.finalSize / 1024)} KB`}`, e.className = "badge-comp-size px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-300 rounded font-mono text-[10px] font-bold truncate"), i.isAtFloor) {
+								let e = h.querySelector(".badge-floor-limit");
+								e || (e = document.createElement("div"), e.className = "badge-floor-limit mt-1 px-1.5 py-0.5 bg-amber-50 border border-amber-300 text-amber-800 rounded font-mono text-[9px] font-bold text-center", h.appendChild(e)), e.textContent = `⚠ Min readable limit: ${i.floorKb} KB`;
+							}
 						}
 					}
-				}
-			}), r.show("Compression Complete!", `Saved ${n} files directly into ${t}/`, "success");
-			else if (e === "merge_pdf") {
+				});
+				let d = i > 0 && i > c ? Math.round((i - c) / i * 100) : 0, f = this.lastOutputFolder || (this.activeFolderPath ? `${this.activeFolderPath}/${t}` : `Output/${t}`);
+				this.completionSummary = {
+					totalFiles: n,
+					origTotalBytes: i,
+					outTotalBytes: c,
+					savedPct: d,
+					outFolderPath: f
+				}, this.files = [], this.updateStats(), this.renderQueue(), r.show("Compression Complete!", `Saved ${n} files directly into ${t}/`, "success");
+			} else if (e === "merge_pdf") {
 				let e = Et(this.files.map((e) => e.bytes).filter(Boolean), "portrait"), i = this.activeFolderName ? `Merged_Admission_Dossier_${this.activeFolderName}.pdf` : "Merged_Admission_Dossier.pdf";
 				await this.saveOutputFile(t, i, e), n = 1, r.show("Merge Complete!", `Dossier saved to ${t}/${i}`, "success");
 			} else if (e === "split_pdf") {
@@ -11803,12 +11889,10 @@ var Jt = class {
 				}
 				r.show("Enhancement Complete!", `Saved ${n} clean PDFs to ${t}/`, "success");
 			}
-			let i = document.getElementById("btnOpenOutputFolder");
-			i && i.classList.remove("hidden");
 		} catch (e) {
 			console.error("[PDF-STUDIO] Process failed:", e), r.show("Operation Failed", e.message, "error");
 		} finally {
-			this.isProcessing = !1;
+			this.isProcessing = !1, i && i.classList.add("hidden"), n && (n.disabled = !1, n.classList.remove("opacity-50", "cursor-not-allowed")), this._updateProcessButtonLabel();
 		}
 	}
 };

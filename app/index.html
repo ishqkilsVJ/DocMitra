@@ -1304,26 +1304,34 @@
                       </div>
                     </div>
 
-                    <!-- Right: Manual Dual Input (KB & MB up to 100MB) -->
-                    <div class="flex items-center bg-slate-50 px-3 py-1 rounded-lg border border-slate-200/90 shadow-xs flex-shrink-0 space-x-2">
+                    <!-- Right: Manual Dual Input with Strict Mutual-Exclusive Lock System (Choice 1-A) -->
+                    <div id="targetManualGroup" class="flex items-center bg-slate-50 px-3 py-1 rounded-lg border border-slate-200/90 shadow-xs flex-shrink-0 space-x-2">
                       <div class="flex items-center space-x-1 text-slate-500 font-semibold text-xs tracking-tight uppercase">
                         <span class="text-[10px] text-slate-400 font-bold tracking-wider font-mono">Manual:</span>
                       </div>
                       <div class="flex items-center space-x-2">
-                        <div class="group flex items-center bg-white border border-slate-200 hover:border-blue-400 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 rounded-lg p-0.5 shadow-inner transition-all">
+                        <!-- KB Input Container (Active by default) -->
+                        <div id="wrapManualKb" class="group flex items-center bg-white border border-blue-500 ring-2 ring-blue-100 rounded-lg p-0.5 shadow-inner transition-all cursor-pointer" title="KB Mode Active (Click to select)">
+                          <button id="btnLockKb" type="button" class="px-1 text-slate-400 hover:text-slate-600 hidden" title="Locked in MB Mode">
+                            <span class="material-symbols-outlined text-[13px]">lock</span>
+                          </button>
                           <input id="inputManualTargetKb" class="px-1 text-center font-mono text-xs font-bold text-slate-800 bg-transparent border-none focus:outline-none w-16 min-w-[58px]" type="number" min="1" max="102400" placeholder="300" value="300">
-                          <span class="px-1.5 py-0.5 bg-blue-100/70 text-blue-700 font-mono text-[10px] font-bold rounded">KB</span>
+                          <span id="badgeUnitKb" class="px-1.5 py-0.5 bg-blue-100/70 text-blue-700 font-mono text-[10px] font-bold rounded">KB</span>
                         </div>
                         <span class="text-slate-300 text-xs font-medium select-none">or</span>
-                        <div class="group flex items-center bg-white border border-slate-200 hover:border-indigo-400 focus-within:border-indigo-600 focus-within:ring-2 focus-within:ring-indigo-100 rounded-lg p-0.5 shadow-inner transition-all" title="Direct manual MB input (supports up to 100 MB)">
-                          <input id="inputManualTargetMb" class="px-1 text-center font-mono text-xs font-bold text-slate-800 bg-transparent border-none focus:outline-none w-16 min-w-[58px]" max="100" min="0.01" step="0.05" type="number" placeholder="0.29" value="0.29">
-                          <span class="px-1.5 py-0.5 bg-indigo-100 text-indigo-700 font-mono text-[10px] font-bold rounded">MB</span>
+                        <!-- MB Input Container (Locked by default with lock icon) -->
+                        <div id="wrapManualMb" class="group flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 shadow-inner transition-all opacity-70 cursor-pointer" title="Click to unlock MB Mode (up to 100 MB)">
+                          <button id="btnLockMb" type="button" class="px-1 text-slate-500 hover:text-indigo-600 flex items-center cursor-pointer" title="Click to unlock MB Mode">
+                            <span class="material-symbols-outlined text-[13px]">lock</span>
+                          </button>
+                          <input id="inputManualTargetMb" class="px-1 text-center font-mono text-xs font-bold text-slate-400 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-not-allowed" max="100" min="0.01" step="0.05" type="number" placeholder="0.29" value="0.29" disabled>
+                          <span id="badgeUnitMb" class="px-1.5 py-0.5 bg-slate-200 text-slate-500 font-mono text-[10px] font-bold rounded">MB</span>
                         </div>
                       </div>
                       <div class="h-4 w-px bg-slate-200"></div>
                       <span class="text-[11px] text-slate-500 font-medium flex items-center gap-1 flex-shrink-0 whitespace-nowrap">
-                        <span class="material-symbols-outlined text-[14px] text-blue-600">info</span>
-                        <span>Up to 100MB</span>
+                        <span id="targetModeIcon" class="material-symbols-outlined text-[14px] text-blue-600">info</span>
+                        <span id="targetModeLabel">KB Active</span>
                       </span>
                     </div>
                   </div>
@@ -1383,17 +1391,24 @@
         <!-- Bottom Sticky Execution Dock -->
         <div
           class="flex-shrink-0 h-16 bg-inverse-surface text-inverse-on-surface px-gutter flex items-center justify-between z-40 shadow-[0_-4px_16px_rgba(0,0,0,0.15)] border-t border-outline/20">
-          <!-- Left: Operational Launcher / Telemetry -->
-          <div class="flex items-center gap-space-md"></div>
+          <!-- Left: Operational Live Progress Bar (Behavior 3) -->
+          <div id="pdfExecutionProgressWrap" class="hidden flex-1 max-w-xl mr-6 flex items-center gap-3">
+            <div class="flex-1">
+              <div class="flex items-center justify-between text-xs font-mono mb-1 text-slate-200">
+                <span id="pdfProgressText" class="font-bold flex items-center gap-1.5">
+                  <span class="animate-spin text-emerald-400 text-sm">hourglass_top</span>
+                  <span id="pdfProgressCount">Compressing: 0 / 0 Files (0%)</span>
+                </span>
+                <span id="pdfProgressEta" class="text-slate-400 font-medium font-mono text-[11px]">Est. ~0s left</span>
+              </div>
+              <div class="w-full bg-slate-800/90 rounded-full h-2.5 overflow-hidden border border-slate-700/80 p-0.5">
+                <div id="pdfProgressBar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-200 ease-out shadow-xs" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
 
-          <!-- Right: Open Output Folder (Choice 1-C) & Emerald Primary Action Button -->
-          <div class="flex items-center gap-3">
-            <button id="btnOpenOutputFolder"
-              class="hidden px-4 py-2.5 rounded-lg border-2 border-emerald-500/80 bg-emerald-950/40 hover:bg-emerald-600 text-emerald-300 hover:text-white font-bold text-xs transition-all flex items-center gap-2 cursor-pointer shadow-xs hover:shadow-md active:scale-98"
-              type="button" title="Open Output Folder in Windows Explorer">
-              <span class="material-symbols-outlined text-[18px] text-emerald-400">folder_open</span>
-              <span>Open Output Folder</span>
-            </button>
+          <!-- Right: Emerald Primary Action Button (Without separate bottom Open Output Folder button) -->
+          <div class="flex items-center gap-3 ml-auto">
             <button
               class="px-7 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center space-x-2 cursor-pointer active:scale-98"
               id="startCompressBtn" type="button">
