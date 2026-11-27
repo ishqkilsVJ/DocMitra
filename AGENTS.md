@@ -42,6 +42,7 @@
 2. **Clean Workspace:** Move any temporary or junk files to Recycle Bin (never leave clutter). Never delete existing project or user files without explicit approval.
 3. **Auto-Checkpoint Rule:** Record a sequential Git Checkpoint (`CP-001`, `CP-002`, ...) in [`CHECKPOINT_LOG.md`](file:///e:/DocMitra/CHECKPOINT_LOG.md) with Checkpoint ID, Date/Time, Module Name, Git Commit Hash, and a 1-line clean working summary so any future issue can be rolled back in 1 command.
 4. **1-Command Rollback Rule:** If any future change introduces bugs or regressions, upon user request, the agent MUST safely archive broken commits into a backup branch (`rollback-archive/<commit>`), reset `master` to the target checkpoint tag (`git reset --hard CP-XXX`), and verify the restored build.
+5. **GitHub Cloud Auto-Backup:** After recording each checkpoint tag, immediately sync latest commits and tags to GitHub (`git push origin main --tags`), ensuring zero data loss and automated cloud mirroring.
 
 ---
 
