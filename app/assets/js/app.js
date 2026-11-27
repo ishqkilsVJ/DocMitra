@@ -10864,17 +10864,11 @@ function Rt(e, t, n) {
 		return !1;
 	}
 }
-function zt(e, t, n) {
-	try {
-		let r = e.getImageData(0, 0, t, n), i = r.data, a = i.length;
-		for (let e = 0; e < a; e += 4) {
-			let t = i[e] * .299 + i[e + 1] * .587 + i[e + 2] * .114 | 0;
-			i[e] = t, i[e + 1] = t, i[e + 2] = t;
-		}
-		e.putImageData(r, 0, 0);
-	} catch (e) {
-		console.warn("[CompressProEngine] Grayscale fallback error:", e);
-	}
+function zt(e, t) {
+	let n = document.createElement("canvas");
+	n.width = Math.max(1, Math.round(e.width * t)), n.height = Math.max(1, Math.round(e.height * t));
+	let r = n.getContext("2d");
+	return r.imageSmoothingEnabled = !0, r.imageSmoothingQuality = "high", r.drawImage(e, 0, 0, n.width, n.height), n;
 }
 async function Bt(e) {
 	try {
@@ -10961,22 +10955,42 @@ async function Gt({ canvases: e, targetKb: t, hasQr: n = !1, rotation: r = 0 }) 
 		f > i ? s = t : o = t;
 	}
 	if (c && c.size > i && a >= 1) {
-		for (let t of e) zt(t.getContext("2d"), t.width, t.height);
-		o = n ? .4 : .26, s = .88;
-		for (let t = 1; t <= 3; t++) {
-			let t = (o + s) / 2, n = [];
+		let t = n ? [.35, .28] : [
+			.2,
+			.14,
+			.1
+		];
+		for (let n of t) {
+			let t = [];
 			for (let r of e) {
-				let e = await Wt(r, t);
-				n.push(e);
+				let e = await Wt(r, n);
+				t.push(e);
 			}
-			let a = Q(n, d, r, { margin: 0 });
+			let a = Q(t, d, r, { margin: 0 });
 			if (a.size < c.size) {
 				c = a;
 				let e = await a.arrayBuffer();
 				l = new Uint8Array(e);
 			}
 			if (a.size <= i) break;
-			s = t;
+		}
+		if (c.size > i) for (let t of [
+			.8,
+			.65,
+			.5
+		]) {
+			let n = e.map((e) => zt(e, t)), a = [];
+			for (let e of n) {
+				let t = await Wt(e, .55);
+				a.push(t);
+			}
+			let o = Q(a, d, r, { margin: 0 });
+			if (o.size < c.size) {
+				c = o;
+				let e = await o.arrayBuffer();
+				l = new Uint8Array(e);
+			}
+			if (o.size <= i) break;
 		}
 	}
 	let f = !1, p = 0;
@@ -11154,18 +11168,36 @@ var Jt = class {
 	}
 	_bindTargetSizeControls() {
 		let e = document.getElementById("targetRadioGroup"), t = document.querySelectorAll("#compressTargetControlBar .target-radio-pill"), n = document.getElementById("sliderTargetKb"), i = document.getElementById("inputManualTargetKb"), a = document.getElementById("inputManualTargetMb"), o = document.getElementById("wrapManualKb"), s = document.getElementById("wrapManualMb"), c = document.getElementById("radioModeKb"), l = document.getElementById("radioModeMb"), u = document.getElementById("lblModeKb"), d = document.getElementById("lblModeMb"), f = document.getElementById("overlayLockKb"), p = document.getElementById("overlayLockMb"), m = document.getElementById("badgeUnitKb"), h = document.getElementById("badgeUnitMb"), g = (e) => {
+			let n = [
+				100,
+				200,
+				300,
+				400,
+				500
+			].includes(e);
 			t.forEach((t) => {
-				let n = parseInt(t.getAttribute("data-kb"), 10);
-				this.targetSizeMode === "kb" && n === e ? n === 300 ? (t.className = "target-radio-pill relative px-3 py-0.5 text-xs font-bold text-white bg-blue-600 rounded-md shadow-md ring-2 ring-blue-500/50 flex items-center gap-1.5 transition cursor-pointer", t.innerHTML = "\n              <span class=\"relative flex h-1.5 w-1.5\">\n                <span class=\"animate-beacon-ping absolute inline-flex h-full w-full rounded-full bg-sky-300 opacity-75\"></span>\n                <span class=\"relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400\"></span>\n              </span>\n              <span class=\"tracking-wide\">300 KB</span>\n            ") : (t.className = "target-radio-pill px-2.5 py-0.5 text-xs font-bold text-white bg-blue-600 rounded-md shadow-xs transition cursor-pointer", t.textContent = `${n} KB`) : (t.className = "target-radio-pill px-2.5 py-0.5 text-xs font-medium text-slate-600 rounded-md hover:bg-white hover:text-slate-900 transition cursor-pointer", t.textContent = `${n} KB`);
+				let r = parseInt(t.getAttribute("data-kb"), 10);
+				this.targetSizeMode === "kb" && n && r === e ? (t.className = "target-radio-pill relative px-3 py-0.5 text-xs font-extrabold text-white bg-blue-600 rounded-md shadow-md ring-2 ring-blue-500/50 flex items-center gap-1.5 transition cursor-pointer", t.innerHTML = `
+            <span class="relative flex h-1.5 w-1.5">
+              <span class="animate-beacon-ping absolute inline-flex h-full w-full rounded-full bg-sky-300 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400"></span>
+            </span>
+            <span class="tracking-wide">${r} KB</span>
+          `) : (t.className = "target-radio-pill px-2.5 py-0.5 text-xs font-medium text-slate-600 rounded-md hover:bg-white hover:text-slate-900 transition cursor-pointer", t.textContent = `${r} KB`);
 			});
 		}, _ = (r) => {
-			this.targetSizeMode = r, r === "kb" ? (c && (c.checked = !0), l && (l.checked = !1), u && (u.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white text-blue-700 shadow-xs cursor-pointer transition-all"), d && (d.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-500 hover:text-slate-800 cursor-pointer transition-all"), f && f.classList.add("hidden"), o && (o.className = "group flex items-center bg-white border-2 border-blue-500 rounded-lg p-0.5 shadow-sm transition-all cursor-pointer", o.title = "KB Mode Active"), i && (i.disabled = !1, i.className = "px-1 text-center font-mono text-xs font-black text-slate-900 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-text"), m && (m.className = "px-1.5 py-0.5 bg-blue-100 text-blue-800 font-mono text-[10px] font-bold rounded"), e && e.classList.remove("opacity-40", "pointer-events-none"), n && (n.disabled = !1, n.classList.remove("opacity-40", "cursor-not-allowed")), p && p.classList.remove("hidden"), s && (s.className = "group flex items-center bg-white border border-slate-300 rounded-lg p-0.5 shadow-sm transition-all cursor-pointer", s.title = "Click to unlock MB Mode (up to 100 MB)"), a && (a.disabled = !0, a.className = "px-1 text-center font-mono text-xs font-black text-slate-900 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-not-allowed"), h && (h.className = "px-1.5 py-0.5 bg-slate-200 text-slate-600 font-mono text-[10px] font-bold rounded"), g(this.targetKb)) : (c && (c.checked = !1), l && (l.checked = !0), d && (d.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white text-indigo-700 shadow-xs cursor-pointer transition-all"), u && (u.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-500 hover:text-slate-800 cursor-pointer transition-all"), f && f.classList.remove("hidden"), o && (o.className = "group flex items-center bg-white border border-slate-300 rounded-lg p-0.5 shadow-sm transition-all cursor-pointer", o.title = "Click to switch back to KB Mode"), i && (i.disabled = !0, i.className = "px-1 text-center font-mono text-xs font-black text-slate-900 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-not-allowed"), m && (m.className = "px-1.5 py-0.5 bg-slate-200 text-slate-600 font-mono text-[10px] font-bold rounded"), e && e.classList.add("opacity-40"), n && (n.disabled = !0, n.classList.add("opacity-40", "cursor-not-allowed")), p && p.classList.add("hidden"), s && (s.className = "group flex items-center bg-white border-2 border-indigo-500 ring-2 ring-indigo-100 rounded-lg p-0.5 shadow-sm transition-all cursor-pointer", s.title = "MB Mode Active"), a && (a.disabled = !1, a.className = "px-1 text-center font-mono text-xs font-black text-slate-900 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-text", a.focus()), h && (h.className = "px-1.5 py-0.5 bg-indigo-100 text-indigo-700 font-mono text-[10px] font-bold rounded"), t.forEach((e) => {
+			this.targetSizeMode = r, r === "kb" ? (c && (c.checked = !0), l && (l.checked = !1), u && (u.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white text-blue-700 ring-2 ring-blue-500/40 shadow-xs cursor-pointer transition-all", u.querySelector(".mode-pulse-dot")?.classList.remove("hidden")), d && (d.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-500 hover:text-slate-800 cursor-pointer transition-all", d.querySelector(".mode-pulse-dot")?.classList.add("hidden")), f && f.classList.add("hidden"), o && (o.className = "group flex items-center h-8 bg-white border-2 border-blue-500 rounded-lg px-2 shadow-xs transition-all cursor-pointer", o.title = "KB Mode Active"), i && (i.disabled = !1, i.className = "w-14 text-center font-mono text-xs font-black text-slate-900 bg-transparent border-none focus:outline-none p-0 cursor-text"), m && (m.className = "px-1.5 py-0.5 bg-blue-100 text-blue-800 font-mono text-[10px] font-bold rounded ml-1"), e && e.classList.remove("opacity-40", "pointer-events-none"), n && (n.disabled = !1, n.classList.remove("opacity-40", "cursor-not-allowed")), p && p.classList.remove("hidden"), s && (s.className = "group flex items-center h-8 bg-white border border-slate-300 rounded-lg px-2 shadow-xs transition-all cursor-pointer", s.title = "Click to unlock MB Mode (up to 100 MB)"), a && (a.disabled = !0, a.className = "w-14 text-center font-mono text-xs font-black text-slate-900 bg-transparent border-none focus:outline-none p-0 cursor-not-allowed"), h && (h.className = "px-1.5 py-0.5 bg-slate-200 text-slate-600 font-mono text-[10px] font-bold rounded ml-1"), g(this.targetKb)) : (c && (c.checked = !1), l && (l.checked = !0), d && (d.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white text-indigo-700 ring-2 ring-indigo-500/40 shadow-xs cursor-pointer transition-all", d.querySelector(".mode-pulse-dot")?.classList.remove("hidden")), u && (u.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-500 hover:text-slate-800 cursor-pointer transition-all", u.querySelector(".mode-pulse-dot")?.classList.add("hidden")), f && f.classList.remove("hidden"), o && (o.className = "group flex items-center h-8 bg-white border border-slate-300 rounded-lg px-2 shadow-xs transition-all cursor-pointer", o.title = "Click to switch back to KB Mode"), i && (i.disabled = !0, i.className = "w-14 text-center font-mono text-xs font-black text-slate-900 bg-transparent border-none focus:outline-none p-0 cursor-not-allowed"), m && (m.className = "px-1.5 py-0.5 bg-slate-200 text-slate-600 font-mono text-[10px] font-bold rounded ml-1"), e && e.classList.add("opacity-40"), n && (n.disabled = !0, n.classList.add("opacity-40", "cursor-not-allowed")), p && p.classList.add("hidden"), s && (s.className = "group flex items-center h-8 bg-white border-2 border-indigo-500 ring-2 ring-indigo-100 rounded-lg px-2 shadow-xs transition-all cursor-pointer", s.title = "MB Mode Active"), a && (a.disabled = !1, a.className = "w-14 text-center font-mono text-xs font-black text-slate-900 bg-transparent border-none focus:outline-none p-0 cursor-text", a.focus()), h && (h.className = "px-1.5 py-0.5 bg-indigo-100 text-indigo-700 font-mono text-[10px] font-bold rounded ml-1"), t.forEach((e) => {
 				let t = parseInt(e.getAttribute("data-kb"), 10);
 				e.className = "target-radio-pill px-2.5 py-0.5 text-xs font-medium text-slate-400 rounded-md transition cursor-pointer hover:bg-slate-200", e.textContent = `${t} KB`;
 			}));
 		}, v = (e, t) => {
 			let r = parseInt(e, 10);
-			(isNaN(r) || r <= 0) && (r = 300), r > 102400 && (r = 102400), this.targetKb = r, t !== "slider" && n && (n.value = Math.min(Math.max(r, 50), 1e3)), t !== "inputKb" && i && (i.value = r), g(r), this.updateStats(), this.updateCardsProjectedSize();
+			if ((isNaN(r) || r <= 0) && (r = 300), r > 102400 && (r = 102400), this.targetKb = r, n) {
+				t !== "slider" && (n.value = Math.min(Math.max(r, 50), 1e3));
+				let e = (Math.min(Math.max(r, 50), 1e3) - 50) / 950 * 100;
+				n.style.setProperty("--slider-pct", `${e}%`), n.style.background = `linear-gradient(to right, #2563eb 0%, #2563eb ${e}%, #cbd5e1 ${e}%, #cbd5e1 100%)`;
+			}
+			t !== "inputKb" && i && (i.value = r), g(r), this.updateStats(), this.updateCardsProjectedSize();
 		}, y = (e) => {
 			let t = parseFloat(e);
 			(isNaN(t) || t <= 0) && (t = 1), t > 100 && (t = 100), this.targetKb = Math.round(t * 1024), this.updateStats(), this.updateCardsProjectedSize();
@@ -11232,40 +11264,35 @@ var Jt = class {
 		i && i.addEventListener("click", () => this.handleClearQueue());
 		let a = document.getElementById("btnFilterOversizedPdf");
 		a && a.addEventListener("click", () => this.handleFilterOversized());
-		let o = document.getElementById("btnOpenOutputFolder");
-		o && o.addEventListener("click", () => {
-			let e = this.lastOutputFolder || (this.activeFolderPath ? `${this.activeFolderPath}/${Ot(this.activeTool)}` : null);
-			e ? b(e) : r.show("No Output Folder", "Process documents first to generate output folder.", "info");
-		});
-		let s = document.getElementById("btnPdfScrollLeft"), c = document.getElementById("btnPdfScrollRight"), l = document.getElementById("pdfCardsGrid");
-		s && l && s.addEventListener("click", () => {
-			l.scrollBy({
+		let o = document.getElementById("btnPdfScrollLeft"), s = document.getElementById("btnPdfScrollRight"), c = document.getElementById("pdfCardsGrid");
+		o && c && o.addEventListener("click", () => {
+			c.scrollBy({
 				left: -300,
 				behavior: "smooth"
 			});
-		}), c && l && c.addEventListener("click", () => {
-			l.scrollBy({
+		}), s && c && s.addEventListener("click", () => {
+			c.scrollBy({
 				left: 300,
 				behavior: "smooth"
 			});
 		});
-		let u = document.getElementById("btnPdfSortSize");
-		u && u.addEventListener("click", () => {
-			this.sortDesc = !this.sortDesc, this.files.sort((e, t) => this.sortDesc ? t.size - e.size : e.size - t.size), u.textContent = this.sortDesc ? "Size (Desc)" : "Size (Asc)", this.renderQueue();
+		let l = document.getElementById("btnPdfSortSize");
+		l && l.addEventListener("click", () => {
+			this.sortDesc = !this.sortDesc, this.files.sort((e, t) => this.sortDesc ? t.size - e.size : e.size - t.size), l.textContent = this.sortDesc ? "Size (Desc)" : "Size (Asc)", this.renderQueue();
 		});
-		let d = document.getElementById("btnPdfSortDocket");
-		d && d.addEventListener("click", () => {
+		let u = document.getElementById("btnPdfSortDocket");
+		u && u.addEventListener("click", () => {
 			this.files.sort((e, t) => e.name.localeCompare(t.name, void 0, {
 				numeric: !0,
 				sensitivity: "base"
 			})), this.renderQueue(), r.show("Queue Sorted", "Natural sorting (1-0, A-Z) applied.", "info");
 		});
-		let f = document.getElementById("inputSplitPageRange");
-		f && f.addEventListener("input", (e) => {
+		let d = document.getElementById("inputSplitPageRange");
+		d && d.addEventListener("input", (e) => {
 			this.splitPageRange = e.target.value.trim();
 		});
-		let p = document.getElementById("startCompressBtn");
-		p && p.addEventListener("click", () => this.handleStartProcess());
+		let f = document.getElementById("startCompressBtn");
+		f && f.addEventListener("click", () => this.handleStartProcess());
 	}
 	_bindBentoDropdowns() {
 		let e = document.getElementById("btnBentoJpgDpi"), t = document.getElementById("menuBentoJpgDpi"), n = document.getElementById("labelJpgDpi");
@@ -11544,7 +11571,11 @@ var Jt = class {
 					let g = document.createElement("div");
 					g.className = "relative w-full h-56 rounded-lg bg-slate-50 border border-slate-200/80 overflow-hidden mb-2 p-1.5 flex items-center justify-center group-hover:bg-blue-50/20 transition-colors";
 					let _ = document.createElement("canvas");
-					if (_.className = "max-w-full max-h-full object-contain shadow-xs rounded bg-white", g.appendChild(_), t.thumbUrl) {
+					_.className = "max-w-full max-h-full object-contain shadow-xs rounded bg-white transition-all", g.appendChild(_);
+					let v = document.createElement("div");
+					v.className = "card-limit-badge absolute top-2 left-2 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm flex items-center gap-1 hidden pointer-events-none z-10", v.innerHTML = "<span class=\"material-symbols-outlined text-[12px]\">check_circle</span><span>✓ Already in Limit</span>", g.appendChild(v);
+					let y = document.createElement("div");
+					if (y.className = "card-blur-warning absolute inset-x-2 bottom-2 bg-amber-500/95 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm flex items-center justify-center gap-1 backdrop-blur-xs hidden pointer-events-none z-10", y.innerHTML = "<span class=\"material-symbols-outlined text-[13px]\">warning</span><span>⚠️ Blur Warning — Low Readability</span>", g.appendChild(y), t.thumbUrl) {
 						let e = new Image();
 						e.onload = () => {
 							_.width = e.width, _.height = e.height, _.getContext("2d").drawImage(e, 0, 0);
@@ -11580,20 +11611,20 @@ var Jt = class {
 						};
 					}
 					i.appendChild(g);
-					let v = document.createElement("div");
-					v.className = "font-sans text-xs font-bold text-slate-800 truncate mb-1.5", v.title = t.name, v.textContent = t.name, i.appendChild(v);
-					let y = document.createElement("div");
-					y.className = "flex items-center justify-between gap-1 pt-1 border-t border-slate-100";
-					let b = t.size > 1048576 ? `${(t.size / 1048576).toFixed(2)} MB` : `${Math.round(t.size / 1024)} KB`, x = t.size > u ? this.targetKb >= 1024 ? `${(this.targetKb / 1024).toFixed(2)} MB` : `${this.targetKb} KB` : b, S = document.createElement("span");
-					S.className = "badge-orig-size px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded font-mono text-[10px] font-bold truncate", S.textContent = `Orig ${b}`, y.appendChild(S);
-					let C = document.createElement("span");
-					C.className = t.size > u ? "badge-comp-size px-1.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-200/80 rounded font-mono text-[10px] font-bold truncate" : "badge-comp-size px-1.5 py-0.5 bg-slate-50 text-slate-600 border border-slate-200/80 rounded font-mono text-[10px] font-bold truncate", C.textContent = `Comp ${x}`, y.appendChild(C), i.appendChild(y), i.addEventListener("click", () => {
+					let b = document.createElement("div");
+					b.className = "font-sans text-xs font-bold text-slate-800 truncate mb-1.5", b.title = t.name, b.textContent = t.name, i.appendChild(b);
+					let x = document.createElement("div");
+					x.className = "flex items-center justify-between gap-1 pt-1 border-t border-slate-100";
+					let S = t.size > 1048576 ? `${(t.size / 1048576).toFixed(2)} MB` : `${Math.round(t.size / 1024)} KB`, C = t.size > u ? this.targetKb >= 1024 ? `${(this.targetKb / 1024).toFixed(2)} MB` : `${this.targetKb} KB` : S, w = document.createElement("span");
+					w.className = "badge-orig-size px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded font-mono text-[10px] font-bold truncate", w.textContent = `Orig ${S}`, x.appendChild(w);
+					let T = document.createElement("span");
+					T.className = t.size > u ? "badge-comp-size px-1.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-200/80 rounded font-mono text-[10px] font-bold truncate" : "badge-comp-size px-1.5 py-0.5 bg-slate-50 text-slate-600 border border-slate-200/80 rounded font-mono text-[10px] font-bold truncate", T.textContent = `Comp ${C}`, x.appendChild(T), i.appendChild(x), i.addEventListener("click", () => {
 						this.openPreviewModal(n);
 					}), e.appendChild(i);
 				} catch (e) {
 					console.error(`[PDF-STUDIO] Failed to render card for ${t ? t.name : n}:`, e);
 				}
-			});
+			}), this.updateCardsProjectedSize();
 		}
 	}
 	updateCardsProjectedSize() {
@@ -11601,11 +11632,14 @@ var Jt = class {
 		e.forEach((e) => {
 			let r = e.getAttribute("data-file-id"), i = this.files.find((e) => e.id === r);
 			if (!i) return;
-			let a = e.querySelector(".badge-reduction-pct"), o = e.querySelector(".badge-comp-size"), s = i.size > 1048576 ? `${(i.size / 1048576).toFixed(2)} MB` : `${Math.round(i.size / 1024)} KB`;
+			let a = e.querySelector(".badge-reduction-pct"), o = e.querySelector(".badge-comp-size"), s = e.querySelector(".card-limit-badge"), c = e.querySelector(".card-blur-warning"), l = e.querySelector("canvas"), u = i.size > 1048576 ? `${(i.size / 1048576).toFixed(2)} MB` : `${Math.round(i.size / 1024)} KB`;
 			if (i.size > t) {
 				let e = Math.min(95, Math.max(1, Math.round((i.size - t) / i.size * 100)));
-				a && (a.textContent = `-${e}%`, a.style.display = ""), o && (o.textContent = `Comp ${n}`, o.className = "badge-comp-size px-1.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-200/80 rounded font-mono text-[10px] font-bold truncate");
-			} else a && (a.style.display = "none"), o && (o.textContent = `Comp ${s}`, o.className = "badge-comp-size px-1.5 py-0.5 bg-slate-50 text-slate-600 border border-slate-200/80 rounded font-mono text-[10px] font-bold truncate");
+				if (a && (a.textContent = `-${e}%`, a.style.display = ""), o && (o.textContent = `Comp ${n}`, o.className = "badge-comp-size px-1.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-200/80 rounded font-mono text-[10px] font-bold truncate"), s && s.classList.add("hidden"), e >= 75 || this.targetKb <= 70) {
+					let t = 1.2;
+					e >= 90 || this.targetKb <= 50 ? t = 2.4 : (e >= 80 || this.targetKb <= 70) && (t = 1.7), l && (l.style.filter = `blur(${t}px)`, l.style.transition = "filter 0.2s ease"), c && c.classList.remove("hidden");
+				} else l && (l.style.filter = "none"), c && c.classList.add("hidden");
+			} else a && (a.style.display = "none"), o && (o.textContent = `Comp ${u}`, o.className = "badge-comp-size px-1.5 py-0.5 bg-slate-50 text-slate-600 border border-slate-200/80 rounded font-mono text-[10px] font-bold truncate"), s && s.classList.remove("hidden"), c && c.classList.add("hidden"), l && (l.style.filter = "none");
 		});
 	}
 	async rotateSingleFile(e) {

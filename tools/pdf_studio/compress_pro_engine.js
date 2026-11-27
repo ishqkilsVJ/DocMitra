@@ -7,7 +7,7 @@
  * 2. Skip-If-Already-Smaller (Zero Quality Loss Protection)
  * 3. Micro-Sharpen & Contrast Guard (Adaptive edge enhancement for signatures/stamps)
  * 4. QR Code & Barcode Protection Mode (150 DPI minimum floor)
- * 5. Auto-Grayscale Fallback (65% payload rescue for heavy multi-page PDFs)
+ * 5. Full-Color Adaptive Scaling (Zero Grayscale Fallback — Preserves 100% Original Colors)
  * 6. Hybrid Vector + Image Compression (Preserve crisp font glyphs)
  * 7. Hidden Bloat & Metadata Stripper (Lossless Pass 1 cleanup)
  * 8. Auto-A4 Page Fit (Proportional fit with 18pt margins for JPG/PNG)
@@ -162,29 +162,21 @@ export function detectHighFrequencyMatrix(ctx, width, height) {
 }
 
 /**
- * Feature 5: Auto-Grayscale Fallback
- * Converts canvas to 8-bit grayscale for multi-page documents to drop file size by 65%.
- * @param {CanvasRenderingContext2D} ctx
- * @param {number} width
- * @param {number} height
+ * Feature 5: Full-Color Adaptive Resolution Scaling
+ * Scales page canvases in 100% full 24-bit RGB color without ever converting to grayscale.
+ * @param {HTMLCanvasElement} canvas
+ * @param {number} scaleFactor
+ * @returns {HTMLCanvasElement}
  */
-export function convertCanvasToGrayscale(ctx, width, height) {
-  try {
-    const imgData = ctx.getImageData(0, 0, width, height);
-    const d = imgData.data;
-    const len = d.length;
-
-    for (let i = 0; i < len; i += 4) {
-      // Standard ITU-R BT.601 luminance conversion
-      const gray = (d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114) | 0;
-      d[i] = gray;
-      d[i + 1] = gray;
-      d[i + 2] = gray;
-    }
-    ctx.putImageData(imgData, 0, 0);
-  } catch (e) {
-    console.warn('[CompressProEngine] Grayscale fallback error:', e);
-  }
+export function renderCanvasScaled(canvas, scaleFactor) {
+  const scaled = document.createElement('canvas');
+  scaled.width = Math.max(1, Math.round(canvas.width * scaleFactor));
+  scaled.height = Math.max(1, Math.round(canvas.height * scaleFactor));
+  const sCtx = scaled.getContext('2d');
+  sCtx.imageSmoothingEnabled = true;
+  sCtx.imageSmoothingQuality = 'high';
+  sCtx.drawImage(canvas, 0, 0, scaled.width, scaled.height);
+  return scaled;
 }
 
 /**
@@ -430,35 +422,44 @@ export async function optimizeCanvasesToTarget({ canvases, targetKb, hasQr = fal
     }
   }
 
-  // Feature 5: Auto-Grayscale Rescue Fallback if color couldn't reach target
+  // Feature 5: Full-Color Adaptive Scaling (Zero Grayscale Fallback)
+  // Preserves 100% full-color documents without ever converting to black-and-white/grayscale.
   if (bestBlob && bestBlob.size > targetBytes && numPages >= 1) {
-    isGrayscaleActive = true;
-    for (const cv of canvases) {
-      const ctx = cv.getContext('2d');
-      convertCanvasToGrayscale(ctx, cv.width, cv.height);
-    }
-
-    // Re-run binary search on grayscale canvases
-    qLow = hasQr ? 0.40 : 0.26;
-    qHigh = 0.88;
-
-    for (let pass = 1; pass <= 3; pass++) {
-      const qMid = (qLow + qHigh) / 2;
+    // Pass A: Test lower quality floor in full color (down to 0.10)
+    const lowerQualities = hasQr ? [0.35, 0.28] : [0.20, 0.14, 0.10];
+    for (const q of lowerQualities) {
       const jpegs = [];
       for (const cv of canvases) {
-        const b = await canvasToJpegBytes(cv, qMid);
+        const b = await canvasToJpegBytes(cv, q);
         jpegs.push(b);
       }
-      const grayBlob = createPdfFromJpegs(jpegs, docOrientation, rotation, { margin: 0 });
-      if (grayBlob.size < bestBlob.size) {
-        bestBlob = grayBlob;
-        const buf = await grayBlob.arrayBuffer();
+      const colorBlob = createPdfFromJpegs(jpegs, docOrientation, rotation, { margin: 0 });
+      if (colorBlob.size < bestBlob.size) {
+        bestBlob = colorBlob;
+        const buf = await colorBlob.arrayBuffer();
         bestBytes = new Uint8Array(buf);
       }
-      if (grayBlob.size <= targetBytes) {
-        break;
+      if (colorBlob.size <= targetBytes) break;
+    }
+
+    // Pass B: If still above target, scale down canvas resolution in 100% full RGB color
+    if (bestBlob.size > targetBytes) {
+      const scaleFactors = [0.80, 0.65, 0.50];
+      for (const factor of scaleFactors) {
+        const scaledCanvases = canvases.map(cv => renderCanvasScaled(cv, factor));
+        const jpegs = [];
+        for (const sc of scaledCanvases) {
+          const b = await canvasToJpegBytes(sc, 0.55);
+          jpegs.push(b);
+        }
+        const scaledBlob = createPdfFromJpegs(jpegs, docOrientation, rotation, { margin: 0 });
+        if (scaledBlob.size < bestBlob.size) {
+          bestBlob = scaledBlob;
+          const buf = await scaledBlob.arrayBuffer();
+          bestBytes = new Uint8Array(buf);
+        }
+        if (scaledBlob.size <= targetBytes) break;
       }
-      qHigh = qMid;
     }
   }
 
