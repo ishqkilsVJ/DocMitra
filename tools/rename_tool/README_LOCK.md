@@ -1,16 +1,23 @@
 # 🔒 LOCKED TOOL: Bulk Document Renamer (`tools/rename_tool/`)
 
 > [!IMPORTANT]
-> **FROZEN & FULLY SEALED PRODUCTION MILESTONE UNDER CHECKPOINT `CP-060`**  
+> **FROZEN & FULLY SEALED PRODUCTION MILESTONE UNDER CHECKPOINT `CP-061`**  
 > **Status:** `LOCKED — PRODUCTION STABLE`  
 > **Governance Policy:** `AGENTS.md` (RULE 7) & `RENAME_TOOL_AGENT.md`  
 > **Module Integrity:** 100% Passing Across All Verification Tests via Dual-MCP QA (Playwright MCP + Chrome DevTools MCP: 0 Console Errors)  
 > **Verification Date:** 2026-11-27  
-> **Core Architecture:** Complete Production Suite (Physical Windows Folder Rename, Exact Casing, Circular Queue, 3-Tab Settings Modal with Deduplicated 58 Canonical Documents, Linked Documents Manager with Dynamic Zero-Error Exclusion, Bento Document Desk with Universal 1-0 and A-Z Natural Auto-Sort, In-App Notepad Report with Windows Notepad Launcher, 3-Way Unlimited Rotation Toolkit, Indian Phonetic & Fuzzy Matching Engine, Choice 1-B Direct Typed Word + Student Name Appending Engine, Choice 1-A & 2-B Strict Stop-Word Isolation & Word-Boundary Keyword Matching).
+> **Core Architecture:** Complete Production Suite (Physical Windows Folder Rename, Exact Casing, Circular Queue, 3-Tab Settings Modal with Deduplicated 58 Canonical Documents, Linked Documents Manager with Dynamic Zero-Error Exclusion, Bento Document Desk with Universal 1-0 and A-Z Natural Auto-Sort, In-App Notepad Report with Windows Notepad Launcher, 3-Way Unlimited Rotation Toolkit, Indian Phonetic & Fuzzy Matching Engine, Choice 1-B Direct Typed Word + Student Name Appending Engine, Choice 1-A & 2-B Strict Stop-Word Isolation, Choice 1-A & 2-A Complete Purge of Phonetic Sound Matching & Regional Desi Terms).
 >
 > **LOCKED BY POLICY (`AGENTS.md` Rule 3):**  
 > Strict Feature Freeze in effect. Zero direct file modifications permitted inside `tools/rename_tool/` without explicit user unlock command:  
 > `UNLOCK RENAME_TOOL`
+
+> **Last QA Stabilization & Verification:** 2026-11-27 (Complete Purge of Phonetic Sound Matching & Regional Desi Terms [CP-061] Verified 100%:
+> 1. Complete Phonetic Sound Bypass (Choice 1-A): Disabled Double Metaphone sound-alike guessing (`phoneticSimilarity` returns 0.0 unless exact match), preventing false sound code collisions on distinct document names.
+> 2. Total Regional Desi Words Purge (Choice 2-A): Defined `DESI_REGIONAL_STOP_WORDS` and purged all Marathi/Hindi/desi terms (`dakhla`, `pramanpatra`, `utpanna`, `jati`, `samaj`, `adhiwas`, `rehivasi`, `rashtriyatva`, `sanad`, `shidha patrika`, `swayam`, `hamipatra`, `palak`, `mrutyu`, `janma`, `apang`, `divyang`, `arogya`, `charitra`, etc.) from `INDIAN_ACADEMIC_SYNONYMS`, `BUILTIN_PRESETS`, `DEFAULT_SHORTCUT_DICTIONARY`, `DOCUMENT_PATTERNS`, and `PROFILES`.
+> 3. Pure Standard English Matching: The entire matching engine now operates exclusively on pure standard English administrative terms (`Marksheet`, `Passing`, `Income`, `Caste`, `Validity`, `Domicile`, `Nationality`, `Medical Fitness`, `Bonafide`, etc.).
+> 4. Unmatched Regional Files Preserved (Choice 3-A): Regional files with desi names remain cleanly marked as `Unmatched` with original name + student name intact, allowing users to rename manually without aggressive auto-hijacking.
+> 5. Dual-MCP Verification: 100% PASS across Playwright MCP and Chrome DevTools MCP (0 console errors); deployed to `C:\Users\USER\AppData\Local\DocMitra\app.exe`; re-sealed under `CP-061`).
 
 > **Last QA Stabilization & Verification:** 2026-11-27 (Strict Stop-Word Isolation & Word-Boundary Keyword Matching [CP-060] Verified 100%:
 > 1. Stop-Word Isolation (Choice 1-A): Defined `GENERIC_STOP_KEYWORDS` (`certificate`, `pramanpatra`, `dakhla`, `sanad`, `patrika`, `card`, `doc`, `paper`, etc.) ensuring standalone generic administrative terms can NEVER match on their own as keywords.

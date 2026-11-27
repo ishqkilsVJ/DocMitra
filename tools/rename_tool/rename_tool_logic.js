@@ -214,14 +214,14 @@ export const DEFAULT_CHECKLISTS_DATA = {
     ["12TH MARKSHEET AND PASSING CERTIFICATE", ["12th marksheet and passing certificate", "12th combined", "hsc marksheet passing"]],
     ["12TH LC", ["12th lc", "12 lc", "12 l", "leaving certificate", "school leaving", "tc", "transfer certificate"]],
     ["PREVIOUS YEAR MARKSHEET", ["previous year marksheet", "last exam marksheet", "prev marksheet"]],
-    ["CASTE CERTIFICATE", ["caste certificate", "cast", "jati pramanpatra"]],
+    ["CASTE CERTIFICATE", ["caste certificate", "cast"]],
     ["CASTE VALIDITY CERTIFICATE", ["caste validity certificate", "validity", "cvc", "tribe validity"]],
-    ["NON CREAMY LAYER CERTIFICATE", ["non creamy layer", "ncl", "non criminal", "non-creamy"]],
-    ["INCOME CERTIFICATE", ["income certificate", "utpanna dakhla", "tahsildar income", "form 16"]],
+    ["NON CREAMY LAYER CERTIFICATE", ["non creamy layer", "ncl", "non-creamy"]],
+    ["INCOME CERTIFICATE", ["income certificate", "tahsildar income", "form 16"]],
     ["DOMICILE AND NATIONALITY CERTIFICATE", ["domicile and nationality certificate", "domicile nationality", "nationality domicile", "domicile and nationality", "domnat", "natdom", "dn"]],
-    ["DOMICILE CERTIFICATE", ["domicile certificate", "adhiwas", "maharashtra domicile"]],
-    ["NATIONALITY CERTIFICATE", ["nationality certificate", "rashtriyatva", "nationality proof"]],
-    ["RATION CARD", ["ration card", "shidha patrika"]],
+    ["DOMICILE CERTIFICATE", ["domicile certificate", "maharashtra domicile"]],
+    ["NATIONALITY CERTIFICATE", ["nationality certificate", "nationality proof"]],
+    ["RATION CARD", ["ration card"]],
     ["BANK PASSBOOK", ["bank passbook", "passbook", "bank account", "npci seeded"]],
     ["CAP ALLOTMENT LETTER", ["cap allotment letter", "admission confirmation letter", "allotment"]],
     ["BONAFIDE CERTIFICATE", ["bonafide certificate", "bonafide", "college bonafide"]],
@@ -229,9 +229,9 @@ export const DEFAULT_CHECKLISTS_DATA = {
     ["ATTENDANCE CERTIFICATE", ["attendance certificate", "college attendance"]],
     ["HOSTEL CERTIFICATE", ["hostel certificate", "rent agreement", "private hostel proof"]],
     ["GAP CERTIFICATE", ["gap certificate", "educational gap", "gap affidavit"]],
-    ["SELF DECLARATION", ["self declaration", "swayam ghoshnapatra", "declaration"]],
-    ["PARENT DECLARATION", ["parent declaration", "hamipatra", "father declaration"]],
-    ["DEATH CERTIFICATE", ["death certificate", "father death certificate", "mrutyu pramanpatra"]]
+    ["SELF DECLARATION", ["self declaration", "declaration"]],
+    ["PARENT DECLARATION", ["parent declaration", "father declaration"]],
+    ["DEATH CERTIFICATE", ["death certificate", "father death certificate"]]
   ],
   "SWAYAM DEENDAYAL YOJANA": [
     ["PHOTO", ["photo", "pic", "passport photo", "photograph"]],
@@ -243,20 +243,20 @@ export const DEFAULT_CHECKLISTS_DATA = {
     ["12TH MARKSHEET AND PASSING CERTIFICATE", ["12th marksheet and passing certificate", "12th combined", "hsc marksheet passing"]],
     ["12TH LC", ["12th lc", "12 lc", "12 l", "leaving certificate", "school leaving", "tc", "transfer certificate"]],
     ["PREVIOUS YEAR MARKSHEET", ["previous year marksheet", "last exam marksheet", "prev marksheet"]],
-    ["CASTE CERTIFICATE", ["caste certificate", "cast", "jati pramanpatra"]],
+    ["CASTE CERTIFICATE", ["caste certificate", "cast"]],
     ["CASTE VALIDITY CERTIFICATE", ["caste validity certificate", "validity", "cvc", "tribe validity"]],
     ["DOMICILE AND NATIONALITY CERTIFICATE", ["domicile and nationality certificate", "domicile nationality", "nationality domicile", "domicile and nationality", "domnat", "natdom", "dn"]],
-    ["DOMICILE CERTIFICATE", ["domicile certificate", "adhiwas", "maharashtra domicile"]],
-    ["INCOME CERTIFICATE", ["income certificate", "utpanna dakhla", "tahsildar income", "form 16"]],
+    ["DOMICILE CERTIFICATE", ["domicile certificate", "maharashtra domicile"]],
+    ["INCOME CERTIFICATE", ["income certificate", "tahsildar income", "form 16"]],
     ["BANK PASSBOOK", ["bank passbook", "passbook", "bank account", "npci seeded"]],
     ["BONAFIDE CERTIFICATE", ["bonafide certificate", "bonafide", "college bonafide"]],
     ["CAP ALLOTMENT LETTER", ["cap allotment letter", "admission confirmation letter", "allotment"]],
     ["ATTENDANCE CERTIFICATE", ["attendance certificate", "college attendance"]],
     ["HOSTEL CERTIFICATE", ["hostel certificate", "rent agreement", "private hostel proof"]],
     ["NON HOSTEL DECLARATION", ["non hostel declaration", "government hostel non allotment", "warden letter"]],
-    ["SELF DECLARATION", ["self declaration", "swayam ghoshnapatra", "declaration"]],
-    ["PARENT DECLARATION", ["parent declaration", "hamipatra", "father declaration"]],
-    ["DISABILITY CERTIFICATE", ["disability certificate", "divyang", "pwd certificate", "udid"]]
+    ["SELF DECLARATION", ["self declaration", "declaration"]],
+    ["PARENT DECLARATION", ["parent declaration", "father declaration"]],
+    ["DISABILITY CERTIFICATE", ["disability certificate", "pwd certificate", "udid"]]
   ],
   "CET CELL": [
     ["PHOTO", ["photo", "pic", "passport photo", "photograph"]],
@@ -275,17 +275,17 @@ export const DEFAULT_CHECKLISTS_DATA = {
     ["12TH MARKSHEET AND PASSING CERTIFICATE", ["12th marksheet and passing certificate", "12th combined", "hsc marksheet passing"]],
     ["12TH LC", ["12th lc", "12 lc", "12 l", "leaving certificate", "school leaving", "tc", "transfer certificate"]],
     ["DOMICILE AND NATIONALITY CERTIFICATE", ["domicile and nationality certificate", "domicile nationality", "nationality domicile", "domicile and nationality", "domnat", "natdom", "dn"]],
-    ["DOMICILE CERTIFICATE", ["domicile certificate", "adhiwas", "maharashtra domicile"]],
-    ["NATIONALITY CERTIFICATE", ["nationality certificate", "rashtriyatva", "nationality proof"]],
-    ["CASTE CERTIFICATE", ["caste certificate", "cast", "jati pramanpatra"]],
+    ["DOMICILE CERTIFICATE", ["domicile certificate", "maharashtra domicile"]],
+    ["NATIONALITY CERTIFICATE", ["nationality certificate", "nationality proof"]],
+    ["CASTE CERTIFICATE", ["caste certificate", "cast"]],
     ["CASTE VALIDITY CERTIFICATE", ["caste validity certificate", "validity", "cvc", "tribe validity"]],
-    ["NON CREAMY LAYER CERTIFICATE", ["non creamy layer", "ncl", "non criminal", "non-creamy"]],
+    ["NON CREAMY LAYER CERTIFICATE", ["non creamy layer", "ncl", "non-creamy"]],
     ["EWS CERTIFICATE", ["ews certificate", "economically weaker section"]],
-    ["INCOME CERTIFICATE", ["income certificate", "utpanna dakhla", "tahsildar income", "form 16"]],
+    ["INCOME CERTIFICATE", ["income certificate", "tahsildar income", "form 16"]],
     ["GAP CERTIFICATE", ["gap certificate", "educational gap", "gap affidavit"]],
     ["MIGRATION CERTIFICATE", ["migration certificate", "migration"]],
     ["MEDICAL FITNESS CERTIFICATE", ["medical fitness certificate", "fitness certificate", "health certificate"]],
-    ["BIRTH CERTIFICATE", ["birth certificate", "janma dakhla", "dob proof"]]
+    ["BIRTH CERTIFICATE", ["birth certificate", "dob proof"]]
   ],
   "EDUCATIONAL DOCUMENTS": [
     ["PHOTO", ["photo", "pic", "passport photo", "photograph"]],
@@ -299,14 +299,14 @@ export const DEFAULT_CHECKLISTS_DATA = {
     ["12TH MARKSHEET AND PASSING CERTIFICATE", ["12th marksheet and passing certificate", "12th combined", "hsc marksheet passing"]],
     ["12TH LC", ["12th lc", "12 lc", "12 l", "leaving certificate", "school leaving", "tc", "transfer certificate"]],
     ["PREVIOUS YEAR MARKSHEET", ["previous year marksheet", "last exam marksheet", "prev marksheet"]],
-    ["CASTE CERTIFICATE", ["caste certificate", "cast", "jati pramanpatra"]],
+    ["CASTE CERTIFICATE", ["caste certificate", "cast"]],
     ["CASTE VALIDITY CERTIFICATE", ["caste validity certificate", "validity", "cvc", "tribe validity"]],
-    ["NON CREAMY LAYER CERTIFICATE", ["non creamy layer", "ncl", "non criminal", "non-creamy"]],
-    ["INCOME CERTIFICATE", ["income certificate", "utpanna dakhla", "tahsildar income", "form 16"]],
+    ["NON CREAMY LAYER CERTIFICATE", ["non creamy layer", "ncl", "non-creamy"]],
+    ["INCOME CERTIFICATE", ["income certificate", "tahsildar income", "form 16"]],
     ["DOMICILE AND NATIONALITY CERTIFICATE", ["domicile and nationality certificate", "domicile nationality", "nationality domicile", "domicile and nationality", "domnat", "natdom", "dn"]],
-    ["DOMICILE CERTIFICATE", ["domicile certificate", "adhiwas", "maharashtra domicile"]],
-    ["NATIONALITY CERTIFICATE", ["nationality certificate", "rashtriyatva", "nationality proof"]],
-    ["RATION CARD", ["ration card", "shidha patrika"]],
+    ["DOMICILE CERTIFICATE", ["domicile certificate", "maharashtra domicile"]],
+    ["NATIONALITY CERTIFICATE", ["nationality certificate", "nationality proof"]],
+    ["RATION CARD", ["ration card"]],
     ["BANK PASSBOOK", ["bank passbook", "passbook", "bank account", "npci seeded"]],
     ["CAP ALLOTMENT LETTER", ["cap allotment letter", "admission confirmation letter", "allotment"]],
     ["BONAFIDE CERTIFICATE", ["bonafide certificate", "bonafide", "college bonafide"]],
@@ -314,11 +314,11 @@ export const DEFAULT_CHECKLISTS_DATA = {
     ["ATTENDANCE CERTIFICATE", ["attendance certificate", "college attendance"]],
     ["HOSTEL CERTIFICATE", ["hostel certificate", "rent agreement", "private hostel proof"]],
     ["GAP CERTIFICATE", ["gap certificate", "educational gap", "gap affidavit"]],
-    ["SELF DECLARATION", ["self declaration", "swayam ghoshnapatra", "declaration"]],
-    ["PARENT DECLARATION", ["parent declaration", "hamipatra", "father declaration"]],
-    ["DEATH CERTIFICATE", ["death certificate", "father death certificate", "mrutyu pramanpatra"]],
+    ["SELF DECLARATION", ["self declaration", "declaration"]],
+    ["PARENT DECLARATION", ["parent declaration", "father declaration"]],
+    ["DEATH CERTIFICATE", ["death certificate", "father death certificate"]],
     ["NON HOSTEL DECLARATION", ["non hostel declaration", "government hostel non allotment", "warden letter"]],
-    ["DISABILITY CERTIFICATE", ["disability certificate", "divyang", "pwd certificate", "udid"]],
+    ["DISABILITY CERTIFICATE", ["disability certificate", "pwd certificate", "udid"]],
     ["APAAR ID", ["apaar id", "abc id", "academic bank of credits"]],
     ["CET APPLICATION FORM", ["cet application form", "cet application confirmation", "cap registration form"]],
     ["CET SCORE CARD", ["cet score card", "cet result", "scorecard", "neet score card"]],
@@ -326,7 +326,7 @@ export const DEFAULT_CHECKLISTS_DATA = {
     ["EWS CERTIFICATE", ["ews certificate", "economically weaker section"]],
     ["MIGRATION CERTIFICATE", ["migration certificate", "migration"]],
     ["MEDICAL FITNESS CERTIFICATE", ["medical fitness certificate", "fitness certificate", "health certificate"]],
-    ["BIRTH CERTIFICATE", ["birth certificate", "janma dakhla", "dob proof"]],
+    ["BIRTH CERTIFICATE", ["birth certificate", "dob proof"]],
     ["PAN CARD", ["pan card", "permanent account number"]],
     ["VOTER ID", ["voter id", "election card", "epic"]],
     ["DRIVING LICENSE", ["driving license", "dl", "licence"]],
@@ -339,9 +339,9 @@ export const DEFAULT_CHECKLISTS_DATA = {
     ["DEGREE CERTIFICATE", ["degree certificate", "convocation certificate", "diploma certificate"]],
     ["REGISTRATION CERTIFICATE", ["registration certificate", "council registration", "mnc registration", "nursing registration"]],
     ["INTERNSHIP CERTIFICATE", ["internship certificate", "internship completion", "clinical experience"]],
-    ["CHARACTER CERTIFICATE", ["character certificate", "conduct certificate", "charitra dakhla"]],
-    ["GAZETTE CERTIFICATE", ["gazette certificate", "name change gazette", "rajpatra", "marriage certificate"]],
-    ["MINORITY CERTIFICATE", ["minority certificate", "minority declaration", "alpsankhyank pramanpatra", "minority proof"]]
+    ["CHARACTER CERTIFICATE", ["character certificate", "conduct certificate"]],
+    ["GAZETTE CERTIFICATE", ["gazette certificate", "name change gazette", "marriage certificate"]],
+    ["MINORITY CERTIFICATE", ["minority certificate", "minority declaration", "minority proof"]]
   ]
 };
 // Backward-compatibility aliases
@@ -366,14 +366,14 @@ export const DEFAULT_SHORTCUT_DICTIONARY = [
   { id: "12th-marksheet-passing", displayName: "12th Marksheet & Passing", primaryShortcut: "12MP", alternateKeywords: ["12th marksheet and passing certificate", "12th combined", "hsc marksheet passing"], outputName: "12TH MARKSHEET AND PASSING CERTIFICATE" },
   { id: "12th-lc", displayName: "12th LC", primaryShortcut: "12LC", alternateKeywords: ["12th lc", "12 lc", "12 l", "leaving certificate", "school leaving", "tc", "transfer certificate"], outputName: "12TH LC" },
   { id: "previous-year-marksheet", displayName: "Previous Year Marksheet", primaryShortcut: "PYM", alternateKeywords: ["previous year marksheet", "last exam marksheet", "prev marksheet"], outputName: "PREVIOUS YEAR MARKSHEET" },
-  { id: "caste-certificate", displayName: "Caste Certificate", primaryShortcut: "CST", alternateShortcuts: ["CAST", "JATI"], alternateKeywords: ["caste certificate", "cast", "jati pramanpatra"], outputName: "CASTE CERTIFICATE" },
+  { id: "caste-certificate", displayName: "Caste Certificate", primaryShortcut: "CST", alternateShortcuts: ["CAST"], alternateKeywords: ["caste certificate", "cast"], outputName: "CASTE CERTIFICATE" },
   { id: "caste-validity", displayName: "Caste Validity Certificate", primaryShortcut: "VAL", alternateShortcuts: ["VLD", "CVC"], alternateKeywords: ["caste validity certificate", "validity", "cvc", "vld", "tribe validity"], outputName: "CASTE VALIDITY CERTIFICATE" },
-  { id: "non-creamy-layer", displayName: "Non Creamy Layer Certificate", primaryShortcut: "NCL", alternateKeywords: ["non creamy layer", "ncl", "non criminal", "non-creamy"], outputName: "NON CREAMY LAYER CERTIFICATE" },
-  { id: "income-certificate", displayName: "Income Certificate", primaryShortcut: "INC", alternateKeywords: ["income certificate", "utpanna dakhla", "tahsildar income", "form 16"], outputName: "INCOME CERTIFICATE" },
-  { id: "domicile-certificate", displayName: "Domicile Certificate", primaryShortcut: "DOM", alternateKeywords: ["domicile certificate", "adhiwas", "maharashtra domicile"], outputName: "DOMICILE CERTIFICATE" },
-  { id: "nationality-certificate", displayName: "Nationality Certificate", primaryShortcut: "NAT", alternateKeywords: ["nationality certificate", "rashtriyatva", "nationality proof"], outputName: "NATIONALITY CERTIFICATE" },
+  { id: "non-creamy-layer", displayName: "Non Creamy Layer Certificate", primaryShortcut: "NCL", alternateKeywords: ["non creamy layer", "ncl", "non-creamy"], outputName: "NON CREAMY LAYER CERTIFICATE" },
+  { id: "income-certificate", displayName: "Income Certificate", primaryShortcut: "INC", alternateKeywords: ["income certificate", "tahsildar income", "form 16"], outputName: "INCOME CERTIFICATE" },
+  { id: "domicile-certificate", displayName: "Domicile Certificate", primaryShortcut: "DOM", alternateKeywords: ["domicile certificate", "maharashtra domicile"], outputName: "DOMICILE CERTIFICATE" },
+  { id: "nationality-certificate", displayName: "Nationality Certificate", primaryShortcut: "NAT", alternateKeywords: ["nationality certificate", "nationality proof"], outputName: "NATIONALITY CERTIFICATE" },
   { id: "domicile-nationality-certificate", displayName: "Domicile & Nationality", primaryShortcut: "DOMNAT", alternateKeywords: ["domicile and nationality certificate", "domicile nationality", "nationality domicile", "domicile and nationality", "dn", "natdom"], outputName: "DOMICILE AND NATIONALITY CERTIFICATE" },
-  { id: "ration-card", displayName: "Ration Card", primaryShortcut: "RAT", alternateKeywords: ["ration card", "shidha patrika"], outputName: "RATION CARD" },
+  { id: "ration-card", displayName: "Ration Card", primaryShortcut: "RAT", alternateKeywords: ["ration card"], outputName: "RATION CARD" },
   { id: "bank-passbook", displayName: "Bank Passbook", primaryShortcut: "BNK", alternateKeywords: ["bank passbook", "passbook", "bank account", "npci seeded"], outputName: "BANK PASSBOOK" },
   { id: "cap-allotment", displayName: "CAP Allotment Letter", primaryShortcut: "CAP", alternateKeywords: ["cap allotment letter", "admission confirmation letter", "allotment"], outputName: "CAP ALLOTMENT LETTER" },
   { id: "bonafide-certificate", displayName: "Bonafide Certificate", primaryShortcut: "BON", alternateKeywords: ["bonafide certificate", "bonafide", "college bonafide"], outputName: "BONAFIDE CERTIFICATE" },
@@ -381,11 +381,11 @@ export const DEFAULT_SHORTCUT_DICTIONARY = [
   { id: "attendance-certificate", displayName: "Attendance Certificate", primaryShortcut: "ATT", alternateKeywords: ["attendance certificate", "college attendance"], outputName: "ATTENDANCE CERTIFICATE" },
   { id: "hostel-certificate", displayName: "Hostel Certificate", primaryShortcut: "HST", alternateKeywords: ["hostel certificate", "rent agreement", "private hostel proof"], outputName: "HOSTEL CERTIFICATE" },
   { id: "gap-certificate", displayName: "Gap Certificate", primaryShortcut: "GAP", alternateKeywords: ["gap certificate", "educational gap", "gap affidavit"], outputName: "GAP CERTIFICATE" },
-  { id: "self-declaration", displayName: "Self Declaration", primaryShortcut: "SDC", alternateKeywords: ["self declaration", "swayam ghoshnapatra", "declaration"], outputName: "SELF DECLARATION" },
-  { id: "parent-declaration", displayName: "Parent Declaration", primaryShortcut: "PDC", alternateKeywords: ["parent declaration", "hamipatra", "father declaration"], outputName: "PARENT DECLARATION" },
-  { id: "death-certificate", displayName: "Death Certificate", primaryShortcut: "DTH", alternateKeywords: ["death certificate", "father death certificate", "mrutyu pramanpatra"], outputName: "DEATH CERTIFICATE" },
+  { id: "self-declaration", displayName: "Self Declaration", primaryShortcut: "SDC", alternateKeywords: ["self declaration", "declaration"], outputName: "SELF DECLARATION" },
+  { id: "parent-declaration", displayName: "Parent Declaration", primaryShortcut: "PDC", alternateKeywords: ["parent declaration", "father declaration"], outputName: "PARENT DECLARATION" },
+  { id: "death-certificate", displayName: "Death Certificate", primaryShortcut: "DTH", alternateKeywords: ["death certificate", "father death certificate"], outputName: "DEATH CERTIFICATE" },
   { id: "non-hostel-declaration", displayName: "Non Hostel Declaration", primaryShortcut: "NHC", alternateKeywords: ["non hostel declaration", "government hostel non allotment", "warden letter"], outputName: "NON HOSTEL DECLARATION" },
-  { id: "disability-certificate", displayName: "Disability Certificate", primaryShortcut: "DIS", alternateKeywords: ["disability certificate", "divyang", "pwd certificate", "udid"], outputName: "DISABILITY CERTIFICATE" },
+  { id: "disability-certificate", displayName: "Disability Certificate", primaryShortcut: "DIS", alternateKeywords: ["disability certificate", "pwd certificate", "udid"], outputName: "DISABILITY CERTIFICATE" },
   { id: "apaar-id", displayName: "APAAR ID", primaryShortcut: "APR", alternateKeywords: ["apaar id", "abc id", "academic bank of credits"], outputName: "APAAR ID" },
   { id: "cet-application-form", displayName: "CET Application Form", primaryShortcut: "CETAF", alternateKeywords: ["cet application form", "cet application confirmation", "cap registration form"], outputName: "CET APPLICATION FORM" },
   { id: "cet-score-card", displayName: "CET Score Card", primaryShortcut: "CETSC", alternateKeywords: ["cet score card", "cet result", "scorecard", "neet score card"], outputName: "CET SCORE CARD" },
@@ -393,7 +393,7 @@ export const DEFAULT_SHORTCUT_DICTIONARY = [
   { id: "ews-certificate", displayName: "EWS Certificate", primaryShortcut: "EWS", alternateKeywords: ["ews certificate", "economically weaker section"], outputName: "EWS CERTIFICATE" },
   { id: "migration-certificate", displayName: "Migration Certificate", primaryShortcut: "MIG", alternateKeywords: ["migration certificate", "migration"], outputName: "MIGRATION CERTIFICATE" },
   { id: "medical-fitness", displayName: "Medical Fitness Certificate", primaryShortcut: "MED", alternateKeywords: ["medical fitness certificate", "fitness certificate", "health certificate"], outputName: "MEDICAL FITNESS CERTIFICATE" },
-  { id: "birth-certificate", displayName: "Birth Certificate", primaryShortcut: "BRT", alternateKeywords: ["birth certificate", "janma dakhla", "dob proof"], outputName: "BIRTH CERTIFICATE" },
+  { id: "birth-certificate", displayName: "Birth Certificate", primaryShortcut: "BRT", alternateKeywords: ["birth certificate", "dob proof"], outputName: "BIRTH CERTIFICATE" },
   { id: "pan-card", displayName: "PAN Card", primaryShortcut: "PAN", alternateKeywords: ["pan card", "permanent account number"], outputName: "PAN CARD" },
   { id: "voter-id", displayName: "Voter ID", primaryShortcut: "VOT", alternateKeywords: ["voter id", "election card", "epic"], outputName: "VOTER ID" },
   { id: "driving-license", displayName: "Driving License", primaryShortcut: "DL", alternateKeywords: ["driving license", "dl", "licence"], outputName: "DRIVING LICENSE" },
@@ -406,9 +406,9 @@ export const DEFAULT_SHORTCUT_DICTIONARY = [
   { id: "degree-certificate", displayName: "Degree Certificate", primaryShortcut: "DEG", alternateKeywords: ["degree certificate", "convocation certificate", "diploma certificate"], outputName: "DEGREE CERTIFICATE" },
   { id: "registration-certificate", displayName: "Registration Certificate", primaryShortcut: "REG", alternateKeywords: ["registration certificate", "council registration", "mnc registration", "nursing registration"], outputName: "REGISTRATION CERTIFICATE" },
   { id: "internship-certificate", displayName: "Internship Certificate", primaryShortcut: "INT", alternateKeywords: ["internship certificate", "internship completion", "clinical experience"], outputName: "INTERNSHIP CERTIFICATE" },
-  { id: "character-certificate", displayName: "Character Certificate", primaryShortcut: "CHR", alternateKeywords: ["character certificate", "conduct certificate", "charitra dakhla"], outputName: "CHARACTER CERTIFICATE" },
-  { id: "gazette-certificate", displayName: "Gazette Certificate", primaryShortcut: "GAZ", alternateKeywords: ["gazette certificate", "name change gazette", "rajpatra", "marriage certificate"], outputName: "GAZETTE CERTIFICATE" },
-  { id: "minority-certificate", displayName: "Minority Certificate", primaryShortcut: "MIN", alternateKeywords: ["minority certificate", "minority declaration", "alpsankhyank pramanpatra", "minority proof"], outputName: "MINORITY CERTIFICATE" }
+  { id: "character-certificate", displayName: "Character Certificate", primaryShortcut: "CHR", alternateKeywords: ["character certificate", "conduct certificate"], outputName: "CHARACTER CERTIFICATE" },
+  { id: "gazette-certificate", displayName: "Gazette Certificate", primaryShortcut: "GAZ", alternateKeywords: ["gazette certificate", "name change gazette", "marriage certificate"], outputName: "GAZETTE CERTIFICATE" },
+  { id: "minority-certificate", displayName: "Minority Certificate", primaryShortcut: "MIN", alternateKeywords: ["minority certificate", "minority declaration", "minority proof"], outputName: "MINORITY CERTIFICATE" }
 ];
 
 export function exportDictionaryToGroups(dictionary = DEFAULT_SHORTCUT_DICTIONARY) {
@@ -466,37 +466,37 @@ export const INDIAN_ACADEMIC_SYNONYMS = {
   'hsc': ['12th', '12', 'inter', 'intermediate'],
   '11th': ['11', 'fyjc'],
   'marksheet': ['mark sheet', 'marks', 'mark', 'result', 'score card', 'grade card'],
-  'passing': ['passing certificate', 'pass cert', 'passing cert', 'pass certificate', 'sanad', 'board cert'],
+  'passing': ['passing certificate', 'pass cert', 'passing cert', 'pass certificate', 'board cert'],
   'lc': ['leaving certificate', 'school leaving', 'tc', 'transfer certificate', 'college leaving', 'leaving'],
   'tc': ['transfer certificate', 'leaving certificate', 'lc', 'school leaving'],
-  // Caste & Validity
-  'caste': ['cast', 'jati', 'samaj', 'jati pramanpatra'],
-  'validity': ['caste validity', 'cvc', 'validity certificate', 'padtalani', 'padtalani pramanpatra'],
-  'non creamy': ['ncl', 'non creamy layer', 'non criminal', 'non-creamy', 'unnath va pragat'],
-  'ncl': ['non creamy layer', 'non creamy', 'non criminal'],
-  // Income & Domicile
-  'income': ['utpanna', 'utpanna dakhla', 'tahsildar income', 'form 16', 'salary slip', 'income cert'],
-  'domicile': ['adhivas', 'rehivasi', 'domicile cert', 'residence', 'residence certificate', 'maharashtra domicile'],
-  'nationality': ['rashtriyatva', 'indian nationality', 'nationality cert', 'citizenship'],
+  // Caste & Validity (Strictly pure English terms)
+  'caste': ['cast', 'caste cert', 'caste category'],
+  'validity': ['caste validity', 'cvc', 'validity cert', 'validity certificate'],
+  'non creamy': ['ncl', 'non creamy layer', 'non-creamy'],
+  'ncl': ['non creamy layer', 'non creamy'],
+  // Income & Domicile (Strictly pure English terms)
+  'income': ['income cert', 'income certificate', 'tahsildar income', 'form 16', 'salary slip'],
+  'domicile': ['domicile cert', 'domicile certificate', 'residence', 'residence certificate', 'maharashtra domicile'],
+  'nationality': ['indian nationality', 'nationality cert', 'citizenship'],
   // Identity & Bio
   'aadhaar': ['aadhar', 'aadhar card', 'adhar', 'adhaar', 'uid', 'uidai', 'adhar card'],
   'pan': ['pan card', 'pancard', 'income tax pan'],
-  'voter': ['voter card', 'voting card', 'epic', 'election card', 'matdar card'],
+  'voter': ['voter card', 'voting card', 'epic', 'election card'],
   'driving': ['driving license', 'license', 'dl', 'vehicle license'],
   'photo': ['photo', 'photograph', 'passport photo', 'pass photo', 'pic', 'profile photo'],
   'signature': ['sign', 'signature', 'student signature', 'st sign', 'sig'],
-  // Bonafide, Declarations, Welfare
+  // Bonafide, Declarations, Welfare (Strictly pure English terms)
   'bonafide': ['bonafide certificate', 'bona fide', 'college bonafide'],
-  'gap': ['gap certificate', 'gap affidavit', 'shikshanit khand'],
-  'self declaration': ['self declaration', 'self declaration certificate', 'swayam ghoshana', 'sdc'],
-  'parent declaration': ['parent declaration', 'parents declaration', 'palak ghoshana', 'pdc'],
-  'death': ['death certificate', 'mrutyu dakhla'],
-  'disability': ['disability certificate', 'handicapped', 'divyang', 'pwd certificate', 'apang', 'pwd'],
-  'ews': ['economically weaker section', 'ews certificate', 'arthik durbal ghatak'],
+  'gap': ['gap certificate', 'gap affidavit'],
+  'self declaration': ['self declaration', 'self declaration certificate', 'sdc'],
+  'parent declaration': ['parent declaration', 'parents declaration', 'pdc'],
+  'death': ['death certificate', 'death cert'],
+  'disability': ['disability certificate', 'handicapped', 'pwd certificate', 'pwd'],
+  'ews': ['economically weaker section', 'ews certificate'],
   'migration': ['migration certificate', 'migration cert'],
-  'medical': ['medical fitness', 'fitness certificate', 'arogya dakhla'],
-  'birth': ['birth certificate', 'janam dakhla', 'janma pramanpatra'],
-  'ration': ['ration card', 'rationcard', 'ration book', 'rasan kard'],
+  'medical': ['medical fitness', 'medical fitness certificate', 'fitness certificate'],
+  'birth': ['birth certificate', 'birth cert', 'dob proof'],
+  'ration': ['ration card', 'rationcard', 'ration book'],
   'bank': ['bank passbook', 'passbook', 'account statement', 'bank statement'],
   // CET / Higher Ed
   'cetaf': ['cet application form', 'application form', 'cet form'],
@@ -505,13 +505,24 @@ export const INDIAN_ACADEMIC_SYNONYMS = {
   'srf': ['scrutiny form', 'fc verification', 'document verification receipt'],
   'fee': ['fee receipt', 'fees', 'receipt', 'admission fee receipt'],
   'attendance': ['attendance certificate', 'attendance report'],
-  'hostel': ['hostel certificate', 'hostel receipt', 'vasatigruh dakhla']
+  'hostel': ['hostel certificate', 'hostel receipt']
 };
 
-// Choice 1-A: Generic Administrative Stop-Words that must NEVER match as standalone keywords
+// Choice 2-A: Marathi / Hindi / Desi Regional Words that are strictly excluded from automated matching
+export const DESI_REGIONAL_STOP_WORDS = new Set([
+  'pramanpatra', 'dakhla', 'dakhala', 'utpanna', 'utpann', 'jati', 'samaj',
+  'adivas', 'adhiwas', 'rehivasi', 'rahavasi', 'rashtriyatva', 'sanad',
+  'patrika', 'shidha', 'dahavi', 'dahawi', 'baravi', 'barawi', 'padtalani',
+  'padtalni', 'hamipatra', 'swayam', 'palak', 'mrutyu', 'arogya', 'janma',
+  'janam', 'apang', 'divyang', 'alpsankhyank', 'charitra', 'vasatigruh',
+  'shikshanit', 'rajpatra', 'sahi', 'pratigya', 'pratigyapatra'
+]);
+
+// Generic Administrative Stop-Words that must NEVER match as standalone keywords
 export const GENERIC_STOP_KEYWORDS = new Set([
   'certificate', 'pramanpatra', 'dakhla', 'sanad', 'patrika', 'card', 'kard',
-  'doc', 'document', 'paper', 'form', 'letter', 'receipt', 'praman', 'patra'
+  'doc', 'document', 'paper', 'form', 'letter', 'receipt', 'praman', 'patra',
+  ...DESI_REGIONAL_STOP_WORDS
 ]);
 
 export function generateSmartKeywords(docName, shortCodes = []) {
@@ -584,7 +595,7 @@ export function generateSmartKeywords(docName, shortCodes = []) {
     results.add(cleanBase.replace(/\bpassing certificate\b/g, 'pass cert'));
   }
 
-  // 5. Common Indian phonetic spelling variations & typos (Decision 4-A: Balanced Smart Pool)
+  // 5. Common English spelling variations & typos (Choice 2-A: Pure English, zero regional words)
   if (cleanBase.includes('caste')) {
     results.add('kcast');
     results.add('kast');
@@ -593,17 +604,13 @@ export function generateSmartKeywords(docName, shortCodes = []) {
   if (cleanBase.includes('certificate')) {
     results.add(cleanBase.replace(/\bcertificate\b/g, 'sartificat'));
     results.add(cleanBase.replace(/\bcertificate\b/g, 'certi'));
-    results.add(cleanBase.replace(/\bcertificate\b/g, 'dakhla'));
   }
   if (cleanBase.includes('domicile')) {
     results.add('domisail');
     results.add('domicil');
-    results.add('rehivasi');
   }
   if (cleanBase.includes('income')) {
     results.add('incom');
-    results.add('utpanna');
-    results.add('utpanna dakhla');
   }
   if (cleanBase.includes('non creamy')) {
     results.add('non crimiler');
@@ -777,8 +784,8 @@ export const DOCUMENT_PATTERNS = [
     shortcut: "12P",
     patterns: [
       /\b12p\b/i,
-      /\b12(th)?\s*(pass|passing|board|sanad)\b/i,
-      /\bhsc\s*(pass|passing|board|sanad)\b/i
+      /\b12(th)?\s*(pass|passing|board)\b/i,
+      /\bhsc\s*(pass|passing|board)\b/i
     ]
   },
   {
@@ -810,8 +817,8 @@ export const DOCUMENT_PATTERNS = [
     shortcut: "10P",
     patterns: [
       /\b10p\b/i,
-      /\b10(th)?\s*(pass|passing|board|sanad)\b/i,
-      /\bssc\s*(pass|passing|board|sanad)\b/i
+      /\b10(th)?\s*(pass|passing|board)\b/i,
+      /\bssc\s*(pass|passing|board)\b/i
     ]
   },
   {
@@ -886,8 +893,6 @@ export const DOCUMENT_PATTERNS = [
       /\bcas\b/i,
       /\bcaste\b(?!.*validit)/i,
       /\bcast\b(?!.*validit)/i,
-      /\bjati\b(?!.*validit)/i,
-      /\bjati\s*pramanpatra\b/i,
       /\bcategory\b/i
     ]
   },
@@ -910,8 +915,6 @@ export const DOCUMENT_PATTERNS = [
     patterns: [
       /\binc\b/i,
       /\bincome\b/i,
-      /\butpann\b/i,
-      /\butpanna\s*dakhla\b/i,
       /\btahsildar\s*income\b/i,
       /\bform\s*16\b/i,
       /\btahsildar\b/i
@@ -936,9 +939,7 @@ export const DOCUMENT_PATTERNS = [
     patterns: [
       /\bdom\b/i,
       /\bdomicile\b/i,
-      /\badhivasa?\b/i,
-      /\bmaharashtra\s*domicile\b/i,
-      /\bnivas\b/i
+      /\bmaharashtra\s*domicile\b/i
     ]
   },
   {
@@ -948,7 +949,6 @@ export const DOCUMENT_PATTERNS = [
     patterns: [
       /\bnat\b/i,
       /\bnationality\b/i,
-      /\brashtriyatva\b/i,
       /\bnationality\s*proof\b/i
     ]
   },
@@ -959,9 +959,7 @@ export const DOCUMENT_PATTERNS = [
     patterns: [
       /\brat\b/i,
       /\bration\b/i,
-      /\bration\s*card\b/i,
-      /\bshidha\s*patrika\b/i,
-      /\bshidori\b/i
+      /\bration\s*card\b/i
     ]
   },
   {
@@ -1054,7 +1052,6 @@ export const DOCUMENT_PATTERNS = [
       /\bsdc\b/i,
       /\bslf\b/i,
       /\bself\s*declaration\b/i,
-      /\bswayam\s*ghoshnapatra\b/i,
       /\bdeclaration\b/i
     ]
   },
@@ -1066,9 +1063,7 @@ export const DOCUMENT_PATTERNS = [
       /\bpdc\b/i,
       /\bpar\b/i,
       /\bparent\s*(declaration|undertaking|form)\b/i,
-      /\bhamipatra\b/i,
-      /\bfather\s*declaration\b/i,
-      /\bpalak\s*(ghoshana|pratigya|pratigyapatra|declaration|undertaking)\b/i
+      /\bfather\s*declaration\b/i
     ]
   },
   {
@@ -1079,8 +1074,7 @@ export const DOCUMENT_PATTERNS = [
       /\bdth\b/i,
       /\bdeath\b/i,
       /\bdeath\s*certificate\b/i,
-      /\bfather\s*death\b/i,
-      /\bmrutyu\s*pramanpatra\b/i
+      /\bfather\s*death\b/i
     ]
   },
   {
@@ -1201,8 +1195,6 @@ export const DOCUMENT_PATTERNS = [
     patterns: [
       /\bbrt\b/i,
       /\bbirth\b/i,
-      /\bjanma\b/i,
-      /\bjanma\s*dakhla\b/i,
       /\bdob\s*proof\b/i,
       /\bdob\b/i
     ]
@@ -1337,8 +1329,7 @@ export const DOCUMENT_PATTERNS = [
     patterns: [
       /\bchr\b/i,
       /\bcharacter\b/i,
-      /\bconduct\s*certificate\b/i,
-      /\bcharitra\s*dakhla\b/i
+      /\bconduct\s*certificate\b/i
     ]
   },
   {
@@ -1349,7 +1340,6 @@ export const DOCUMENT_PATTERNS = [
       /\bgaz\b/i,
       /\bgazette\b/i,
       /\bname\s*change\s*gazette\b/i,
-      /\brajpatra\b/i,
       /\bmarriage\s*certificate\b/i
     ]
   },
@@ -1360,7 +1350,6 @@ export const DOCUMENT_PATTERNS = [
     patterns: [
       /\bmin\b/i,
       /\bminority\b/i,
-      /\balpsankhyank\b/i,
       /\bminority\s*declaration\b/i
     ]
   }
@@ -2642,25 +2631,25 @@ export function normalizeIndianText(text) {
   s = s.replace(/ee+/gi, 'i');               // marksheet -> marksit, bonafidee -> bonafid
   s = s.replace(/oo+/gi, 'u');               // book -> buk, school -> skul
 
-  // 3. Indian administrative synonyms & typos (Full Equivalence per user decision 2-A)
-  s = s.replace(/\b(sartificat|sartifiket|sartifakit|sartificet|certi|cert|dakhla|pramanpatra|praman\s*patra)\b/gi, 'certificate');
-  s = s.replace(/\b(domisail|domicile|domicil|adivas|adhiwas|rehivasi|rahavasi)\b/gi, 'domicile');
-  s = s.replace(/\b(incom|incm|utpanna|utpann)\b/gi, 'income');
+  // 3. Common English spelling variations & administrative typos (Choice 2-A: Pure English, zero desi terms)
+  s = s.replace(/\b(sartificat|sartifiket|sartifakit|sartificet|certi|cert)\b/gi, 'certificate');
+  s = s.replace(/\b(domisail|domicile|domicil)\b/gi, 'domicile');
+  s = s.replace(/\b(incom|incm)\b/gi, 'income');
   s = s.replace(/\b(bonafaid|bonafied|bonfide|bona\s*fide)\b/gi, 'bonafide');
   s = s.replace(/\b(non\s*crimiler|non\s*criminal|noncreamy|non\s*creamy|ncl)\b/gi, 'non creamy layer');
   s = s.replace(/\b(markshit|markshet|marskheet|mark\s*sheet|scorecard|score\s*card)\b/gi, 'marksheet');
-  s = s.replace(/\b(pasing|pass\s*cert|sanad)\b/gi, 'passing');
+  s = s.replace(/\b(pasing|pass\s*cert)\b/gi, 'passing');
   s = s.replace(/\b(adhar|aadhar|aadhhar|adhaar|uid|uidai)\b/gi, 'aadhaar');
-  s = s.replace(/\b(rasan|rashan|shidha|patrika)\b/gi, 'ration');
+  s = s.replace(/\b(rasan|rashan)\b/gi, 'ration');
   s = s.replace(/\b(skool|clg|college)\b/gi, 'school');
   s = s.replace(/\b(lc|tc|leaving|transfer)\b/gi, 'leaving certificate');
   s = s.replace(/\b(foto|pic|image|photograph)\b/gi, 'photo');
-  s = s.replace(/\b(signatur|sahi|signature|st\s*sign)\b/gi, 'signature');
+  s = s.replace(/\b(signatur|signature|st\s*sign)\b/gi, 'signature');
   s = s.replace(/\b(validiti|validty)\b/gi, 'validity');
 
   // 4. Academic numbers / terms to canonical tokens
-  s = s.replace(/\b(dahavi|dahawi|ssc|tenth)\b/gi, '10th');
-  s = s.replace(/\b(baravi|barawi|hsc|twelfth)\b/gi, '12th');
+  s = s.replace(/\b(ssc|tenth)\b/gi, '10th');
+  s = s.replace(/\b(hsc|twelfth)\b/gi, '12th');
 
   // Normalize delimiters & whitespace
   return s.replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -2934,25 +2923,10 @@ export function doubleMetaphone(input) {
  * Returns similarity 1.0 (exact phonetic), 0.95 (alternate phonetic), 0.85 (prefix phonetic), or 0.0.
  */
 export function phoneticSimilarity(tok1, tok2) {
+  // Choice 1-A: Phonetic sound-alike matching completely disabled per user directive.
+  // Double Metaphone sound guessing is bypassed. Only exact match returns 1.0, otherwise 0.0.
   if (!tok1 || !tok2) return 0.0;
-  const t1 = tok1.toLowerCase().trim();
-  const t2 = tok2.toLowerCase().trim();
-  if (t1 === t2) return 1.0;
-
-  // Short tokens <= 3 chars or generic system words should NEVER match via fuzzy phonetics
-  if (t1.length < 4 || t2.length < 4) return 0.0;
-  const GENERIC_WORDS = ['file', 'files', 'doc', 'docs', 'document', 'pdf', 'scan', 'copy', 'page', 'text', 'random', 'order', 'misc'];
-  if (GENERIC_WORDS.includes(t1) || GENERIC_WORDS.includes(t2)) return 0.0;
-
-  const [p1, s1] = doubleMetaphone(t1);
-  const [p2, s2] = doubleMetaphone(t2);
-  if (!p1 || !p2) return 0.0;
-
-  if (p1 === p2) return 1.0;
-  if ((s1 && s1 === p2) || (s2 && p1 === s2) || (s1 && s2 && s1 === s2)) return 0.95;
-  if (p1.length >= 3 && p2.length >= 3 && (p1.startsWith(p2) || p2.startsWith(p1))) return 0.85;
-
-  return 0.0;
+  return tok1.toLowerCase().trim() === tok2.toLowerCase().trim() ? 1.0 : 0.0;
 }
 
 /**
@@ -3118,7 +3092,7 @@ export function matchFilenameSmart(filename, studentName = '', groups = null, pr
     const canonUpper = canon.toUpperCase();
     const normUpper = baseOriginal.toUpperCase().replace(/\s+/g, ' ').trim();
     let isExact = false;
-    if (studentName && studentName.trim()) {
+    if (studentName && typeof studentName === 'string' && studentName.trim()) {
       const sUpper = studentName.trim().toUpperCase().replace(/\s+/g, ' ');
       if (normUpper === `${canonUpper} ${sUpper}` || normUpper === `${upperDoc} ${sUpper}`) {
         isExact = true;
@@ -3143,7 +3117,7 @@ export function matchFilenameSmart(filename, studentName = '', groups = null, pr
     const canonUpper = canon.toUpperCase();
     const normUpper = baseOriginal.toUpperCase().replace(/\s+/g, ' ').trim();
     let isExact = false;
-    if (studentName && studentName.trim()) {
+    if (studentName && typeof studentName === 'string' && studentName.trim()) {
       const sUpper = studentName.trim().toUpperCase().replace(/\s+/g, ' ');
       if (normUpper === `${canonUpper} ${sUpper}` || normUpper === `${upperDoc} ${sUpper}`) {
         isExact = true;
@@ -3162,49 +3136,49 @@ export function matchFilenameSmart(filename, studentName = '', groups = null, pr
     };
   }
 
-  // 3. Profiles Dictionary
+  // 3. Profiles Dictionary (Choice 2-A: Strictly pure English terms, zero Marathi/Hindi/desi regional tokens)
   const PROFILES = [
-    { type: '12TH LC', code: '12LC', patterns: [/\b12(th)?\s*(lc|tc|leaving|l)\b/i, /\b12l\b/i], tokens: ['12th lc', '12 lc', '12th tc', '12 tc', '12th leaving', '12 leaving', '12lc', '12l', 'leaving certificate', 'school leaving', 'tc', 'transfer certificate', 'skool leaving'], primary: ['lc', 'tc', 'leaving', 'transfer', '12l', '12lc'], qualifier: ['12', '12th', 'hsc'], standard: '12' },
+    { type: '12TH LC', code: '12LC', patterns: [/\b12(th)?\s*(lc|tc|leaving|l)\b/i, /\b12l\b/i], tokens: ['12th lc', '12 lc', '12th tc', '12 tc', '12th leaving', '12 leaving', '12lc', '12l', 'leaving certificate', 'school leaving', 'tc', 'transfer certificate'], primary: ['lc', 'tc', 'leaving', 'transfer', '12l', '12lc'], qualifier: ['12', '12th', 'hsc'], standard: '12' },
     { type: '12TH MARKSHEET AND PASSING CERTIFICATE', code: '12MP', tokens: ['12mp', '12tmp', '12th passing marksheet', '12 marksheet passing', '12th marksheet and passing', '12th combined', '12th markshit and pasing'], standard: '12', minScore: 90 },
     { type: '10TH MARKSHEET AND PASSING CERTIFICATE', code: '10MP', tokens: ['10mp', '10tmp', '10th passing marksheet', '10 marksheet passing', '10th marksheet and passing', '10th combined', '10th markshit and pasing'], standard: '10', minScore: 90 },
-    { type: '12TH MARKSHEET', code: '12M', patterns: [/\b12(th)?\s*(m|mark|marksheet|hsc)\b/i, /\bhsc\s*mark/i], tokens: ['12th marksheet', 'hsc marksheet', '12 marksheet', '12th mark', '12m', 'hsc', '12th markshit', 'baravi markshit'], primary: ['marksheet', 'markshet', 'mark', 'markshit'], qualifier: ['12', '12th', 'hsc', 'baravi'], standard: '12' },
-    { type: '10TH MARKSHEET', code: '10M', patterns: [/\b10(th)?\s*(m|mark|marksheet|ssc)\b/i, /\bssc\s*mark/i], tokens: ['10th marksheet', 'ssc marksheet', '10 marksheet', '10th mark', '10m', 'ssc', '10th markshit', 'dahavi markshit'], primary: ['marksheet', 'markshet', 'mark', 'markshit'], qualifier: ['10', '10th', 'ssc', 'dahavi'], standard: '10' },
-    { type: '12TH PASSING CERTIFICATE', code: '12P', tokens: ['12th passing', 'hsc passing', '12p', '12th pass', '12th pasing', 'hsc pasing'], primary: ['passing', 'sanad', 'pasing'], qualifier: ['12', '12th', 'hsc'], standard: '12' },
-    { type: '10TH PASSING CERTIFICATE', code: '10P', tokens: ['10th passing', 'ssc passing', '10p', '10th pass', '10th pasing', 'ssc pasing'], primary: ['passing', 'sanad', 'pasing'], qualifier: ['10', '10th', 'ssc'], standard: '10' },
+    { type: '12TH MARKSHEET', code: '12M', patterns: [/\b12(th)?\s*(m|mark|marksheet|hsc)\b/i, /\bhsc\s*mark/i], tokens: ['12th marksheet', 'hsc marksheet', '12 marksheet', '12th mark', '12m', 'hsc', '12th markshit'], primary: ['marksheet', 'markshet', 'mark', 'markshit'], qualifier: ['12', '12th', 'hsc'], standard: '12' },
+    { type: '10TH MARKSHEET', code: '10M', patterns: [/\b10(th)?\s*(m|mark|marksheet|ssc)\b/i, /\bssc\s*mark/i], tokens: ['10th marksheet', 'ssc marksheet', '10 marksheet', '10th mark', '10m', 'ssc', '10th markshit'], primary: ['marksheet', 'markshet', 'mark', 'markshit'], qualifier: ['10', '10th', 'ssc'], standard: '10' },
+    { type: '12TH PASSING CERTIFICATE', code: '12P', tokens: ['12th passing', 'hsc passing', '12p', '12th pass', '12th pasing', 'hsc pasing'], primary: ['passing', 'pasing'], qualifier: ['12', '12th', 'hsc'], standard: '12' },
+    { type: '10TH PASSING CERTIFICATE', code: '10P', tokens: ['10th passing', 'ssc passing', '10p', '10th pass', '10th pasing', 'ssc pasing'], primary: ['passing', 'pasing'], qualifier: ['10', '10th', 'ssc'], standard: '10' },
     { type: '10TH LC', code: '10LC', patterns: [/\b10(th)?\s*(lc|tc|leaving|l)\b/i, /\b10l\b/i], tokens: ['10th lc', '10 lc', '10th tc', '10 tc', '10th leaving', '10 leaving', '10lc', '10l'], primary: ['lc', 'tc', 'leaving', 'transfer', '10l', '10lc'], qualifier: ['10', '10th', 'ssc'], standard: '10' },
     { type: 'AADHAAR CARD', code: 'ADR', tokens: ['aadhaar', 'adhar', 'aadhar', 'adr', 'uid', 'uidai', 'adhaar', 'adhar card', 'aadhar card'], primary: ['aadhaar', 'adhar', 'aadhar', 'adr'] },
-    { type: 'CASTE VALIDITY CERTIFICATE', code: 'VAL', tokens: ['caste validity', 'validity', 'val', 'vld', 'cvc', 'padtalni', 'tribe validity', 'cast validity', 'kast validity', 'cast validiti', 'caste validiti', 'validiti'], primary: ['validity', 'padtalni', 'validiti', 'val', 'cvc'] },
-    { type: 'CASTE CERTIFICATE', code: 'CST', patterns: [/\b(cst|cas|caste|kcast|kast)\b/i], tokens: ['caste certificate', 'caste cert', 'cst', 'cas', 'caste', 'jati', 'jati pramanpatra', 'kcast', 'kast', 'sartificat', 'dakhla'], primary: ['caste', 'jati', 'cst', 'cas', 'kcast', 'kast'] },
+    { type: 'CASTE VALIDITY CERTIFICATE', code: 'VAL', tokens: ['caste validity', 'validity', 'val', 'vld', 'cvc', 'tribe validity', 'cast validity', 'kast validity', 'cast validiti', 'caste validiti', 'validiti'], primary: ['validity', 'validiti', 'val', 'cvc'] },
+    { type: 'CASTE CERTIFICATE', code: 'CST', patterns: [/\b(cst|cas|caste|kcast|kast)\b/i], tokens: ['caste certificate', 'caste cert', 'cst', 'cas', 'caste', 'kcast', 'kast', 'sartificat'], primary: ['caste', 'cst', 'cas', 'kcast', 'kast'] },
     { type: 'DOMICILE AND NATIONALITY CERTIFICATE', code: 'DOMNAT', tokens: ['domicile and nationality', 'domicile nationality', 'nationality domicile', 'domicile and nationality certificate', 'domnat', 'natdom', 'dn'], primary: ['domicile and nationality', 'domnat', 'natdom'], minScore: 90 },
-    { type: 'DOMICILE CERTIFICATE', code: 'DOM', tokens: ['domicile', 'dom', 'adivasi', 'rahavasi', 'residential certificate', 'residence', 'adhiwas', 'domisail', 'domicil', 'rehivasi', 'dakhla'], primary: ['domicile', 'dom', 'adivasi', 'rahavasi', 'domisail', 'rehivasi'] },
-    { type: 'NATIONALITY CERTIFICATE', code: 'NAT', tokens: ['nationality', 'nat', 'rashtriyatva', 'nationality proof'], primary: ['nationality', 'nat', 'rashtriyatva'] },
-    { type: 'INCOME CERTIFICATE', code: 'INC', patterns: [/\b(income|inc|utpanna|incom)\b/i, /\bin\s*\(\d+\)/i, /\bin\./i, /\binc\b/i], tokens: ['income certificate', 'income cert', 'inc', 'in', 'utpanna', 'tahsildar', 'utpanna dakhla', 'form 16', 'incom', 'dakhla'], primary: ['income', 'inc', 'utpanna', 'incom'] },
-    { type: 'NON CREAMY LAYER CERTIFICATE', code: 'NCL', tokens: ['non creamy', 'creamy layer', 'ncl', 'noncreamy', 'non criminal', 'non crimiler', 'unnath va pragat'], primary: ['ncl', 'non creamy', 'creamy', 'non crimiler'] },
-    { type: 'RATION CARD', code: 'RAT', tokens: ['ration card', 'ration', 'rat', 'rc', 'shidha patrika', 'rashan', 'rasan', 'rashan kard'], primary: ['ration', 'rat', 'rashan'] },
+    { type: 'DOMICILE CERTIFICATE', code: 'DOM', tokens: ['domicile', 'dom', 'residential certificate', 'residence', 'domisail', 'domicil'], primary: ['domicile', 'dom', 'domisail'] },
+    { type: 'NATIONALITY CERTIFICATE', code: 'NAT', tokens: ['nationality', 'nat', 'nationality proof'], primary: ['nationality', 'nat'] },
+    { type: 'INCOME CERTIFICATE', code: 'INC', patterns: [/\b(income|inc|incom)\b/i, /\bin\s*\(\d+\)/i, /\bin\./i, /\binc\b/i], tokens: ['income certificate', 'income cert', 'inc', 'in', 'tahsildar', 'form 16', 'incom'], primary: ['income', 'inc', 'incom'] },
+    { type: 'NON CREAMY LAYER CERTIFICATE', code: 'NCL', tokens: ['non creamy', 'creamy layer', 'ncl', 'noncreamy', 'non criminal', 'non crimiler'], primary: ['ncl', 'non creamy', 'creamy', 'non crimiler'] },
+    { type: 'RATION CARD', code: 'RAT', tokens: ['ration card', 'ration', 'rat', 'rc'], primary: ['ration', 'rat'] },
     { type: 'PHOTO', code: 'PIC', tokens: ['passport photo', 'photo', 'photograph', 'pic', 'image', 'student photo', 'foto'], primary: ['photo', 'pic', 'photograph', 'foto'] },
-    { type: 'SIGNATURE', code: 'SIG', tokens: ['signature', 'sign', 'signatur', 'sahi', 'student sign'], primary: ['signature', 'sign', 'signatur', 'sahi'] },
+    { type: 'SIGNATURE', code: 'SIG', tokens: ['signature', 'sign', 'signatur', 'student sign'], primary: ['signature', 'sign', 'signatur'] },
     { type: 'BANK PASSBOOK', code: 'BNK', tokens: ['bank passbook', 'passbook', 'bank statement', 'account', 'passbook bank', 'npci seeded', 'bank pasbuk', 'pasbuk'], primary: ['passbook', 'bank', 'pasbuk'] },
     { type: 'PAN CARD', code: 'PAN', tokens: ['pan card', 'pancard', 'pan', 'permanent account number', 'pan kard'], primary: ['pan', 'pancard'] },
     { type: 'GAP CERTIFICATE', code: 'GAP', tokens: ['gap certificate', 'gap affidavit', 'gap cert', 'affidavit for gap', 'educational gap', 'gap sartifiket'], primary: ['gap', 'affidavit'] },
     { type: 'BONAFIDE CERTIFICATE', code: 'BON', tokens: ['bonafide certificate', 'bonafide cert', 'bonfide', 'bnf', 'bonafied', 'bon', 'bonafaid'], primary: ['bonafide', 'bonfide', 'bon', 'bonafaid'] },
-    { type: 'SELF DECLARATION', code: 'SDC', patterns: [/\bself\s*declaration\b/i, /\bsvayam\s*ghoshana\b/i, /\bsdc\b/i, /\bslf\b/i, /\bself\s*declarashan\b/i], tokens: ['self declaration', 'undertaking', 'declaration form', 'pratigyapatra', 'svayam', 'sdc', 'swayam ghoshnapatra', 'self declarashan'], primary: ['declaration', 'undertaking', 'self', 'sdc'] },
-    { type: 'PARENT DECLARATION', code: 'PDC', patterns: [/\bparent\s*(declaration|undertaking|form)\b/i, /\bpalak\s*(ghoshana|pratigya|pratigyapatra|declaration|undertaking)\b/i, /\bpdc\b/i, /\bhamipatra\b/i], tokens: ['parent declaration', 'palak ghoshana', 'palak declaration', 'parent undertaking', 'pdc', 'hamipatra'], primary: ['parent declaration', 'palak ghoshana', 'pdc', 'hamipatra'] },
+    { type: 'SELF DECLARATION', code: 'SDC', patterns: [/\bself\s*declaration\b/i, /\bsdc\b/i, /\bslf\b/i, /\bself\s*declarashan\b/i], tokens: ['self declaration', 'undertaking', 'declaration form', 'sdc', 'self declarashan'], primary: ['declaration', 'undertaking', 'self', 'sdc'] },
+    { type: 'PARENT DECLARATION', code: 'PDC', patterns: [/\bparent\s*(declaration|undertaking|form)\b/i, /\bpdc\b/i], tokens: ['parent declaration', 'parent undertaking', 'pdc'], primary: ['parent declaration', 'pdc'] },
     { type: 'ATTEMPT CERTIFICATE', code: 'ATM', tokens: ['attempt certificate', 'attempt', 'atm', 'atempt sartificat'], primary: ['attempt', 'atm', 'atempt'] },
-    { type: 'BIRTH CERTIFICATE', code: 'BRT', tokens: ['birth certificate', 'janma dakhla', 'brt', 'birth', 'dob proof', 'birth dakhla', 'janam dakhla'], primary: ['birth', 'janma', 'brt', 'janam'] },
+    { type: 'BIRTH CERTIFICATE', code: 'BRT', tokens: ['birth certificate', 'brt', 'birth', 'dob proof'], primary: ['birth', 'brt'] },
     { type: 'CAP ALLOTMENT LETTER', code: 'CAP', tokens: ['allotment letter', 'cap allotment', 'merit list', 'cap letter', 'admission confirmation'], primary: ['allotment', 'cap'] },
     { type: 'FEE RECEIPT', code: 'FEE', patterns: [/\b(fee|fees|tuition)\s*(receipt|reciept|risit|slip|challan|payment)\b/i, /\b(fee|fees)\b/i], tokens: ['fee receipt', 'admission fee receipt', 'tuition fee', 'fee', 'fee risit', 'fees receipt'], primary: ['fee', 'fees'], qualifier: ['receipt', 'reciept', 'risit', 'slip', 'payment'] },
     { type: 'ATTENDANCE CERTIFICATE', code: 'ATT', tokens: ['attendance certificate', 'college attendance', 'attendance'], primary: ['attendance'] },
-    { type: 'HOSTEL CERTIFICATE', code: 'HST', tokens: ['hostel certificate', 'rent agreement', 'private hostel proof', 'hostel', 'vasatigruh dakhla'], primary: ['hostel', 'vasatigruh'] },
-    { type: 'DEATH CERTIFICATE', code: 'DTH', tokens: ['death certificate', 'father death certificate', 'mrutyu pramanpatra', 'death', 'mrutyu dakhla'], primary: ['death', 'mrutyu'] },
+    { type: 'HOSTEL CERTIFICATE', code: 'HST', tokens: ['hostel certificate', 'rent agreement', 'private hostel proof', 'hostel'], primary: ['hostel'] },
+    { type: 'DEATH CERTIFICATE', code: 'DTH', tokens: ['death certificate', 'father death certificate', 'death'], primary: ['death'] },
     { type: 'NON HOSTEL DECLARATION', code: 'NHC', tokens: ['non hostel declaration', 'government hostel non allotment', 'warden letter', 'nhc'], primary: ['non hostel', 'nhc'] },
-    { type: 'DISABILITY CERTIFICATE', code: 'DIS', tokens: ['disability certificate', 'divyang', 'pwd certificate', 'udid', 'dis', 'pwd', 'divyang cert'], primary: ['disability', 'divyang', 'dis', 'pwd'] },
+    { type: 'DISABILITY CERTIFICATE', code: 'DIS', tokens: ['disability certificate', 'pwd certificate', 'udid', 'dis', 'pwd'], primary: ['disability', 'dis', 'pwd'] },
     { type: 'APAAR ID', code: 'APR', tokens: ['apaar id', 'abc id', 'academic bank of credits', 'apaar', 'apr'], primary: ['apaar', 'apr', 'abc'] },
     { type: 'CET APPLICATION FORM', code: 'CETAF', tokens: ['cet application form', 'cet application confirmation', 'cap registration form', 'cetaf', 'cet aplication form'], primary: ['cetaf', 'cet application', 'aplication'] },
     { type: 'CET SCORE CARD', code: 'CETSC', tokens: ['cet score card', 'cet result', 'scorecard', 'neet score card', 'cetsc', 'cet score kard'], primary: ['cetsc', 'score card', 'scorecard'] },
     { type: 'STATUS RETENTION FORM', code: 'SRF', tokens: ['status retention form', 'retention form', 'cet retention', 'srf'], primary: ['retention', 'srf'] },
-    { type: 'EWS CERTIFICATE', code: 'EWS', tokens: ['ews certificate', 'economically weaker section', 'ews', 'ews dakhla'], primary: ['ews'] },
+    { type: 'EWS CERTIFICATE', code: 'EWS', tokens: ['ews certificate', 'economically weaker section', 'ews'], primary: ['ews'] },
     { type: 'MIGRATION CERTIFICATE', code: 'MIG', tokens: ['migration certificate', 'migration', 'mig', 'migrashan cert'], primary: ['migration', 'mig', 'migrashan'] },
-    { type: 'MEDICAL FITNESS CERTIFICATE', code: 'MED', tokens: ['medical fitness certificate', 'fitness certificate', 'health certificate', 'med', 'medical fitnes', 'arogya dakhla'], primary: ['fitness', 'medical', 'med', 'arogya'] },
+    { type: 'MEDICAL FITNESS CERTIFICATE', code: 'MED', tokens: ['medical fitness certificate', 'fitness certificate', 'health certificate', 'med', 'medical fitnes'], primary: ['fitness', 'medical', 'med'] },
     { type: 'VOTER ID', code: 'VOT', tokens: ['voter id', 'election card', 'epic', 'vot', 'woter id', 'woter'], primary: ['voter', 'vot', 'woter'] },
     { type: 'DRIVING LICENSE', code: 'DL', tokens: ['driving license', 'dl', 'licence', 'license', 'drivin lisence'], primary: ['driving', 'license', 'dl', 'drivin'] },
     { type: '11TH MARKSHEET', code: '11M', tokens: ['11th marksheet', '11th mark', '11m'], primary: ['11th', '11m'] },
@@ -3216,9 +3190,9 @@ export function matchFilenameSmart(filename, studentName = '', groups = null, pr
     { type: 'DEGREE CERTIFICATE', code: 'DEG', tokens: ['degree certificate', 'convocation certificate', 'diploma certificate', 'deg', 'digree convocation'], primary: ['degree', 'deg', 'digree'] },
     { type: 'REGISTRATION CERTIFICATE', code: 'REG', tokens: ['registration certificate', 'council registration', 'mnc registration', 'nursing registration', 'reg'], primary: ['registration', 'reg'] },
     { type: 'INTERNSHIP CERTIFICATE', code: 'INT', tokens: ['internship certificate', 'internship completion', 'clinical experience', 'int'], primary: ['internship', 'int'] },
-    { type: 'CHARACTER CERTIFICATE', code: 'CHR', tokens: ['character certificate', 'conduct certificate', 'charitra dakhla', 'chr'], primary: ['character', 'chr'] },
-    { type: 'GAZETTE CERTIFICATE', code: 'GAZ', tokens: ['gazette certificate', 'name change gazette', 'rajpatra', 'marriage certificate', 'gaz'], primary: ['gazette', 'gaz'] },
-    { type: 'MINORITY CERTIFICATE', code: 'MIN', tokens: ['minority certificate', 'minority declaration', 'alpsankhyank pramanpatra', 'minority proof', 'min'], primary: ['minority', 'min'] }
+    { type: 'CHARACTER CERTIFICATE', code: 'CHR', tokens: ['character certificate', 'conduct certificate', 'chr'], primary: ['character', 'chr'] },
+    { type: 'GAZETTE CERTIFICATE', code: 'GAZ', tokens: ['gazette certificate', 'name change gazette', 'marriage certificate', 'gaz'], primary: ['gazette', 'gaz'] },
+    { type: 'MINORITY CERTIFICATE', code: 'MIN', tokens: ['minority certificate', 'minority declaration', 'minority proof', 'min'], primary: ['minority', 'min'] }
   ];
 
   // Merge any dynamically configured preset documents
@@ -3229,7 +3203,12 @@ export function matchFilenameSmart(filename, studentName = '', groups = null, pr
       if (!docName) continue;
       const docCode = (item.code || (Array.isArray(item) && item[2]) || '').toUpperCase();
       const rawKws = item.keywords || (Array.isArray(item) && item[1]) || [];
-      const kws = Array.isArray(rawKws) ? rawKws : (typeof rawKws === 'string' ? rawKws.split(',').map(k => k.trim()) : []);
+      const rawKwsArray = Array.isArray(rawKws) ? rawKws : (typeof rawKws === 'string' ? rawKws.split(',').map(k => k.trim()) : []);
+      // Choice 2-A: Strictly exclude generic stop-words and Marathi/Hindi/desi regional words from custom profile tokens
+      const kws = rawKwsArray.filter(kw => {
+        const kClean = String(kw).toLowerCase().trim();
+        return kClean && !GENERIC_STOP_KEYWORDS.has(kClean) && !DESI_REGIONAL_STOP_WORDS.has(kClean);
+      });
 
       const existing = PROFILES.find(p => p.type === docName || (p.code && docCode && p.code.toUpperCase() === docCode));
       if (existing) {
@@ -3263,9 +3242,9 @@ export function matchFilenameSmart(filename, studentName = '', groups = null, pr
 
     // Safety Guard: Caste Certificate must strictly never match validity-related files
     if (prof.type === 'CASTE CERTIFICATE') {
-      const hasValidity = /\b(validity|validiti|padtalni|padtalani|cvc|val)\b/i.test(normalized) ||
-        /\b(validity|validiti|padtalni|cvc|val)\b/i.test(indianNormalized) ||
-        combinedFileTokens.some(t => ['validity', 'validiti', 'padtalni', 'cvc'].includes(t));
+      const hasValidity = /\b(validity|validiti|cvc|val)\b/i.test(normalized) ||
+        /\b(validity|validiti|cvc|val)\b/i.test(indianNormalized) ||
+        combinedFileTokens.some(t => ['validity', 'validiti', 'cvc', 'val'].includes(t));
       if (hasValidity) {
         continue;
       }
@@ -3414,7 +3393,7 @@ export function matchFilenameSmart(filename, studentName = '', groups = null, pr
     const canonUpper = canon.toUpperCase();
     const normUpper = baseOriginal.toUpperCase().replace(/\s+/g, ' ').trim();
     let isExact = false;
-    if (studentName && studentName.trim()) {
+    if (studentName && typeof studentName === 'string' && studentName.trim()) {
       const sUpper = studentName.trim().toUpperCase().replace(/\s+/g, ' ');
       if (normUpper === `${canonUpper} ${sUpper}` || normUpper === `${upperDoc} ${sUpper}`) {
         isExact = true;

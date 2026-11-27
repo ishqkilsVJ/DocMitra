@@ -967,11 +967,7 @@ var ee = {
 			"last exam marksheet",
 			"prev marksheet"
 		]],
-		["CASTE CERTIFICATE", [
-			"caste certificate",
-			"cast",
-			"jati pramanpatra"
-		]],
+		["CASTE CERTIFICATE", ["caste certificate", "cast"]],
 		["CASTE VALIDITY CERTIFICATE", [
 			"caste validity certificate",
 			"validity",
@@ -981,12 +977,10 @@ var ee = {
 		["NON CREAMY LAYER CERTIFICATE", [
 			"non creamy layer",
 			"ncl",
-			"non criminal",
 			"non-creamy"
 		]],
 		["INCOME CERTIFICATE", [
 			"income certificate",
-			"utpanna dakhla",
 			"tahsildar income",
 			"form 16"
 		]],
@@ -999,17 +993,9 @@ var ee = {
 			"natdom",
 			"dn"
 		]],
-		["DOMICILE CERTIFICATE", [
-			"domicile certificate",
-			"adhiwas",
-			"maharashtra domicile"
-		]],
-		["NATIONALITY CERTIFICATE", [
-			"nationality certificate",
-			"rashtriyatva",
-			"nationality proof"
-		]],
-		["RATION CARD", ["ration card", "shidha patrika"]],
+		["DOMICILE CERTIFICATE", ["domicile certificate", "maharashtra domicile"]],
+		["NATIONALITY CERTIFICATE", ["nationality certificate", "nationality proof"]],
+		["RATION CARD", ["ration card"]],
 		["BANK PASSBOOK", [
 			"bank passbook",
 			"passbook",
@@ -1042,21 +1028,9 @@ var ee = {
 			"educational gap",
 			"gap affidavit"
 		]],
-		["SELF DECLARATION", [
-			"self declaration",
-			"swayam ghoshnapatra",
-			"declaration"
-		]],
-		["PARENT DECLARATION", [
-			"parent declaration",
-			"hamipatra",
-			"father declaration"
-		]],
-		["DEATH CERTIFICATE", [
-			"death certificate",
-			"father death certificate",
-			"mrutyu pramanpatra"
-		]]
+		["SELF DECLARATION", ["self declaration", "declaration"]],
+		["PARENT DECLARATION", ["parent declaration", "father declaration"]],
+		["DEATH CERTIFICATE", ["death certificate", "father death certificate"]]
 	],
 	"SWAYAM DEENDAYAL YOJANA": [
 		["PHOTO", [
@@ -1111,11 +1085,7 @@ var ee = {
 			"last exam marksheet",
 			"prev marksheet"
 		]],
-		["CASTE CERTIFICATE", [
-			"caste certificate",
-			"cast",
-			"jati pramanpatra"
-		]],
+		["CASTE CERTIFICATE", ["caste certificate", "cast"]],
 		["CASTE VALIDITY CERTIFICATE", [
 			"caste validity certificate",
 			"validity",
@@ -1131,14 +1101,9 @@ var ee = {
 			"natdom",
 			"dn"
 		]],
-		["DOMICILE CERTIFICATE", [
-			"domicile certificate",
-			"adhiwas",
-			"maharashtra domicile"
-		]],
+		["DOMICILE CERTIFICATE", ["domicile certificate", "maharashtra domicile"]],
 		["INCOME CERTIFICATE", [
 			"income certificate",
-			"utpanna dakhla",
 			"tahsildar income",
 			"form 16"
 		]],
@@ -1169,19 +1134,10 @@ var ee = {
 			"government hostel non allotment",
 			"warden letter"
 		]],
-		["SELF DECLARATION", [
-			"self declaration",
-			"swayam ghoshnapatra",
-			"declaration"
-		]],
-		["PARENT DECLARATION", [
-			"parent declaration",
-			"hamipatra",
-			"father declaration"
-		]],
+		["SELF DECLARATION", ["self declaration", "declaration"]],
+		["PARENT DECLARATION", ["parent declaration", "father declaration"]],
 		["DISABILITY CERTIFICATE", [
 			"disability certificate",
-			"divyang",
 			"pwd certificate",
 			"udid"
 		]]
@@ -1281,21 +1237,9 @@ var ee = {
 			"natdom",
 			"dn"
 		]],
-		["DOMICILE CERTIFICATE", [
-			"domicile certificate",
-			"adhiwas",
-			"maharashtra domicile"
-		]],
-		["NATIONALITY CERTIFICATE", [
-			"nationality certificate",
-			"rashtriyatva",
-			"nationality proof"
-		]],
-		["CASTE CERTIFICATE", [
-			"caste certificate",
-			"cast",
-			"jati pramanpatra"
-		]],
+		["DOMICILE CERTIFICATE", ["domicile certificate", "maharashtra domicile"]],
+		["NATIONALITY CERTIFICATE", ["nationality certificate", "nationality proof"]],
+		["CASTE CERTIFICATE", ["caste certificate", "cast"]],
 		["CASTE VALIDITY CERTIFICATE", [
 			"caste validity certificate",
 			"validity",
@@ -1305,13 +1249,11 @@ var ee = {
 		["NON CREAMY LAYER CERTIFICATE", [
 			"non creamy layer",
 			"ncl",
-			"non criminal",
 			"non-creamy"
 		]],
 		["EWS CERTIFICATE", ["ews certificate", "economically weaker section"]],
 		["INCOME CERTIFICATE", [
 			"income certificate",
-			"utpanna dakhla",
 			"tahsildar income",
 			"form 16"
 		]],
@@ -1326,11 +1268,7 @@ var ee = {
 			"fitness certificate",
 			"health certificate"
 		]],
-		["BIRTH CERTIFICATE", [
-			"birth certificate",
-			"janma dakhla",
-			"dob proof"
-		]]
+		["BIRTH CERTIFICATE", ["birth certificate", "dob proof"]]
 	],
 	"EDUCATIONAL DOCUMENTS": [
 		["PHOTO", [
@@ -1397,11 +1335,7 @@ var ee = {
 			"last exam marksheet",
 			"prev marksheet"
 		]],
-		["CASTE CERTIFICATE", [
-			"caste certificate",
-			"cast",
-			"jati pramanpatra"
-		]],
+		["CASTE CERTIFICATE", ["caste certificate", "cast"]],
 		["CASTE VALIDITY CERTIFICATE", [
 			"caste validity certificate",
 			"validity",
@@ -1411,12 +1345,10 @@ var ee = {
 		["NON CREAMY LAYER CERTIFICATE", [
 			"non creamy layer",
 			"ncl",
-			"non criminal",
 			"non-creamy"
 		]],
 		["INCOME CERTIFICATE", [
 			"income certificate",
-			"utpanna dakhla",
 			"tahsildar income",
 			"form 16"
 		]],
@@ -1429,17 +1361,9 @@ var ee = {
 			"natdom",
 			"dn"
 		]],
-		["DOMICILE CERTIFICATE", [
-			"domicile certificate",
-			"adhiwas",
-			"maharashtra domicile"
-		]],
-		["NATIONALITY CERTIFICATE", [
-			"nationality certificate",
-			"rashtriyatva",
-			"nationality proof"
-		]],
-		["RATION CARD", ["ration card", "shidha patrika"]],
+		["DOMICILE CERTIFICATE", ["domicile certificate", "maharashtra domicile"]],
+		["NATIONALITY CERTIFICATE", ["nationality certificate", "nationality proof"]],
+		["RATION CARD", ["ration card"]],
 		["BANK PASSBOOK", [
 			"bank passbook",
 			"passbook",
@@ -1472,21 +1396,9 @@ var ee = {
 			"educational gap",
 			"gap affidavit"
 		]],
-		["SELF DECLARATION", [
-			"self declaration",
-			"swayam ghoshnapatra",
-			"declaration"
-		]],
-		["PARENT DECLARATION", [
-			"parent declaration",
-			"hamipatra",
-			"father declaration"
-		]],
-		["DEATH CERTIFICATE", [
-			"death certificate",
-			"father death certificate",
-			"mrutyu pramanpatra"
-		]],
+		["SELF DECLARATION", ["self declaration", "declaration"]],
+		["PARENT DECLARATION", ["parent declaration", "father declaration"]],
+		["DEATH CERTIFICATE", ["death certificate", "father death certificate"]],
 		["NON HOSTEL DECLARATION", [
 			"non hostel declaration",
 			"government hostel non allotment",
@@ -1494,7 +1406,6 @@ var ee = {
 		]],
 		["DISABILITY CERTIFICATE", [
 			"disability certificate",
-			"divyang",
 			"pwd certificate",
 			"udid"
 		]],
@@ -1526,11 +1437,7 @@ var ee = {
 			"fitness certificate",
 			"health certificate"
 		]],
-		["BIRTH CERTIFICATE", [
-			"birth certificate",
-			"janma dakhla",
-			"dob proof"
-		]],
+		["BIRTH CERTIFICATE", ["birth certificate", "dob proof"]],
 		["PAN CARD", ["pan card", "permanent account number"]],
 		["VOTER ID", [
 			"voter id",
@@ -1591,21 +1498,15 @@ var ee = {
 			"internship completion",
 			"clinical experience"
 		]],
-		["CHARACTER CERTIFICATE", [
-			"character certificate",
-			"conduct certificate",
-			"charitra dakhla"
-		]],
+		["CHARACTER CERTIFICATE", ["character certificate", "conduct certificate"]],
 		["GAZETTE CERTIFICATE", [
 			"gazette certificate",
 			"name change gazette",
-			"rajpatra",
 			"marriage certificate"
 		]],
 		["MINORITY CERTIFICATE", [
 			"minority certificate",
 			"minority declaration",
-			"alpsankhyank pramanpatra",
 			"minority proof"
 		]]
 	]
@@ -1749,12 +1650,8 @@ var A = [
 		id: "caste-certificate",
 		displayName: "Caste Certificate",
 		primaryShortcut: "CST",
-		alternateShortcuts: ["CAST", "JATI"],
-		alternateKeywords: [
-			"caste certificate",
-			"cast",
-			"jati pramanpatra"
-		],
+		alternateShortcuts: ["CAST"],
+		alternateKeywords: ["caste certificate", "cast"],
 		outputName: "CASTE CERTIFICATE"
 	},
 	{
@@ -1778,7 +1675,6 @@ var A = [
 		alternateKeywords: [
 			"non creamy layer",
 			"ncl",
-			"non criminal",
 			"non-creamy"
 		],
 		outputName: "NON CREAMY LAYER CERTIFICATE"
@@ -1789,7 +1685,6 @@ var A = [
 		primaryShortcut: "INC",
 		alternateKeywords: [
 			"income certificate",
-			"utpanna dakhla",
 			"tahsildar income",
 			"form 16"
 		],
@@ -1799,22 +1694,14 @@ var A = [
 		id: "domicile-certificate",
 		displayName: "Domicile Certificate",
 		primaryShortcut: "DOM",
-		alternateKeywords: [
-			"domicile certificate",
-			"adhiwas",
-			"maharashtra domicile"
-		],
+		alternateKeywords: ["domicile certificate", "maharashtra domicile"],
 		outputName: "DOMICILE CERTIFICATE"
 	},
 	{
 		id: "nationality-certificate",
 		displayName: "Nationality Certificate",
 		primaryShortcut: "NAT",
-		alternateKeywords: [
-			"nationality certificate",
-			"rashtriyatva",
-			"nationality proof"
-		],
+		alternateKeywords: ["nationality certificate", "nationality proof"],
 		outputName: "NATIONALITY CERTIFICATE"
 	},
 	{
@@ -1835,7 +1722,7 @@ var A = [
 		id: "ration-card",
 		displayName: "Ration Card",
 		primaryShortcut: "RAT",
-		alternateKeywords: ["ration card", "shidha patrika"],
+		alternateKeywords: ["ration card"],
 		outputName: "RATION CARD"
 	},
 	{
@@ -1916,33 +1803,21 @@ var A = [
 		id: "self-declaration",
 		displayName: "Self Declaration",
 		primaryShortcut: "SDC",
-		alternateKeywords: [
-			"self declaration",
-			"swayam ghoshnapatra",
-			"declaration"
-		],
+		alternateKeywords: ["self declaration", "declaration"],
 		outputName: "SELF DECLARATION"
 	},
 	{
 		id: "parent-declaration",
 		displayName: "Parent Declaration",
 		primaryShortcut: "PDC",
-		alternateKeywords: [
-			"parent declaration",
-			"hamipatra",
-			"father declaration"
-		],
+		alternateKeywords: ["parent declaration", "father declaration"],
 		outputName: "PARENT DECLARATION"
 	},
 	{
 		id: "death-certificate",
 		displayName: "Death Certificate",
 		primaryShortcut: "DTH",
-		alternateKeywords: [
-			"death certificate",
-			"father death certificate",
-			"mrutyu pramanpatra"
-		],
+		alternateKeywords: ["death certificate", "father death certificate"],
 		outputName: "DEATH CERTIFICATE"
 	},
 	{
@@ -1962,7 +1837,6 @@ var A = [
 		primaryShortcut: "DIS",
 		alternateKeywords: [
 			"disability certificate",
-			"divyang",
 			"pwd certificate",
 			"udid"
 		],
@@ -2042,11 +1916,7 @@ var A = [
 		id: "birth-certificate",
 		displayName: "Birth Certificate",
 		primaryShortcut: "BRT",
-		alternateKeywords: [
-			"birth certificate",
-			"janma dakhla",
-			"dob proof"
-		],
+		alternateKeywords: ["birth certificate", "dob proof"],
 		outputName: "BIRTH CERTIFICATE"
 	},
 	{
@@ -2185,11 +2055,7 @@ var A = [
 		id: "character-certificate",
 		displayName: "Character Certificate",
 		primaryShortcut: "CHR",
-		alternateKeywords: [
-			"character certificate",
-			"conduct certificate",
-			"charitra dakhla"
-		],
+		alternateKeywords: ["character certificate", "conduct certificate"],
 		outputName: "CHARACTER CERTIFICATE"
 	},
 	{
@@ -2199,7 +2065,6 @@ var A = [
 		alternateKeywords: [
 			"gazette certificate",
 			"name change gazette",
-			"rajpatra",
 			"marriage certificate"
 		],
 		outputName: "GAZETTE CERTIFICATE"
@@ -2211,7 +2076,6 @@ var A = [
 		alternateKeywords: [
 			"minority certificate",
 			"minority declaration",
-			"alpsankhyank pramanpatra",
 			"minority proof"
 		],
 		outputName: "MINORITY CERTIFICATE"
@@ -2270,7 +2134,6 @@ var ne = {
 		"pass cert",
 		"passing cert",
 		"pass certificate",
-		"sanad",
 		"board cert"
 	],
 	lc: [
@@ -2289,47 +2152,36 @@ var ne = {
 	],
 	caste: [
 		"cast",
-		"jati",
-		"samaj",
-		"jati pramanpatra"
+		"caste cert",
+		"caste category"
 	],
 	validity: [
 		"caste validity",
 		"cvc",
-		"validity certificate",
-		"padtalani",
-		"padtalani pramanpatra"
+		"validity cert",
+		"validity certificate"
 	],
 	"non creamy": [
 		"ncl",
 		"non creamy layer",
-		"non criminal",
-		"non-creamy",
-		"unnath va pragat"
+		"non-creamy"
 	],
-	ncl: [
-		"non creamy layer",
-		"non creamy",
-		"non criminal"
-	],
+	ncl: ["non creamy layer", "non creamy"],
 	income: [
-		"utpanna",
-		"utpanna dakhla",
+		"income cert",
+		"income certificate",
 		"tahsildar income",
 		"form 16",
-		"salary slip",
-		"income cert"
+		"salary slip"
 	],
 	domicile: [
-		"adhivas",
-		"rehivasi",
 		"domicile cert",
+		"domicile certificate",
 		"residence",
 		"residence certificate",
 		"maharashtra domicile"
 	],
 	nationality: [
-		"rashtriyatva",
 		"indian nationality",
 		"nationality cert",
 		"citizenship"
@@ -2352,8 +2204,7 @@ var ne = {
 		"voter card",
 		"voting card",
 		"epic",
-		"election card",
-		"matdar card"
+		"election card"
 	],
 	driving: [
 		"driving license",
@@ -2381,53 +2232,40 @@ var ne = {
 		"bona fide",
 		"college bonafide"
 	],
-	gap: [
-		"gap certificate",
-		"gap affidavit",
-		"shikshanit khand"
-	],
+	gap: ["gap certificate", "gap affidavit"],
 	"self declaration": [
 		"self declaration",
 		"self declaration certificate",
-		"swayam ghoshana",
 		"sdc"
 	],
 	"parent declaration": [
 		"parent declaration",
 		"parents declaration",
-		"palak ghoshana",
 		"pdc"
 	],
-	death: ["death certificate", "mrutyu dakhla"],
+	death: ["death certificate", "death cert"],
 	disability: [
 		"disability certificate",
 		"handicapped",
-		"divyang",
 		"pwd certificate",
-		"apang",
 		"pwd"
 	],
-	ews: [
-		"economically weaker section",
-		"ews certificate",
-		"arthik durbal ghatak"
-	],
+	ews: ["economically weaker section", "ews certificate"],
 	migration: ["migration certificate", "migration cert"],
 	medical: [
 		"medical fitness",
-		"fitness certificate",
-		"arogya dakhla"
+		"medical fitness certificate",
+		"fitness certificate"
 	],
 	birth: [
 		"birth certificate",
-		"janam dakhla",
-		"janma pramanpatra"
+		"birth cert",
+		"dob proof"
 	],
 	ration: [
 		"ration card",
 		"rationcard",
-		"ration book",
-		"rasan kard"
+		"ration book"
 	],
 	bank: [
 		"bank passbook",
@@ -2463,12 +2301,8 @@ var ne = {
 		"admission fee receipt"
 	],
 	attendance: ["attendance certificate", "attendance report"],
-	hostel: [
-		"hostel certificate",
-		"hostel receipt",
-		"vasatigruh dakhla"
-	]
-}, j = /* @__PURE__ */ new Set([
+	hostel: ["hostel certificate", "hostel receipt"]
+}, re = /* @__PURE__ */ new Set(/* @__PURE__ */ "pramanpatra.dakhla.dakhala.utpanna.utpann.jati.samaj.adivas.adhiwas.rehivasi.rahavasi.rashtriyatva.sanad.patrika.shidha.dahavi.dahawi.baravi.barawi.padtalani.padtalni.hamipatra.swayam.palak.mrutyu.arogya.janma.janam.apang.divyang.alpsankhyank.charitra.vasatigruh.shikshanit.rajpatra.sahi.pratigya.pratigyapatra".split(".")), j = /* @__PURE__ */ new Set([
 	"certificate",
 	"pramanpatra",
 	"dakhla",
@@ -2483,7 +2317,8 @@ var ne = {
 	"letter",
 	"receipt",
 	"praman",
-	"patra"
+	"patra",
+	...re
 ]);
 function M(e, t = []) {
 	if (!e || typeof e != "string") return "";
@@ -2505,7 +2340,7 @@ function M(e, t = []) {
 			}
 		}
 	}
-	i.includes("10th") ? (r.add(i.replace(/\b10th\b/g, "10")), r.add(i.replace(/\b10th\b/g, "ssc"))) : i.includes("10") && (r.add(i.replace(/\b10\b/g, "10th")), r.add(i.replace(/\b10\b/g, "ssc"))), i.includes("12th") ? (r.add(i.replace(/\b12th\b/g, "12")), r.add(i.replace(/\b12th\b/g, "hsc"))) : i.includes("12") && (r.add(i.replace(/\b12\b/g, "12th")), r.add(i.replace(/\b12\b/g, "hsc"))), i.includes("marksheet") && (r.add(i.replace(/\bmarksheet\b/g, "mark")), r.add(i.replace(/\bmarksheet\b/g, "mark sheet")), n.length >= 2 && r.add(`${n[n.length - 1]} ${n.slice(0, -1).join(" ")}`)), i.includes("passing certificate") && (r.add(i.replace(/\bpassing certificate\b/g, "passing")), r.add(i.replace(/\bpassing certificate\b/g, "pass cert"))), i.includes("caste") && (r.add("kcast"), r.add("kast"), r.add("cst")), i.includes("certificate") && (r.add(i.replace(/\bcertificate\b/g, "sartificat")), r.add(i.replace(/\bcertificate\b/g, "certi")), r.add(i.replace(/\bcertificate\b/g, "dakhla"))), i.includes("domicile") && (r.add("domisail"), r.add("domicil"), r.add("rehivasi")), i.includes("income") && (r.add("incom"), r.add("utpanna"), r.add("utpanna dakhla")), i.includes("non creamy") && (r.add("non crimiler"), r.add("non criminal")), i.includes("marksheet") && r.add(i.replace(/\bmarksheet\b/g, "markshit")), i.includes("aadhaar") && (r.add("adhar"), r.add("aadhar"), r.add("adhaar")), i.includes("photo") && r.add("foto"), i.includes("bonafide") && (r.add("bonafaid"), r.add("bonfide"));
+	i.includes("10th") ? (r.add(i.replace(/\b10th\b/g, "10")), r.add(i.replace(/\b10th\b/g, "ssc"))) : i.includes("10") && (r.add(i.replace(/\b10\b/g, "10th")), r.add(i.replace(/\b10\b/g, "ssc"))), i.includes("12th") ? (r.add(i.replace(/\b12th\b/g, "12")), r.add(i.replace(/\b12th\b/g, "hsc"))) : i.includes("12") && (r.add(i.replace(/\b12\b/g, "12th")), r.add(i.replace(/\b12\b/g, "hsc"))), i.includes("marksheet") && (r.add(i.replace(/\bmarksheet\b/g, "mark")), r.add(i.replace(/\bmarksheet\b/g, "mark sheet")), n.length >= 2 && r.add(`${n[n.length - 1]} ${n.slice(0, -1).join(" ")}`)), i.includes("passing certificate") && (r.add(i.replace(/\bpassing certificate\b/g, "passing")), r.add(i.replace(/\bpassing certificate\b/g, "pass cert"))), i.includes("caste") && (r.add("kcast"), r.add("kast"), r.add("cst")), i.includes("certificate") && (r.add(i.replace(/\bcertificate\b/g, "sartificat")), r.add(i.replace(/\bcertificate\b/g, "certi"))), i.includes("domicile") && (r.add("domisail"), r.add("domicil")), i.includes("income") && r.add("incom"), i.includes("non creamy") && (r.add("non crimiler"), r.add("non criminal")), i.includes("marksheet") && r.add(i.replace(/\bmarksheet\b/g, "markshit")), i.includes("aadhaar") && (r.add("adhar"), r.add("aadhar"), r.add("adhaar")), i.includes("photo") && r.add("foto"), i.includes("bonafide") && (r.add("bonafaid"), r.add("bonfide"));
 	for (let e of n) e.length >= 3 && ![
 		"and",
 		"for",
@@ -2539,7 +2374,7 @@ function N(e, t = null) {
 	}
 	return null;
 }
-var re = [
+var ie = [
 	{
 		id: "12th-marksheet-passing-combined",
 		outputName: "12TH MARKSHEET AND PASSING CERTIFICATE",
@@ -2593,8 +2428,8 @@ var re = [
 		shortcut: "12P",
 		patterns: [
 			/\b12p\b/i,
-			/\b12(th)?\s*(pass|passing|board|sanad)\b/i,
-			/\bhsc\s*(pass|passing|board|sanad)\b/i
+			/\b12(th)?\s*(pass|passing|board)\b/i,
+			/\bhsc\s*(pass|passing|board)\b/i
 		]
 	},
 	{
@@ -2626,8 +2461,8 @@ var re = [
 		shortcut: "10P",
 		patterns: [
 			/\b10p\b/i,
-			/\b10(th)?\s*(pass|passing|board|sanad)\b/i,
-			/\bssc\s*(pass|passing|board|sanad)\b/i
+			/\b10(th)?\s*(pass|passing|board)\b/i,
+			/\bssc\s*(pass|passing|board)\b/i
 		]
 	},
 	{
@@ -2702,8 +2537,6 @@ var re = [
 			/\bcas\b/i,
 			/\bcaste\b(?!.*validit)/i,
 			/\bcast\b(?!.*validit)/i,
-			/\bjati\b(?!.*validit)/i,
-			/\bjati\s*pramanpatra\b/i,
 			/\bcategory\b/i
 		]
 	},
@@ -2726,8 +2559,6 @@ var re = [
 		patterns: [
 			/\binc\b/i,
 			/\bincome\b/i,
-			/\butpann\b/i,
-			/\butpanna\s*dakhla\b/i,
 			/\btahsildar\s*income\b/i,
 			/\bform\s*16\b/i,
 			/\btahsildar\b/i
@@ -2752,9 +2583,7 @@ var re = [
 		patterns: [
 			/\bdom\b/i,
 			/\bdomicile\b/i,
-			/\badhivasa?\b/i,
-			/\bmaharashtra\s*domicile\b/i,
-			/\bnivas\b/i
+			/\bmaharashtra\s*domicile\b/i
 		]
 	},
 	{
@@ -2764,7 +2593,6 @@ var re = [
 		patterns: [
 			/\bnat\b/i,
 			/\bnationality\b/i,
-			/\brashtriyatva\b/i,
 			/\bnationality\s*proof\b/i
 		]
 	},
@@ -2775,9 +2603,7 @@ var re = [
 		patterns: [
 			/\brat\b/i,
 			/\bration\b/i,
-			/\bration\s*card\b/i,
-			/\bshidha\s*patrika\b/i,
-			/\bshidori\b/i
+			/\bration\s*card\b/i
 		]
 	},
 	{
@@ -2870,7 +2696,6 @@ var re = [
 			/\bsdc\b/i,
 			/\bslf\b/i,
 			/\bself\s*declaration\b/i,
-			/\bswayam\s*ghoshnapatra\b/i,
 			/\bdeclaration\b/i
 		]
 	},
@@ -2882,9 +2707,7 @@ var re = [
 			/\bpdc\b/i,
 			/\bpar\b/i,
 			/\bparent\s*(declaration|undertaking|form)\b/i,
-			/\bhamipatra\b/i,
-			/\bfather\s*declaration\b/i,
-			/\bpalak\s*(ghoshana|pratigya|pratigyapatra|declaration|undertaking)\b/i
+			/\bfather\s*declaration\b/i
 		]
 	},
 	{
@@ -2895,8 +2718,7 @@ var re = [
 			/\bdth\b/i,
 			/\bdeath\b/i,
 			/\bdeath\s*certificate\b/i,
-			/\bfather\s*death\b/i,
-			/\bmrutyu\s*pramanpatra\b/i
+			/\bfather\s*death\b/i
 		]
 	},
 	{
@@ -3017,8 +2839,6 @@ var re = [
 		patterns: [
 			/\bbrt\b/i,
 			/\bbirth\b/i,
-			/\bjanma\b/i,
-			/\bjanma\s*dakhla\b/i,
 			/\bdob\s*proof\b/i,
 			/\bdob\b/i
 		]
@@ -3150,8 +2970,7 @@ var re = [
 		patterns: [
 			/\bchr\b/i,
 			/\bcharacter\b/i,
-			/\bconduct\s*certificate\b/i,
-			/\bcharitra\s*dakhla\b/i
+			/\bconduct\s*certificate\b/i
 		]
 	},
 	{
@@ -3162,7 +2981,6 @@ var re = [
 			/\bgaz\b/i,
 			/\bgazette\b/i,
 			/\bname\s*change\s*gazette\b/i,
-			/\brajpatra\b/i,
 			/\bmarriage\s*certificate\b/i
 		]
 	},
@@ -3173,14 +2991,13 @@ var re = [
 		patterns: [
 			/\bmin\b/i,
 			/\bminority\b/i,
-			/\balpsankhyank\b/i,
 			/\bminority\s*declaration\b/i
 		]
 	}
 ];
-function ie(e, t, n = null) {
+function ae(e, t, n = null) {
 	if (!e || !t) return;
-	let r = e.toUpperCase().trim(), i = re.find((e) => e.shortcut && e.shortcut.toUpperCase() === r);
+	let r = e.toUpperCase().trim(), i = ie.find((e) => e.shortcut && e.shortcut.toUpperCase() === r);
 	if (i && (i.outputName = t.toUpperCase().trim(), n && Array.isArray(n))) for (let e of n) {
 		let t = e.trim().toLowerCase();
 		if (t.length >= 2) {
@@ -3204,7 +3021,7 @@ function P(e, t = null) {
 			matchedPattern: t
 		};
 	}
-	for (let e of re) for (let t of e.patterns) if (t.test(n) || r.length >= 2 && r.length <= 6 && t.test(r)) return {
+	for (let e of ie) for (let t of e.patterns) if (t.test(n) || r.length >= 2 && r.length <= 6 && t.test(r)) return {
 		docType: e.outputName,
 		confidence: 90,
 		matchedPattern: t.toString()
@@ -3223,7 +3040,7 @@ function F(e) {
 function I(e) {
 	return !e || typeof e != "string" ? "" : e.replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
 }
-function ae(e, t) {
+function oe(e, t) {
 	let n = P(e, t);
 	return n && n.docType ? n.docType : N(e, t) || null;
 }
@@ -3235,7 +3052,7 @@ function R(e, t, n, r = "preserve") {
 	let i = "", a = (e || "").trim().toUpperCase();
 	if (w[a]) i = w[a];
 	else {
-		let t = ae(e, n);
+		let t = oe(e, n);
 		i = t ? w[t.toUpperCase()] || t : I(e);
 	}
 	let o = i;
@@ -3326,21 +3143,21 @@ var V = new class {
 	clear() {
 		this.history = [];
 	}
-}(), oe = (e) => e.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-function se(e, t) {
+}(), se = (e) => e.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+function ce(e, t) {
 	return e === e.toUpperCase() ? t.toUpperCase() : e === e.toLowerCase() ? t.toLowerCase() : e[0] === e[0].toUpperCase() ? t[0].toUpperCase() + t.slice(1).toLowerCase() : t;
 }
-function ce(e, t) {
+function le(e, t) {
 	if (!e || typeof e != "string") return e;
 	let n = e;
 	for (let [e, r] of Object.entries(t || {})) {
 		if (!e) continue;
-		let t = RegExp(`(^|[^a-zA-Z0-9])(${oe(e)})([^a-zA-Z0-9]|$)`, "gi");
-		n = n.replace(t, (e, t, n, i) => t + se(n, r) + i);
+		let t = RegExp(`(^|[^a-zA-Z0-9])(${se(e)})([^a-zA-Z0-9]|$)`, "gi");
+		n = n.replace(t, (e, t, n, i) => t + ce(n, r) + i);
 	}
 	return n;
 }
-async function le(e, t, n = null) {
+async function ue(e, t, n = null) {
 	let r = [];
 	try {
 		let i = 0;
@@ -3418,7 +3235,7 @@ async function le(e, t, n = null) {
 		throw e;
 	}
 }
-async function ue(e, t, n = null) {
+async function de(e, t, n = null) {
 	let r = [...t].reverse(), i = 0;
 	for (let t of r) {
 		let a = e && (e.nativePath || e.path) || "", o = t.file && (t.file.path || t.file.nativePath) || (a ? `${a}/${t.next}` : null) || (t.nativePath ? t.nativePath.replace(/[^\\\/]+$/, t.next) : null);
@@ -3457,7 +3274,7 @@ async function ue(e, t, n = null) {
 		i++, n && n(Math.round(i / r.length * 100), `Undo: ${i}/${r.length}`);
 	}
 }
-var de = [
+var fe = [
 	{
 		canonical: "AADHAAR CARD",
 		code: "ADR",
@@ -3788,7 +3605,7 @@ var de = [
 		]
 	}
 ];
-function fe({ canonical: e, code: t = "", primaryKeywords: n = [], secondaryKeywords: r = [] }) {
+function pe({ canonical: e, code: t = "", primaryKeywords: n = [], secondaryKeywords: r = [] }) {
 	if (!e || typeof e != "string") return null;
 	let i = e.trim().toUpperCase(), a = (t || "").trim().toUpperCase() || i.slice(0, 3);
 	w[i] = i;
@@ -3811,10 +3628,10 @@ function fe({ canonical: e, code: t = "", primaryKeywords: n = [], secondaryKeyw
 		patterns: s,
 		primaryKeywords: c,
 		secondaryKeywords: l
-	}, d = de.findIndex((e) => e.canonical === i);
-	return d === -1 ? de.push(u) : de[d] = u, u;
+	}, d = fe.findIndex((e) => e.canonical === i);
+	return d === -1 ? fe.push(u) : fe[d] = u, u;
 }
-function pe(e, t) {
+function me(e, t) {
 	if (e === t) return 0;
 	if (!e || !e.length) return (t || "").length;
 	if (!t || !t.length) return e.length;
@@ -3827,20 +3644,20 @@ function pe(e, t) {
 	}
 	return i[n.length][r.length];
 }
-function me(e, t) {
+function he(e, t) {
 	if (!e && !t) return 1;
 	if (!e || !t) return 0;
 	let n = e.toLowerCase().trim(), r = t.toLowerCase().trim();
 	if (n === r) return 1;
 	let i = Math.max(n.length, r.length);
 	if (i === 0) return 1;
-	let a = pe(n, r);
+	let a = me(n, r);
 	return Math.max(0, 1 - a / i);
 }
 function H(e) {
 	return !e || typeof e != "string" ? [] : e.replace(/\.[a-zA-Z0-9]+$/i, "").replace(/[^a-zA-Z0-9]+/g, " ").toLowerCase().split(/\s+/).filter((e) => e.length > 0);
 }
-var he = [
+var ge = [
 	{
 		id: "10",
 		tags: [
@@ -3914,20 +3731,20 @@ var he = [
 		]
 	}
 ];
-function ge(e) {
+function _e(e) {
 	let t = (e || "").toLowerCase();
-	for (let e of he) if (e.tags.includes(t)) return e.id;
+	for (let e of ge) if (e.tags.includes(t)) return e.id;
 	return null;
 }
-function _e(e) {
+function ve(e) {
 	let t = /* @__PURE__ */ new Set();
 	for (let n of e) {
-		let e = ge(n);
+		let e = _e(n);
 		e && t.add(e);
 	}
 	return t;
 }
-function ve(e, t) {
+function ye(e, t) {
 	if (t && t.size > 0) {
 		for (let n of e) if (!t.has(n)) return !0;
 	}
@@ -3936,117 +3753,10 @@ function ve(e, t) {
 function U(e) {
 	if (!e || typeof e != "string") return "";
 	let t = e.toLowerCase().trim();
-	return t = t.replace(/(\.[a-zA-Z0-9]+)+$/i, ""), t = t.replace(/\bkc([aeiou])/gi, "k$1"), t = t.replace(/\bkn([aeiou])/gi, "n$1"), t = t.replace(/\bps([aeiou])/gi, "s$1"), t = t.replace(/w/gi, "v"), t = t.replace(/ph/gi, "f"), t = t.replace(/sh/gi, "s"), t = t.replace(/ee+/gi, "i"), t = t.replace(/oo+/gi, "u"), t = t.replace(/\b(sartificat|sartifiket|sartifakit|sartificet|certi|cert|dakhla|pramanpatra|praman\s*patra)\b/gi, "certificate"), t = t.replace(/\b(domisail|domicile|domicil|adivas|adhiwas|rehivasi|rahavasi)\b/gi, "domicile"), t = t.replace(/\b(incom|incm|utpanna|utpann)\b/gi, "income"), t = t.replace(/\b(bonafaid|bonafied|bonfide|bona\s*fide)\b/gi, "bonafide"), t = t.replace(/\b(non\s*crimiler|non\s*criminal|noncreamy|non\s*creamy|ncl)\b/gi, "non creamy layer"), t = t.replace(/\b(markshit|markshet|marskheet|mark\s*sheet|scorecard|score\s*card)\b/gi, "marksheet"), t = t.replace(/\b(pasing|pass\s*cert|sanad)\b/gi, "passing"), t = t.replace(/\b(adhar|aadhar|aadhhar|adhaar|uid|uidai)\b/gi, "aadhaar"), t = t.replace(/\b(rasan|rashan|shidha|patrika)\b/gi, "ration"), t = t.replace(/\b(skool|clg|college)\b/gi, "school"), t = t.replace(/\b(lc|tc|leaving|transfer)\b/gi, "leaving certificate"), t = t.replace(/\b(foto|pic|image|photograph)\b/gi, "photo"), t = t.replace(/\b(signatur|sahi|signature|st\s*sign)\b/gi, "signature"), t = t.replace(/\b(validiti|validty)\b/gi, "validity"), t = t.replace(/\b(dahavi|dahawi|ssc|tenth)\b/gi, "10th"), t = t.replace(/\b(baravi|barawi|hsc|twelfth)\b/gi, "12th"), t.replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
-}
-function ye(e) {
-	if (!e || typeof e != "string") return ["", ""];
-	let t = e.toUpperCase().trim();
-	if (!t) return ["", ""];
-	let n = "", r = "", i = 0, a = t.length;
-	function o(e) {
-		return e < 0 || e >= a ? !1 : /[AEIOUY]/.test(t[e]);
-	}
-	function s(e, n, ...r) {
-		if (e < 0 || e >= a) return !1;
-		let i = t.substr(e, n);
-		return r.includes(i);
-	}
-	for (s(0, 2, "GN", "KN", "PN", "WR", "PS") && (i += 1), t[0] === "X" && (n += "S", r += "S", i += 1); i < a && (n.length < 8 || r.length < 8);) switch (t[i]) {
-		case "A":
-		case "E":
-		case "I":
-		case "O":
-		case "U":
-		case "Y":
-			i === 0 && (n += "A", r += "A"), i += 1;
-			break;
-		case "B":
-			n += "P", r += "P", i = t[i + 1] === "B" ? i + 2 : i + 1;
-			break;
-		case "C":
-			s(i, 2, "CH") ? (n += "X", r += "X", i += 2) : s(i, 2, "CI", "CE", "CY") ? (n += "S", r += "S", i += 2) : s(i, 2, "CK", "CG", "CQ") ? (n += "K", r += "K", i += 2) : s(i, 2, "CZ") ? (n += "S", r += "S", i += 2) : (n += "K", r += "K", i = t[i + 1] === "C" ? i + 2 : i + 1);
-			break;
-		case "D":
-			s(i, 2, "DG") ? (n += "J", r += "J", i += 2) : s(i, 2, "DT", "DD") ? (n += "T", r += "T", i += 2) : (n += "T", r += "T", i += 1);
-			break;
-		case "F":
-			n += "F", r += "F", i = t[i + 1] === "F" ? i + 2 : i + 1;
-			break;
-		case "G":
-			s(i, 2, "GH") ? (i > 0 && !o(i - 1) && (n += "K", r += "K"), i += 2) : s(i, 2, "GN") ? (n += "N", r += "KN", i += 2) : s(i, 2, "GE", "GI", "GY") ? (n += "J", r += "K", i += 2) : (n += "K", r += "K", i = t[i + 1] === "G" ? i + 2 : i + 1);
-			break;
-		case "H":
-			(i === 0 || !o(i - 1)) && o(i + 1) ? (n += "H", r += "H", i += 2) : i += 1;
-			break;
-		case "J":
-			n += "J", r += "J", i = t[i + 1] === "J" ? i + 2 : i + 1;
-			break;
-		case "K":
-			n += "K", r += "K", i = t[i + 1] === "K" ? i + 2 : i + 1;
-			break;
-		case "L":
-			n += "L", r += "L", i = t[i + 1] === "L" ? i + 2 : i + 1;
-			break;
-		case "M":
-			n += "M", r += "M", i = t[i + 1] === "M" ? i + 2 : i + 1;
-			break;
-		case "N":
-			n += "N", r += "N", i = t[i + 1] === "N" ? i + 2 : i + 1;
-			break;
-		case "P":
-			s(i, 2, "PH") ? (n += "F", r += "F", i += 2) : (n += "P", r += "P", i = s(i + 1, 1, "P", "B") ? i + 2 : i + 1);
-			break;
-		case "Q":
-			n += "K", r += "K", i = t[i + 1] === "Q" ? i + 2 : i + 1;
-			break;
-		case "R":
-			n += "R", r += "R", i = t[i + 1] === "R" ? i + 2 : i + 1;
-			break;
-		case "S":
-			s(i, 2, "SH") ? (n += "X", r += "X", i += 2) : s(i, 3, "SIO", "SIA") ? (n += "S", r += "X", i += 3) : (n += "S", r += "S", i = s(i + 1, 1, "S", "Z") ? i + 2 : i + 1);
-			break;
-		case "T":
-			s(i, 4, "TION") ? (n += "XN", r += "XN", i += 4) : s(i, 3, "TIA", "TCH") ? (n += "X", r += "X", i += 3) : s(i, 2, "TH") ? (n += "T", r += "T", i += 2) : (n += "T", r += "T", i = s(i + 1, 1, "T", "D") ? i + 2 : i + 1);
-			break;
-		case "V":
-			n += "F", r += "F", i = t[i + 1] === "V" ? i + 2 : i + 1;
-			break;
-		case "W":
-			o(i + 1) && (n += "F", r += "F"), i += 1;
-			break;
-		case "X":
-			n += "KS", r += "KS", i = s(i + 1, 1, "C", "X") ? i + 2 : i + 1;
-			break;
-		case "Z":
-			n += "S", r += "S", i = s(i + 1, 1, "Z") ? i + 2 : i + 1;
-			break;
-		default: i += 1;
-	}
-	return [n, r];
+	return t = t.replace(/(\.[a-zA-Z0-9]+)+$/i, ""), t = t.replace(/\bkc([aeiou])/gi, "k$1"), t = t.replace(/\bkn([aeiou])/gi, "n$1"), t = t.replace(/\bps([aeiou])/gi, "s$1"), t = t.replace(/w/gi, "v"), t = t.replace(/ph/gi, "f"), t = t.replace(/sh/gi, "s"), t = t.replace(/ee+/gi, "i"), t = t.replace(/oo+/gi, "u"), t = t.replace(/\b(sartificat|sartifiket|sartifakit|sartificet|certi|cert)\b/gi, "certificate"), t = t.replace(/\b(domisail|domicile|domicil)\b/gi, "domicile"), t = t.replace(/\b(incom|incm)\b/gi, "income"), t = t.replace(/\b(bonafaid|bonafied|bonfide|bona\s*fide)\b/gi, "bonafide"), t = t.replace(/\b(non\s*crimiler|non\s*criminal|noncreamy|non\s*creamy|ncl)\b/gi, "non creamy layer"), t = t.replace(/\b(markshit|markshet|marskheet|mark\s*sheet|scorecard|score\s*card)\b/gi, "marksheet"), t = t.replace(/\b(pasing|pass\s*cert)\b/gi, "passing"), t = t.replace(/\b(adhar|aadhar|aadhhar|adhaar|uid|uidai)\b/gi, "aadhaar"), t = t.replace(/\b(rasan|rashan)\b/gi, "ration"), t = t.replace(/\b(skool|clg|college)\b/gi, "school"), t = t.replace(/\b(lc|tc|leaving|transfer)\b/gi, "leaving certificate"), t = t.replace(/\b(foto|pic|image|photograph)\b/gi, "photo"), t = t.replace(/\b(signatur|signature|st\s*sign)\b/gi, "signature"), t = t.replace(/\b(validiti|validty)\b/gi, "validity"), t = t.replace(/\b(ssc|tenth)\b/gi, "10th"), t = t.replace(/\b(hsc|twelfth)\b/gi, "12th"), t.replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
 }
 function be(e, t) {
-	if (!e || !t) return 0;
-	let n = e.toLowerCase().trim(), r = t.toLowerCase().trim();
-	if (n === r) return 1;
-	if (n.length < 4 || r.length < 4) return 0;
-	let i = [
-		"file",
-		"files",
-		"doc",
-		"docs",
-		"document",
-		"pdf",
-		"scan",
-		"copy",
-		"page",
-		"text",
-		"random",
-		"order",
-		"misc"
-	];
-	if (i.includes(n) || i.includes(r)) return 0;
-	let [a, o] = ye(n), [s, c] = ye(r);
-	return !a || !s ? 0 : a === s ? 1 : o && o === s || c && a === c || o && c && o === c ? .95 : a.length >= 3 && s.length >= 3 && (a.startsWith(s) || s.startsWith(a)) ? .85 : 0;
+	return !e || !t ? 0 : +(e.toLowerCase().trim() === t.toLowerCase().trim());
 }
 function xe(e, t = "", n = null, r = null) {
 	if (!e || typeof e != "string") return {
@@ -4066,7 +3776,7 @@ function xe(e, t = "", n = null, r = null) {
 		isConfident: !1,
 		reason: "Empty basename"
 	};
-	let a = U(i), o = ce(i, ee), s = o.replace(/[_\-\.\+,\(\)\[\]]+/g, " ").replace(/\s+/g, " ").trim().toLowerCase(), c = H(o), l = H(a), u = Array.from(/* @__PURE__ */ new Set([...c, ...l])), d = _e(u);
+	let a = U(i), o = le(i, ee), s = o.replace(/[_\-\.\+,\(\)\[\]]+/g, " ").replace(/\s+/g, " ").trim().toLowerCase(), c = H(o), l = H(a), u = Array.from(/* @__PURE__ */ new Set([...c, ...l])), d = ve(u);
 	if (r) {
 		let e = Array.isArray(r) ? r : Object.values(r);
 		for (let t of e) {
@@ -4074,7 +3784,7 @@ function xe(e, t = "", n = null, r = null) {
 			let e = (typeof t == "string" ? t : t.name || t.canonical || (Array.isArray(t) ? t[0] : "")).trim().toUpperCase();
 			if (!e) continue;
 			let n = (t.code || Array.isArray(t) && t[2] || "").trim().toUpperCase(), r = t.keywords || Array.isArray(t) && t[1] || [], c = Array.isArray(r) ? r : typeof r == "string" ? r.split(",").map((e) => e.trim()) : [];
-			if (ve(d, _e(H(e)))) continue;
+			if (ye(d, ve(H(e)))) continue;
 			if (n) {
 				let t = RegExp(`(^|[^a-z0-9])${n}([^a-z0-9]|$)`, "i");
 				if (t.test(o) || t.test(i) || t.test(a)) return {
@@ -4135,7 +3845,7 @@ function xe(e, t = "", n = null, r = null) {
 	let p = N(o, n) || N(a, n) || N(i, n);
 	if (f && f.docType) {
 		let e = f.docType.toUpperCase(), n = w[e] || e, r = n.toUpperCase(), a = i.toUpperCase().replace(/\s+/g, " ").trim(), o = !1;
-		if (t && t.trim()) {
+		if (t && typeof t == "string" && t.trim()) {
 			let n = t.trim().toUpperCase().replace(/\s+/g, " ");
 			(a === `${r} ${n}` || a === `${e} ${n}`) && (o = !0);
 		}
@@ -4150,7 +3860,7 @@ function xe(e, t = "", n = null, r = null) {
 	}
 	if (p) {
 		let e = p.toUpperCase(), n = w[e] || e, r = n.toUpperCase(), a = i.toUpperCase().replace(/\s+/g, " ").trim(), o = !1;
-		if (t && t.trim()) {
+		if (t && typeof t == "string" && t.trim()) {
 			let n = t.trim().toUpperCase().replace(/\s+/g, " ");
 			(a === `${r} ${n}` || a === `${e} ${n}`) && (o = !0);
 		}
@@ -4180,8 +3890,7 @@ function xe(e, t = "", n = null, r = null) {
 				"leaving certificate",
 				"school leaving",
 				"tc",
-				"transfer certificate",
-				"skool leaving"
+				"transfer certificate"
 			],
 			primary: [
 				"lc",
@@ -4239,8 +3948,7 @@ function xe(e, t = "", n = null, r = null) {
 				"12th mark",
 				"12m",
 				"hsc",
-				"12th markshit",
-				"baravi markshit"
+				"12th markshit"
 			],
 			primary: [
 				"marksheet",
@@ -4251,8 +3959,7 @@ function xe(e, t = "", n = null, r = null) {
 			qualifier: [
 				"12",
 				"12th",
-				"hsc",
-				"baravi"
+				"hsc"
 			],
 			standard: "12"
 		},
@@ -4267,8 +3974,7 @@ function xe(e, t = "", n = null, r = null) {
 				"10th mark",
 				"10m",
 				"ssc",
-				"10th markshit",
-				"dahavi markshit"
+				"10th markshit"
 			],
 			primary: [
 				"marksheet",
@@ -4279,8 +3985,7 @@ function xe(e, t = "", n = null, r = null) {
 			qualifier: [
 				"10",
 				"10th",
-				"ssc",
-				"dahavi"
+				"ssc"
 			],
 			standard: "10"
 		},
@@ -4295,11 +4000,7 @@ function xe(e, t = "", n = null, r = null) {
 				"12th pasing",
 				"hsc pasing"
 			],
-			primary: [
-				"passing",
-				"sanad",
-				"pasing"
-			],
+			primary: ["passing", "pasing"],
 			qualifier: [
 				"12",
 				"12th",
@@ -4318,11 +4019,7 @@ function xe(e, t = "", n = null, r = null) {
 				"10th pasing",
 				"ssc pasing"
 			],
-			primary: [
-				"passing",
-				"sanad",
-				"pasing"
-			],
+			primary: ["passing", "pasing"],
 			qualifier: [
 				"10",
 				"10th",
@@ -4389,7 +4086,6 @@ function xe(e, t = "", n = null, r = null) {
 				"val",
 				"vld",
 				"cvc",
-				"padtalni",
 				"tribe validity",
 				"cast validity",
 				"kast validity",
@@ -4399,7 +4095,6 @@ function xe(e, t = "", n = null, r = null) {
 			],
 			primary: [
 				"validity",
-				"padtalni",
 				"validiti",
 				"val",
 				"cvc"
@@ -4415,16 +4110,12 @@ function xe(e, t = "", n = null, r = null) {
 				"cst",
 				"cas",
 				"caste",
-				"jati",
-				"jati pramanpatra",
 				"kcast",
 				"kast",
-				"sartificat",
-				"dakhla"
+				"sartificat"
 			],
 			primary: [
 				"caste",
-				"jati",
 				"cst",
 				"cas",
 				"kcast",
@@ -4456,23 +4147,15 @@ function xe(e, t = "", n = null, r = null) {
 			tokens: [
 				"domicile",
 				"dom",
-				"adivasi",
-				"rahavasi",
 				"residential certificate",
 				"residence",
-				"adhiwas",
 				"domisail",
-				"domicil",
-				"rehivasi",
-				"dakhla"
+				"domicil"
 			],
 			primary: [
 				"domicile",
 				"dom",
-				"adivasi",
-				"rahavasi",
-				"domisail",
-				"rehivasi"
+				"domisail"
 			]
 		},
 		{
@@ -4481,20 +4164,15 @@ function xe(e, t = "", n = null, r = null) {
 			tokens: [
 				"nationality",
 				"nat",
-				"rashtriyatva",
 				"nationality proof"
 			],
-			primary: [
-				"nationality",
-				"nat",
-				"rashtriyatva"
-			]
+			primary: ["nationality", "nat"]
 		},
 		{
 			type: "INCOME CERTIFICATE",
 			code: "INC",
 			patterns: [
-				/\b(income|inc|utpanna|incom)\b/i,
+				/\b(income|inc|incom)\b/i,
 				/\bin\s*\(\d+\)/i,
 				/\bin\./i,
 				/\binc\b/i
@@ -4504,17 +4182,13 @@ function xe(e, t = "", n = null, r = null) {
 				"income cert",
 				"inc",
 				"in",
-				"utpanna",
 				"tahsildar",
-				"utpanna dakhla",
 				"form 16",
-				"incom",
-				"dakhla"
+				"incom"
 			],
 			primary: [
 				"income",
 				"inc",
-				"utpanna",
 				"incom"
 			]
 		},
@@ -4527,8 +4201,7 @@ function xe(e, t = "", n = null, r = null) {
 				"ncl",
 				"noncreamy",
 				"non criminal",
-				"non crimiler",
-				"unnath va pragat"
+				"non crimiler"
 			],
 			primary: [
 				"ncl",
@@ -4544,17 +4217,9 @@ function xe(e, t = "", n = null, r = null) {
 				"ration card",
 				"ration",
 				"rat",
-				"rc",
-				"shidha patrika",
-				"rashan",
-				"rasan",
-				"rashan kard"
+				"rc"
 			],
-			primary: [
-				"ration",
-				"rat",
-				"rashan"
-			]
+			primary: ["ration", "rat"]
 		},
 		{
 			type: "PHOTO",
@@ -4582,14 +4247,12 @@ function xe(e, t = "", n = null, r = null) {
 				"signature",
 				"sign",
 				"signatur",
-				"sahi",
 				"student sign"
 			],
 			primary: [
 				"signature",
 				"sign",
-				"signatur",
-				"sahi"
+				"signatur"
 			]
 		},
 		{
@@ -4660,7 +4323,6 @@ function xe(e, t = "", n = null, r = null) {
 			code: "SDC",
 			patterns: [
 				/\bself\s*declaration\b/i,
-				/\bsvayam\s*ghoshana\b/i,
 				/\bsdc\b/i,
 				/\bslf\b/i,
 				/\bself\s*declarashan\b/i
@@ -4669,10 +4331,7 @@ function xe(e, t = "", n = null, r = null) {
 				"self declaration",
 				"undertaking",
 				"declaration form",
-				"pratigyapatra",
-				"svayam",
 				"sdc",
-				"swayam ghoshnapatra",
 				"self declarashan"
 			],
 			primary: [
@@ -4685,26 +4344,13 @@ function xe(e, t = "", n = null, r = null) {
 		{
 			type: "PARENT DECLARATION",
 			code: "PDC",
-			patterns: [
-				/\bparent\s*(declaration|undertaking|form)\b/i,
-				/\bpalak\s*(ghoshana|pratigya|pratigyapatra|declaration|undertaking)\b/i,
-				/\bpdc\b/i,
-				/\bhamipatra\b/i
-			],
+			patterns: [/\bparent\s*(declaration|undertaking|form)\b/i, /\bpdc\b/i],
 			tokens: [
 				"parent declaration",
-				"palak ghoshana",
-				"palak declaration",
 				"parent undertaking",
-				"pdc",
-				"hamipatra"
+				"pdc"
 			],
-			primary: [
-				"parent declaration",
-				"palak ghoshana",
-				"pdc",
-				"hamipatra"
-			]
+			primary: ["parent declaration", "pdc"]
 		},
 		{
 			type: "ATTEMPT CERTIFICATE",
@@ -4726,19 +4372,11 @@ function xe(e, t = "", n = null, r = null) {
 			code: "BRT",
 			tokens: [
 				"birth certificate",
-				"janma dakhla",
 				"brt",
 				"birth",
-				"dob proof",
-				"birth dakhla",
-				"janam dakhla"
+				"dob proof"
 			],
-			primary: [
-				"birth",
-				"janma",
-				"brt",
-				"janam"
-			]
+			primary: ["birth", "brt"]
 		},
 		{
 			type: "CAP ALLOTMENT LETTER",
@@ -4790,10 +4428,9 @@ function xe(e, t = "", n = null, r = null) {
 				"hostel certificate",
 				"rent agreement",
 				"private hostel proof",
-				"hostel",
-				"vasatigruh dakhla"
+				"hostel"
 			],
-			primary: ["hostel", "vasatigruh"]
+			primary: ["hostel"]
 		},
 		{
 			type: "DEATH CERTIFICATE",
@@ -4801,11 +4438,9 @@ function xe(e, t = "", n = null, r = null) {
 			tokens: [
 				"death certificate",
 				"father death certificate",
-				"mrutyu pramanpatra",
-				"death",
-				"mrutyu dakhla"
+				"death"
 			],
-			primary: ["death", "mrutyu"]
+			primary: ["death"]
 		},
 		{
 			type: "NON HOSTEL DECLARATION",
@@ -4823,16 +4458,13 @@ function xe(e, t = "", n = null, r = null) {
 			code: "DIS",
 			tokens: [
 				"disability certificate",
-				"divyang",
 				"pwd certificate",
 				"udid",
 				"dis",
-				"pwd",
-				"divyang cert"
+				"pwd"
 			],
 			primary: [
 				"disability",
-				"divyang",
 				"dis",
 				"pwd"
 			]
@@ -4903,8 +4535,7 @@ function xe(e, t = "", n = null, r = null) {
 			tokens: [
 				"ews certificate",
 				"economically weaker section",
-				"ews",
-				"ews dakhla"
+				"ews"
 			],
 			primary: ["ews"]
 		},
@@ -4931,14 +4562,12 @@ function xe(e, t = "", n = null, r = null) {
 				"fitness certificate",
 				"health certificate",
 				"med",
-				"medical fitnes",
-				"arogya dakhla"
+				"medical fitnes"
 			],
 			primary: [
 				"fitness",
 				"medical",
-				"med",
-				"arogya"
+				"med"
 			]
 		},
 		{
@@ -5110,7 +4739,6 @@ function xe(e, t = "", n = null, r = null) {
 			tokens: [
 				"character certificate",
 				"conduct certificate",
-				"charitra dakhla",
 				"chr"
 			],
 			primary: ["character", "chr"]
@@ -5121,7 +4749,6 @@ function xe(e, t = "", n = null, r = null) {
 			tokens: [
 				"gazette certificate",
 				"name change gazette",
-				"rajpatra",
 				"marriage certificate",
 				"gaz"
 			],
@@ -5133,7 +4760,6 @@ function xe(e, t = "", n = null, r = null) {
 			tokens: [
 				"minority certificate",
 				"minority declaration",
-				"alpsankhyank pramanpatra",
 				"minority proof",
 				"min"
 			],
@@ -5145,10 +4771,13 @@ function xe(e, t = "", n = null, r = null) {
 		for (let t of e) {
 			let e = (typeof t == "string" ? t : t.name || (Array.isArray(t) ? t[0] : "")).toUpperCase();
 			if (!e) continue;
-			let n = (t.code || Array.isArray(t) && t[2] || "").toUpperCase(), r = t.keywords || Array.isArray(t) && t[1] || [], i = Array.isArray(r) ? r : typeof r == "string" ? r.split(",").map((e) => e.trim()) : [], a = m.find((t) => t.type === e || t.code && n && t.code.toUpperCase() === n);
+			let n = (t.code || Array.isArray(t) && t[2] || "").toUpperCase(), r = t.keywords || Array.isArray(t) && t[1] || [], i = (Array.isArray(r) ? r : typeof r == "string" ? r.split(",").map((e) => e.trim()) : []).filter((e) => {
+				let t = String(e).toLowerCase().trim();
+				return t && !j.has(t) && !re.has(t);
+			}), a = m.find((t) => t.type === e || t.code && n && t.code.toUpperCase() === n);
 			if (a) a.type = e, a.code = n, a.tokens = [e.toLowerCase(), ...i.map((e) => e.toLowerCase())];
 			else {
-				let t = H(e), r = _e(t), a = r.size > 0 ? Array.from(r)[0] : null;
+				let t = H(e), r = ve(t), a = r.size > 0 ? Array.from(r)[0] : null;
 				m.push({
 					type: e,
 					code: n,
@@ -5167,11 +4796,11 @@ function xe(e, t = "", n = null, r = null) {
 	}
 	let h = null, g = 0;
 	for (let e of m) {
-		if (ve(d, e.standard ? /* @__PURE__ */ new Set([e.standard]) : _e(H(e.type))) || e.type === "CASTE CERTIFICATE" && (/\b(validity|validiti|padtalni|padtalani|cvc|val)\b/i.test(s) || /\b(validity|validiti|padtalni|cvc|val)\b/i.test(a) || u.some((e) => [
+		if (ye(d, e.standard ? /* @__PURE__ */ new Set([e.standard]) : ve(H(e.type))) || e.type === "CASTE CERTIFICATE" && (/\b(validity|validiti|cvc|val)\b/i.test(s) || /\b(validity|validiti|cvc|val)\b/i.test(a) || u.some((e) => [
 			"validity",
 			"validiti",
-			"padtalni",
-			"cvc"
+			"cvc",
+			"val"
 		].includes(e)))) continue;
 		let t = 0;
 		if (e.patterns) {
@@ -5199,7 +4828,7 @@ function xe(e, t = "", n = null, r = null) {
 		if (n.length > 0) {
 			let e = 0, r = 0;
 			for (let t of n) {
-				let n = ge(t);
+				let n = _e(t);
 				if (n) {
 					d.has(n) && (e++, r += 1);
 					continue;
@@ -5223,7 +4852,7 @@ function xe(e, t = "", n = null, r = null) {
 					(n === r || e === r || n === t) && (i = Math.max(i, .95));
 					let a = be(e, t);
 					a > i && (i = a);
-					let o = me(e, t);
+					let o = he(e, t);
 					o > i && (i = o);
 				}
 				i >= .8 && (e++, r += i);
@@ -5240,17 +4869,17 @@ function xe(e, t = "", n = null, r = null) {
 			].includes(n[0]) && u.some((e) => e === n[0] || be(e, n[0]) >= .85 || U(e) === n[0]) && (t = Math.max(t, 85));
 		}
 		if (e.primary && e.qualifier) {
-			let n = e.primary.some((e) => u.some((t) => t === e || be(t, e) >= .85 || U(t) === e || me(t, e) >= .8)), r = e.qualifier.some((e) => {
+			let n = e.primary.some((e) => u.some((t) => t === e || be(t, e) >= .85 || U(t) === e || he(t, e) >= .8)), r = e.qualifier.some((e) => {
 				let t = RegExp(`(^|[^a-z0-9])${e}([^a-z0-9]|$)`, "i");
 				return t.test(s) || t.test(a);
 			});
 			n && r ? t = Math.max(t, 90) : n && !r && !e.standard && (t = Math.max(t, 50));
-		} else e.primary && e.primary.some((e) => u.some((t) => t === e || be(t, e) >= .85 || U(t) === e || me(t, e) >= .8)) && (t = Math.max(t, 85));
+		} else e.primary && e.primary.some((e) => u.some((t) => t === e || be(t, e) >= .85 || U(t) === e || he(t, e) >= .8)) && (t = Math.max(t, 85));
 		t > g && (g = t, h = e);
 	}
 	if (t && t.trim() && g > 0 && t.trim().toLowerCase().split(/\s+/).filter((e) => e.length > 2).some((e) => s.includes(e) || a.includes(e)) && (g = Math.min(100, g + 5)), h && g >= 50) {
 		let e = h.type.toUpperCase(), n = w[e] || e, r = n.toUpperCase(), a = i.toUpperCase().replace(/\s+/g, " ").trim(), o = !1;
-		if (t && t.trim()) {
+		if (t && typeof t == "string" && t.trim()) {
 			let n = t.trim().toUpperCase().replace(/\s+/g, " ");
 			(a === `${r} ${n}` || a === `${e} ${n}`) && (o = !0);
 		}
@@ -5336,7 +4965,7 @@ function Ee(e, t, n = "") {
 	}
 	let o = r.toLowerCase().replace(/(\d+)\s+(th|st|nd|rd)\b/gi, "$1$2").replace(/\bmark\s+sheet\b/gi, "marksheet").replace(/[\s_\-]+/g, " ").trim(), s = i.toLowerCase().replace(/(\d+)\s+(th|st|nd|rd)\b/gi, "$1$2").replace(/\bmark\s+sheet\b/gi, "marksheet").replace(/[\s_\-]+/g, " ").trim();
 	if (!o || !s || o === s) return 0;
-	let c = pe(o, s), l = Math.max(o.length, s.length);
+	let c = me(o, s), l = Math.max(o.length, s.length);
 	if (l === 0) return 0;
 	let u = Math.round(c / l * 100);
 	return Math.min(100, Math.max(0, u));
@@ -6917,14 +6546,14 @@ var mt = A.map((e) => ({
 		te && te.addEventListener("click", () => this.handleCopyPreset());
 		let ne = document.getElementById("btnRenamePreset");
 		ne && ne.addEventListener("click", () => this.handleRenamePreset());
-		let j = document.getElementById("btnDeletePreset");
-		j && j.addEventListener("click", () => this.handleDeletePreset());
-		let M = document.getElementById("btnResetPresetsDefault");
-		M && M.addEventListener("click", () => this.handleResetPresetsDefault());
-		let N = document.getElementById("btnAddDocToPreset");
-		N && N.addEventListener("click", () => this.openAddDocumentModal());
-		let re = document.getElementById("btnAddNewShortcut");
-		re && re.addEventListener("click", () => this.openAddDocumentModal(null, !0));
+		let re = document.getElementById("btnDeletePreset");
+		re && re.addEventListener("click", () => this.handleDeletePreset());
+		let j = document.getElementById("btnResetPresetsDefault");
+		j && j.addEventListener("click", () => this.handleResetPresetsDefault());
+		let M = document.getElementById("btnAddDocToPreset");
+		M && M.addEventListener("click", () => this.openAddDocumentModal());
+		let N = document.getElementById("btnAddNewShortcut");
+		N && N.addEventListener("click", () => this.openAddDocumentModal(null, !0));
 		let ie = document.getElementById("btnAddDocOrShortcut");
 		ie && ie.addEventListener("click", () => {
 			let e = this.state.settingsActiveTab === "shortcuts" || document.getElementById("tabContentShortcuts") && !document.getElementById("tabContentShortcuts").classList.contains("hidden");
@@ -6941,15 +6570,15 @@ var mt = A.map((e) => ({
 		}), document.addEventListener("click", (e) => {
 			e.target.closest(".keyword-popover-container") || document.querySelectorAll(".keyword-popover-card:not(.hidden)").forEach((e) => e.classList.add("hidden"));
 		});
-		let P = document.getElementById("inputSearchPresetDocs");
-		P && P.addEventListener("input", (e) => {
+		let ae = document.getElementById("inputSearchPresetDocs");
+		ae && ae.addEventListener("input", (e) => {
 			this._presetDocsSearchQuery = e.target.value.trim().toLowerCase(), this.renderPresetDocsTable();
 		});
-		let F = document.getElementById("inputSearchShortcuts");
-		F && F.addEventListener("input", (e) => {
+		let P = document.getElementById("inputSearchShortcuts");
+		P && P.addEventListener("input", (e) => {
 			this._shortcutsSearchQuery = e.target.value.trim().toLowerCase(), this.renderShortcutsTable();
 		}), this._initCrossCheckEvents();
-		let ae = () => {
+		let F = () => {
 			document.querySelectorAll("#casingRadiosGroup label").forEach((e) => {
 				let t = e.querySelector("input");
 				e.className = t && t.checked ? "flex items-center cursor-pointer text-white bg-primary font-mono-code text-[11px] px-2 py-0.5 rounded shadow-xs select-none font-bold transition-all casing-pill-active" : "flex items-center cursor-pointer text-secondary hover:text-on-surface font-mono-code text-[11px] px-2 py-0.5 rounded transition-all select-none";
@@ -6959,26 +6588,26 @@ var mt = A.map((e) => ({
 			e.value === (this.state.style || "upper") && (e.checked = !0), e.addEventListener("change", (e) => {
 				if (e.target.checked) {
 					let t = e.target.value;
-					this.state.style = t, localStorage.setItem("docmitra_casing_style", t), ae();
+					this.state.style = t, localStorage.setItem("docmitra_casing_style", t), F();
 					for (let e of this.state.files) !e.isRenamed && !e.isKept && (e.userEditedName = L(e.userEditedName || I(e.name), t));
 					this._recalculateTargetNames(), this.renderQueue(), this.renderCurrentPreview();
 					let n = this.state.files.filter((e) => !e.isRenamed && !e.isKept).length, i = t.toUpperCase() === "UPPER" ? "UPPERCASE" : t.toUpperCase() === "LOWER" ? "LOWERCASE" : "TITLE CASE";
 					r.show("Case Style Changed", `Applied ${i} to ${n} pending files`, "info");
 				}
 			});
-		}), ae();
-		let R = document.getElementById("btnClearWorkspace");
+		}), F();
+		let oe = document.getElementById("btnClearWorkspace");
+		oe && oe.addEventListener("click", () => this.handleClearQueue());
+		let R = document.getElementById("btnClearQueue");
 		R && R.addEventListener("click", () => this.handleClearQueue());
-		let z = document.getElementById("btnClearQueue");
-		z && z.addEventListener("click", () => this.handleClearQueue());
-		let B = document.getElementById("btnEmptySelectFolder");
-		B && B.addEventListener("click", () => this.handleSelectFolder());
-		let V = document.getElementById("btnEmptyAddFiles");
-		V && V.addEventListener("click", () => this.handleAddFiles());
-		let oe = document.querySelector("#col-queue input");
-		oe && (oe.addEventListener("keydown", (e) => {
+		let z = document.getElementById("btnEmptySelectFolder");
+		z && z.addEventListener("click", () => this.handleSelectFolder());
+		let B = document.getElementById("btnEmptyAddFiles");
+		B && B.addEventListener("click", () => this.handleAddFiles());
+		let V = document.querySelector("#col-queue input");
+		V && (V.addEventListener("keydown", (e) => {
 			(e.key === "Tab" || e.key === "Enter") && (e.preventDefault(), r.show("Intake Folder Needed", "Press \"Select Folder\" (F2) to choose admission documents.", "info")), /[\\/:*?"<>|]/.test(e.key) && (e.preventDefault(), r.show("Character Not Allowed", `Windows filenames cannot contain ${e.key}`, "warning"));
-		}), oe.addEventListener("input", (e) => {
+		}), V.addEventListener("input", (e) => {
 			/[\\/:*?"<>|]/.test(e.target.value) && (e.target.value = e.target.value.replace(/[\\/:*?"<>|]/g, ""), r.show("Character Not Allowed", "Illegal characters removed", "warning"));
 		})), document.querySelectorAll("#col-queue .grid-cols-3 button").forEach((e) => {
 			e.addEventListener("click", () => {
@@ -7568,7 +7197,7 @@ var mt = A.map((e) => ({
 			u.id = "activeFileLiveBadge", n.status === "needs_review" ? (u.className = "confidence-badge confidence-badge-med", u.textContent = "🟡 Needs Review") : n.smartConfidence !== void 0 && n.smartConfidence >= 50 ? n.smartConfidence >= 80 ? (u.className = "confidence-badge confidence-badge-high", u.textContent = `🟢 ${n.smartConfidence}% ${n.smartDocType || n.docType || "DOCUMENT"}`) : (u.className = "confidence-badge confidence-badge-med", u.textContent = `🟡 ${n.smartConfidence}% ${n.smartDocType || n.docType || "DOCUMENT"}`) : n.isMatched && n.docType ? (u.className = "confidence-badge confidence-badge-high", u.textContent = `🟢 Matched: ${n.docType}`) : (u.className = "confidence-badge confidence-badge-low", u.textContent = "🔴 Unmatched"), l.appendChild(u);
 			let d = I(n.name), f = I(n.targetName || n.suggestedName || "");
 			if (f && d.toLowerCase() !== f.toLowerCase()) {
-				let e = me(d, f);
+				let e = he(d, f);
 				if (e >= .4 && e < .99) {
 					let t = Math.round((1 - e) * 100), n = document.createElement("span");
 					n.className = "px-1.5 py-0.5 rounded text-[10px] font-mono-code font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30", n.textContent = `~${t}% Typo/Diff`, l.appendChild(n);
@@ -8278,7 +7907,7 @@ var mt = A.map((e) => ({
 		}));
 		r.show("Executing Batch Rename", `Processing ${t.length} files atomically...`, "info");
 		try {
-			await le(this.state.folder, t, (e, t) => {
+			await ue(this.state.folder, t, (e, t) => {
 				console.log(`[Rename Progress] ${e}%: ${t}`);
 			}), V.pushBatch(this.state.folder, t), e.forEach((e) => {
 				if (e.name = e.targetName, e.isRenamed = !0, e.status = "renamed", e.rotation = 0, e._pdfBytes = null, e._blobUrl && typeof URL < "u" && URL.revokeObjectURL) {
@@ -8303,7 +7932,7 @@ var mt = A.map((e) => ({
 		let e = V.pop();
 		r.show("Reverting Changes", `Restoring ${e.plan.length} files...`, "info");
 		try {
-			await ue(e.dir, e.plan, (e, t) => {
+			await de(e.dir, e.plan, (e, t) => {
 				console.log(`[Undo Progress] ${e}%: ${t}`);
 			}), e.plan.forEach((e) => {
 				let t = this.state.files.find((t) => t.targetName === e.next || t.name === e.next || e.file && t.id === e.file.id);
@@ -8474,7 +8103,7 @@ var mt = A.map((e) => ({
 		t && this.savePresetsAndSettings(), this.syncPresetsToShortcuts();
 		let r = this.getAllPresetDocuments();
 		O(r);
-		for (let e of r) e && e.code && e.name && (ie(e.code, e.name, e.keywords), E(e.name, e.name));
+		for (let e of r) e && e.code && e.name && (ae(e.code, e.name, e.keywords), E(e.name, e.name));
 		try {
 			let e = localStorage.getItem("docmitra_rename_linked_rules");
 			e && (this.state.linkedRules = JSON.parse(e));
@@ -9356,13 +8985,13 @@ var mt = A.map((e) => ({
 			keywords: c
 		};
 		if (this.shortcuts21.push(m), this.state.customShortcuts || (this.state.customShortcuts = []), this.state.customShortcuts.push(m), u.forEach((e) => {
-			fe({
+			pe({
 				canonical: a,
 				code: e,
 				primaryKeywords: [a.toLowerCase(), e.toLowerCase()],
 				secondaryKeywords: c
 			});
-		}), E(a, a), ie(d, a, c), Z.set(d, {
+		}), E(a, a), ae(d, a, c), Z.set(d, {
 			code: d,
 			canonical: a,
 			label: a,
@@ -9732,7 +9361,7 @@ var mt = A.map((e) => ({
 			});
 		}
 		try {
-			await le(this.state.folder, i, (e, t) => {
+			await ue(this.state.folder, i, (e, t) => {
 				console.log(`[Batch Rename Progress] ${e}%: ${t}`);
 			}), V.pushBatch(this.state.folder, i), i.forEach((e) => {
 				let t = e.file;
