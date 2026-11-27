@@ -1,0 +1,89 @@
+[
+  {
+    "id": "P5_TC001",
+    "title": "Verify Document Preview Viewport and Per-File Rotation controls",
+    "description": "Inspect #col-preview viewport. Click rotate 90 clockwise button in preview controls and verify preview controls remain active.",
+    "category": "Phase 5: High-DPI Canvas Preview, Rotation & Safety Isolation",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /index.html?test_mode=1"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify #col-preview viewport is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click rotate 90 clockwise button in #col-preview toolbar"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify preview toolbar controls respond cleanly"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "P5_TC002",
+    "title": "Verify Settings modal tabs and live search filtering",
+    "description": "Click #btnRenameSettings to open Settings modal. Verify Document Presets and Shortcuts tabs switch cleanly, and search filter input works.",
+    "category": "Phase 5: High-DPI Canvas Preview, Rotation & Safety Isolation",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /index.html?test_mode=1"
+      },
+      {
+        "type": "action",
+        "description": "Click #btnRenameSettings to open modalRenameSettings"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify #modalRenameSettings is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click #tabBtnShortcuts to switch to Shortcuts & Rename Rules tab"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify #inputSearchShortcuts is visible for live search filtering"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "P5_TC003",
+    "title": "Verify Add Document modal layering and Smart Keyword Generator",
+    "description": "In Settings modal, click #btnAddDocToPreset to open #modalAddDocument at z-9999. Verify Smart Keyword Generator #btnAutoGenerateKeywords and Save button.",
+    "category": "Phase 5: High-DPI Canvas Preview, Rotation & Safety Isolation",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /index.html?test_mode=1"
+      },
+      {
+        "type": "action",
+        "description": "Click #btnRenameSettings to open modalRenameSettings"
+      },
+      {
+        "type": "action",
+        "description": "Click #btnAddDocToPreset to open modalAddDocument"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify #modalAddDocument is visible in front of Settings modal"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify #btnAutoGenerateKeywords button is present"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify #btnSaveAddDoc button is present"
+      }
+    ],
+    "priority": "High"
+  }
+]

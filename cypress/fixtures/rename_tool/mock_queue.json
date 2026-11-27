@@ -1,0 +1,36 @@
+{
+  "studentName": "Vijay Ramesh Yadav",
+  "folder": {
+    "name": "Vijay_Ramesh_Yadav",
+    "path": "E:/Students/Vijay_Ramesh_Yadav"
+  },
+  "files": [
+    {
+      "name": "10th_marksheet.pdf",
+      "size": 184320,
+      "ext": ".pdf",
+      "status": "pending",
+      "targetName": "10TH MARKSHEET VIJAY RAMESH YADAV.pdf",
+      "isRenamed": false,
+      "matchConfidence": 95
+    },
+    {
+      "name": "adhar_card.pdf",
+      "size": 215040,
+      "ext": ".pdf",
+      "status": "pending",
+      "targetName": "AADHAAR CARD VIJAY RAMESH YADAV.pdf",
+      "isRenamed": false,
+      "matchConfidence": 90
+    },
+    {
+      "name": "photo_scan.jpg",
+      "size": 95400,
+      "ext": ".jpg",
+      "status": "pending",
+      "targetName": "PHOTO VIJAY RAMESH YADAV.jpg",
+      "isRenamed": false,
+      "matchConfidence": 95
+    }
+  ]
+}

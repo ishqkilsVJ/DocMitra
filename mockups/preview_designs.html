@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DocMitra - Missing Documents Desk 5 Designs Preview</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#0037b0",
+            "primary-container": "#1d4ed8",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-low": "#eff4ff",
+            "surface-container": "#e5eeff",
+            "surface-container-high": "#dce9ff",
+            "on-surface": "#0b1c30",
+            "on-surface-variant": "#434655",
+            "secondary": "#565e74",
+            "outline-variant": "#c4c5d7",
+            "error": "#ba1a1a",
+            "error-container": "#ffdad6"
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+            headline: ['Plus Jakarta Sans', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20; }
+  </style>
+</head>
+<body class="p-6 max-w-7xl mx-auto space-y-10">
+
+  <!-- HEADER OF PREVIEW -->
+  <div class="border-b border-slate-700 pb-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold font-headline text-white flex items-center gap-2">
+          <span class="material-symbols-outlined text-blue-500 text-3xl">palette</span>
+          Missing Documents Desk — Live Design Comparison
+        </h1>
+        <p class="text-slate-400 text-sm mt-1">
+          Present Documents प्रमाणेच सेम-टू-सेम कॉम्पॅक्ट (~52px) Missing Document कार्ड्स आणि मुख्य थीमशी मॅच होणारे डार्क हेडर कंट्रोल्स.
+        </p>
+      </div>
+      <span class="px-3 py-1 bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg text-xs font-mono font-bold">
+        DocMitra Administrative Bento v1.4.4
+      </span>
+    </div>
+  </div>
+
+  <!-- SECTION 1: HEADER CONTROLS COMPARISON -->
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4" id="headerComparison">
+    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+      <h2 class="text-lg font-bold text-white flex items-center gap-2">
+        <span class="material-symbols-outlined text-amber-400">tune</span>
+        १. मोडल हेडर कंट्रोल्स तुलना (Scheme Dropdown &amp; Esc Close Button)
+      </h2>
+      <span class="text-xs text-slate-400">Main Theme Match Comparison</span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Old/Buggy Look -->
+      <div class="bg-slate-950/60 border border-rose-500/30 rounded-xl p-4 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-mono font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1">
+            <span class="material-symbols-outlined text-[15px]">cancel</span> आधीचा लूक (Theme Mismatch)
+          </span>
+          <span class="text-[11px] text-slate-500">फिका स्काय-ब्लू बॉक्स व साधा टेक्स्ट</span>
+        </div>
+        <div class="p-4 bg-white rounded-lg flex items-center justify-between gap-3 border border-slate-200">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-[#0037b0] text-white flex items-center justify-center font-bold text-xs">
+              <span class="material-symbols-outlined text-[18px]">checklist_rtl</span>
+            </div>
+            <span class="font-bold text-slate-900 text-sm">Missing Documents Desk</span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <!-- Buggy Scheme -->
+            <div class="flex items-center bg-[#dce9ff]/80 border border-[#c4c5d7]/60 rounded-lg px-2.5 py-1 text-slate-700 text-xs gap-1">
+              <span class="text-[10px] text-slate-500 font-bold">SCHEME:</span>
+              <span class="font-bold text-[#0037b0]">MAHA DBT 2 ▼</span>
+            </div>
+            <!-- Buggy Esc -->
+            <div class="px-3 py-1 rounded-lg bg-[#dce9ff]/90 text-slate-800 text-xs font-bold border border-[#c4c5d7]/60 flex items-center gap-1">
+              <span>Esc Close</span>
+              <span class="material-symbols-outlined text-[14px]">close</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- New Proposed Dark Slate Administrative Look -->
+      <div class="bg-slate-950/60 border border-emerald-500/30 rounded-xl p-4 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+            <span class="material-symbols-outlined text-[15px]">check_circle</span> नवीन फायनल लूक (100% Bento Main Theme Match)
+          </span>
+          <span class="text-[11px] text-slate-400">Select Folder सारखे डार्क स्लेट बटन्स</span>
+        </div>
+        <div class="p-4 bg-white rounded-lg flex items-center justify-between gap-3 border border-slate-200 shadow-sm">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-[#0037b0] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+              <span class="material-symbols-outlined text-[18px]">checklist_rtl</span>
+            </div>
+            <div>
+              <span class="font-bold text-slate-900 text-sm block leading-none">Missing Documents &amp; Follow-up Desk</span>
+              <span class="text-[10px] text-slate-500">Maharashtra Admission Workflow</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <!-- Theme Matched Scheme Dropdown -->
+            <div class="flex items-center bg-slate-900 border border-slate-700 hover:border-blue-500 rounded-lg px-3 py-1.5 shadow-sm gap-2 transition-all cursor-pointer">
+              <span class="font-mono text-[10px] text-slate-400 uppercase font-bold tracking-wider">SCHEME:</span>
+              <span class="font-mono text-[12px] font-bold text-white flex items-center gap-1">
+                MAHA DBT 2
+                <span class="material-symbols-outlined text-[14px] text-blue-400">expand_more</span>
+              </span>
+            </div>
+            <!-- Theme Matched Dark Esc Close Button -->
+            <button class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-rose-700 text-slate-200 hover:text-white font-mono text-[11px] font-bold transition-all flex items-center gap-1.5 border border-slate-700 shadow-sm cursor-pointer">
+              <span>Esc Close</span>
+              <span class="material-symbols-outlined text-[14px]">close</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: BASELINE REFERENCE (PRESENT DOCUMENTS CARD) -->
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-3" id="baselineReference">
+    <div class="flex items-center justify-between">
+      <div>
+        <span class="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">Baseline Reference (तुम्हाला पसंत असलेले कार्ड)</span>
+        <h2 class="text-base font-bold text-white">Present Documents in Folder Card (हे प्रमाण मानून मिसिंग कार्ड बनवायचे आहे)</h2>
+      </div>
+      <span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-md text-xs font-mono font-bold">
+        ✓ 12 Ready
+      </span>
+    </div>
+
+    <!-- Live Present Card on White Modal Canvas -->
+    <div class="p-4 bg-[#eff4ff] border border-blue-200/60 rounded-xl max-w-xl">
+      <div class="p-2.5 rounded-lg bg-white border border-slate-200 shadow-xs flex flex-col gap-1.5">
+        <div class="flex items-center justify-between gap-2 min-w-0">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="material-symbols-outlined text-emerald-600 text-[18px] shrink-0 font-bold">task_alt</span>
+            <span class="text-[12px] font-bold text-slate-900 truncate">AADHAAR CARD</span>
+          </div>
+          <span class="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-900 font-mono text-[9px] font-bold shrink-0">Verified</span>
+        </div>
+        <div class="flex items-center justify-between gap-1 text-[10px] font-mono text-slate-500 pl-6">
+          <div class="flex items-center gap-2">
+            <span class="px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 font-bold uppercase text-[9px]">PDF</span>
+            <span>124 KB</span>
+          </div>
+          <div class="flex items-center gap-1 text-slate-600 font-medium">
+            <span class="material-symbols-outlined text-[13px] text-slate-400">date_range</span>
+            <span>Created: 12-08-2026</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: 5 LIVE DESIGNS FOR MISSING DOCUMENTS CARD -->
+  <div class="space-y-6" id="fiveDesignsContainer">
+    <div class="border-b border-slate-800 pb-2">
+      <h2 class="text-xl font-bold text-white flex items-center gap-2">
+        <span class="material-symbols-outlined text-rose-500">grid_view</span>
+        २. Missing Documents चे ५ थेट लाइव्ह डिझाईन्स (Choose Your Favorite)
+      </h2>
+      <p class="text-slate-400 text-xs mt-0.5">सर्व डिझाईन्स प्रेजेंट कार्डप्रमाणेच तंतोतंत कॉम्पॅक्ट (~52px) आहेत. खाली प्रत्येक डिझाईनचा रिअल-टाइम लूक पहा:</p>
+    </div>
+
+    <!-- DESIGN 1: STRICT MIRROR -->
+    <div class="bg-slate-900 border border-slate-800 hover:border-blue-500/60 transition-all rounded-2xl p-5 space-y-3" id="designCard1">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">1</span>
+          <h3 class="text-base font-bold text-white">Design 1: "Strict Mirror" (सेम टू सेम Present Card रचना)</h3>
+        </div>
+        <span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-mono text-xs font-bold border border-blue-500/30">
+          ⭐ RECOMMENDED (सर्वात जास्त पसंती)
+        </span>
+      </div>
+      <p class="text-xs text-slate-400">
+        वर नाव + [Missing] बॅज; खाली डावीकडे PDF टॅग आणि उजवीकडे (जिथे Created Date असते तिथे) तारीख इनपुट व निळे इम्पोर्ट बटन.
+      </p>
+
+      <!-- Canvas -->
+      <div class="p-4 bg-[#eff4ff] border border-rose-200/50 rounded-xl grid grid-cols-1 md:grid-cols-2 gap-3">
+        <!-- Missing Card 1 -->
+        <div class="p-2.5 rounded-lg bg-white border border-rose-200/90 shadow-xs flex flex-col justify-between gap-1.5 hover:border-rose-400 transition-colors">
+          <div class="flex items-center justify-between gap-2 min-w-0">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="material-symbols-outlined text-rose-600 text-[18px] shrink-0 font-bold">error_outline</span>
+              <span class="text-[12px] font-bold text-slate-900 truncate">10TH MARKSHEET</span>
+              <span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-700 font-mono text-[9px] font-bold">10M</span>
+            </div>
+            <span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 font-mono text-[9px] font-bold shrink-0">Missing</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-1 text-[10px] font-mono text-slate-500 pl-6">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[9px] border border-slate-200">PDF / JPG</span>
+              <span class="text-[9px] text-slate-400">≤ 256 KB</span>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <!-- Compact Date -->
+              <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 shadow-2xs">
+                <span class="material-symbols-outlined text-[13px] text-slate-500">calendar_today</span>
+                <input type="text" value="dd-mm-yyyy" class="bg-transparent text-slate-700 font-mono text-[9px] font-bold w-[68px] focus:outline-none" readonly>
+              </div>
+              <!-- Royal Blue Import Button -->
+              <button class="px-2.5 py-0.5 rounded bg-[#0037b0] hover:bg-blue-800 text-white font-mono text-[10px] font-bold flex items-center gap-1 shadow-xs cursor-pointer">
+                <span class="material-symbols-outlined text-[12px]">download</span>
+                <span>Import</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Missing Card 2 -->
+        <div class="p-2.5 rounded-lg bg-white border border-rose-200/90 shadow-xs flex flex-col justify-between gap-1.5 hover:border-rose-400 transition-colors">
+          <div class="flex items-center justify-between gap-2 min-w-0">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="material-symbols-outlined text-rose-600 text-[18px] shrink-0 font-bold">error_outline</span>
+              <span class="text-[12px] font-bold text-slate-900 truncate">12TH PASSING CERTIFICATE</span>
+              <span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-700 font-mono text-[9px] font-bold">12P</span>
+            </div>
+            <span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 font-mono text-[9px] font-bold shrink-0">Missing</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-1 text-[10px] font-mono text-slate-500 pl-6">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[9px] border border-slate-200">PDF / JPG</span>
+              <span class="text-[9px] text-slate-400">≤ 256 KB</span>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 shadow-2xs">
+                <span class="material-symbols-outlined text-[13px] text-slate-500">calendar_today</span>
+                <input type="text" value="dd-mm-yyyy" class="bg-transparent text-slate-700 font-mono text-[9px] font-bold w-[68px] focus:outline-none" readonly>
+              </div>
+              <button class="px-2.5 py-0.5 rounded bg-[#0037b0] hover:bg-blue-800 text-white font-mono text-[10px] font-bold flex items-center gap-1 shadow-xs cursor-pointer">
+                <span class="material-symbols-outlined text-[12px]">download</span>
+                <span>Import</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DESIGN 2: INLINE MICRO-TOOLBAR -->
+    <div class="bg-slate-900 border border-slate-800 hover:border-blue-500/60 transition-all rounded-2xl p-5 space-y-3" id="designCard2">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-slate-700 text-white flex items-center justify-center font-bold text-xs">2</span>
+          <h3 class="text-base font-bold text-white">Design 2: "Inline Micro-Toolbar" (जोडलेले एकत्रित डेट + इम्पोर्ट पिल)</h3>
+        </div>
+        <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-xs font-bold">
+          Unified Segmented Pill
+        </span>
+      </div>
+      <p class="text-xs text-slate-400">
+        तारीख आणि इम्पोर्ट बटन स्वतंत्र न ठेवता त्यांना एकाच स्लीक पिल टूलबारमध्ये जोडले आहे (`[📅 तारीख | 📥 Import]`).
+      </p>
+
+      <div class="p-4 bg-[#eff4ff] border border-rose-200/50 rounded-xl grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="p-2.5 rounded-lg bg-white border border-rose-200/90 shadow-xs flex flex-col justify-between gap-1.5">
+          <div class="flex items-center justify-between gap-2 min-w-0">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="material-symbols-outlined text-rose-600 text-[18px] shrink-0 font-bold">pending_actions</span>
+              <span class="text-[12px] font-bold text-slate-900 truncate">10TH MARKSHEET</span>
+            </div>
+            <span class="px-1.5 py-0.2 rounded bg-rose-600 text-white font-mono text-[9px] font-bold shrink-0">Required</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-1 text-[10px] font-mono text-slate-500 pl-6">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[9px]">PDF / JPG</span>
+              <span class="text-[9px] text-slate-400">≤ 256 KB</span>
+            </div>
+
+            <!-- Segmented Pill -->
+            <div class="flex items-center bg-slate-100 border border-slate-300 rounded-md overflow-hidden shadow-2xs">
+              <div class="flex items-center gap-1 px-1.5 py-0.5 bg-white">
+                <span class="material-symbols-outlined text-[13px] text-slate-500">event</span>
+                <span class="text-[9px] font-mono font-bold text-slate-700">dd-mm-yyyy</span>
+              </div>
+              <button class="px-2 py-0.5 bg-[#0037b0] hover:bg-blue-800 text-white font-mono text-[9px] font-bold flex items-center gap-0.5 cursor-pointer">
+                <span class="material-symbols-outlined text-[12px]">download</span>
+                <span>Import</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-2.5 rounded-lg bg-white border border-rose-200/90 shadow-xs flex flex-col justify-between gap-1.5">
+          <div class="flex items-center justify-between gap-2 min-w-0">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="material-symbols-outlined text-rose-600 text-[18px] shrink-0 font-bold">pending_actions</span>
+              <span class="text-[12px] font-bold text-slate-900 truncate">12TH PASSING CERTIFICATE</span>
+            </div>
+            <span class="px-1.5 py-0.2 rounded bg-rose-600 text-white font-mono text-[9px] font-bold shrink-0">Required</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-1 text-[10px] font-mono text-slate-500 pl-6">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[9px]">PDF / JPG</span>
+              <span class="text-[9px] text-slate-400">≤ 256 KB</span>
+            </div>
+
+            <div class="flex items-center bg-slate-100 border border-slate-300 rounded-md overflow-hidden shadow-2xs">
+              <div class="flex items-center gap-1 px-1.5 py-0.5 bg-white">
+                <span class="material-symbols-outlined text-[13px] text-slate-500">event</span>
+                <span class="text-[9px] font-mono font-bold text-slate-700">dd-mm-yyyy</span>
+              </div>
+              <button class="px-2 py-0.5 bg-[#0037b0] hover:bg-blue-800 text-white font-mono text-[9px] font-bold flex items-center gap-0.5 cursor-pointer">
+                <span class="material-symbols-outlined text-[12px]">download</span>
+                <span>Import</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DESIGN 3: DUAL RIGHT ACTIONS (IMPORT TOP RIGHT) -->
+    <div class="bg-slate-900 border border-slate-800 hover:border-blue-500/60 transition-all rounded-2xl p-5 space-y-3" id="designCard3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-slate-700 text-white flex items-center justify-center font-bold text-xs">3</span>
+          <h3 class="text-base font-bold text-white">Design 3: "Dual Right Actions" (वर उजवीकडे थेट Import बटन)</h3>
+        </div>
+        <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-xs font-bold">
+          High-Speed Import
+        </span>
+      </div>
+      <p class="text-xs text-slate-400">
+        वर उजव्या कोपऱ्यात जिथे `Verified` असते, तिथे थेट ठळक **`[ 📥 Import ]`** बटन, आणि खाली Created Date च्या जागी तारीख.
+      </p>
+
+      <div class="p-4 bg-[#eff4ff] border border-rose-200/50 rounded-xl grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="p-2.5 rounded-lg bg-white border border-rose-200/90 shadow-xs flex flex-col justify-between gap-1.5">
+          <div class="flex items-center justify-between gap-2 min-w-0">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="material-symbols-outlined text-rose-600 text-[18px] shrink-0 font-bold">cancel</span>
+              <span class="text-[12px] font-bold text-slate-900 truncate">10TH MARKSHEET</span>
+            </div>
+            <!-- Import Top Right -->
+            <button class="px-2.5 py-0.5 rounded bg-[#0037b0] hover:bg-blue-800 text-white font-mono text-[10px] font-bold flex items-center gap-1 shadow-xs cursor-pointer">
+              <span class="material-symbols-outlined text-[12px]">download</span>
+              <span>Import</span>
+            </button>
+          </div>
+
+          <div class="flex items-center justify-between gap-1 text-[10px] font-mono text-slate-500 pl-6">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[9px]">PDF / JPG</span>
+              <span class="text-[9px] text-slate-400">≤ 256 KB</span>
+            </div>
+
+            <div class="flex items-center gap-1 text-slate-600 font-medium">
+              <span class="material-symbols-outlined text-[13px] text-slate-400">event</span>
+              <span>Promise:</span>
+              <span class="text-slate-800 font-bold underline cursor-pointer">dd-mm-yyyy</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-2.5 rounded-lg bg-white border border-rose-200/90 shadow-xs flex flex-col justify-between gap-1.5">
+          <div class="flex items-center justify-between gap-2 min-w-0">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="material-symbols-outlined text-rose-600 text-[18px] shrink-0 font-bold">cancel</span>
+              <span class="text-[12px] font-bold text-slate-900 truncate">12TH PASSING CERTIFICATE</span>
+            </div>
+            <button class="px-2.5 py-0.5 rounded bg-[#0037b0] hover:bg-blue-800 text-white font-mono text-[10px] font-bold flex items-center gap-1 shadow-xs cursor-pointer">
+              <span class="material-symbols-outlined text-[12px]">download</span>
+              <span>Import</span>
+            </button>
+          </div>
+
+          <div class="flex items-center justify-between gap-1 text-[10px] font-mono text-slate-500 pl-6">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[9px]">PDF / JPG</span>
+              <span class="text-[9px] text-slate-400">≤ 256 KB</span>
+            </div>
+
+            <div class="flex items-center gap-1 text-slate-600 font-medium">
+              <span class="material-symbols-outlined text-[13px] text-slate-400">event</span>
+              <span>Promise:</span>
+              <span class="text-slate-800 font-bold underline cursor-pointer">dd-mm-yyyy</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DESIGN 4: RED LEFT ACCENT BAR -->
+    <div class="bg-slate-900 border border-slate-800 hover:border-blue-500/60 transition-all rounded-2xl p-5 space-y-3" id="designCard4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-slate-700 text-white flex items-center justify-center font-bold text-xs">4</span>
+          <h3 class="text-base font-bold text-white">Design 4: "Red Left Accent Bar" (डाव्या बाजूला लाल पट्टी)</h3>
+        </div>
+        <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 font-mono text-xs font-bold border border-rose-500/30">
+          High-Visibility Indicator
+        </span>
+      </div>
+      <p class="text-xs text-slate-400">
+        कार्डच्या डाव्या बाजूला 4px लाल बॉर्डर पट्टी (`border-l-4 border-l-rose-500`) ज्यामुळे मिसिंग डॉक्युमेंट डोळ्यात पटकन भरते.
+      </p>
+
+      <div class="p-4 bg-[#eff4ff] border border-rose-200/50 rounded-xl grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="p-2.5 rounded-lg bg-white border border-slate-200 border-l-4 border-l-rose-600 shadow-xs flex flex-col justify-between gap-1.5">
+          <div class="flex items-center justify-between gap-2 min-w-0">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="text-[12px] font-bold text-slate-900 truncate">10TH MARKSHEET</span>
+            </div>
+            <span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 font-mono text-[9px] font-bold">10M Missing</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-1 text-[10px] font-mono text-slate-500">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[9px]">PDF / JPG</span>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <button class="px-2 py-0.5 rounded border border-slate-300 hover:bg-slate-50 text-slate-700 font-mono text-[9px] font-bold flex items-center gap-1">
+                <span class="material-symbols-outlined text-[11px]">event</span>
+                <span>Date</span>
+              </button>
+              <button class="px-2.5 py-0.5 rounded bg-[#0037b0] hover:bg-blue-800 text-white font-mono text-[9px] font-bold flex items-center gap-1">
+                <span class="material-symbols-outlined text-[11px]">download</span>
+                <span>Import</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-2.5 rounded-lg bg-white border border-slate-200 border-l-4 border-l-rose-600 shadow-xs flex flex-col justify-between gap-1.5">
+          <div class="flex items-center justify-between gap-2 min-w-0">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="text-[12px] font-bold text-slate-900 truncate">12TH PASSING CERTIFICATE</span>
+            </div>
+            <span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 font-mono text-[9px] font-bold">12P Missing</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-1 text-[10px] font-mono text-slate-500">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[9px]">PDF / JPG</span>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <button class="px-2 py-0.5 rounded border border-slate-300 hover:bg-slate-50 text-slate-700 font-mono text-[9px] font-bold flex items-center gap-1">
+                <span class="material-symbols-outlined text-[11px]">event</span>
+                <span>Date</span>
+              </button>
+              <button class="px-2.5 py-0.5 rounded bg-[#0037b0] hover:bg-blue-800 text-white font-mono text-[9px] font-bold flex items-center gap-1">
+                <span class="material-symbols-outlined text-[11px]">download</span>
+                <span>Import</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DESIGN 5: ULTRA-COMPACT BENTO MASTER -->
+    <div class="bg-slate-900 border border-slate-800 hover:border-blue-500/60 transition-all rounded-2xl p-5 space-y-3" id="designCard5">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full bg-slate-700 text-white flex items-center justify-center font-bold text-xs">5</span>
+          <h3 class="text-base font-bold text-white">Design 5: "Ultra-Compact Bento Master" (डार्क स्लेट कंट्रोल्स)</h3>
+        </div>
+        <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-xs font-bold">
+          High Density (48px)
+        </span>
+      </div>
+      <p class="text-xs text-slate-400">
+        कमाल कॉम्पॅक्ट लेआउट, डार्क मायक्रो-बटन्स जे मुख्य रिबनच्या स्टाइलशी एकरूप होतात.
+      </p>
+
+      <div class="p-4 bg-[#eff4ff] border border-rose-200/50 rounded-xl grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="p-2 rounded-lg bg-white border border-rose-300 shadow-2xs flex flex-col justify-between gap-1">
+          <div class="flex items-center justify-between gap-1 min-w-0">
+            <div class="flex items-center gap-1 min-w-0">
+              <div class="w-2 h-2 rounded-full bg-rose-600 ring-2 ring-rose-200"></div>
+              <span class="text-[11px] font-bold text-slate-900 truncate">10TH MARKSHEET</span>
+            </div>
+            <span class="px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 font-mono text-[8px] font-bold border border-rose-200">Missing</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-1 text-[9px] font-mono text-slate-500 pl-3">
+            <span class="px-1 py-0.2 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[8px]">PDF ≤ 256KB</span>
+
+            <div class="flex items-center gap-1">
+              <span class="px-1 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-700 text-[8px] font-bold">📅 dd-mm-yy</span>
+              <button class="px-2 py-0.5 rounded bg-slate-900 hover:bg-blue-700 text-white text-[9px] font-bold">Import</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-2 rounded-lg bg-white border border-rose-300 shadow-2xs flex flex-col justify-between gap-1">
+          <div class="flex items-center justify-between gap-1 min-w-0">
+            <div class="flex items-center gap-1 min-w-0">
+              <div class="w-2 h-2 rounded-full bg-rose-600 ring-2 ring-rose-200"></div>
+              <span class="text-[11px] font-bold text-slate-900 truncate">12TH PASSING CERTIFICATE</span>
+            </div>
+            <span class="px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 font-mono text-[8px] font-bold border border-rose-200">Missing</span>
+          </div>
+
+          <div class="flex items-center justify-between gap-1 text-[9px] font-mono text-slate-500 pl-3">
+            <span class="px-1 py-0.2 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[8px]">PDF ≤ 256KB</span>
+
+            <div class="flex items-center gap-1">
+              <span class="px-1 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-700 text-[8px] font-bold">📅 dd-mm-yy</span>
+              <button class="px-2 py-0.5 rounded bg-slate-900 hover:bg-blue-700 text-white text-[9px] font-bold">Import</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: FULL MODAL LIVE PREVIEW WITH DESIGN 1 (STRICT MIRROR) -->
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4" id="fullModalPreview">
+    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div>
+        <span class="text-xs font-mono font-bold text-blue-400 uppercase tracking-wider">Full Workflow Integration</span>
+        <h2 class="text-lg font-bold text-white">संपूर्ण मोडलचा लाइव्ह पूर्वावलोकन (Full Modal Live Preview - Design 1)</h2>
+      </div>
+      <span class="px-2.5 py-1 bg-blue-600/20 text-blue-300 border border-blue-500/30 rounded-md text-xs font-mono font-bold">
+        100% Bento Workstation Ready
+      </span>
+    </div>
+
+    <!-- Complete Modal Container Simulation -->
+    <div class="bg-white rounded-2xl border border-slate-300 shadow-2xl overflow-hidden max-w-4xl mx-auto text-slate-900">
+      
+      <!-- Modal Header with Theme-Matched Dark Slate Controls -->
+      <div class="px-5 py-3.5 bg-white border-b border-slate-200 flex items-center justify-between gap-3 flex-wrap">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-[#0037b0] text-white flex items-center justify-center shadow-xs shrink-0">
+            <span class="material-symbols-outlined text-[24px]">checklist_rtl</span>
+          </div>
+          <div>
+            <h1 class="text-[17px] text-slate-900 font-bold tracking-tight">Missing Documents &amp; Follow-up Desk</h1>
+            <p class="text-[11px] text-slate-500 mt-0.5">Maharashtra Admission &amp; Verification Workflow • 100% Offline Localhost</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+          <!-- Dark Slate Scheme Dropdown -->
+          <div class="flex items-center bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 shadow-sm gap-2">
+            <span class="font-mono text-[10px] text-slate-400 uppercase font-bold tracking-wider">SCHEME:</span>
+            <span class="font-mono text-[12px] font-bold text-white flex items-center gap-1">
+              MAHA DBT 2
+              <span class="material-symbols-outlined text-[14px] text-blue-400">expand_more</span>
+            </span>
+          </div>
+          <!-- Dark Slate Esc Close Button -->
+          <button class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-rose-700 text-slate-200 hover:text-white font-mono text-[11px] font-bold transition-all flex items-center gap-1.5 border border-slate-700 shadow-sm cursor-pointer">
+            <span>Esc Close</span>
+            <span class="material-symbols-outlined text-[14px]">close</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-5 space-y-4 bg-[#f8f9ff]">
+        
+        <!-- Readiness Card with Inline Student Edit -->
+        <div class="bg-[#eff4ff] border border-blue-200/60 rounded-xl p-3.5 shadow-xs">
+          <div class="flex items-center justify-between gap-4 flex-wrap">
+            <div class="flex items-center gap-4">
+              <div class="relative w-16 h-16 shrink-0 flex items-center justify-center">
+                <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                  <path class="text-blue-100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3.8"></path>
+                  <path class="text-emerald-500" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="55, 100" stroke-linecap="round" stroke-width="3.8"></path>
+                </svg>
+                <div class="absolute flex flex-col items-center justify-center text-center leading-none">
+                  <span class="text-[14px] font-bold text-slate-900">55%</span>
+                  <span class="font-mono text-[8px] uppercase tracking-wider text-slate-500 mt-0.5">Ready</span>
+                </div>
+              </div>
+
+              <div>
+                <span class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold block">Application Readiness Status</span>
+                <div class="flex items-center gap-2 mt-0.5">
+                  <span class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Student Name:</span>
+                  <span class="px-2.5 py-0.5 rounded-md bg-white text-[#0037b0] text-[13px] font-bold tracking-wide border border-blue-200 shadow-2xs">
+                    Kshitija
+                  </span>
+                  <button class="p-1 rounded-md bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 shadow-2xs" title="Edit Student Name">
+                    <span class="material-symbols-outlined text-[13px]">edit</span>
+                  </button>
+                </div>
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="text-[14px] font-bold text-slate-900">12 of 22 Documents Staged</span>
+                  <span class="px-2 py-0.2 rounded bg-emerald-100 text-emerald-900 font-mono text-[10px] font-bold">55% Verified</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Metrics -->
+            <div class="flex items-center gap-3">
+              <div class="bg-white border border-emerald-300 rounded-xl px-3.5 py-2 shadow-2xs flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                  <span class="material-symbols-outlined text-[18px]">verified</span>
+                </div>
+                <div>
+                  <span class="text-[10px] text-slate-500 uppercase font-semibold block">Completed</span>
+                  <span class="font-mono text-[13px] font-bold text-emerald-800">12 Documents</span>
+                </div>
+              </div>
+
+              <div class="bg-white border border-rose-300 rounded-xl px-3.5 py-2 shadow-2xs flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center font-bold">
+                  <span class="material-symbols-outlined text-[18px]">pending_actions</span>
+                </div>
+                <div>
+                  <span class="text-[10px] text-slate-500 uppercase font-semibold block">Pending / Missing</span>
+                  <span class="font-mono text-[13px] font-bold text-rose-700">10 Documents</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Missing Documents (2-Column Cards - Design 1) -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-[14px] text-slate-900 font-bold">Missing Documents</span>
+              <span class="px-2 py-0.2 rounded-full bg-rose-600 text-white font-mono text-[10px] font-bold shadow-2xs">
+                10 Required
+              </span>
+            </div>
+            <span class="font-mono text-[10px] text-slate-500">Target Buffer: ≤ 256 KB (MahaDBT Strict)</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+            <!-- Missing Card A -->
+            <div class="p-2.5 rounded-lg bg-white border border-rose-200 shadow-xs flex flex-col justify-between gap-1.5">
+              <div class="flex items-center justify-between gap-2 min-w-0">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <span class="material-symbols-outlined text-rose-600 text-[18px] shrink-0 font-bold">error_outline</span>
+                  <span class="text-[12px] font-bold text-slate-900 truncate">10TH MARKSHEET</span>
+                  <span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-700 font-mono text-[9px] font-bold">10M</span>
+                </div>
+                <span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 font-mono text-[9px] font-bold shrink-0">Missing</span>
+              </div>
+              <div class="flex items-center justify-between gap-1 text-[10px] font-mono text-slate-500 pl-6">
+                <div class="flex items-center gap-1.5">
+                  <span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[9px]">PDF / JPG</span>
+                  <span class="text-[9px] text-slate-400">≤ 256 KB</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5">
+                    <span class="material-symbols-outlined text-[13px] text-slate-500">calendar_today</span>
+                    <span class="text-[9px] font-bold text-slate-700">dd-mm-yyyy</span>
+                  </div>
+                  <button class="px-2.5 py-0.5 rounded bg-[#0037b0] text-white font-mono text-[10px] font-bold flex items-center gap-1 shadow-xs">
+                    <span class="material-symbols-outlined text-[12px]">download</span>
+                    <span>Import</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Missing Card B -->
+            <div class="p-2.5 rounded-lg bg-white border border-rose-200 shadow-xs flex flex-col justify-between gap-1.5">
+              <div class="flex items-center justify-between gap-2 min-w-0">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <span class="material-symbols-outlined text-rose-600 text-[18px] shrink-0 font-bold">error_outline</span>
+                  <span class="text-[12px] font-bold text-slate-900 truncate">10TH PASSING CERTIFICATE</span>
+                  <span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-700 font-mono text-[9px] font-bold">10P</span>
+                </div>
+                <span class="px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 font-mono text-[9px] font-bold shrink-0">Missing</span>
+              </div>
+              <div class="flex items-center justify-between gap-1 text-[10px] font-mono text-slate-500 pl-6">
+                <div class="flex items-center gap-1.5">
+                  <span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-bold uppercase text-[9px]">PDF / JPG</span>
+                  <span class="text-[9px] text-slate-400">≤ 256 KB</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5">
+                    <span class="material-symbols-outlined text-[13px] text-slate-500">calendar_today</span>
+                    <span class="text-[9px] font-bold text-slate-700">dd-mm-yyyy</span>
+                  </div>
+                  <button class="px-2.5 py-0.5 rounded bg-[#0037b0] text-white font-mono text-[10px] font-bold flex items-center gap-1 shadow-xs">
+                    <span class="material-symbols-outlined text-[12px]">download</span>
+                    <span>Import</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Present Documents (2-Column Cards - 100% Identical) -->
+        <div class="space-y-2 pt-2">
+          <div class="flex items-center justify-between py-2 bg-white border border-slate-200 rounded-xl px-3.5 shadow-2xs">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-emerald-600 text-[18px]">check_circle</span>
+              <span class="text-[13px] font-bold text-slate-900">Present Documents in Folder (12 Verified)</span>
+              <span class="text-slate-500 text-[11px]">• All auto-matched</span>
+            </div>
+            <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-mono text-[10px] font-bold">12 READY</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+            <div class="p-2.5 rounded-lg bg-white border border-slate-200 shadow-xs flex flex-col justify-between gap-1.5">
+              <div class="flex items-center justify-between gap-2 min-w-0">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <span class="material-symbols-outlined text-emerald-600 text-[18px] shrink-0 font-bold">task_alt</span>
+                  <span class="text-[12px] font-bold text-slate-900 truncate">AADHAAR CARD</span>
+                </div>
+                <span class="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-900 font-mono text-[9px] font-bold shrink-0">Verified</span>
+              </div>
+              <div class="flex items-center justify-between gap-1 text-[10px] font-mono text-slate-500 pl-6">
+                <div class="flex items-center gap-2">
+                  <span class="px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 font-bold uppercase text-[9px]">PDF</span>
+                  <span>124 KB</span>
+                </div>
+                <div class="flex items-center gap-1 text-slate-600 font-medium">
+                  <span class="material-symbols-outlined text-[13px] text-slate-400">date_range</span>
+                  <span>Created: 12-08-2026</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded-lg bg-white border border-slate-200 shadow-xs flex flex-col justify-between gap-1.5">
+              <div class="flex items-center justify-between gap-2 min-w-0">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <span class="material-symbols-outlined text-emerald-600 text-[18px] shrink-0 font-bold">task_alt</span>
+                  <span class="text-[12px] font-bold text-slate-900 truncate">APPOINTMENT KSHITIJA.pdf</span>
+                </div>
+                <span class="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-900 font-mono text-[9px] font-bold shrink-0">Verified</span>
+              </div>
+              <div class="flex items-center justify-between gap-1 text-[10px] font-mono text-slate-500 pl-6">
+                <div class="flex items-center gap-2">
+                  <span class="px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 font-bold uppercase text-[9px]">PDF</span>
+                  <span>277 KB</span>
+                </div>
+                <div class="flex items-center gap-1 text-slate-600 font-medium">
+                  <span class="material-symbols-outlined text-[13px] text-slate-400">date_range</span>
+                  <span>Created: 12-08-2026</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-5 py-3 bg-[#eff4ff] border-t border-slate-200 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2 text-slate-600 text-[11px]">
+          <span class="material-symbols-outlined text-[#0037b0] text-[16px]">info</span>
+          <span>Imported files automatically move to active folder and re-scan queue.</span>
+        </div>
+        <button class="px-4 py-2 rounded-lg bg-[#0037b0] hover:bg-blue-800 text-white text-xs font-bold shadow-md flex items-center gap-2">
+          <span>Done / Return to Ledger</span>
+          <kbd class="px-1.5 py-0.5 rounded bg-white/20 text-[10px] font-mono">Esc / Enter</kbd>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>
