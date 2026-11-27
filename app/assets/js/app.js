@@ -11153,65 +11153,73 @@ var Jt = class {
 		t && (t.textContent = this._getToolDisplayName(this.activeTool));
 	}
 	_bindTargetSizeControls() {
-		let e = document.getElementById("targetRadioGroup"), t = document.querySelectorAll("#compressTargetControlBar .target-radio-pill"), n = document.getElementById("sliderTargetKb"), i = document.getElementById("inputManualTargetKb"), a = document.getElementById("inputManualTargetMb"), o = document.getElementById("wrapManualKb"), s = document.getElementById("wrapManualMb"), c = document.getElementById("btnLockKb"), l = document.getElementById("btnLockMb"), u = document.getElementById("badgeUnitKb"), d = document.getElementById("badgeUnitMb"), f = document.getElementById("targetModeLabel"), p = document.getElementById("targetModeIcon"), m = (e) => {
+		let e = document.getElementById("targetRadioGroup"), t = document.querySelectorAll("#compressTargetControlBar .target-radio-pill"), n = document.getElementById("sliderTargetKb"), i = document.getElementById("inputManualTargetKb"), a = document.getElementById("inputManualTargetMb"), o = document.getElementById("wrapManualKb"), s = document.getElementById("wrapManualMb"), c = document.getElementById("radioModeKb"), l = document.getElementById("radioModeMb"), u = document.getElementById("lblModeKb"), d = document.getElementById("lblModeMb"), f = document.getElementById("overlayLockKb"), p = document.getElementById("overlayLockMb"), m = document.getElementById("badgeUnitKb"), h = document.getElementById("badgeUnitMb"), g = (e) => {
 			t.forEach((t) => {
 				let n = parseInt(t.getAttribute("data-kb"), 10);
 				this.targetSizeMode === "kb" && n === e ? n === 300 ? (t.className = "target-radio-pill relative px-3 py-0.5 text-xs font-bold text-white bg-blue-600 rounded-md shadow-md ring-2 ring-blue-500/50 flex items-center gap-1.5 transition cursor-pointer", t.innerHTML = "\n              <span class=\"relative flex h-1.5 w-1.5\">\n                <span class=\"animate-beacon-ping absolute inline-flex h-full w-full rounded-full bg-sky-300 opacity-75\"></span>\n                <span class=\"relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400\"></span>\n              </span>\n              <span class=\"tracking-wide\">300 KB</span>\n            ") : (t.className = "target-radio-pill px-2.5 py-0.5 text-xs font-bold text-white bg-blue-600 rounded-md shadow-xs transition cursor-pointer", t.textContent = `${n} KB`) : (t.className = "target-radio-pill px-2.5 py-0.5 text-xs font-medium text-slate-600 rounded-md hover:bg-white hover:text-slate-900 transition cursor-pointer", t.textContent = `${n} KB`);
 			});
-		}, h = (r) => {
-			this.targetSizeMode = r, r === "kb" ? (o && (o.className = "group flex items-center bg-white border border-blue-500 ring-2 ring-blue-100 rounded-lg p-0.5 shadow-inner transition-all cursor-pointer", o.title = "KB Mode Active"), c && c.classList.add("hidden"), i && (i.disabled = !1, i.className = "px-1 text-center font-mono text-xs font-bold text-slate-800 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-text"), u && (u.className = "px-1.5 py-0.5 bg-blue-100/70 text-blue-700 font-mono text-[10px] font-bold rounded"), e && e.classList.remove("opacity-50", "opacity-40", "pointer-events-none"), n && (n.disabled = !1, n.classList.remove("opacity-50", "opacity-40", "cursor-not-allowed")), s && (s.className = "group flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 shadow-inner transition-all opacity-70 cursor-pointer", s.title = "Click to unlock MB Mode (up to 100 MB)"), l && l.classList.remove("hidden"), a && (a.disabled = !0, a.className = "px-1 text-center font-mono text-xs font-bold text-slate-400 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-not-allowed"), d && (d.className = "px-1.5 py-0.5 bg-slate-200 text-slate-500 font-mono text-[10px] font-bold rounded"), f && (f.textContent = "KB Active"), p && (p.className = "material-symbols-outlined text-[14px] text-blue-600"), m(this.targetKb)) : (o && (o.className = "group flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 shadow-inner transition-all opacity-70 cursor-pointer", o.title = "Click to switch back to KB Mode"), c && c.classList.remove("hidden"), i && (i.disabled = !0, i.className = "px-1 text-center font-mono text-xs font-bold text-slate-400 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-not-allowed"), u && (u.className = "px-1.5 py-0.5 bg-slate-200 text-slate-500 font-mono text-[10px] font-bold rounded"), e && e.classList.add("opacity-50"), n && n.classList.add("opacity-50"), s && (s.className = "group flex items-center bg-white border border-indigo-500 ring-2 ring-indigo-100 rounded-lg p-0.5 shadow-inner transition-all cursor-pointer", s.title = "MB Mode Active"), l && l.classList.add("hidden"), a && (a.disabled = !1, a.className = "px-1 text-center font-mono text-xs font-bold text-slate-800 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-text", a.focus()), d && (d.className = "px-1.5 py-0.5 bg-indigo-100 text-indigo-700 font-mono text-[10px] font-bold rounded"), f && (f.textContent = "MB Active"), p && (p.className = "material-symbols-outlined text-[14px] text-indigo-600"), t.forEach((e) => {
+		}, _ = (r) => {
+			this.targetSizeMode = r, r === "kb" ? (c && (c.checked = !0), l && (l.checked = !1), u && (u.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white text-blue-700 shadow-xs cursor-pointer transition-all"), d && (d.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-500 hover:text-slate-800 cursor-pointer transition-all"), f && f.classList.add("hidden"), o && (o.className = "group flex items-center bg-white border-2 border-blue-500 rounded-lg p-0.5 shadow-sm transition-all cursor-pointer", o.title = "KB Mode Active"), i && (i.disabled = !1, i.className = "px-1 text-center font-mono text-xs font-black text-slate-900 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-text"), m && (m.className = "px-1.5 py-0.5 bg-blue-100 text-blue-800 font-mono text-[10px] font-bold rounded"), e && e.classList.remove("opacity-40", "pointer-events-none"), n && (n.disabled = !1, n.classList.remove("opacity-40", "cursor-not-allowed")), p && p.classList.remove("hidden"), s && (s.className = "group flex items-center bg-white border border-slate-300 rounded-lg p-0.5 shadow-sm transition-all cursor-pointer", s.title = "Click to unlock MB Mode (up to 100 MB)"), a && (a.disabled = !0, a.className = "px-1 text-center font-mono text-xs font-black text-slate-900 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-not-allowed"), h && (h.className = "px-1.5 py-0.5 bg-slate-200 text-slate-600 font-mono text-[10px] font-bold rounded"), g(this.targetKb)) : (c && (c.checked = !1), l && (l.checked = !0), d && (d.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white text-indigo-700 shadow-xs cursor-pointer transition-all"), u && (u.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-500 hover:text-slate-800 cursor-pointer transition-all"), f && f.classList.remove("hidden"), o && (o.className = "group flex items-center bg-white border border-slate-300 rounded-lg p-0.5 shadow-sm transition-all cursor-pointer", o.title = "Click to switch back to KB Mode"), i && (i.disabled = !0, i.className = "px-1 text-center font-mono text-xs font-black text-slate-900 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-not-allowed"), m && (m.className = "px-1.5 py-0.5 bg-slate-200 text-slate-600 font-mono text-[10px] font-bold rounded"), e && e.classList.add("opacity-40"), n && (n.disabled = !0, n.classList.add("opacity-40", "cursor-not-allowed")), p && p.classList.add("hidden"), s && (s.className = "group flex items-center bg-white border-2 border-indigo-500 ring-2 ring-indigo-100 rounded-lg p-0.5 shadow-sm transition-all cursor-pointer", s.title = "MB Mode Active"), a && (a.disabled = !1, a.className = "px-1 text-center font-mono text-xs font-black text-slate-900 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-text", a.focus()), h && (h.className = "px-1.5 py-0.5 bg-indigo-100 text-indigo-700 font-mono text-[10px] font-bold rounded"), t.forEach((e) => {
 				let t = parseInt(e.getAttribute("data-kb"), 10);
 				e.className = "target-radio-pill px-2.5 py-0.5 text-xs font-medium text-slate-400 rounded-md transition cursor-pointer hover:bg-slate-200", e.textContent = `${t} KB`;
 			}));
-		}, g = (e, t) => {
+		}, v = (e, t) => {
 			let r = parseInt(e, 10);
-			(isNaN(r) || r <= 0) && (r = 300), r > 102400 && (r = 102400), this.targetKb = r, t !== "slider" && n && (n.value = Math.min(Math.max(r, 50), 1e3)), t !== "inputKb" && i && (i.value = r), m(r), this.updateStats(), this.updateCardsProjectedSize();
-		}, _ = (e) => {
+			(isNaN(r) || r <= 0) && (r = 300), r > 102400 && (r = 102400), this.targetKb = r, t !== "slider" && n && (n.value = Math.min(Math.max(r, 50), 1e3)), t !== "inputKb" && i && (i.value = r), g(r), this.updateStats(), this.updateCardsProjectedSize();
+		}, y = (e) => {
 			let t = parseFloat(e);
 			(isNaN(t) || t <= 0) && (t = 1), t > 100 && (t = 100), this.targetKb = Math.round(t * 1024), this.updateStats(), this.updateCardsProjectedSize();
 		};
 		t.forEach((e) => {
 			e.addEventListener("click", (t) => {
-				t.preventDefault(), this.targetSizeMode !== "kb" && h("kb");
+				t.preventDefault(), this.targetSizeMode !== "kb" && _("kb");
 				let n = parseInt(e.getAttribute("data-kb"), 10);
-				g(n, "radio"), r.show("Target Size", `Target set to < ${n} KB`, "info");
+				v(n, "radio"), r.show("Target Size", `Target set to < ${n} KB`, "info");
 			});
 		}), n && (n.addEventListener("mousedown", () => {
-			this.targetSizeMode !== "kb" && h("kb");
+			this.targetSizeMode !== "kb" && _("kb");
 		}), n.addEventListener("input", (e) => {
-			this.targetSizeMode !== "kb" && h("kb");
+			this.targetSizeMode !== "kb" && _("kb");
 			let t = parseInt(e.target.value, 10);
-			g(t, "slider");
-		})), o && o.addEventListener("click", () => {
-			this.targetSizeMode !== "kb" && (h("kb"), i && i.focus(), r.show("KB Mode", "Switched to KB preset mode.", "info"));
-		}), c && c.addEventListener("click", (e) => {
-			e.stopPropagation(), this.targetSizeMode !== "kb" && (h("kb"), i && i.focus(), r.show("KB Mode", "Switched to KB preset mode.", "info"));
+			v(t, "slider");
+		})), c && c.addEventListener("change", () => {
+			c.checked && this.targetSizeMode !== "kb" && (_("kb"), r.show("KB Mode", "Switched to KB preset mode.", "info"));
+		}), l && l.addEventListener("change", () => {
+			if (l.checked && this.targetSizeMode !== "mb") {
+				_("mb");
+				let e = parseFloat(a?.value || .29);
+				y(e), r.show("MB Mode Active", "KB controls locked. Direct MB sizing enabled.", "info");
+			}
+		}), f && f.addEventListener("click", (e) => {
+			e.stopPropagation(), this.targetSizeMode !== "kb" && (_("kb"), i && i.focus(), r.show("KB Mode", "Switched to KB preset mode.", "info"));
+		}), p && p.addEventListener("click", (e) => {
+			if (e.stopPropagation(), this.targetSizeMode !== "mb") {
+				_("mb");
+				let e = parseFloat(a?.value || .29);
+				y(e), r.show("MB Mode Active", "KB controls locked. Direct MB sizing enabled.", "info");
+			}
+		}), o && o.addEventListener("click", () => {
+			this.targetSizeMode !== "kb" && (_("kb"), i && i.focus(), r.show("KB Mode", "Switched to KB preset mode.", "info"));
 		}), i && (i.addEventListener("input", (e) => {
-			this.targetSizeMode !== "kb" && h("kb");
+			this.targetSizeMode !== "kb" && _("kb");
 			let t = parseInt(e.target.value, 10);
-			!isNaN(t) && t > 0 && g(t, "inputKb");
+			!isNaN(t) && t > 0 && v(t, "inputKb");
 		}), i.addEventListener("change", (e) => {
 			let t = parseInt(e.target.value, 10);
-			(isNaN(t) || t < 30) && (t = 30), g(t, "inputKb");
+			(isNaN(t) || t < 30) && (t = 30), v(t, "inputKb");
 		})), s && s.addEventListener("click", () => {
 			if (this.targetSizeMode !== "mb") {
-				h("mb");
+				_("mb");
 				let e = parseFloat(a?.value || .29);
-				_(e), r.show("MB Mode Active", "KB controls locked. Direct MB sizing enabled.", "info");
-			}
-		}), l && l.addEventListener("click", (e) => {
-			if (e.stopPropagation(), this.targetSizeMode !== "mb") {
-				h("mb");
-				let e = parseFloat(a?.value || .29);
-				_(e), r.show("MB Mode Active", "KB controls locked. Direct MB sizing enabled.", "info");
+				y(e), r.show("MB Mode Active", "KB controls locked. Direct MB sizing enabled.", "info");
 			}
 		}), a && (a.addEventListener("input", (e) => {
 			let t = parseFloat(e.target.value);
-			!isNaN(t) && t > 0 && _(t);
+			!isNaN(t) && t > 0 && y(t);
 		}), a.addEventListener("change", (e) => {
 			let t = parseFloat(e.target.value);
-			(isNaN(t) || t < .01) && (t = .01), t > 100 && (t = 100), a.value = t, _(t);
-		})), h("kb"), g(300, "init");
+			(isNaN(t) || t < .01) && (t = .01), t > 100 && (t = 100), a.value = t, y(t);
+		})), _("kb"), v(300, "init");
 	}
 	_bindActions() {
 		let e = document.getElementById("btnBrowsePdfDir");
@@ -11416,13 +11424,13 @@ var Jt = class {
 	}
 	updateStats() {
 		let e = this.files.length, t = this.files.reduce((e, t) => e + (t.size || 0), 0), n = (t / 1048576).toFixed(2), r = this.files.reduce((e, t) => e + Math.min(t.size || 0, this.targetKb * 1024), 0), i = (r / 1048576).toFixed(2), a = t > 0 && t > r ? Math.max(0, Math.round((t - r) / t * 100)) : 0, o = document.getElementById("summaryPdfCount");
-		o && (o.innerHTML = `${e} Documents <span class="text-[10px] font-normal text-slate-500 font-sans">(Ready)</span>`);
+		o && (o.textContent = `${e} Docs`);
 		let s = document.getElementById("summaryPdfTotalSize");
-		s && (s.innerHTML = `${n} MB <span class="text-[10px] font-normal text-slate-400 font-sans">(Uncompressed)</span>`);
+		s && (s.textContent = `${n} MB`);
 		let c = document.getElementById("summaryPdfProjected");
 		c && (c.textContent = `~${i} MB`);
 		let l = document.getElementById("summaryPdfReductionBadge");
-		l && (l.textContent = `↓ -${a}% saved`);
+		l && (a > 0 ? (l.textContent = `↓ -${a}%`, l.classList.remove("hidden")) : l.classList.add("hidden"));
 		let u = document.getElementById("pdfQueueCount");
 		u && (u.textContent = `${e} Files`);
 		let d = document.getElementById("pdfQueueStats");
@@ -11804,17 +11812,17 @@ var Jt = class {
 		this.isProcessing = !0;
 		let e = this.activeTool, t = Ot(e);
 		r.show("Processing Started", `Running ${this._getToolDisplayName(e)} via Zero-Port Native IPC...`, "info");
-		let n = document.getElementById("startCompressBtn"), i = document.getElementById("pdfExecutionProgressWrap"), a = document.getElementById("pdfProgressBar"), o = document.getElementById("pdfProgressCount"), s = document.getElementById("pdfProgressEta");
+		let n = document.getElementById("startCompressBtn"), i = document.getElementById("pdfExecutionProgressWrap"), a = document.getElementById("pdfProgressBar"), o = document.getElementById("pdfProgressCount"), s = document.getElementById("pdfProgressEta"), c = document.getElementById("pdfCenterProgressOverlay"), l = document.getElementById("pdfCenterProgressBar"), u = document.getElementById("pdfCenterProgressCount"), d = document.getElementById("pdfCenterProgressEta"), f = document.getElementById("pdfCenterProgressFileName");
 		if (n) {
 			n.disabled = !0, n.classList.add("opacity-50", "cursor-not-allowed");
 			let e = n.querySelector("span:last-child");
 			e && (e.textContent = "Compressing...");
 		}
-		i && (i.classList.remove("hidden"), a && (a.style.width = "0%"), o && (o.textContent = `Compressing: 0 / ${this.files.length} Files (0%)`), s && (s.textContent = "Estimating..."));
+		i && (i.classList.remove("hidden"), a && (a.style.width = "0%"), o && (o.textContent = `Compressing: 0 / ${this.files.length} Files (0%)`), s && (s.textContent = "Estimating...")), c && e === "compress_pdf" && (c.classList.remove("hidden"), l && (l.style.width = "0%"), u && (u.textContent = `Compressing: 0 / ${this.files.length} Files (0%)`), d && (d.textContent = "Estimating..."), f && (f.textContent = "Preparing batch compression..."));
 		try {
 			let n = 0;
 			if (e === "compress_pdf") {
-				let e = this.files.length, i = this.files.reduce((e, t) => e + (t.size || 0), 0), c = 0, l = 0, u = Date.now();
+				let e = this.files.length, i = this.files.reduce((e, t) => e + (t.size || 0), 0), p = 0, m = 0, h = Date.now();
 				await qt(this.files, this.targetKb, (e, t) => {
 					let n = document.querySelector(`.docket-card[data-file-id="${e}"]`);
 					if (n) {
@@ -11823,29 +11831,29 @@ var Jt = class {
 					}
 				}, async (r, i) => {
 					if (i && i.success) {
-						await this.saveOutputFile(t, i.outName, i.finalBlob || i.finalBytes), n++, l++, c += i.finalSize || 0;
-						let d = Math.round(l / e * 100);
-						a && (a.style.width = `${d}%`), o && (o.textContent = `Compressing: ${l} / ${e} Files (${d}%)`);
-						let f = (Date.now() - u) / 1e3 / l, p = e - l, m = Math.max(0, Math.ceil(p * f));
-						s && (s.textContent = p > 0 ? `Est. ~${m}s left` : "Finalizing...");
-						let h = document.querySelector(`.docket-card[data-file-id="${r.id}"]`);
-						if (h) {
-							let e = h.querySelector(".badge-comp-size");
+						await this.saveOutputFile(t, i.outName, i.finalBlob || i.finalBytes), n++, m++, p += i.finalSize || 0;
+						let c = Math.round(m / e * 100);
+						a && (a.style.width = `${c}%`), o && (o.textContent = `Compressing: ${m} / ${e} Files (${c}%)`);
+						let g = (Date.now() - h) / 1e3 / m, _ = e - m, v = Math.max(0, Math.ceil(_ * g)), y = _ > 0 ? `Est. ~${v}s left` : "Finalizing...";
+						s && (s.textContent = y), l && (l.style.width = `${c}%`), u && (u.textContent = `Compressing: ${m} / ${e} Files (${c}%)`), d && (d.textContent = y), f && (f.textContent = r.name);
+						let b = document.querySelector(`.docket-card[data-file-id="${r.id}"]`);
+						if (b) {
+							let e = b.querySelector(".badge-comp-size");
 							if (e && (e.textContent = `Comp ${i.finalSize >= 1048576 ? `${(i.finalSize / 1048576).toFixed(2)} MB` : `${Math.round(i.finalSize / 1024)} KB`}`, e.className = "badge-comp-size px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-300 rounded font-mono text-[10px] font-bold truncate"), i.isAtFloor) {
-								let e = h.querySelector(".badge-floor-limit");
-								e || (e = document.createElement("div"), e.className = "badge-floor-limit mt-1 px-1.5 py-0.5 bg-amber-50 border border-amber-300 text-amber-800 rounded font-mono text-[9px] font-bold text-center", h.appendChild(e)), e.textContent = `⚠ Min readable limit: ${i.floorKb} KB`;
+								let e = b.querySelector(".badge-floor-limit");
+								e || (e = document.createElement("div"), e.className = "badge-floor-limit mt-1 px-1.5 py-0.5 bg-amber-50 border border-amber-300 text-amber-800 rounded font-mono text-[9px] font-bold text-center", b.appendChild(e)), e.textContent = `⚠ Min readable limit: ${i.floorKb} KB`;
 							}
 						}
 					}
 				});
-				let d = i > 0 && i > c ? Math.round((i - c) / i * 100) : 0, f = this.lastOutputFolder || (this.activeFolderPath ? `${this.activeFolderPath}/${t}` : `Output/${t}`);
+				let g = i > 0 && i > p ? Math.round((i - p) / i * 100) : 0, _ = this.lastOutputFolder || (this.activeFolderPath ? `${this.activeFolderPath}/${t}` : `Output/${t}`);
 				this.completionSummary = {
 					totalFiles: n,
 					origTotalBytes: i,
-					outTotalBytes: c,
-					savedPct: d,
-					outFolderPath: f
-				}, this.files = [], this.updateStats(), this.renderQueue(), r.show("Compression Complete!", `Saved ${n} files directly into ${t}/`, "success");
+					outTotalBytes: p,
+					savedPct: g,
+					outFolderPath: _
+				}, c && c.classList.add("hidden"), this.files = [], this.updateStats(), this.renderQueue(), r.show("Compression Complete!", `Saved ${n} files directly into ${t}/`, "success");
 			} else if (e === "merge_pdf") {
 				let e = Et(this.files.map((e) => e.bytes).filter(Boolean), "portrait"), i = this.activeFolderName ? `Merged_Admission_Dossier_${this.activeFolderName}.pdf` : "Merged_Admission_Dossier.pdf";
 				await this.saveOutputFile(t, i, e), n = 1, r.show("Merge Complete!", `Dossier saved to ${t}/${i}`, "success");
@@ -11892,7 +11900,7 @@ var Jt = class {
 		} catch (e) {
 			console.error("[PDF-STUDIO] Process failed:", e), r.show("Operation Failed", e.message, "error");
 		} finally {
-			this.isProcessing = !1, i && i.classList.add("hidden"), n && (n.disabled = !1, n.classList.remove("opacity-50", "cursor-not-allowed")), this._updateProcessButtonLabel();
+			this.isProcessing = !1, c && c.classList.add("hidden"), i && i.classList.add("hidden"), n && (n.disabled = !1, n.classList.remove("opacity-50", "cursor-not-allowed")), this._updateProcessButtonLabel();
 		}
 	}
 };

@@ -168,12 +168,14 @@ export class PdfStudioUIManager {
     const inputMb = document.getElementById('inputManualTargetMb');
     const wrapKb = document.getElementById('wrapManualKb');
     const wrapMb = document.getElementById('wrapManualMb');
-    const btnLockKb = document.getElementById('btnLockKb');
-    const btnLockMb = document.getElementById('btnLockMb');
+    const radioModeKb = document.getElementById('radioModeKb');
+    const radioModeMb = document.getElementById('radioModeMb');
+    const lblModeKb = document.getElementById('lblModeKb');
+    const lblModeMb = document.getElementById('lblModeMb');
+    const overlayLockKb = document.getElementById('overlayLockKb');
+    const overlayLockMb = document.getElementById('overlayLockMb');
     const badgeUnitKb = document.getElementById('badgeUnitKb');
     const badgeUnitMb = document.getElementById('badgeUnitMb');
-    const modeLabel = document.getElementById('targetModeLabel');
-    const modeIcon = document.getElementById('targetModeIcon');
 
     const updatePills = (kb) => {
       radioBtns.forEach(btn => {
@@ -202,81 +204,90 @@ export class PdfStudioUIManager {
     const setMode = (mode) => {
       this.targetSizeMode = mode;
       if (mode === 'kb') {
-        // Unlock KB
+        // Radio buttons & labels
+        if (radioModeKb) radioModeKb.checked = true;
+        if (radioModeMb) radioModeMb.checked = false;
+        if (lblModeKb) lblModeKb.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white text-blue-700 shadow-xs cursor-pointer transition-all';
+        if (lblModeMb) lblModeMb.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-500 hover:text-slate-800 cursor-pointer transition-all';
+
+        // Unlock KB Section
+        if (overlayLockKb) overlayLockKb.classList.add('hidden');
         if (wrapKb) {
-          wrapKb.className = 'group flex items-center bg-white border border-blue-500 ring-2 ring-blue-100 rounded-lg p-0.5 shadow-inner transition-all cursor-pointer';
+          wrapKb.className = 'group flex items-center bg-white border-2 border-blue-500 rounded-lg p-0.5 shadow-sm transition-all cursor-pointer';
           wrapKb.title = 'KB Mode Active';
         }
-        if (btnLockKb) btnLockKb.classList.add('hidden');
         if (inputKb) {
           inputKb.disabled = false;
-          inputKb.className = 'px-1 text-center font-mono text-xs font-bold text-slate-800 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-text';
+          inputKb.className = 'px-1 text-center font-mono text-xs font-black text-slate-900 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-text';
         }
         if (badgeUnitKb) {
-          badgeUnitKb.className = 'px-1.5 py-0.5 bg-blue-100/70 text-blue-700 font-mono text-[10px] font-bold rounded';
+          badgeUnitKb.className = 'px-1.5 py-0.5 bg-blue-100 text-blue-800 font-mono text-[10px] font-bold rounded';
         }
         if (radioGroup) {
-          radioGroup.classList.remove('opacity-50', 'opacity-40', 'pointer-events-none');
+          radioGroup.classList.remove('opacity-40', 'pointer-events-none');
         }
         if (slider) {
           slider.disabled = false;
-          slider.classList.remove('opacity-50', 'opacity-40', 'cursor-not-allowed');
+          slider.classList.remove('opacity-40', 'cursor-not-allowed');
         }
 
-        // Lock MB
+        // Lock MB Section
+        if (overlayLockMb) overlayLockMb.classList.remove('hidden');
         if (wrapMb) {
-          wrapMb.className = 'group flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 shadow-inner transition-all opacity-70 cursor-pointer';
+          wrapMb.className = 'group flex items-center bg-white border border-slate-300 rounded-lg p-0.5 shadow-sm transition-all cursor-pointer';
           wrapMb.title = 'Click to unlock MB Mode (up to 100 MB)';
         }
-        if (btnLockMb) btnLockMb.classList.remove('hidden');
         if (inputMb) {
           inputMb.disabled = true;
-          inputMb.className = 'px-1 text-center font-mono text-xs font-bold text-slate-400 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-not-allowed';
+          inputMb.className = 'px-1 text-center font-mono text-xs font-black text-slate-900 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-not-allowed';
         }
         if (badgeUnitMb) {
-          badgeUnitMb.className = 'px-1.5 py-0.5 bg-slate-200 text-slate-500 font-mono text-[10px] font-bold rounded';
+          badgeUnitMb.className = 'px-1.5 py-0.5 bg-slate-200 text-slate-600 font-mono text-[10px] font-bold rounded';
         }
-        if (modeLabel) modeLabel.textContent = 'KB Active';
-        if (modeIcon) modeIcon.className = 'material-symbols-outlined text-[14px] text-blue-600';
 
         updatePills(this.targetKb);
       } else {
-        // Lock KB
+        // Radio buttons & labels
+        if (radioModeKb) radioModeKb.checked = false;
+        if (radioModeMb) radioModeMb.checked = true;
+        if (lblModeMb) lblModeMb.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white text-indigo-700 shadow-xs cursor-pointer transition-all';
+        if (lblModeKb) lblModeKb.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-500 hover:text-slate-800 cursor-pointer transition-all';
+
+        // Lock KB Section
+        if (overlayLockKb) overlayLockKb.classList.remove('hidden');
         if (wrapKb) {
-          wrapKb.className = 'group flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 shadow-inner transition-all opacity-70 cursor-pointer';
+          wrapKb.className = 'group flex items-center bg-white border border-slate-300 rounded-lg p-0.5 shadow-sm transition-all cursor-pointer';
           wrapKb.title = 'Click to switch back to KB Mode';
         }
-        if (btnLockKb) btnLockKb.classList.remove('hidden');
         if (inputKb) {
           inputKb.disabled = true;
-          inputKb.className = 'px-1 text-center font-mono text-xs font-bold text-slate-400 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-not-allowed';
+          inputKb.className = 'px-1 text-center font-mono text-xs font-black text-slate-900 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-not-allowed';
         }
         if (badgeUnitKb) {
-          badgeUnitKb.className = 'px-1.5 py-0.5 bg-slate-200 text-slate-500 font-mono text-[10px] font-bold rounded';
+          badgeUnitKb.className = 'px-1.5 py-0.5 bg-slate-200 text-slate-600 font-mono text-[10px] font-bold rounded';
         }
         if (radioGroup) {
-          radioGroup.classList.add('opacity-50');
+          radioGroup.classList.add('opacity-40');
         }
         if (slider) {
-          slider.classList.add('opacity-50');
+          slider.disabled = true;
+          slider.classList.add('opacity-40', 'cursor-not-allowed');
         }
 
-        // Unlock MB
+        // Unlock MB Section
+        if (overlayLockMb) overlayLockMb.classList.add('hidden');
         if (wrapMb) {
-          wrapMb.className = 'group flex items-center bg-white border border-indigo-500 ring-2 ring-indigo-100 rounded-lg p-0.5 shadow-inner transition-all cursor-pointer';
+          wrapMb.className = 'group flex items-center bg-white border-2 border-indigo-500 ring-2 ring-indigo-100 rounded-lg p-0.5 shadow-sm transition-all cursor-pointer';
           wrapMb.title = 'MB Mode Active';
         }
-        if (btnLockMb) btnLockMb.classList.add('hidden');
         if (inputMb) {
           inputMb.disabled = false;
-          inputMb.className = 'px-1 text-center font-mono text-xs font-bold text-slate-800 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-text';
+          inputMb.className = 'px-1 text-center font-mono text-xs font-black text-slate-900 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-text';
           inputMb.focus();
         }
         if (badgeUnitMb) {
           badgeUnitMb.className = 'px-1.5 py-0.5 bg-indigo-100 text-indigo-700 font-mono text-[10px] font-bold rounded';
         }
-        if (modeLabel) modeLabel.textContent = 'MB Active';
-        if (modeIcon) modeIcon.className = 'material-symbols-outlined text-[14px] text-indigo-600';
 
         // Dim pills in MB mode but keep them clickable to switch back to KB
         radioBtns.forEach(btn => {
@@ -338,9 +349,31 @@ export class PdfStudioUIManager {
       });
     }
 
-    // KB Input container click / focus / lock -> switch to KB mode
-    if (wrapKb) {
-      wrapKb.addEventListener('click', () => {
+    // Radio change listeners
+    if (radioModeKb) {
+      radioModeKb.addEventListener('change', () => {
+        if (radioModeKb.checked && this.targetSizeMode !== 'kb') {
+          setMode('kb');
+          toast.show('KB Mode', 'Switched to KB preset mode.', 'info');
+        }
+      });
+    }
+
+    if (radioModeMb) {
+      radioModeMb.addEventListener('change', () => {
+        if (radioModeMb.checked && this.targetSizeMode !== 'mb') {
+          setMode('mb');
+          const mb = parseFloat(inputMb?.value || 0.29);
+          setTargetMb(mb);
+          toast.show('MB Mode Active', 'KB controls locked. Direct MB sizing enabled.', 'info');
+        }
+      });
+    }
+
+    // Lock Overlay click listeners (Clicking anywhere on lock immediately switches mode)
+    if (overlayLockKb) {
+      overlayLockKb.addEventListener('click', (e) => {
+        e.stopPropagation();
         if (this.targetSizeMode !== 'kb') {
           setMode('kb');
           if (inputKb) inputKb.focus();
@@ -349,9 +382,21 @@ export class PdfStudioUIManager {
       });
     }
 
-    if (btnLockKb) {
-      btnLockKb.addEventListener('click', (e) => {
+    if (overlayLockMb) {
+      overlayLockMb.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (this.targetSizeMode !== 'mb') {
+          setMode('mb');
+          const mb = parseFloat(inputMb?.value || 0.29);
+          setTargetMb(mb);
+          toast.show('MB Mode Active', 'KB controls locked. Direct MB sizing enabled.', 'info');
+        }
+      });
+    }
+
+    // KB Input container click / focus -> switch to KB mode
+    if (wrapKb) {
+      wrapKb.addEventListener('click', () => {
         if (this.targetSizeMode !== 'kb') {
           setMode('kb');
           if (inputKb) inputKb.focus();
@@ -375,21 +420,9 @@ export class PdfStudioUIManager {
       });
     }
 
-    // MB Input container / lock click -> switch to MB mode
+    // MB Input container click -> switch to MB mode
     if (wrapMb) {
       wrapMb.addEventListener('click', () => {
-        if (this.targetSizeMode !== 'mb') {
-          setMode('mb');
-          const mb = parseFloat(inputMb?.value || 0.29);
-          setTargetMb(mb);
-          toast.show('MB Mode Active', 'KB controls locked. Direct MB sizing enabled.', 'info');
-        }
-      });
-    }
-
-    if (btnLockMb) {
-      btnLockMb.addEventListener('click', (e) => {
-        e.stopPropagation();
         if (this.targetSizeMode !== 'mb') {
           setMode('mb');
           const mb = parseFloat(inputMb?.value || 0.29);
@@ -863,12 +896,12 @@ export class PdfStudioUIManager {
     // Summary cards
     const cardCount = document.getElementById('summaryPdfCount');
     if (cardCount) {
-      cardCount.innerHTML = `${totalFiles} Documents <span class="text-[10px] font-normal text-slate-500 font-sans">(Ready)</span>`;
+      cardCount.textContent = `${totalFiles} Docs`;
     }
 
     const cardTotal = document.getElementById('summaryPdfTotalSize');
     if (cardTotal) {
-      cardTotal.innerHTML = `${totalMB} MB <span class="text-[10px] font-normal text-slate-400 font-sans">(Uncompressed)</span>`;
+      cardTotal.textContent = `${totalMB} MB`;
     }
 
     const cardProjected = document.getElementById('summaryPdfProjected');
@@ -878,7 +911,12 @@ export class PdfStudioUIManager {
 
     const reductionBadge = document.getElementById('summaryPdfReductionBadge');
     if (reductionBadge) {
-      reductionBadge.textContent = `↓ -${reductionPct}% saved`;
+      if (reductionPct > 0) {
+        reductionBadge.textContent = `↓ -${reductionPct}%`;
+        reductionBadge.classList.remove('hidden');
+      } else {
+        reductionBadge.classList.add('hidden');
+      }
     }
 
     // Queue header readout if present
@@ -1636,6 +1674,13 @@ export class PdfStudioUIManager {
     const progressCount = document.getElementById('pdfProgressCount');
     const progressEta = document.getElementById('pdfProgressEta');
 
+    // Center Frosted Blue Progress Overlay (Choice 2-A)
+    const centerOverlay = document.getElementById('pdfCenterProgressOverlay');
+    const centerBar = document.getElementById('pdfCenterProgressBar');
+    const centerCount = document.getElementById('pdfCenterProgressCount');
+    const centerEta = document.getElementById('pdfCenterProgressEta');
+    const centerFileName = document.getElementById('pdfCenterProgressFileName');
+
     if (btnStart) {
       btnStart.disabled = true;
       btnStart.classList.add('opacity-50', 'cursor-not-allowed');
@@ -1648,6 +1693,14 @@ export class PdfStudioUIManager {
       if (progressBar) progressBar.style.width = '0%';
       if (progressCount) progressCount.textContent = `Compressing: 0 / ${this.files.length} Files (0%)`;
       if (progressEta) progressEta.textContent = 'Estimating...';
+    }
+
+    if (centerOverlay && opName === 'compress_pdf') {
+      centerOverlay.classList.remove('hidden');
+      if (centerBar) centerBar.style.width = '0%';
+      if (centerCount) centerCount.textContent = `Compressing: 0 / ${this.files.length} Files (0%)`;
+      if (centerEta) centerEta.textContent = 'Estimating...';
+      if (centerFileName) centerFileName.textContent = 'Preparing batch compression...';
     }
 
     try {
@@ -1686,7 +1739,14 @@ export class PdfStudioUIManager {
               const avgTime = elapsedSec / completedFiles;
               const remaining = totalFiles - completedFiles;
               const estLeft = Math.max(0, Math.ceil(remaining * avgTime));
-              if (progressEta) progressEta.textContent = remaining > 0 ? `Est. ~${estLeft}s left` : 'Finalizing...';
+              const etaText = remaining > 0 ? `Est. ~${estLeft}s left` : 'Finalizing...';
+              if (progressEta) progressEta.textContent = etaText;
+
+              // Update Center Frosted Blue Progress Overlay
+              if (centerBar) centerBar.style.width = `${overallPct}%`;
+              if (centerCount) centerCount.textContent = `Compressing: ${completedFiles} / ${totalFiles} Files (${overallPct}%)`;
+              if (centerEta) centerEta.textContent = etaText;
+              if (centerFileName) centerFileName.textContent = file.name;
 
               // Update card in real-time
               const card = document.querySelector(`.docket-card[data-file-id="${file.id}"]`);
@@ -1729,6 +1789,7 @@ export class PdfStudioUIManager {
           outFolderPath: outFolderPath
         };
 
+        if (centerOverlay) centerOverlay.classList.add('hidden');
         this.files = [];
         this.updateStats();
         this.renderQueue();
@@ -1833,6 +1894,7 @@ export class PdfStudioUIManager {
       toast.show('Operation Failed', err.message, 'error');
     } finally {
       this.isProcessing = false;
+      if (centerOverlay) centerOverlay.classList.add('hidden');
       if (progressWrap) progressWrap.classList.add('hidden');
       if (btnStart) {
         btnStart.disabled = false;

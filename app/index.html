@@ -1141,360 +1141,451 @@
 
       <section id="view-pdf-studio" class="view-pane flex flex-col h-full overflow-hidden pdf-studio-scope hidden select-none">
         <!-- Main Workspace Layout (Sidebar + Execution Canvas) -->
-        <div class="flex flex-1 min-h-0 overflow-hidden">
-          <!-- Left Sidebar: PDF Tools Ribbon -->
-          <aside class="w-60 flex-shrink-0 bg-surface-container-lowest border-r border-surface-container-high/80 flex flex-col justify-between shadow-[2px_0_8px_rgba(0,0,0,0.02)] z-30">
-            <div class="p-3 flex flex-col gap-1.5 overflow-y-auto">
-              <div class="px-3 pt-2 pb-1.5 flex items-center justify-between text-outline text-[11px] font-mono-code uppercase tracking-wider font-semibold">
-                <span>PDF Tools</span>
-                <span class="text-tertiary bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded font-bold">PRO</span>
-              </div>
-              <!-- Tool Items -->
-              <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl bg-primary-container text-on-primary font-semibold shadow-sm transition-all group cursor-pointer" data-tool="compress_pdf" href="#">
-                <div class="flex items-center gap-2.5">
-                  <span class="material-symbols-outlined text-[20px]">compress</span>
-                  <span class="font-label-md text-label-md">Compress PDF</span>
-                </div>
-                <span class="active-tool-badge bg-primary/60 text-on-primary text-[10px] font-mono-code px-1.5 py-0.5 rounded font-bold uppercase tracking-tight">Active</span>
-              </a>
-              <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group cursor-pointer" data-tool="merge_pdf" href="#">
-                <div class="flex items-center gap-2.5">
-                  <span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">tab_unselected</span>
-                  <span>Merge PDF</span>
-                </div>
-                <span class="text-outline-variant text-[11px] font-mono-code">Alt+M</span>
-              </a>
-              <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group cursor-pointer" data-tool="split_pdf" href="#">
-                <div class="flex items-center gap-2.5">
-                  <span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">call_split</span>
-                  <span>Split PDF</span>
-                </div>
-                <span class="text-outline-variant text-[11px] font-mono-code">Alt+S</span>
-              </a>
-              <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group cursor-pointer" data-tool="pdf_to_jpg" href="#">
-                <div class="flex items-center gap-2.5">
-                  <span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">image</span>
-                  <span>PDF to JPG</span>
-                </div>
-                <span class="text-outline-variant text-[11px] font-mono-code">Alt+J</span>
-              </a>
-              <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group cursor-pointer" data-tool="jpg_to_pdf" href="#">
-                <div class="flex items-center gap-2.5">
-                  <span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">picture_as_pdf</span>
-                  <span>JPG to PDF</span>
-                </div>
-                <span class="text-outline-variant text-[11px] font-mono-code">Alt+P</span>
-              </a>
-              <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group cursor-pointer" data-tool="rotate_pdf" href="#">
-                <div class="flex items-center gap-2.5">
-                  <span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">rotate_right</span>
-                  <span>Rotate PDF</span>
-                </div>
-                <span class="text-outline-variant text-[11px] font-mono-code">Alt+R</span>
-              </a>
-              <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group cursor-pointer" data-tool="clean_pdf" href="#">
-                <div class="flex items-center gap-2.5">
-                  <span class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">auto_fix_high</span>
-                  <span>Clean &amp; Enhance</span>
-                </div>
-                <span class="text-tertiary bg-emerald-50 px-1 py-0.5 rounded text-[10px] font-mono-code font-bold">AI</span>
-              </a>
-            </div>
-          </aside>
-
-          <!-- Main Execution Workspace Canvas -->
-          <main class="flex-1 min-w-0 flex flex-col overflow-hidden bg-[#f8f9ff]">
-            <!-- Sticky Header Stack (Frozen at Top - Zero Scroll) -->
-            <div id="pdfStudioHeaderStack" class="w-full flex-shrink-0 bg-[#f8f9ff] border-b border-surface-container-high/60 p-4 pb-2.5 flex flex-col gap-2.5 z-20">
-              <div class="max-w-7xl w-full mx-auto flex flex-col gap-2.5">
-                <!-- Top Toolbar: Supported Formats & Action Triggers -->
-                <div
-                  class="w-full bg-surface-container-lowest border border-surface-container-high/80 rounded-xl px-3 py-2 shadow-xs flex flex-wrap items-center justify-between gap-3">
-                  <!-- Left: Supported Formats Pill -->
-                  <div class="flex items-center space-x-2.5 px-3 py-1.5 bg-slate-50 border border-slate-200/80 rounded-lg text-xs text-slate-600 shadow-xs select-none">
-                    <div class="flex items-center space-x-1.5">
-                      <span class="material-symbols-outlined text-[15px] text-blue-600">info</span>
-                      <span class="font-semibold text-slate-700">Supported Formats:</span>
-                    </div>
-                    <div class="flex items-center space-x-1">
-                      <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-800 text-white uppercase font-mono">PDF</span>
-                      <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-600 text-white uppercase font-mono">JPG</span>
-                      <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-600 text-white uppercase font-mono">PNG</span>
-                    </div>
-                    <span class="text-slate-400 text-[11px] hidden sm:inline">(Max 20MB per file / Auto-converted to PDF)</span>
-                  </div>
-                  <!-- Right: Clear Queue and Add Files Side by Side with Identical Layout -->
-                  <div class="flex items-center space-x-2">
-                    <button id="btnClearPdfQueue"
-                      class="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg shadow-xs transition-all hover:text-slate-900 cursor-pointer"
-                      type="button">
-                      <span class="material-symbols-outlined text-[15px] mr-1.5 text-slate-400">delete_sweep</span>
-                      <span>Clear Queue</span>
-                    </button>
-                    <button id="btnAddPdfFiles"
-                      class="inline-flex items-center px-3.5 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 border border-blue-600 rounded-lg shadow-sm hover:shadow transition-all cursor-pointer"
-                      type="button">
-                      <span class="material-symbols-outlined text-[15px] mr-1.5">add_circle</span>
-                      <span>Add Files</span>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Summary Metrics Cards (Clean 3 Primary Cards matching Stitch) -->
-                <section class="grid grid-cols-1 md:grid-cols-3 gap-3" data-purpose="summary-metrics">
-                  <!-- Metric 1: Loaded Files -->
-                  <div class="bg-surface-container-lowest px-3 py-2 rounded-xl border border-surface-container-high/80 shadow-xs flex items-center space-x-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
-                      <span class="material-symbols-outlined text-[18px]">folder_copy</span>
-                    </div>
-                    <div class="flex items-baseline space-x-2 truncate">
-                      <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400 font-mono">LOADED FILES:</span>
-                      <span id="summaryPdfCount" class="text-xs font-bold text-slate-800">0 Documents <span class="text-[10px] font-normal text-slate-500 font-sans">(Ready)</span></span>
-                    </div>
-                  </div>
-                  <!-- Metric 2: Current Size -->
-                  <div class="bg-surface-container-lowest px-3 py-2 rounded-xl border border-surface-container-high/80 shadow-xs flex items-center space-x-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 flex-shrink-0">
-                      <span class="material-symbols-outlined text-[18px]">storage</span>
-                    </div>
-                    <div class="flex items-baseline space-x-2 truncate">
-                      <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400 font-mono">CURRENT:</span>
-                      <span id="summaryPdfTotalSize" class="text-xs font-bold text-slate-800 font-mono">0.00 MB <span class="text-[10px] font-normal text-slate-400 font-sans">(Uncompressed)</span></span>
-                    </div>
-                  </div>
-                  <!-- Metric 3: Projected Output -->
-                  <div class="bg-surface-container-lowest px-3 py-2 rounded-xl border border-surface-container-high/80 shadow-xs flex items-center space-x-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 flex-shrink-0">
-                      <span class="material-symbols-outlined text-[18px]">compress</span>
-                    </div>
-                    <div class="flex items-center space-x-2 truncate">
-                      <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400 font-mono">OUTPUT:</span>
-                      <span id="summaryPdfProjected" class="text-xs font-bold text-emerald-600 font-mono">~0.00 MB</span>
-                      <span id="summaryPdfReductionBadge" class="text-[9px] font-bold text-emerald-700 bg-emerald-100/70 px-1 py-0.5 rounded font-sans hidden">↓ -0% saved</span>
-                    </div>
-                  </div>
-                </section>
-
-                <!-- Target Size Controls & Contextual Operations Strip -->
-                <div class="flex flex-wrap items-center justify-between gap-2 px-0.5">
-                  <!-- Left: Compress Target Size Controls (Stitch Sample 4 High-Craft Bento Panel) -->
-                  <div id="compressTargetControlBar" class="bg-white rounded-xl border border-blue-200 shadow-xs py-1.5 px-3 flex flex-wrap items-center justify-between w-full overflow-hidden gap-2">
-                    <div class="flex items-center flex-shrink-0 space-x-2">
-                      <div class="flex items-center gap-1.5 text-xs font-bold text-slate-700 uppercase tracking-wide flex-shrink-0">
-                        <span class="w-2 h-2 rounded-full bg-blue-600"></span>
-                        <span>Target Size:</span>
-                      </div>
-                      <div id="targetRadioGroup" class="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-100/90 shadow-inner space-x-1 flex-shrink-0">
-                        <button type="button" data-kb="100" class="target-radio-pill px-2.5 py-0.5 text-xs font-medium text-slate-600 rounded-md hover:bg-white hover:text-slate-900 transition cursor-pointer">100 KB</button>
-                        <button type="button" data-kb="200" class="target-radio-pill px-2.5 py-0.5 text-xs font-medium text-slate-600 rounded-md hover:bg-white hover:text-slate-900 transition cursor-pointer">200 KB</button>
-                        <button id="btnPreset300Kb" type="button" data-kb="300" class="target-radio-pill relative px-3 py-0.5 text-xs font-bold text-white bg-blue-600 rounded-md shadow-md ring-2 ring-blue-500/50 flex items-center gap-1.5 transition cursor-pointer">
-                          <span class="relative flex h-1.5 w-1.5">
-                            <span class="animate-beacon-ping absolute inline-flex h-full w-full rounded-full bg-sky-300 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400"></span>
-                          </span>
-                          <span class="tracking-wide">300 KB</span>
-                        </button>
-                        <button type="button" data-kb="400" class="target-radio-pill px-2.5 py-0.5 text-xs font-medium text-slate-600 rounded-md hover:bg-white hover:text-slate-900 transition cursor-pointer">400 KB</button>
-                        <button type="button" data-kb="500" class="target-radio-pill px-2.5 py-0.5 text-xs font-medium text-slate-600 rounded-md hover:bg-white hover:text-slate-900 transition cursor-pointer">500 KB</button>
-                      </div>
-                      <div class="flex items-center space-x-1.5 pl-2 flex-shrink-0">
-                        <span class="text-[10px] text-slate-400 font-mono">50</span>
-                        <input id="sliderTargetKb" class="accent-blue-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer w-20 sm:w-28" max="1000" min="50" type="range" value="300">
-                        <span class="text-[10px] text-slate-400 font-mono">1000</span>
-                      </div>
-                    </div>
-
-                    <!-- Right: Manual Dual Input with Strict Mutual-Exclusive Lock System (Choice 1-A) -->
-                    <div id="targetManualGroup" class="flex items-center bg-slate-50 px-3 py-1 rounded-lg border border-slate-200/90 shadow-xs flex-shrink-0 space-x-2">
-                      <div class="flex items-center space-x-1 text-slate-500 font-semibold text-xs tracking-tight uppercase">
-                        <span class="text-[10px] text-slate-400 font-bold tracking-wider font-mono">Manual:</span>
-                      </div>
-                      <div class="flex items-center space-x-2">
-                        <!-- KB Input Container (Active by default) -->
-                        <div id="wrapManualKb" class="group flex items-center bg-white border border-blue-500 ring-2 ring-blue-100 rounded-lg p-0.5 shadow-inner transition-all cursor-pointer" title="KB Mode Active (Click to select)">
-                          <button id="btnLockKb" type="button" class="px-1 text-slate-400 hover:text-slate-600 hidden" title="Locked in MB Mode">
-                            <span class="material-symbols-outlined text-[13px]">lock</span>
-                          </button>
-                          <input id="inputManualTargetKb" class="px-1 text-center font-mono text-xs font-bold text-slate-800 bg-transparent border-none focus:outline-none w-16 min-w-[58px]" type="number" min="1" max="102400" placeholder="300" value="300">
-                          <span id="badgeUnitKb" class="px-1.5 py-0.5 bg-blue-100/70 text-blue-700 font-mono text-[10px] font-bold rounded">KB</span>
-                        </div>
-                        <span class="text-slate-300 text-xs font-medium select-none">or</span>
-                        <!-- MB Input Container (Locked by default with lock icon) -->
-                        <div id="wrapManualMb" class="group flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 shadow-inner transition-all opacity-70 cursor-pointer" title="Click to unlock MB Mode (up to 100 MB)">
-                          <button id="btnLockMb" type="button" class="px-1 text-slate-500 hover:text-indigo-600 flex items-center cursor-pointer" title="Click to unlock MB Mode">
-                            <span class="material-symbols-outlined text-[13px]">lock</span>
-                          </button>
-                          <input id="inputManualTargetMb" class="px-1 text-center font-mono text-xs font-bold text-slate-400 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-not-allowed" max="100" min="0.01" step="0.05" type="number" placeholder="0.29" value="0.29" disabled>
-                          <span id="badgeUnitMb" class="px-1.5 py-0.5 bg-slate-200 text-slate-500 font-mono text-[10px] font-bold rounded">MB</span>
-                        </div>
-                      </div>
-                      <div class="h-4 w-px bg-slate-200"></div>
-                      <span class="text-[11px] text-slate-500 font-medium flex items-center gap-1 flex-shrink-0 whitespace-nowrap">
-                        <span id="targetModeIcon" class="material-symbols-outlined text-[14px] text-blue-600">info</span>
-                        <span id="targetModeLabel">KB Active</span>
-                      </span>
-                    </div>
-                  </div>
-
-                  <!-- Other Contextual Controls (DPI for PDF to JPG, Page Range for Split) -->
-                  <div class="flex items-center gap-2">
-                    <!-- Custom Bento Dropdown: PDF to JPG DPI -->
-                    <div id="bentoJpgDpiWrapper" class="relative inline-block text-left hidden">
-                      <button id="btnBentoJpgDpi" type="button"
-                        class="px-2.5 py-1 rounded-lg bg-slate-900 text-white font-mono-code text-[11px] font-bold flex items-center gap-1.5 shadow-xs border border-slate-700 cursor-pointer hover:bg-slate-800 transition-colors">
-                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
-                        <span id="labelJpgDpi">150 DPI (Fast)</span>
-                        <span class="material-symbols-outlined text-[14px] text-slate-400">arrow_drop_down</span>
-                      </button>
-                      <div id="menuBentoJpgDpi"
-                        class="absolute right-0 mt-1.5 w-52 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-1 z-50 hidden font-mono-code text-[11px]">
-                        <button type="button" data-dpi="150"
-                          class="w-full text-left px-3 py-1.5 hover:bg-slate-800 text-white flex items-center justify-between cursor-pointer">
-                          <span>150 DPI (Fast / Standard)</span>
-                          <span class="text-blue-400 font-bold">✓</span>
-                        </button>
-                        <button type="button" data-dpi="300"
-                          class="w-full text-left px-3 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-between cursor-pointer">
-                          <span>300 DPI (High Quality)</span>
-                        </button>
-                        <button type="button" data-dpi="72"
-                          class="w-full text-left px-3 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-between cursor-pointer">
-                          <span>72 DPI (Web Compact)</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    <!-- Split Page Range Input Strip (Visible when Split PDF is active) -->
-                    <div id="splitRangeWrapper"
-                      class="hidden items-center gap-1.5 bg-surface-container-lowest border border-surface-container-high px-2 py-0.5 rounded-lg shadow-xs">
-                      <span class="text-outline font-mono-code text-[11px]">Pages:</span>
-                      <input id="inputSplitPageRange" type="text" placeholder="All (e.g. 1-3, 5)"
-                        class="w-32 font-mono-code text-[11px] px-1.5 py-0.5 bg-surface-container-low border border-surface-container-high rounded outline-none focus:border-primary text-on-surface">
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Preview Cards Grid Viewport (Scrolls Independently) -->
-            <div id="pdfCardsGridContainer" class="w-full flex-1 min-h-0 overflow-y-auto p-4 custom-pan-scroll">
-              <div class="max-w-7xl w-full mx-auto">
-                <!-- Main PDF Docket Cards Grid (Dynamically rendered by PdfStudioUIManager.renderQueue()) -->
-                <div id="pdfCardsGrid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 min-h-[300px]">
-                  <!-- Dynamically filled with clean empty state or file cards -->
-                </div>
-              </div>
-            </div>
-          </main>
-        </div>
-
-        <!-- Bottom Sticky Execution Dock -->
+  <div class="flex flex-1 min-h-0 overflow-hidden">
+    <!-- Left Sidebar: PDF Tools Ribbon -->
+    <aside
+      class="w-60 flex-shrink-0 bg-surface-container-lowest border-r border-surface-container-high/80 flex flex-col justify-between shadow-[2px_0_8px_rgba(0,0,0,0.02)] z-30">
+      <div class="p-3 flex flex-col gap-1.5 overflow-y-auto">
         <div
-          class="flex-shrink-0 h-16 bg-inverse-surface text-inverse-on-surface px-gutter flex items-center justify-between z-40 shadow-[0_-4px_16px_rgba(0,0,0,0.15)] border-t border-outline/20">
-          <!-- Left: Operational Live Progress Bar (Behavior 3) -->
-          <div id="pdfExecutionProgressWrap" class="hidden flex-1 max-w-xl mr-6 flex items-center gap-3">
-            <div class="flex-1">
-              <div class="flex items-center justify-between text-xs font-mono mb-1 text-slate-200">
-                <span id="pdfProgressText" class="font-bold flex items-center gap-1.5">
-                  <span class="animate-spin text-emerald-400 text-sm">hourglass_top</span>
-                  <span id="pdfProgressCount">Compressing: 0 / 0 Files (0%)</span>
+          class="px-3 pt-2 pb-1.5 flex items-center justify-between text-outline text-[11px] font-mono-code uppercase tracking-wider font-semibold">
+          <span>PDF Tools</span>
+          <span class="text-tertiary bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded font-bold">PRO</span>
+        </div>
+        <!-- Tool Items -->
+        <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl bg-primary-container text-on-primary font-semibold shadow-sm transition-all group cursor-pointer"
+          data-tool="compress_pdf" href="#">
+          <div class="flex items-center gap-2.5">
+            <span class="material-symbols-outlined text-[20px]">compress</span>
+            <span class="font-label-md text-label-md">Compress PDF</span>
+          </div>
+          <span
+            class="active-tool-badge bg-primary/60 text-on-primary text-[10px] font-mono-code px-1.5 py-0.5 rounded font-bold uppercase tracking-tight">Active</span>
+        </a>
+        <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group cursor-pointer"
+          data-tool="merge_pdf" href="#">
+          <div class="flex items-center gap-2.5">
+            <span
+              class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">tab_unselected</span>
+            <span>Merge PDF</span>
+          </div>
+          <span class="text-outline-variant text-[11px] font-mono-code">Alt+M</span>
+        </a>
+        <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group cursor-pointer"
+          data-tool="split_pdf" href="#">
+          <div class="flex items-center gap-2.5">
+            <span
+              class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">call_split</span>
+            <span>Split PDF</span>
+          </div>
+          <span class="text-outline-variant text-[11px] font-mono-code">Alt+S</span>
+        </a>
+        <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group cursor-pointer"
+          data-tool="pdf_to_jpg" href="#">
+          <div class="flex items-center gap-2.5">
+            <span
+              class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">image</span>
+            <span>PDF to JPG</span>
+          </div>
+          <span class="text-outline-variant text-[11px] font-mono-code">Alt+J</span>
+        </a>
+        <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group cursor-pointer"
+          data-tool="jpg_to_pdf" href="#">
+          <div class="flex items-center gap-2.5">
+            <span
+              class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">picture_as_pdf</span>
+            <span>JPG to PDF</span>
+          </div>
+          <span class="text-outline-variant text-[11px] font-mono-code">Alt+P</span>
+        </a>
+        <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group cursor-pointer"
+          data-tool="rotate_pdf" href="#">
+          <div class="flex items-center gap-2.5">
+            <span
+              class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">rotate_right</span>
+            <span>Rotate PDF</span>
+          </div>
+          <span class="text-outline-variant text-[11px] font-mono-code">Alt+R</span>
+        </a>
+        <a class="tool-ribbon-btn flex items-center justify-between px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface font-label-md text-label-md transition-colors group cursor-pointer"
+          data-tool="clean_pdf" href="#">
+          <div class="flex items-center gap-2.5">
+            <span
+              class="material-symbols-outlined text-[20px] text-primary group-hover:scale-105 transition-transform">auto_fix_high</span>
+            <span>Clean &amp; Enhance</span>
+          </div>
+          <span class="text-tertiary bg-emerald-50 px-1 py-0.5 rounded text-[10px] font-mono-code font-bold">AI</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Execution Workspace Canvas -->
+    <main class="flex-1 min-w-0 flex flex-col overflow-hidden bg-[#f8f9ff]">
+      <!-- Sticky Header Stack (Frozen at Top - Zero Scroll) -->
+      <div id="pdfStudioHeaderStack" class="w-full flex-shrink-0 bg-[#f8f9ff] border-b border-surface-container-high/60 p-4 pb-2 flex flex-col gap-2 z-20">
+        <div class="max-w-7xl w-full mx-auto flex flex-col gap-2">
+          <!-- Top Unified Status Strip: Formats, Metrics Chips & Actions (Compact Space Saver - Choice 3-A) -->
+          <div
+            class="w-full bg-surface-container-lowest border border-surface-container-high/80 rounded-xl px-3 py-1.5 shadow-xs flex flex-wrap items-center justify-between gap-2.5">
+            <!-- Left Group: Formats Pill & Metrics Chips -->
+            <div class="flex items-center flex-wrap gap-2 select-none">
+              <!-- Supported Formats Pill -->
+              <div class="flex items-center space-x-1.5 px-2.5 py-1 bg-slate-50 border border-slate-200/80 rounded-lg text-xs text-slate-600 shadow-2xs">
+                <span class="material-symbols-outlined text-[14px] text-blue-600">info</span>
+                <span class="font-semibold text-slate-700 text-[11px]">Formats:</span>
+                <span class="px-1 py-0.2 rounded text-[9px] font-bold bg-slate-800 text-white font-mono">PDF</span>
+                <span class="px-1 py-0.2 rounded text-[9px] font-bold bg-amber-600 text-white font-mono">JPG</span>
+                <span class="px-1 py-0.2 rounded text-[9px] font-bold bg-indigo-600 text-white font-mono">PNG</span>
+              </div>
+
+              <div class="h-4 w-px bg-slate-200 hidden sm:block"></div>
+
+              <!-- Metric Chip 1: Loaded Files -->
+              <div class="flex items-center space-x-1.5 px-2.5 py-1 bg-blue-50/70 border border-blue-200/70 rounded-lg text-xs">
+                <span class="material-symbols-outlined text-[15px] text-blue-600">folder_copy</span>
+                <span class="text-[10px] font-bold text-slate-500 uppercase font-mono">Loaded:</span>
+                <span id="summaryPdfCount" class="text-xs font-bold text-slate-800 font-mono">0 Docs</span>
+              </div>
+
+              <!-- Metric Chip 2: Current Size -->
+              <div class="flex items-center space-x-1.5 px-2.5 py-1 bg-amber-50/70 border border-amber-200/70 rounded-lg text-xs">
+                <span class="material-symbols-outlined text-[15px] text-amber-600">storage</span>
+                <span class="text-[10px] font-bold text-slate-500 uppercase font-mono">Current:</span>
+                <span id="summaryPdfTotalSize" class="text-xs font-bold text-slate-800 font-mono">0.00 MB</span>
+              </div>
+
+              <!-- Metric Chip 3: Output Projected Size & Reduction -->
+              <div class="flex items-center space-x-1.5 px-2.5 py-1 bg-emerald-50/70 border border-emerald-200/70 rounded-lg text-xs">
+                <span class="material-symbols-outlined text-[15px] text-emerald-600">compress</span>
+                <span class="text-[10px] font-bold text-emerald-800 uppercase font-mono">Output:</span>
+                <span id="summaryPdfProjected" class="text-xs font-bold text-emerald-700 font-mono">~0.00 MB</span>
+                <span id="summaryPdfReductionBadge" class="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1 py-0.5 rounded hidden">↓ -0%</span>
+              </div>
+            </div>
+
+            <!-- Right Group: Action Triggers (Rename Tool Dark Slate Theme - Choice 3-A) -->
+            <div class="flex items-center space-x-2 shrink-0">
+              <button id="btnClearPdfQueue"
+                class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-98 text-slate-200 hover:text-white font-medium text-xs border border-slate-700 transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+                title="Clear loaded documents and reset queue"
+                type="button">
+                <span class="material-symbols-outlined text-[15px] text-rose-400">delete_sweep</span>
+                <span>Clear Queue</span>
+              </button>
+              <button id="btnOpenOutputFolder"
+                class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-98 text-slate-200 hover:text-white font-medium text-xs border border-slate-700 transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+                title="Open Output Folder in Windows Explorer"
+                type="button">
+                <span class="material-symbols-outlined text-[15px] text-emerald-400">folder_open</span>
+                <span>Open Folder</span>
+              </button>
+              <button id="btnAddPdfFiles"
+                class="px-3.5 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 active:scale-98 border border-blue-500 rounded-lg shadow-sm hover:shadow transition-all flex items-center gap-1.5 cursor-pointer"
+                type="button">
+                <span class="material-symbols-outlined text-[16px]">add_circle</span>
+                <span>Add Files</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Target Size Controls & Contextual Operations Strip (Choice 1-A) -->
+          <div class="flex flex-wrap items-center justify-between gap-2 px-0.5">
+            <!-- Left: Compress Target Size Controls -->
+            <div id="compressTargetControlBar" class="bg-white rounded-xl border border-blue-200/90 shadow-xs py-1.5 px-3 flex flex-wrap items-center justify-between w-full overflow-hidden gap-2">
+              <div class="flex items-center flex-wrap gap-2 flex-shrink-0">
+                <!-- Vibrant TARGET SIZE Badge -->
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white font-mono text-xs font-black uppercase tracking-wider shadow-sm border border-blue-500/30">
+                  <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-300 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                  </span>
+                  <span>Target Size</span>
                 </span>
-                <span id="pdfProgressEta" class="text-slate-400 font-medium font-mono text-[11px]">Est. ~0s left</span>
-              </div>
-              <div class="w-full bg-slate-800/90 rounded-full h-2.5 overflow-hidden border border-slate-700/80 p-0.5">
-                <div id="pdfProgressBar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-200 ease-out shadow-xs" style="width: 0%"></div>
+
+                <!-- Mode Radio Switcher (KB Mode vs MB Mode - Choice 1-A) -->
+                <div class="inline-flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-xs font-bold font-mono">
+                  <label id="lblModeKb" class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white text-blue-700 shadow-xs cursor-pointer transition-all">
+                    <input type="radio" name="pdfTargetModeRadio" id="radioModeKb" value="kb" checked class="accent-blue-600 w-3 h-3 cursor-pointer">
+                    <span>KB Mode</span>
+                  </label>
+                  <label id="lblModeMb" class="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-slate-500 hover:text-slate-800 cursor-pointer transition-all">
+                    <input type="radio" name="pdfTargetModeRadio" id="radioModeMb" value="mb" class="accent-indigo-600 w-3 h-3 cursor-pointer">
+                    <span>MB Mode</span>
+                  </label>
+                </div>
+
+                <!-- KB Control Section with Prominent Lock Overlay -->
+                <div id="sectionTargetKbControls" class="relative flex items-center flex-wrap gap-2 transition-all">
+                  <!-- Presets cluster -->
+                  <div id="targetRadioGroup" class="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-100 shadow-inner space-x-1 flex-shrink-0">
+                    <button type="button" data-kb="100" class="target-radio-pill px-2.5 py-0.5 text-xs font-bold text-slate-700 hover:text-slate-900 rounded-md transition cursor-pointer">100 KB</button>
+                    <button type="button" data-kb="200" class="target-radio-pill px-2.5 py-0.5 text-xs font-bold text-slate-700 hover:text-slate-900 rounded-md transition cursor-pointer">200 KB</button>
+                    <button id="btnPreset300Kb" type="button" data-kb="300" class="target-radio-pill relative px-3 py-0.5 text-xs font-extrabold text-white bg-blue-600 rounded-md shadow-md ring-2 ring-blue-500/50 flex items-center gap-1.5 transition cursor-pointer">
+                      <span class="relative flex h-1.5 w-1.5">
+                        <span class="animate-beacon-ping absolute inline-flex h-full w-full rounded-full bg-sky-300 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400"></span>
+                      </span>
+                      <span class="tracking-wide">300 KB</span>
+                    </button>
+                    <button type="button" data-kb="400" class="target-radio-pill px-2.5 py-0.5 text-xs font-bold text-slate-700 hover:text-slate-900 rounded-md transition cursor-pointer">400 KB</button>
+                    <button type="button" data-kb="500" class="target-radio-pill px-2.5 py-0.5 text-xs font-bold text-slate-700 hover:text-slate-900 rounded-md transition cursor-pointer">500 KB</button>
+                  </div>
+
+                  <!-- Slider -->
+                  <div class="flex items-center space-x-1.5 pl-1 flex-shrink-0">
+                    <span class="text-[10px] text-slate-500 font-mono font-bold">50</span>
+                    <input id="sliderTargetKb" class="accent-blue-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer w-20 sm:w-28" max="1000" min="50" type="range" value="300">
+                    <span class="text-[10px] text-slate-500 font-mono font-bold">1000</span>
+                  </div>
+
+                  <!-- Manual KB Input container -->
+                  <div id="wrapManualKb" class="group flex items-center bg-white border-2 border-blue-500 rounded-lg p-0.5 shadow-sm transition-all cursor-pointer" title="KB Mode Active">
+                    <span class="px-1.5 text-slate-400 font-mono text-[10px] font-bold">KB:</span>
+                    <input id="inputManualTargetKb" class="px-1 text-center font-mono text-xs font-black text-slate-900 bg-transparent border-none focus:outline-none w-16 min-w-[58px]" type="number" min="1" max="102400" placeholder="300" value="300">
+                    <span id="badgeUnitKb" class="px-1.5 py-0.5 bg-blue-100 text-blue-800 font-mono text-[10px] font-bold rounded">KB</span>
+                  </div>
+
+                  <!-- Prominent Large Lock Overlay for KB (Choice 1-A) -->
+                  <div id="overlayLockKb" class="absolute inset-0 bg-slate-900/80 backdrop-blur-xs rounded-xl flex items-center justify-center gap-2 z-10 transition-all hidden cursor-pointer" title="Click to unlock KB Mode">
+                    <span class="material-symbols-outlined text-amber-400 text-[20px] drop-shadow animate-pulse">lock</span>
+                    <span class="text-white text-xs font-bold font-mono tracking-wide drop-shadow">KB Controls Locked (Click to Unlock)</span>
+                  </div>
+                </div>
+
+                <!-- Right / MB Section with Prominent Large Lock Overlay (Choice 1-A) -->
+                <div id="sectionTargetMbControls" class="relative flex items-center transition-all ml-1">
+                  <!-- Manual MB Input container -->
+                  <div id="wrapManualMb" class="group flex items-center bg-white border border-slate-300 rounded-lg p-0.5 shadow-sm transition-all cursor-pointer" title="Click to unlock MB Mode">
+                    <span class="px-1.5 text-slate-400 font-mono text-[10px] font-bold">MB:</span>
+                    <input id="inputManualTargetMb" class="px-1 text-center font-mono text-xs font-black text-slate-900 bg-transparent border-none focus:outline-none w-16 min-w-[58px] cursor-not-allowed" max="100" min="0.01" step="0.05" type="number" placeholder="0.29" value="0.29" disabled>
+                    <span id="badgeUnitMb" class="px-1.5 py-0.5 bg-slate-200 text-slate-600 font-mono text-[10px] font-bold rounded">MB</span>
+                  </div>
+
+                  <!-- Prominent Large Lock Overlay for MB (Choice 1-A) -->
+                  <div id="overlayLockMb" class="absolute inset-0 bg-slate-900/80 backdrop-blur-xs rounded-lg flex items-center justify-center gap-1.5 z-10 transition-all cursor-pointer" title="Click to unlock MB Mode">
+                    <span class="material-symbols-outlined text-amber-400 text-[18px] drop-shadow animate-pulse">lock</span>
+                    <span class="text-white text-[11px] font-bold font-mono tracking-wide drop-shadow">MB Locked</span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Right: Emerald Primary Action Button (Without separate bottom Open Output Folder button) -->
-          <div class="flex items-center gap-3 ml-auto">
-            <button
-              class="px-7 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center space-x-2 cursor-pointer active:scale-98"
-              id="startCompressBtn" type="button">
-              <span class="material-symbols-outlined text-[18px]">bolt</span>
-              <span id="startCompressBtnText">Compress PDF</span>
-            </button>
+            <!-- Other Contextual Controls (DPI for PDF to JPG, Page Range for Split) -->
+            <div class="flex items-center gap-2">
+              <!-- Custom Bento Dropdown: PDF to JPG DPI -->
+              <div id="bentoJpgDpiWrapper" class="relative inline-block text-left hidden">
+                <button id="btnBentoJpgDpi" type="button"
+                  class="px-2.5 py-1 rounded-lg bg-slate-900 text-white font-mono-code text-[11px] font-bold flex items-center gap-1.5 shadow-xs border border-slate-700 cursor-pointer hover:bg-slate-800 transition-colors">
+                  <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                  <span id="labelJpgDpi">150 DPI (Fast)</span>
+                  <span class="material-symbols-outlined text-[14px] text-slate-400">arrow_drop_down</span>
+                </button>
+                <div id="menuBentoJpgDpi"
+                  class="absolute right-0 mt-1.5 w-52 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl py-1 z-50 hidden font-mono-code text-[11px]">
+                  <button type="button" data-dpi="150"
+                    class="w-full text-left px-3 py-1.5 hover:bg-slate-800 text-white flex items-center justify-between cursor-pointer">
+                    <span>150 DPI (Fast / Standard)</span>
+                    <span class="text-blue-400 font-bold">✓</span>
+                  </button>
+                  <button type="button" data-dpi="300"
+                    class="w-full text-left px-3 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-between cursor-pointer">
+                    <span>300 DPI (High Quality)</span>
+                  </button>
+                  <button type="button" data-dpi="72"
+                    class="w-full text-left px-3 py-1.5 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-between cursor-pointer">
+                    <span>72 DPI (Web Compact)</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Split Page Range Input Strip (Visible when Split PDF is active) -->
+              <div id="splitRangeWrapper"
+                class="hidden items-center gap-1.5 bg-surface-container-lowest border border-surface-container-high px-2 py-0.5 rounded-lg shadow-xs">
+                <span class="text-outline font-mono-code text-[11px]">Pages:</span>
+                <input id="inputSplitPageRange" type="text" placeholder="All (e.g. 1-3, 5)"
+                  class="w-32 font-mono-code text-[11px] px-1.5 py-0.5 bg-surface-container-low border border-surface-container-high rounded outline-none focus:border-primary text-on-surface">
+              </div>
+            </div>
           </div>
         </div>
+      </div>
 
-        <!-- Modal: Interactive Bento Document Preview Viewport (Choice 3-B) -->
-        <div id="modalPdfStudioPreview" class="fixed inset-0 z-[1000] bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 hidden">
-          <div class="w-[92vw] max-w-5xl h-[88vh] bg-surface-container-lowest rounded-2xl border border-slate-700 shadow-2xl flex flex-col overflow-hidden">
-            <!-- Modal Header -->
-            <div class="px-5 py-3 bg-surface-container-low flex items-center justify-between border-b border-outline-variant/30 shrink-0">
-              <div class="flex items-center gap-2.5 min-w-0">
-                <div class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold shrink-0">
-                  <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+      <!-- Preview Cards Grid Viewport (Scrolls Independently) -->
+      <div id="pdfCardsGridContainer" class="relative w-full flex-1 min-h-0 overflow-y-auto p-4 custom-pan-scroll">
+        <div class="max-w-7xl w-full mx-auto relative min-h-[350px]">
+          <!-- Main PDF Docket Cards Grid (Dynamically rendered by PdfStudioUIManager.renderQueue()) -->
+          <div id="pdfCardsGrid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 min-h-[300px]">
+            <!-- Dynamically filled with clean empty state or file cards -->
+          </div>
+
+          <!-- Center Frosted Blue Progress Overlay (Choice 2-A) -->
+          <div id="pdfCenterProgressOverlay" class="absolute inset-0 z-30 bg-slate-950/70 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center p-6 text-center hidden transition-all">
+            <div class="max-w-md w-full bg-slate-900/95 border border-blue-500/40 rounded-2xl p-6 shadow-2xl backdrop-blur-xl flex flex-col items-center text-white">
+              <div class="w-14 h-14 rounded-2xl bg-blue-500/20 border border-blue-400/40 text-blue-400 flex items-center justify-center mb-3 shadow-inner">
+                <span class="material-symbols-outlined text-[32px] animate-spin text-blue-400">sync</span>
+              </div>
+              <h3 class="text-lg font-bold tracking-tight text-white mb-1">Compressing Documents</h3>
+              <p id="pdfCenterProgressFileName" class="text-xs text-blue-200/80 font-mono mb-4 truncate max-w-xs">Processing batch...</p>
+              
+              <div class="w-full mb-3">
+                <div class="flex items-center justify-between text-xs font-mono mb-1.5 text-slate-200">
+                  <span id="pdfCenterProgressCount" class="font-bold">Compressing: 0 / 0 Files (0%)</span>
+                  <span id="pdfCenterProgressEta" class="text-slate-300">Est. ~0s left</span>
                 </div>
-                <div class="min-w-0">
-                  <h3 id="pdfModalDocTitle" class="font-headline-sm text-[15px] font-bold text-on-surface truncate">Document Preview</h3>
-                  <div id="pdfModalDocMeta" class="text-body-sm text-[11px] text-secondary font-mono-code">Page 1 of 1 • 0 KB</div>
+                <div class="w-full bg-slate-800/90 rounded-full h-3 overflow-hidden border border-slate-700/80 p-0.5">
+                  <div id="pdfCenterProgressBar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-200 ease-out shadow-xs" style="width: 0%"></div>
                 </div>
               </div>
-              <div class="flex items-center gap-2.5 shrink-0">
-                <button id="btnClosePdfModal" type="button" class="w-7 h-7 rounded-lg hover:bg-surface-container text-secondary hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer" title="Close Preview (Esc)">
-                  <span class="material-symbols-outlined text-[18px]">close</span>
-                </button>
-              </div>
-            </div>
 
-            <!-- Bento Slate Toolbar matching Rename Tool -->
-            <div class="px-4 py-2 bg-slate-900 border-b border-slate-700/80 flex flex-wrap items-center justify-between gap-2 shrink-0 text-slate-100">
-              <!-- Left: Zoom Group -->
-              <div class="flex items-center gap-1 bg-slate-800/90 rounded-lg p-0.5 border border-slate-700/90 shadow-2xs">
-                <button id="btnPdfModalZoomOut" class="w-7 h-7 rounded hover:bg-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition-colors cursor-pointer" title="Zoom Out (Ctrl -)" type="button">
-                  <span class="material-symbols-outlined text-[16px]">zoom_out</span>
-                </button>
-                <span id="pdfModalZoomReadout" class="font-mono-code text-[11px] font-bold px-2 py-0.5 bg-slate-950 rounded text-sky-400 min-w-[50px] text-center shadow-inner select-none">Fit</span>
-                <button id="btnPdfModalZoomIn" class="w-7 h-7 rounded hover:bg-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition-colors cursor-pointer" title="Zoom In (Ctrl +)" type="button">
-                  <span class="material-symbols-outlined text-[16px]">zoom_in</span>
-                </button>
-                <button id="btnPdfModalZoomFit" class="px-2 h-7 rounded hover:bg-slate-700 flex items-center gap-1 text-[11px] font-semibold text-slate-300 hover:text-white transition-colors cursor-pointer" title="Fit to Screen (Ctrl 0)" type="button">
-                  <span class="material-symbols-outlined text-[15px]">fit_screen</span><span>Fit</span>
-                </button>
-                <button id="btnPdfModalZoomReset" class="w-7 h-7 rounded hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer" title="Reset Zoom" type="button">
-                  <span class="material-symbols-outlined text-[15px]">restart_alt</span>
-                </button>
+              <div class="flex items-center gap-2 text-[11px] text-slate-300 bg-white/5 border border-white/10 px-3 py-1 rounded-full">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span>Zero-Port Native IPC Engine Active</span>
               </div>
-
-              <!-- Center: Multi-Page Navigator -->
-              <div class="flex items-center gap-2 bg-slate-800/90 border border-blue-500/40 rounded-lg px-2.5 py-1 shadow-inner">
-                <button id="btnPdfModalPrev" type="button" class="w-6 h-6 rounded bg-slate-700 hover:bg-blue-600 text-white flex items-center justify-center transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed" title="Previous Page (▲ / PgUp)">
-                  <span class="material-symbols-outlined text-[16px]">chevron_left</span>
-                </button>
-                <div id="pdfModalPageIndicator" class="flex items-center gap-1.5 select-none font-mono-code text-xs font-bold text-white tracking-wide">
-                  <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse inline-block"></span>
-                  <span id="pdfModalPageIndicatorText">Page 1 of 1</span>
-                </div>
-                <button id="btnPdfModalNext" type="button" class="w-6 h-6 rounded bg-slate-700 hover:bg-blue-600 text-white flex items-center justify-center transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed" title="Next Page (▼ / PgDn)">
-                  <span class="material-symbols-outlined text-[16px]">chevron_right</span>
-                </button>
-              </div>
-
-              <!-- Right: 3-Way Rotation Group -->
-              <div class="flex items-center gap-1">
-                <button id="btnPdfModalRotateCCW" class="h-7 px-2.5 rounded-lg bg-slate-800 hover:bg-blue-600 text-slate-200 hover:text-white flex items-center gap-1 font-mono-code text-[11px] font-bold border border-slate-700 shadow-2xs transition-all cursor-pointer select-none" title="Rotate Counter-Clockwise (-90°)" type="button">
-                  <span class="material-symbols-outlined text-[15px]">rotate_left</span>
-                  <span>-90°</span>
-                </button>
-                <button id="btnPdfModalRotateCW" class="h-7 px-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-1 font-mono-code text-[11px] font-bold shadow-md shadow-blue-900/40 transition-all cursor-pointer select-none" title="Rotate Clockwise (+90°)" type="button">
-                  <span class="material-symbols-outlined text-[15px]">rotate_right</span>
-                  <span>+90°</span>
-                </button>
-                <button id="btnPdfModalRotateFlip" class="h-7 px-2.5 rounded-lg bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white flex items-center gap-1 font-mono-code text-[11px] font-bold border border-slate-700 shadow-2xs transition-all cursor-pointer select-none" title="Flip Upside-Down (180° Flip)" type="button">
-                  <span class="material-symbols-outlined text-[15px]">flip</span>
-                  <span>180° Flip</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Center Modal Preview Stage -->
-            <div id="pdfModalViewport" class="flex-1 bg-surface-container-high/40 p-4 flex items-center justify-center overflow-auto min-h-0 relative">
-              <canvas id="pdfModalCanvas" class="max-w-full max-h-full object-contain shadow-lg rounded bg-white transition-transform"></canvas>
             </div>
           </div>
         </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Bottom Sticky Execution Dock -->
+  <div
+    class="flex-shrink-0 h-16 bg-inverse-surface text-inverse-on-surface px-gutter flex items-center justify-between z-40 shadow-[0_-4px_16px_rgba(0,0,0,0.15)] border-t border-outline/20">
+    <!-- Left: Operational Live Progress Bar (Behavior 3) -->
+    <div id="pdfExecutionProgressWrap" class="hidden flex-1 max-w-xl mr-6 flex items-center gap-3">
+      <div class="flex-1">
+        <div class="flex items-center justify-between text-xs font-mono mb-1 text-slate-200">
+          <span id="pdfProgressText" class="font-bold flex items-center gap-1.5">
+            <span class="animate-spin text-emerald-400 text-sm">hourglass_top</span>
+            <span id="pdfProgressCount">Compressing: 0 / 0 Files (0%)</span>
+          </span>
+          <span id="pdfProgressEta" class="text-slate-400 font-medium font-mono text-[11px]">Est. ~0s left</span>
+        </div>
+        <div class="w-full bg-slate-800/90 rounded-full h-2.5 overflow-hidden border border-slate-700/80 p-0.5">
+          <div id="pdfProgressBar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-200 ease-out shadow-xs" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Emerald Primary Action Button (Without separate bottom Open Output Folder button) -->
+    <div class="flex items-center gap-3 ml-auto">
+      <button
+        class="px-7 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center space-x-2 cursor-pointer active:scale-98"
+        id="startCompressBtn" type="button">
+        <span class="material-symbols-outlined text-[18px]">bolt</span>
+        <span id="startCompressBtnText">Compress PDF</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal: Interactive Bento Document Preview Viewport (Choice 3-B) -->
+  <div id="modalPdfStudioPreview"
+    class="fixed inset-0 z-[1000] bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div
+      class="w-[92vw] max-w-5xl h-[88vh] bg-surface-container-lowest rounded-2xl border border-slate-700 shadow-2xl flex flex-col overflow-hidden">
+      <!-- Modal Header -->
+      <div
+        class="px-5 py-3 bg-surface-container-low flex items-center justify-between border-b border-outline-variant/30 shrink-0">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div
+            class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold shrink-0">
+            <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+          </div>
+          <div class="min-w-0">
+            <h3 id="pdfModalDocTitle" class="font-headline-sm text-[15px] font-bold text-on-surface truncate">Document
+              Preview</h3>
+            <div id="pdfModalDocMeta" class="text-body-sm text-[11px] text-secondary font-mono-code">Page 1 of 1 • 0 KB
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2.5 shrink-0">
+          <button id="btnClosePdfModal" type="button"
+            class="w-7 h-7 rounded-lg hover:bg-surface-container text-secondary hover:text-on-surface flex items-center justify-center transition-colors cursor-pointer"
+            title="Close Preview (Esc)">
+            <span class="material-symbols-outlined text-[18px]">close</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bento Slate Toolbar matching Rename Tool -->
+      <div
+        class="px-4 py-2 bg-slate-900 border-b border-slate-700/80 flex flex-wrap items-center justify-between gap-2 shrink-0 text-slate-100">
+        <!-- Left: Zoom Group -->
+        <div class="flex items-center gap-1 bg-slate-800/90 rounded-lg p-0.5 border border-slate-700/90 shadow-2xs">
+          <button id="btnPdfModalZoomOut"
+            class="w-7 h-7 rounded hover:bg-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition-colors cursor-pointer"
+            title="Zoom Out (Ctrl -)" type="button">
+            <span class="material-symbols-outlined text-[16px]">zoom_out</span>
+          </button>
+          <span id="pdfModalZoomReadout"
+            class="font-mono-code text-[11px] font-bold px-2 py-0.5 bg-slate-950 rounded text-sky-400 min-w-[50px] text-center shadow-inner select-none">Fit</span>
+          <button id="btnPdfModalZoomIn"
+            class="w-7 h-7 rounded hover:bg-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition-colors cursor-pointer"
+            title="Zoom In (Ctrl +)" type="button">
+            <span class="material-symbols-outlined text-[16px]">zoom_in</span>
+          </button>
+          <button id="btnPdfModalZoomFit"
+            class="px-2 h-7 rounded hover:bg-slate-700 flex items-center gap-1 text-[11px] font-semibold text-slate-300 hover:text-white transition-colors cursor-pointer"
+            title="Fit to Screen (Ctrl 0)" type="button">
+            <span class="material-symbols-outlined text-[15px]">fit_screen</span><span>Fit</span>
+          </button>
+          <button id="btnPdfModalZoomReset"
+            class="w-7 h-7 rounded hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer"
+            title="Reset Zoom" type="button">
+            <span class="material-symbols-outlined text-[15px]">restart_alt</span>
+          </button>
+        </div>
+
+        <!-- Center: Multi-Page Navigator -->
+        <div
+          class="flex items-center gap-2 bg-slate-800/90 border border-blue-500/40 rounded-lg px-2.5 py-1 shadow-inner">
+          <button id="btnPdfModalPrev" type="button"
+            class="w-6 h-6 rounded bg-slate-700 hover:bg-blue-600 text-white flex items-center justify-center transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+            title="Previous Page (▲ / PgUp)">
+            <span class="material-symbols-outlined text-[16px]">chevron_left</span>
+          </button>
+          <div id="pdfModalPageIndicator"
+            class="flex items-center gap-1.5 select-none font-mono-code text-xs font-bold text-white tracking-wide">
+            <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse inline-block"></span>
+            <span id="pdfModalPageIndicatorText">Page 1 of 1</span>
+          </div>
+          <button id="btnPdfModalNext" type="button"
+            class="w-6 h-6 rounded bg-slate-700 hover:bg-blue-600 text-white flex items-center justify-center transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+            title="Next Page (▼ / PgDn)">
+            <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+          </button>
+        </div>
+
+        <!-- Right: 3-Way Rotation Group -->
+        <div class="flex items-center gap-1">
+          <button id="btnPdfModalRotateCCW"
+            class="h-7 px-2.5 rounded-lg bg-slate-800 hover:bg-blue-600 text-slate-200 hover:text-white flex items-center gap-1 font-mono-code text-[11px] font-bold border border-slate-700 shadow-2xs transition-all cursor-pointer select-none"
+            title="Rotate Counter-Clockwise (-90°)" type="button">
+            <span class="material-symbols-outlined text-[15px]">rotate_left</span>
+            <span>-90°</span>
+          </button>
+          <button id="btnPdfModalRotateCW"
+            class="h-7 px-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-1 font-mono-code text-[11px] font-bold shadow-md shadow-blue-900/40 transition-all cursor-pointer select-none"
+            title="Rotate Clockwise (+90°)" type="button">
+            <span class="material-symbols-outlined text-[15px]">rotate_right</span>
+            <span>+90°</span>
+          </button>
+          <button id="btnPdfModalRotateFlip"
+            class="h-7 px-2.5 rounded-lg bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white flex items-center gap-1 font-mono-code text-[11px] font-bold border border-slate-700 shadow-2xs transition-all cursor-pointer select-none"
+            title="Flip Upside-Down (180° Flip)" type="button">
+            <span class="material-symbols-outlined text-[15px]">flip</span>
+            <span>180° Flip</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Center Modal Preview Stage -->
+      <div id="pdfModalViewport"
+        class="flex-1 bg-surface-container-high/40 p-4 flex items-center justify-center overflow-auto min-h-0 relative">
+        <canvas id="pdfModalCanvas"
+          class="max-w-full max-h-full object-contain shadow-lg rounded bg-white transition-transform"></canvas>
+      </div>
+    </div>
+  </div>
       </section>
 
 
@@ -3956,10 +4047,14 @@
     }
 
     function updateRequestCode() {
-      const name = document.getElementById('actUserName').value.trim();
-      const contact = document.getElementById('actUserContact').value.trim();
+      const nameEl = document.getElementById('actUserName');
+      const contactEl = document.getElementById('actUserContact');
+      const displayEl = document.getElementById('requestCodeDisplay');
+      if (!nameEl || !displayEl) return;
+      const name = nameEl.value.trim();
+      const contact = contactEl ? contactEl.value.trim() : '';
       if (!name) {
-        document.getElementById('requestCodeDisplay').textContent = "Enter your name above to generate code...";
+        displayEl.textContent = "Enter your name above to generate code...";
         return;
       }
       const payload = {
@@ -3969,7 +4064,7 @@
         t: Math.floor(Date.now() / 1000)
       };
       const b64 = btoa(JSON.stringify(payload));
-      document.getElementById('requestCodeDisplay').textContent = `DM-REQ-${b64}`;
+      displayEl.textContent = `DM-REQ-${b64}`;
     }
 
     async function copyRequestCode() {
@@ -4153,10 +4248,13 @@
       }
 
       setTimeout(() => {
-        document.getElementById('detectedHwidText').textContent = detectedHwid;
-        document.getElementById('hwAnalyzingState').classList.add('hidden');
-        document.getElementById('hwActiveFormState').classList.remove('hidden');
-        updateRequestCode();
+        const hwEl = document.getElementById('detectedHwidText');
+        if (hwEl) hwEl.textContent = detectedHwid;
+        const analyzingEl = document.getElementById('hwAnalyzingState');
+        if (analyzingEl) analyzingEl.classList.add('hidden');
+        const activeFormEl = document.getElementById('hwActiveFormState');
+        if (activeFormEl) activeFormEl.classList.remove('hidden');
+        if (typeof updateRequestCode === 'function') updateRequestCode();
       }, 1500);
     });
   </script>
