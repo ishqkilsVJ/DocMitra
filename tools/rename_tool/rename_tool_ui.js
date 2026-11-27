@@ -3405,7 +3405,12 @@ export class RenamerUIManager {
     } else {
       // User choice 1-B: For direct custom/unlinked words, append student name without canonical conversion
       baseWithoutExt = this.formatCustomTypedName(baseWithoutExt, effStudent, this.state.style);
-      current.docType = cleanTarget.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+      let cleanDocOnly = cleanTarget.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
+      if (effStudent) {
+        const escapedStudent = effStudent.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+        cleanDocOnly = cleanDocOnly.replace(new RegExp(`(^|\\s)${escapedStudent}(\\s|$)`, 'gi'), ' ').replace(/\s+/g, ' ').trim();
+      }
+      current.docType = cleanDocOnly || cleanTarget.replace(/(\.[a-zA-Z0-9]+)+$/i, '').trim();
       current.isMatched = false;
     }
     let finalName = `${baseWithoutExt}${fileExt}`;
@@ -3561,7 +3566,12 @@ export class RenamerUIManager {
         targetFile.isMatched = true;
         targetFile.status = 'ready';
         targetFile.smartConfidence = 100;
-        targetFile.smartDocType = targetFile.docType || targetFile.smartDocType || baseWithoutExt;
+        let cleanDocType = rawBase;
+        if (effStudent) {
+          const escapedStudent = effStudent.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+          cleanDocType = cleanDocType.replace(new RegExp(`(^|\\s)${escapedStudent}(\\s|$)`, 'gi'), ' ').replace(/\s+/g, ' ').trim();
+        }
+        targetFile.smartDocType = targetFile.docType || cleanDocType || baseWithoutExt;
       }
     }
 
@@ -6321,13 +6331,12 @@ export class RenamerUIManager {
     if (this._crossCheckState && this._crossCheckState.overrides && this._crossCheckState.overrides.has(f.id)) {
       return this._crossCheckState.overrides.get(f.id);
     }
-    const doc = f.docType || f.smartDocType || f.smartMatchedDoc;
-    if (doc) return doc;
     const rawStudent = (this.state.studentName || '').replace(/\.[a-zA-Z0-9]+$/i, '').trim();
-    let base = cleanName(f.name);
+    let base = f.docType || f.smartDocType || f.smartMatchedDoc || cleanName(f.name);
     if (rawStudent) {
-      const sRegex = new RegExp(`\\b${rawStudent.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, 'gi');
-      base = base.replace(sRegex, '').trim();
+      const escapedStudent = rawStudent.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const sRegex = new RegExp(`(^|\\s)${escapedStudent}(\\s|$)`, 'gi');
+      base = base.replace(sRegex, ' ').replace(/\s+/g, ' ').trim();
     }
     return base || cleanName(f.name);
   }
@@ -6348,6 +6357,14 @@ export class RenamerUIManager {
         casing: this._crossCheckState ? this._crossCheckState.casing : (this.state.style || 'upper')
       });
     }
+
+    // Double safety guard: ensure student name never occurs twice consecutively in cleanTarget
+    if (rawStudent) {
+      const escapedStudent = rawStudent.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const dupStudentRegex = new RegExp(`(${escapedStudent})\\s+(${escapedStudent})`, 'gi');
+      cleanTarget = cleanTarget.replace(dupStudentRegex, '$1');
+    }
+
     return `${cleanTarget}${extension}`;
   }
 

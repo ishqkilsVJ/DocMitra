@@ -4940,8 +4940,12 @@ function Se(e, t, n = "") {
 	};
 }
 function Ce(e, t, n = {}) {
-	let { order: r = "doc_student", separator: i = " ", includeStudent: a = !0, casing: o = "upper" } = n, s = (e || "").trim(), c = (t || "").trim(), l = [];
-	return l = a && c ? r === "student_doc" ? [c, s] : [s, c] : [s], L(l.filter(Boolean).join(i), o);
+	let { order: r = "doc_student", separator: i = " ", includeStudent: a = !0, casing: o = "upper" } = n, s = (e || "").trim(), c = (t || "").trim();
+	if (!a || !c) return L(s, o);
+	let l = s.replace(/[_\-]+/g, " ").replace(/\s+/g, " "), u = c.replace(/[_\-]+/g, " ").replace(/\s+/g, " ").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+	if (RegExp(`(^|\\s)${u}(\\s|$)`, "i").test(l)) return L(s, o);
+	let d = [];
+	return d = r === "student_doc" ? [c, s] : [s, c], L(d.filter(Boolean).join(i), o);
 }
 function we(e) {
 	if (!e) return "";
@@ -7787,7 +7791,15 @@ var mt = A.map((e) => ({
 		if (s) {
 			let e = s.canonical || s.label;
 			a = R(e, o, this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim(), t.docType = e, t.isMatched = !0;
-		} else a = this.formatCustomTypedName(a, o, this.state.style), t.docType = i.replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim(), t.isMatched = !1;
+		} else {
+			a = this.formatCustomTypedName(a, o, this.state.style);
+			let e = i.replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim();
+			if (o) {
+				let t = o.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+				e = e.replace(RegExp(`(^|\\s)${t}(\\s|$)`, "gi"), " ").replace(/\s+/g, " ").trim();
+			}
+			t.docType = e || i.replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim(), t.isMatched = !1;
+		}
 		let c = `${a}${n}`, l = /* @__PURE__ */ new Set();
 		for (let e of this.state.files) e !== t && (e.isRenamed || e.isKept ? l.add(e.targetName || e.name) : e.name && l.add(e.name));
 		let u = B(c, t.name, l, o), d = u.toLowerCase() !== c.toLowerCase();
@@ -7841,7 +7853,13 @@ var mt = A.map((e) => ({
 			let e = document.getElementById("inputRenameTarget");
 			if (e && e.value.trim()) {
 				let n = t.ext || F(t.name), r = e.value.trim().replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim(), i = this.getEffectiveStudentName(), a = this.resolveShortcut(r), o = r;
-				o = a ? R(a.canonical || a.label, i, this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim() : this.formatCustomTypedName(r, i, this.state.style), t.targetName = `${o}${n}`, t.userEditedName = o, t.hasUserEdited = !0, t.isMatched = !0, t.status = "ready", t.smartConfidence = 100, t.smartDocType = t.docType || t.smartDocType || o;
+				o = a ? R(a.canonical || a.label, i, this.state.settings?.groups, this.state.style).replace(/(\.[a-zA-Z0-9]+)+$/i, "").trim() : this.formatCustomTypedName(r, i, this.state.style), t.targetName = `${o}${n}`, t.userEditedName = o, t.hasUserEdited = !0, t.isMatched = !0, t.status = "ready", t.smartConfidence = 100;
+				let s = r;
+				if (i) {
+					let e = i.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+					s = s.replace(RegExp(`(^|\\s)${e}(\\s|$)`, "gi"), " ").replace(/\s+/g, " ").trim();
+				}
+				t.smartDocType = t.docType || s || o;
 			}
 		}
 		if (!t.targetName) {
@@ -9166,23 +9184,25 @@ var mt = A.map((e) => ({
 	}
 	_getCrossCheckTargetBase(e) {
 		if (this._crossCheckState && this._crossCheckState.overrides && this._crossCheckState.overrides.has(e.id)) return this._crossCheckState.overrides.get(e.id);
-		let t = e.docType || e.smartDocType || e.smartMatchedDoc;
-		if (t) return t;
-		let n = (this.state.studentName || "").replace(/\.[a-zA-Z0-9]+$/i, "").trim(), r = I(e.name);
-		if (n) {
-			let e = RegExp(`\\b${n.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&")}\\b`, "gi");
-			r = r.replace(e, "").trim();
+		let t = (this.state.studentName || "").replace(/\.[a-zA-Z0-9]+$/i, "").trim(), n = e.docType || e.smartDocType || e.smartMatchedDoc || I(e.name);
+		if (t) {
+			let e = t.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), r = RegExp(`(^|\\s)${e}(\\s|$)`, "gi");
+			n = n.replace(r, " ").replace(/\s+/g, " ").trim();
 		}
-		return r || I(e.name);
+		return n || I(e.name);
 	}
 	_getCrossCheckTargetName(e) {
 		let t = (this.state.studentName || "").replace(/\.[a-zA-Z0-9]+$/i, "").trim(), n = e.ext || F(e.name) || "", r = this._getCrossCheckTargetBase(e), i = "";
-		return i = this._crossCheckState && this._crossCheckState.overrides && this._crossCheckState.overrides.has(e.id) ? L(r, this._crossCheckState.casing) : Ce(r, t, {
+		if (i = this._crossCheckState && this._crossCheckState.overrides && this._crossCheckState.overrides.has(e.id) ? L(r, this._crossCheckState.casing) : Ce(r, t, {
 			order: this._crossCheckState ? this._crossCheckState.order : "doc_student",
 			separator: this._crossCheckState ? this._crossCheckState.separator : " ",
 			includeStudent: !this._crossCheckState || this._crossCheckState.includeStudent,
 			casing: this._crossCheckState ? this._crossCheckState.casing : this.state.style || "upper"
-		}), `${i}${n}`;
+		}), t) {
+			let e = t.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), n = RegExp(`(${e})\\s+(${e})`, "gi");
+			i = i.replace(n, "$1");
+		}
+		return `${i}${n}`;
 	}
 	openCrossCheckModal() {
 		let e = this._getMatchedCrossCheckFiles();

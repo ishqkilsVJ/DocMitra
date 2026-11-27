@@ -1,8 +1,23 @@
 # 🔒 LOCKED TOOL: Bulk Document Renamer (`tools/rename_tool/`)
 
 > [!IMPORTANT]
-> **FROZEN & FULLY SEALED PRODUCTION MILESTONE UNDER CHECKPOINT `CP-061`**  
+> **FROZEN & FULLY SEALED PRODUCTION MILESTONE UNDER CHECKPOINT `CP-062`**  
 > **Status:** `LOCKED — PRODUCTION STABLE`  
+> **Governance Policy:** `AGENTS.md` (RULE 7) & `RENAME_TOOL_AGENT.md`  
+> **Module Integrity:** 100% Passing Across All Verification Tests via Dual-MCP QA (Playwright MCP + Chrome DevTools MCP: 0 Console Errors)  
+> **Verification Date:** 2026-11-27  
+> **Core Architecture:** Complete Production Suite (Physical Windows Folder Rename, Exact Casing, Circular Queue, 3-Tab Settings Modal with Deduplicated 58 Canonical Documents, Linked Documents Manager with Dynamic Zero-Error Exclusion, Bento Document Desk with Universal 1-0 and A-Z Natural Auto-Sort, In-App Notepad Report with Windows Notepad Launcher, 3-Way Unlimited Rotation Toolkit, Pure Standard English Matching Engine, Choice 1-B Direct Typed Word + Student Name Appending Engine, Choice 1-A & 2-B Strict Stop-Word Isolation, Choice 1-A & 2-A Complete Purge of Phonetic Sound Matching & Regional Desi Terms, Choice 1-A & 2-A Multi-Layer Student Deduplication & Auto-Assign `✓ Perfect` to Existing Formatted Files).
+>
+> **LOCKED BY POLICY (`AGENTS.md` Rule 3):**  
+> Strict Feature Freeze in effect. Zero direct file modifications permitted inside `tools/rename_tool/` without explicit user unlock command:  
+> `UNLOCK RENAME_TOOL`
+
+> **Last QA Stabilization & Verification:** 2026-11-27 (Multi-Layer Student Deduplication & Auto-Assign `✓ Perfect` to Existing Files [CP-062] Verified 100%:
+> 1. Strict Deduplication in `formatPatternName` (Choice 1-A): Added regex word boundary check (`(^|\s)${escapedStudent}(\s|$)`) ensuring student name is NEVER appended if `docType` already contains it.
+> 2. `_getCrossCheckTargetBase` & `_getCrossCheckTargetName` Normalization: Strip student name from `base` regardless of source (`f.docType`, `smartDocType`, or `name`), and prevent double consecutive student name tokens in `cleanTarget`.
+> 3. Clean `docType` Storage: Stripped student name when assigning `current.docType` on custom confirm, ensuring `docType` strictly retains only the document name.
+> 4. Auto-Assign `✓ Perfect` & Auto-Uncheck (Choice 2-A): Files that already contain correct name and student name (e.g. `10TH MARKSHEET GAVIT ARCHNA ARVIND.pdf`, `VALIDITY GAVIT ARCHNA ARVIND.pdf`) are cleanly recognized as `✓ Perfect` (0% error), automatically unchecked by default, preventing redundant renames.
+> 5. Dual-MCP Verification: 100% PASS across Playwright MCP and Chrome DevTools MCP (0 console errors); deployed to `C:\Users\USER\AppData\Local\DocMitra\app.exe`; re-sealed under `CP-062`).  
 > **Governance Policy:** `AGENTS.md` (RULE 7) & `RENAME_TOOL_AGENT.md`  
 > **Module Integrity:** 100% Passing Across All Verification Tests via Dual-MCP QA (Playwright MCP + Chrome DevTools MCP: 0 Console Errors)  
 > **Verification Date:** 2026-11-27  

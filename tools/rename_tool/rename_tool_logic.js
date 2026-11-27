@@ -3558,15 +3558,25 @@ export function formatPatternName(docType, studentName, options = {}) {
   const doc = (docType || '').trim();
   const student = (studentName || '').trim();
 
+  if (!includeStudent || !student) {
+    return applyCase(doc, casing);
+  }
+
+  const normDoc = doc.replace(/[_\-]+/g, ' ').replace(/\s+/g, ' ');
+  const normStudent = student.replace(/[_\-]+/g, ' ').replace(/\s+/g, ' ');
+  const escapedStudent = normStudent.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const studentWordRegex = new RegExp(`(^|\\s)${escapedStudent}(\\s|$)`, 'i');
+
+  // Choice 1-A: Strict Deduplication - If doc already contains student name at word boundaries, do not append duplicate!
+  if (studentWordRegex.test(normDoc)) {
+    return applyCase(doc, casing);
+  }
+
   let parts = [];
-  if (includeStudent && student) {
-    if (order === 'student_doc') {
-      parts = [student, doc];
-    } else {
-      parts = [doc, student];
-    }
+  if (order === 'student_doc') {
+    parts = [student, doc];
   } else {
-    parts = [doc];
+    parts = [doc, student];
   }
 
   const combined = parts.filter(Boolean).join(separator);
