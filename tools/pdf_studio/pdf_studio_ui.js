@@ -666,7 +666,7 @@ export class PdfStudioUIManager {
       // Main screen shortcuts
       if (e.key === 'F2') {
         e.preventDefault();
-        this.handleBrowseFolder();
+        this.handleAddFiles();
       } else if (e.key === 'F8') {
         e.preventDefault();
         this.handleStartProcess();
@@ -980,15 +980,15 @@ export class PdfStudioUIManager {
             <span class="text-[11px] font-mono text-slate-600 truncate flex-1" title="${s.outFolderPath}">${s.outFolderPath}</span>
           </div>
 
-          <button id="btnCenterOpenFolder" type="button" class="w-full py-3 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98">
-            <span class="material-symbols-outlined text-[20px]">folder_open</span>
-            <span>Open Output Folder</span>
-          </button>
-
-          <div class="mt-4 text-[11px] text-slate-400 flex items-center gap-1.5">
-            <span>Click</span>
-            <button id="btnResetBatchLink" type="button" class="text-blue-600 hover:underline font-semibold cursor-pointer">Clear Queue</button>
-            <span>or <b>Add Files</b> above to start a new batch.</span>
+          <div class="flex items-center justify-center gap-3 w-full">
+            <button id="btnResetBatchLink" type="button" class="px-space-md py-2.5 rounded-xl bg-surface-container-lowest hover:bg-surface-container text-secondary hover:text-error font-label-md font-medium border border-outline-variant/40 hover:border-error/40 transition-all flex items-center gap-1.5 shadow-xs cursor-pointer">
+              <span class="material-symbols-outlined text-[16px] text-error">delete_sweep</span>
+              <span>Clear Queue</span>
+            </button>
+            <button id="btnCenterOpenFolder" type="button" class="flex-1 py-2.5 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-md hover:shadow-lg border border-emerald-400/50 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98">
+              <span class="material-symbols-outlined text-[18px]">folder_open</span>
+              <span>Open Output Folder</span>
+            </button>
           </div>
         `;
 
