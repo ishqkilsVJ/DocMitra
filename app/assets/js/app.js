@@ -11581,7 +11581,7 @@ var Jt = class {
 					let v = document.createElement("div");
 					v.className = "card-limit-badge absolute top-2 left-2 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm flex items-center gap-1 hidden pointer-events-none z-10", v.innerHTML = "<span class=\"material-symbols-outlined text-[12px]\">check_circle</span><span>✓ Already in Limit</span>", g.appendChild(v);
 					let y = document.createElement("div");
-					if (y.className = "card-blur-warning absolute inset-x-2 bottom-2 bg-slate-950/85 border border-amber-500/40 text-amber-200 text-[10px] font-semibold px-2 py-1 rounded-lg shadow-lg flex items-center justify-center gap-1.5 backdrop-blur-md hidden pointer-events-none z-10 transition-all", y.innerHTML = "\n          <span class=\"material-symbols-outlined text-[13px] text-amber-400 animate-pulse\">warning</span>\n          <span class=\"font-mono text-[9px] font-bold uppercase tracking-wider text-amber-300 bg-amber-950/80 px-1 py-0.5 rounded border border-amber-500/30\">Blur Alert</span>\n          <span class=\"text-[10px] text-slate-200 font-medium\">Text may be degraded</span>\n        ", g.appendChild(y), t.thumbUrl) {
+					if (y.className = "card-blur-warning absolute bottom-1.5 left-1/2 -translate-x-1/2 z-10 pointer-events-none select-none transition-all hidden", g.appendChild(y), t.thumbUrl) {
 						let e = new Image();
 						e.onload = () => {
 							_.width = e.width, _.height = e.height, _.getContext("2d").drawImage(e, 0, 0);
@@ -11643,7 +11643,20 @@ var Jt = class {
 				let e = Math.min(95, Math.max(1, Math.round((i.size - t) / i.size * 100)));
 				if (a && (a.textContent = `-${e}%`, a.style.display = ""), o && (o.textContent = `Comp ${n}`, o.className = "badge-comp-size px-1.5 py-0.5 bg-rose-50 text-rose-700 border border-rose-200/80 rounded font-mono text-[10px] font-bold truncate"), s && s.classList.add("hidden"), e >= 75 || this.targetKb <= 70) {
 					let t = 1.2;
-					e >= 90 || this.targetKb <= 50 ? t = 2.4 : (e >= 80 || this.targetKb <= 70) && (t = 1.7), l && (l.style.filter = `blur(${t}px)`, l.style.transition = "filter 0.2s ease"), c && c.classList.remove("hidden");
+					if (e >= 90 || this.targetKb <= 50 ? t = 2.4 : (e >= 80 || this.targetKb <= 70) && (t = 1.7), l && (l.style.filter = `blur(${t}px)`, l.style.transition = "filter 0.2s ease"), c) {
+						let e = Math.max(1, i.pageCount || 1), t = this.targetKb / e, n = this.targetKb * 1024, r = Math.min(1, n / i.size), a = Math.min(1, t / 180) * .7 + r * .3, o = Math.round(a * 100);
+						o = t <= 25 ? Math.max(5, Math.min(10, Math.round(t / 25 * 10))) : t <= 45 ? Math.max(10, Math.min(20, 10 + Math.round((t - 25) / 20 * 10))) : t <= 70 ? Math.max(20, Math.min(35, 20 + Math.round((t - 45) / 25 * 15))) : t <= 100 ? Math.max(35, Math.min(50, 35 + Math.round((t - 70) / 30 * 15))) : Math.max(50, Math.min(65, o));
+						let s, l, u, d;
+						o <= 20 ? (s = "border-rose-500/60", l = "text-rose-300", u = "text-rose-400", d = "bg-rose-500") : o <= 35 ? (s = "border-orange-500/50", l = "text-orange-300", u = "text-orange-400", d = "bg-orange-500") : (s = "border-amber-500/45", l = "text-amber-200", u = "text-amber-400", d = "bg-amber-400"), c.className = `card-blur-warning absolute bottom-1.5 left-1/2 -translate-x-1/2 z-10 pointer-events-none select-none transition-all px-2 py-0.5 rounded-full bg-slate-950/85 border ${s} shadow-md backdrop-blur-md inline-flex items-center gap-1.5 whitespace-nowrap`, c.innerHTML = `
+              <span class="material-symbols-outlined text-[12px] ${u} animate-pulse">warning</span>
+              <span class="font-mono text-[9px] font-bold uppercase tracking-wider text-slate-300">Blur</span>
+              <span class="text-slate-600 text-[10px] leading-none">•</span>
+              <span class="font-mono text-[10px] font-extrabold ${l}">~${o}% Visible</span>
+              <div class="w-4 h-1.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700/80 inline-flex">
+                <div class="h-full ${d} rounded-full" style="width: ${o}%"></div>
+              </div>
+            `, c.classList.remove("hidden");
+					}
 				} else l && (l.style.filter = "none"), c && c.classList.add("hidden");
 			} else a && (a.style.display = "none"), o && (o.textContent = `Comp ${u}`, o.className = "badge-comp-size px-1.5 py-0.5 bg-slate-50 text-slate-600 border border-slate-200/80 rounded font-mono text-[10px] font-bold truncate"), s && s.classList.remove("hidden"), c && c.classList.add("hidden"), l && (l.style.filter = "none");
 		});

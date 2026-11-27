@@ -1156,14 +1156,9 @@ export class PdfStudioUIManager {
         limitBadge.innerHTML = '<span class="material-symbols-outlined text-[12px]">check_circle</span><span>✓ Already in Limit</span>';
         thumbBox.appendChild(limitBadge);
 
-        // Low Readability / Blur Warning Overlay (Bottom of Preview - Choice 1-A)
+        // Ultra-Compact Live Readability Pill (Bottom Center of Preview)
         const blurWarning = document.createElement('div');
-        blurWarning.className = 'card-blur-warning absolute inset-x-2 bottom-2 bg-slate-950/85 border border-amber-500/40 text-amber-200 text-[10px] font-semibold px-2 py-1 rounded-lg shadow-lg flex items-center justify-center gap-1.5 backdrop-blur-md hidden pointer-events-none z-10 transition-all';
-        blurWarning.innerHTML = `
-          <span class="material-symbols-outlined text-[13px] text-amber-400 animate-pulse">warning</span>
-          <span class="font-mono text-[9px] font-bold uppercase tracking-wider text-amber-300 bg-amber-950/80 px-1 py-0.5 rounded border border-amber-500/30">Blur Alert</span>
-          <span class="text-[10px] text-slate-200 font-medium">Text may be degraded</span>
-        `;
+        blurWarning.className = 'card-blur-warning absolute bottom-1.5 left-1/2 -translate-x-1/2 z-10 pointer-events-none select-none transition-all hidden';
         thumbBox.appendChild(blurWarning);
 
         // Render thumbnail with cache check and buffer cloning (No 1p/2p badges)
@@ -1303,7 +1298,7 @@ export class PdfStudioUIManager {
           limitBadge.classList.add('hidden');
         }
 
-        // Live Blur preview & Low Readability Warning calculation
+        // Live Blur preview & Dynamic Readability / Visibility % calculation
         if (redPct >= 75 || this.targetKb <= 70) {
           let blurPx = 1.2;
           if (redPct >= 90 || this.targetKb <= 50) {
@@ -1316,6 +1311,56 @@ export class PdfStudioUIManager {
             canvas.style.transition = 'filter 0.2s ease';
           }
           if (blurWarning) {
+            // Dynamic Visibility % calculation based on target KB, original size, and pages
+            const pageCount = Math.max(1, file.pageCount || 1);
+            const effectiveKb = this.targetKb / pageCount;
+            const targetBytes = this.targetKb * 1024;
+            const compRatio = Math.min(1.0, targetBytes / file.size);
+            const kbRatio = Math.min(1.0, effectiveKb / 180);
+            const rawScore = (kbRatio * 0.70) + (compRatio * 0.30);
+            let visPct = Math.round(rawScore * 100);
+
+            if (effectiveKb <= 25) {
+              visPct = Math.max(5, Math.min(10, Math.round((effectiveKb / 25) * 10)));
+            } else if (effectiveKb <= 45) {
+              visPct = Math.max(10, Math.min(20, 10 + Math.round(((effectiveKb - 25) / 20) * 10)));
+            } else if (effectiveKb <= 70) {
+              visPct = Math.max(20, Math.min(35, 20 + Math.round(((effectiveKb - 45) / 25) * 15)));
+            } else if (effectiveKb <= 100) {
+              visPct = Math.max(35, Math.min(50, 35 + Math.round(((effectiveKb - 70) / 30) * 15)));
+            } else {
+              visPct = Math.max(50, Math.min(65, visPct));
+            }
+
+            // Multi-tier color shift (Rose <=20%, Orange <=35%, Amber >35%)
+            let borderCls, textCls, iconCls, barCls;
+            if (visPct <= 20) {
+              borderCls = 'border-rose-500/60';
+              textCls = 'text-rose-300';
+              iconCls = 'text-rose-400';
+              barCls = 'bg-rose-500';
+            } else if (visPct <= 35) {
+              borderCls = 'border-orange-500/50';
+              textCls = 'text-orange-300';
+              iconCls = 'text-orange-400';
+              barCls = 'bg-orange-500';
+            } else {
+              borderCls = 'border-amber-500/45';
+              textCls = 'text-amber-200';
+              iconCls = 'text-amber-400';
+              barCls = 'bg-amber-400';
+            }
+
+            blurWarning.className = `card-blur-warning absolute bottom-1.5 left-1/2 -translate-x-1/2 z-10 pointer-events-none select-none transition-all px-2 py-0.5 rounded-full bg-slate-950/85 border ${borderCls} shadow-md backdrop-blur-md inline-flex items-center gap-1.5 whitespace-nowrap`;
+            blurWarning.innerHTML = `
+              <span class="material-symbols-outlined text-[12px] ${iconCls} animate-pulse">warning</span>
+              <span class="font-mono text-[9px] font-bold uppercase tracking-wider text-slate-300">Blur</span>
+              <span class="text-slate-600 text-[10px] leading-none">•</span>
+              <span class="font-mono text-[10px] font-extrabold ${textCls}">~${visPct}% Visible</span>
+              <div class="w-4 h-1.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700/80 inline-flex">
+                <div class="h-full ${barCls} rounded-full" style="width: ${visPct}%"></div>
+              </div>
+            `;
             blurWarning.classList.remove('hidden');
           }
         } else {
