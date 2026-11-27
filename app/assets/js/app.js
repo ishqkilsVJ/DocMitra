@@ -50,12 +50,19 @@ var e = [
 	}
 }, r = new class {
 	constructor() {
-		this.container = null, this.activeToast = null, this.maxVisible = 1, this._pulseTimeout = null, typeof document < "u" && this._ensureContainer();
+		this.activeToast = null, this.maxVisible = 1;
 	}
-	_ensureContainer() {
-		if (typeof document > "u") return;
-		let e = document.getElementById("toast-container");
-		e ? (e.classList.contains("bottom-12") || e.classList.contains("bottom-6")) && (e.className = "fixed top-20 right-6 z-[9999] flex flex-col gap-2 pointer-events-none max-w-[420px] select-none") : (e = document.createElement("div"), e.id = "toast-container", e.className = "fixed top-20 right-6 z-[9999] flex flex-col gap-2 pointer-events-none max-w-[420px] select-none", e.setAttribute("aria-live", "polite"), document.body.appendChild(e)), this.container = e;
+	_getActiveSlot() {
+		if (typeof document > "u") return null;
+		let e = document.querySelector(".view-pane:not(.hidden)");
+		if (e) {
+			let t = e.querySelector(".bottom-toast-slot");
+			if (t) return t;
+		}
+		let t = document.querySelector(".bottom-toast-slot");
+		if (t) return t;
+		let n = document.getElementById("toast-fallback-container");
+		return n || (n = document.createElement("div"), n.id = "toast-fallback-container", n.className = "fixed bottom-3 left-1/2 -translate-x-1/2 z-[9999] pointer-events-none select-none flex items-center justify-center", document.body.appendChild(n)), n;
 	}
 	success(e, t = "", n = null) {
 		this.show(e, t, "success", n);
@@ -70,61 +77,60 @@ var e = [
 		this.show(e, t, "info", n);
 	}
 	show(e, t = "", n = "info", r = null, i = null) {
-		if (this._ensureContainer(), !this.container) return;
-		let a = (e || "").trim(), o = (t || "").trim(), s = `${n}:${a}`, c = r;
-		c ??= i && typeof i.onClick == "function" ? 0 : n === "warning" || n === "error" ? 3e3 : 1800, this.activeToast && this.activeToast.key === s && !i && !this.activeToast.action ? (this.activeToast.count += 1, this._updateInPlace(this.activeToast, a, o, c)) : (this.activeToast && this._removeToast(this.activeToast, !0), this._createToastCard(a, o, n, c, i, s));
+		let a = this._getActiveSlot();
+		if (!a) return;
+		let o = (e || "").trim(), s = (t || "").trim(), c = `${n}:${o}`, l = r;
+		l ??= i && typeof i.onClick == "function" ? 0 : n === "warning" || n === "error" ? 3200 : 2200, this.activeToast && this.activeToast.key === c && !i && !this.activeToast.action ? (this.activeToast.count += 1, this._updateInPlace(this.activeToast, o, s, l)) : (this.activeToast && this._removeToast(this.activeToast, !0), this._createToastCard(o, s, n, l, i, c, a));
 	}
 	_updateInPlace(e, t, n, r) {
-		e && e.el && (e.counterEl && (e.counterEl.textContent = `×${e.count}`, e.counterEl.classList.remove("hidden")), e.subtitleEl && n && (e.subtitleEl.textContent = n), e.el.classList.remove("toast-pulse"), e.el.offsetWidth, e.el.classList.add("toast-pulse"), e.timer &&= (clearTimeout(e.timer), null), r > 0 && (e.timer = setTimeout(() => {
+		e && e.el && (e.counterEl && (e.counterEl.textContent = `×${e.count}`, e.counterEl.classList.remove("hidden")), e.subtitleEl && n && (e.subtitleEl.textContent = n), e.el.classList.add("scale-105"), setTimeout(() => {
+			e.el && e.el.classList.remove("scale-105");
+		}, 150), e.timer &&= (clearTimeout(e.timer), null), r > 0 && (e.timer = setTimeout(() => {
 			this._removeToast(e);
 		}, r)));
 	}
-	_createToastCard(e, t, n, r, i, a) {
-		let o = document.createElement("div");
-		o.className = `toast-item toast-${n}`;
-		let s = document.createElement("span");
-		s.className = "material-symbols-outlined text-[20px] shrink-0", n === "success" ? (s.textContent = "check_circle", s.className += " text-emerald-400") : n === "warning" ? (s.textContent = "warning", s.className += " text-amber-400") : n === "error" ? (s.textContent = "error", s.className += " text-rose-400") : (s.textContent = "info", s.className += " text-blue-400"), o.appendChild(s);
-		let c = document.createElement("div");
-		c.className = "flex flex-col min-w-0 flex-1";
-		let l = document.createElement("div");
-		l.className = "flex items-center gap-1.5 flex-wrap";
+	_createToastCard(e, t, n, r, i, a, o) {
+		for (; o.firstChild;) o.removeChild(o.firstChild);
+		let s = document.createElement("div");
+		s.className = "flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/95 border border-slate-700/80 text-[11px] text-slate-200 shadow-sm max-w-full truncate pointer-events-auto transition-all duration-200 select-none";
+		let c = document.createElement("span");
+		c.className = "material-symbols-outlined text-[15px] shrink-0", n === "success" ? (c.textContent = "check_circle", c.className += " text-emerald-400") : n === "warning" ? (c.textContent = "warning", c.className += " text-amber-400") : n === "error" ? (c.textContent = "error", c.className += " text-rose-400") : (c.textContent = "info", c.className += " text-blue-400"), s.appendChild(c);
+		let l = document.createElement("span");
+		l.className = "font-bold text-white text-[11px] shrink-0", l.textContent = e, s.appendChild(l);
 		let u = document.createElement("span");
-		u.className = "font-bold font-headline text-white text-[13px] leading-tight truncate", u.textContent = e, l.appendChild(u);
-		let d = document.createElement("span");
-		d.className = "toast-counter-badge hidden", d.textContent = "×1", l.appendChild(d), c.appendChild(l);
-		let f = null;
-		if (t && (f = document.createElement("span"), f.className = "font-mono text-[11px] text-slate-300 mt-0.5 leading-tight truncate max-w-[280px]", f.textContent = t, c.appendChild(f)), o.appendChild(c), i && typeof i.onClick == "function") {
+		u.className = "px-1 py-0.2 bg-blue-500/30 text-blue-300 font-mono text-[9px] rounded font-bold hidden shrink-0", u.textContent = "×1", s.appendChild(u);
+		let d = null;
+		if (t && (d = document.createElement("span"), d.className = "text-slate-300 text-[10px] truncate max-w-[220px] font-mono shrink-1", d.textContent = t, s.appendChild(d)), i && typeof i.onClick == "function") {
 			let e = document.createElement("button");
-			e.type = "button", e.className = "ml-auto mr-1 px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-[11px] font-mono transition-all cursor-pointer flex items-center gap-1 shadow-sm shrink-0", e.innerHTML = `
-        <span class="material-symbols-outlined text-[14px]">undo</span>
+			e.type = "button", e.className = "ml-1.5 px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] flex items-center gap-0.5 cursor-pointer active:scale-95 shadow-xs transition-all shrink-0", e.innerHTML = `
+        <span class="material-symbols-outlined text-[12px]">undo</span>
         <span>${i.label || "Undo"}</span>
       `, e.addEventListener("click", (e) => {
-				e.stopPropagation(), this._removeToast(h), i.onClick();
-			}), o.appendChild(e);
+				e.stopPropagation(), this._removeToast(p, !0), i.onClick();
+			}), s.appendChild(e);
 		}
-		let p = document.createElement("button");
-		p.type = "button", p.className = "text-slate-400 hover:text-white transition-colors p-1 flex items-center justify-center shrink-0 cursor-pointer rounded hover:bg-slate-800/60", p.setAttribute("aria-label", "Dismiss notification");
-		let m = document.createElement("span");
-		m.className = "material-symbols-outlined text-[16px]", m.textContent = "close", p.appendChild(m), p.addEventListener("click", (e) => {
-			e.stopPropagation(), this._removeToast(h);
-		}), o.appendChild(p);
-		let h = {
+		let f = document.createElement("button");
+		f.type = "button", f.className = "text-slate-400 hover:text-white ml-1 p-0.5 leading-none rounded hover:bg-slate-700/60 cursor-pointer flex items-center justify-center shrink-0", f.setAttribute("aria-label", "Dismiss notification"), f.innerHTML = "<span class=\"material-symbols-outlined text-[13px]\">close</span>", f.addEventListener("click", (e) => {
+			e.stopPropagation(), this._removeToast(p);
+		}), s.appendChild(f);
+		let p = {
 			key: a,
-			el: o,
-			counterEl: d,
-			subtitleEl: f,
+			el: s,
+			slot: o,
+			counterEl: u,
+			subtitleEl: d,
 			count: 1,
 			timer: null,
 			action: i
 		};
-		r > 0 && (h.timer = setTimeout(() => {
-			this._removeToast(h);
-		}, r)), this.container.appendChild(o), this.activeToast = h;
+		r > 0 && (p.timer = setTimeout(() => {
+			this._removeToast(p);
+		}, r)), o.appendChild(s), this.activeToast = p;
 	}
 	_removeToast(e, t = !1) {
-		e && e.el && (e.timer &&= (clearTimeout(e.timer), null), this.activeToast === e && (this.activeToast = null), t ? e.el.parentNode && e.el.parentNode.removeChild(e.el) : (e.el.classList.add("toast-leaving"), setTimeout(() => {
+		e && e.el && (e.timer &&= (clearTimeout(e.timer), null), this.activeToast === e && (this.activeToast = null), t ? e.el.parentNode && e.el.parentNode.removeChild(e.el) : (e.el.style.opacity = "0", e.el.style.transform = "scale(0.95)", setTimeout(() => {
 			e.el && e.el.parentNode && e.el.parentNode.removeChild(e.el);
-		}, 180)));
+		}, 150)));
 	}
 }();
 function i(e, t = "info", n = "", i = null, a = null) {
@@ -11501,13 +11507,13 @@ var Jt = class {
             <span class="text-[11px] font-mono text-slate-600 truncate flex-1" title="${t.outFolderPath}">${t.outFolderPath}</span>
           </div>
 
-          <div class="flex items-center justify-center gap-3 w-full">
-            <button id="btnResetBatchLink" type="button" class="px-space-md py-2.5 rounded-xl bg-surface-container-lowest hover:bg-surface-container text-secondary hover:text-error font-label-md font-medium border border-outline-variant/40 hover:border-error/40 transition-all flex items-center gap-1.5 shadow-xs cursor-pointer">
-              <span class="material-symbols-outlined text-[16px] text-error">delete_sweep</span>
+          <div class="grid grid-cols-2 gap-3 w-full">
+            <button id="btnResetBatchLink" type="button" class="h-10 w-full rounded-lg bg-white hover:bg-rose-50/50 text-slate-700 hover:text-rose-600 font-bold text-xs border border-slate-200 hover:border-rose-300 flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer active:scale-98">
+              <span class="material-symbols-outlined text-[17px] text-rose-500">delete_sweep</span>
               <span>Clear Queue</span>
             </button>
-            <button id="btnCenterOpenFolder" type="button" class="flex-1 py-2.5 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-md hover:shadow-lg border border-emerald-400/50 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98">
-              <span class="material-symbols-outlined text-[18px]">folder_open</span>
+            <button id="btnCenterOpenFolder" type="button" class="h-10 w-full rounded-lg bg-white hover:bg-emerald-50/50 text-slate-700 hover:text-emerald-700 font-bold text-xs border border-slate-200 hover:border-emerald-300 flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer active:scale-98">
+              <span class="material-symbols-outlined text-[17px] text-emerald-600">folder_open</span>
               <span>Open Output Folder</span>
             </button>
           </div>
@@ -11846,17 +11852,17 @@ var Jt = class {
 		this.isProcessing = !0;
 		let e = this.activeTool, t = Ot(e);
 		r.show("Processing Started", `Running ${this._getToolDisplayName(e)} via Zero-Port Native IPC...`, "info");
-		let n = document.getElementById("startCompressBtn"), i = document.getElementById("pdfExecutionProgressWrap"), a = document.getElementById("pdfProgressBar"), o = document.getElementById("pdfProgressCount"), s = document.getElementById("pdfProgressEta"), c = document.getElementById("pdfCenterProgressOverlay"), l = document.getElementById("pdfCenterProgressBar"), u = document.getElementById("pdfCenterProgressCount"), d = document.getElementById("pdfCenterProgressEta"), f = document.getElementById("pdfCenterProgressFileName");
+		let n = document.getElementById("startCompressBtn"), i = document.getElementById("pdfCardsGridContainer"), a = document.getElementById("pdfCenterProgressOverlay"), o = document.getElementById("pdfCenterProgressBar"), s = document.getElementById("pdfCenterProgressCount"), c = document.getElementById("pdfCenterProgressEta"), l = document.getElementById("pdfCenterProgressFileName");
 		if (n) {
 			n.disabled = !0, n.classList.add("opacity-50", "cursor-not-allowed");
 			let e = n.querySelector("span:last-child");
 			e && (e.textContent = "Compressing...");
 		}
-		i && (i.classList.remove("hidden"), a && (a.style.width = "0%"), o && (o.textContent = `Compressing: 0 / ${this.files.length} Files (0%)`), s && (s.textContent = "Estimating...")), c && e === "compress_pdf" && (c.classList.remove("hidden"), l && (l.style.width = "0%"), u && (u.textContent = `Compressing: 0 / ${this.files.length} Files (0%)`), d && (d.textContent = "Estimating..."), f && (f.textContent = "Preparing batch compression..."));
+		i && (i.style.overflow = "hidden"), a && e === "compress_pdf" && (a.classList.remove("hidden"), o && (o.style.width = "0%"), s && (s.textContent = `Compressing: 0 / ${this.files.length} Files (0%)`), c && (c.textContent = "Estimating..."), l && (l.textContent = "Preparing batch compression..."));
 		try {
 			let n = 0;
 			if (e === "compress_pdf") {
-				let e = this.files.length, i = this.files.reduce((e, t) => e + (t.size || 0), 0), p = 0, m = 0, h = Date.now();
+				let e = this.files.length, u = this.files.reduce((e, t) => e + (t.size || 0), 0), d = 0, f = 0, p = Date.now();
 				await qt(this.files, this.targetKb, (e, t) => {
 					let n = document.querySelector(`.docket-card[data-file-id="${e}"]`);
 					if (n) {
@@ -11865,29 +11871,27 @@ var Jt = class {
 					}
 				}, async (r, i) => {
 					if (i && i.success) {
-						await this.saveOutputFile(t, i.outName, i.finalBlob || i.finalBytes), n++, m++, p += i.finalSize || 0;
-						let c = Math.round(m / e * 100);
-						a && (a.style.width = `${c}%`), o && (o.textContent = `Compressing: ${m} / ${e} Files (${c}%)`);
-						let g = (Date.now() - h) / 1e3 / m, _ = e - m, v = Math.max(0, Math.ceil(_ * g)), y = _ > 0 ? `Est. ~${v}s left` : "Finalizing...";
-						s && (s.textContent = y), l && (l.style.width = `${c}%`), u && (u.textContent = `Compressing: ${m} / ${e} Files (${c}%)`), d && (d.textContent = y), f && (f.textContent = r.name);
-						let b = document.querySelector(`.docket-card[data-file-id="${r.id}"]`);
-						if (b) {
-							let e = b.querySelector(".badge-comp-size");
+						await this.saveOutputFile(t, i.outName, i.finalBlob || i.finalBytes), n++, f++, d += i.finalSize || 0;
+						let a = Math.round(f / e * 100), u = (Date.now() - p) / 1e3 / f, m = e - f, h = Math.max(0, Math.ceil(m * u)), g = m > 0 ? `Est. ~${h}s left` : "Finalizing...";
+						o && (o.style.width = `${a}%`), s && (s.textContent = `Compressing: ${f} / ${e} Files (${a}%)`), c && (c.textContent = g), l && (l.textContent = r.name);
+						let _ = document.querySelector(`.docket-card[data-file-id="${r.id}"]`);
+						if (_) {
+							let e = _.querySelector(".badge-comp-size");
 							if (e && (e.textContent = `Comp ${i.finalSize >= 1048576 ? `${(i.finalSize / 1048576).toFixed(2)} MB` : `${Math.round(i.finalSize / 1024)} KB`}`, e.className = "badge-comp-size px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-300 rounded font-mono text-[10px] font-bold truncate"), i.isAtFloor) {
-								let e = b.querySelector(".badge-floor-limit");
-								e || (e = document.createElement("div"), e.className = "badge-floor-limit mt-1 px-1.5 py-0.5 bg-amber-50 border border-amber-300 text-amber-800 rounded font-mono text-[9px] font-bold text-center", b.appendChild(e)), e.textContent = `⚠ Min readable limit: ${i.floorKb} KB`;
+								let e = _.querySelector(".badge-floor-limit");
+								e || (e = document.createElement("div"), e.className = "badge-floor-limit mt-1 px-1.5 py-0.5 bg-amber-50 border border-amber-300 text-amber-800 rounded font-mono text-[9px] font-bold text-center", _.appendChild(e)), e.textContent = `⚠ Min readable limit: ${i.floorKb} KB`;
 							}
 						}
 					}
 				});
-				let g = i > 0 && i > p ? Math.round((i - p) / i * 100) : 0, _ = this.lastOutputFolder || (this.activeFolderPath ? `${this.activeFolderPath}/${t}` : `Output/${t}`);
+				let m = u > 0 && u > d ? Math.round((u - d) / u * 100) : 0, h = this.lastOutputFolder || (this.activeFolderPath ? `${this.activeFolderPath}/${t}` : `Output/${t}`);
 				this.completionSummary = {
 					totalFiles: n,
-					origTotalBytes: i,
-					outTotalBytes: p,
-					savedPct: g,
-					outFolderPath: _
-				}, c && c.classList.add("hidden"), this.files = [], this.updateStats(), this.renderQueue(), r.show("Compression Complete!", `Saved ${n} files directly into ${t}/`, "success");
+					origTotalBytes: u,
+					outTotalBytes: d,
+					savedPct: m,
+					outFolderPath: h
+				}, i && (i.style.overflow = ""), a && a.classList.add("hidden"), this.files = [], this.updateStats(), this.renderQueue(), r.show("Compression Complete!", `Saved ${n} files directly into ${t}/`, "success"), h && b(h);
 			} else if (e === "merge_pdf") {
 				let e = Et(this.files.map((e) => e.bytes).filter(Boolean), "portrait"), i = this.activeFolderName ? `Merged_Admission_Dossier_${this.activeFolderName}.pdf` : "Merged_Admission_Dossier.pdf";
 				await this.saveOutputFile(t, i, e), n = 1, r.show("Merge Complete!", `Dossier saved to ${t}/${i}`, "success");
@@ -11934,7 +11938,7 @@ var Jt = class {
 		} catch (e) {
 			console.error("[PDF-STUDIO] Process failed:", e), r.show("Operation Failed", e.message, "error");
 		} finally {
-			this.isProcessing = !1, c && c.classList.add("hidden"), i && i.classList.add("hidden"), n && (n.disabled = !1, n.classList.remove("opacity-50", "cursor-not-allowed")), this._updateProcessButtonLabel();
+			this.isProcessing = !1, i && (i.style.overflow = ""), a && a.classList.add("hidden"), n && (n.disabled = !1, n.classList.remove("opacity-50", "cursor-not-allowed")), this._updateProcessButtonLabel();
 		}
 	}
 };

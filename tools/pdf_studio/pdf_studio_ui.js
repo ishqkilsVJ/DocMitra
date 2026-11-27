@@ -982,13 +982,13 @@ export class PdfStudioUIManager {
             <span class="text-[11px] font-mono text-slate-600 truncate flex-1" title="${s.outFolderPath}">${s.outFolderPath}</span>
           </div>
 
-          <div class="flex items-center justify-center gap-3 w-full">
-            <button id="btnResetBatchLink" type="button" class="px-space-md py-2.5 rounded-xl bg-surface-container-lowest hover:bg-surface-container text-secondary hover:text-error font-label-md font-medium border border-outline-variant/40 hover:border-error/40 transition-all flex items-center gap-1.5 shadow-xs cursor-pointer">
-              <span class="material-symbols-outlined text-[16px] text-error">delete_sweep</span>
+          <div class="grid grid-cols-2 gap-3 w-full">
+            <button id="btnResetBatchLink" type="button" class="h-10 w-full rounded-lg bg-white hover:bg-rose-50/50 text-slate-700 hover:text-rose-600 font-bold text-xs border border-slate-200 hover:border-rose-300 flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer active:scale-98">
+              <span class="material-symbols-outlined text-[17px] text-rose-500">delete_sweep</span>
               <span>Clear Queue</span>
             </button>
-            <button id="btnCenterOpenFolder" type="button" class="flex-1 py-2.5 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-md hover:shadow-lg border border-emerald-400/50 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98">
-              <span class="material-symbols-outlined text-[18px]">folder_open</span>
+            <button id="btnCenterOpenFolder" type="button" class="h-10 w-full rounded-lg bg-white hover:bg-emerald-50/50 text-slate-700 hover:text-emerald-700 font-bold text-xs border border-slate-200 hover:border-emerald-300 flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer active:scale-98">
+              <span class="material-symbols-outlined text-[17px] text-emerald-600">folder_open</span>
               <span>Open Output Folder</span>
             </button>
           </div>
@@ -1726,12 +1726,9 @@ export class PdfStudioUIManager {
     toast.show('Processing Started', `Running ${this._getToolDisplayName(opName)} via Zero-Port Native IPC...`, 'info');
 
     const btnStart = document.getElementById('startCompressBtn');
-    const progressWrap = document.getElementById('pdfExecutionProgressWrap');
-    const progressBar = document.getElementById('pdfProgressBar');
-    const progressCount = document.getElementById('pdfProgressCount');
-    const progressEta = document.getElementById('pdfProgressEta');
+    const gridContainer = document.getElementById('pdfCardsGridContainer');
 
-    // Center Frosted Blue Progress Overlay (Choice 2-A)
+    // Viewport-Pinned Center Processing Modal (Choice 2-A)
     const centerOverlay = document.getElementById('pdfCenterProgressOverlay');
     const centerBar = document.getElementById('pdfCenterProgressBar');
     const centerCount = document.getElementById('pdfCenterProgressCount');
@@ -1745,11 +1742,9 @@ export class PdfStudioUIManager {
       if (labelSpan) labelSpan.textContent = 'Compressing...';
     }
 
-    if (progressWrap) {
-      progressWrap.classList.remove('hidden');
-      if (progressBar) progressBar.style.width = '0%';
-      if (progressCount) progressCount.textContent = `Compressing: 0 / ${this.files.length} Files (0%)`;
-      if (progressEta) progressEta.textContent = 'Estimating...';
+    // Lock Screen Scroll to prevent user scrolling during execution (Choice 2-A)
+    if (gridContainer) {
+      gridContainer.style.overflow = 'hidden';
     }
 
     if (centerOverlay && opName === 'compress_pdf') {
@@ -1789,17 +1784,13 @@ export class PdfStudioUIManager {
               outTotalBytes += (res.finalSize || 0);
 
               const overallPct = Math.round((completedFiles / totalFiles) * 100);
-              if (progressBar) progressBar.style.width = `${overallPct}%`;
-              if (progressCount) progressCount.textContent = `Compressing: ${completedFiles} / ${totalFiles} Files (${overallPct}%)`;
-
               const elapsedSec = (Date.now() - startTime) / 1000;
               const avgTime = elapsedSec / completedFiles;
               const remaining = totalFiles - completedFiles;
               const estLeft = Math.max(0, Math.ceil(remaining * avgTime));
               const etaText = remaining > 0 ? `Est. ~${estLeft}s left` : 'Finalizing...';
-              if (progressEta) progressEta.textContent = etaText;
 
-              // Update Center Frosted Blue Progress Overlay
+              // Update Viewport-Pinned Center Processing Modal
               if (centerBar) centerBar.style.width = `${overallPct}%`;
               if (centerCount) centerCount.textContent = `Compressing: ${completedFiles} / ${totalFiles} Files (${overallPct}%)`;
               if (centerEta) centerEta.textContent = etaText;
@@ -1846,12 +1837,19 @@ export class PdfStudioUIManager {
           outFolderPath: outFolderPath
         };
 
+        // Unlock Screen Scroll
+        if (gridContainer) gridContainer.style.overflow = '';
         if (centerOverlay) centerOverlay.classList.add('hidden');
         this.files = [];
         this.updateStats();
         this.renderQueue();
 
         toast.show('Compression Complete!', `Saved ${savedCount} files directly into ${subfolder}/`, 'success');
+
+        // Auto-Open Output Folder in Foreground at 100% Completion (Choice 2-A / Upgrade 4)
+        if (outFolderPath) {
+          openFolderInExplorer(outFolderPath);
+        }
 
       } else if (opName === 'merge_pdf') {
         // Merge PDFs into single admission dossier
@@ -1951,8 +1949,8 @@ export class PdfStudioUIManager {
       toast.show('Operation Failed', err.message, 'error');
     } finally {
       this.isProcessing = false;
+      if (gridContainer) gridContainer.style.overflow = '';
       if (centerOverlay) centerOverlay.classList.add('hidden');
-      if (progressWrap) progressWrap.classList.add('hidden');
       if (btnStart) {
         btnStart.disabled = false;
         btnStart.classList.remove('opacity-50', 'cursor-not-allowed');

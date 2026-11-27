@@ -477,10 +477,8 @@
               </button>
             </div>
 
-            <!-- Safe Mode Instruction Center Badge -->
-            <div class="hidden xl:flex items-center gap-1.5 text-[11px] text-slate-400 font-medium select-none px-3 py-1 bg-slate-800/90 rounded-lg border border-slate-700/60">
-              <span>🛡️ Safe Mode: [Del] only moves file to "Duplicate Files" (never deleted) • Use [Backspace] to delete text</span>
-            </div>
+            <!-- Global Bottom-Bar Toast Slot (Replaced Safe Mode pill - Choice 1-A) -->
+            <div id="renamerBottomToastSlot" class="bottom-toast-slot flex-1 min-w-0 max-w-[460px] mx-2 flex items-center justify-center h-7 select-none pointer-events-none"></div>
             <div class="flex items-center gap-space-sm shrink-0">
               <button
                 class="h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white text-[14px] font-bold shadow-lg hover:shadow-xl border border-emerald-400/50 flex items-center gap-2 cursor-pointer transition-all disabled:opacity-40 disabled:cursor-not-allowed"
@@ -1412,32 +1410,6 @@
           <div id="pdfCardsGrid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 min-h-[300px]">
             <!-- Dynamically filled with clean empty state or file cards -->
           </div>
-
-          <!-- Center Frosted Blue Progress Overlay (Choice 2-A) -->
-          <div id="pdfCenterProgressOverlay" class="absolute inset-0 z-30 bg-slate-950/70 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center p-6 text-center hidden transition-all">
-            <div class="max-w-md w-full bg-slate-900/95 border border-blue-500/40 rounded-2xl p-6 shadow-2xl backdrop-blur-xl flex flex-col items-center text-white">
-              <div class="w-14 h-14 rounded-2xl bg-blue-500/20 border border-blue-400/40 text-blue-400 flex items-center justify-center mb-3 shadow-inner">
-                <span class="material-symbols-outlined text-[32px] animate-spin text-blue-400">sync</span>
-              </div>
-              <h3 class="text-lg font-bold tracking-tight text-white mb-1">Compressing Documents</h3>
-              <p id="pdfCenterProgressFileName" class="text-xs text-blue-200/80 font-mono mb-4 truncate max-w-xs">Processing batch...</p>
-              
-              <div class="w-full mb-3">
-                <div class="flex items-center justify-between text-xs font-mono mb-1.5 text-slate-200">
-                  <span id="pdfCenterProgressCount" class="font-bold">Compressing: 0 / 0 Files (0%)</span>
-                  <span id="pdfCenterProgressEta" class="text-slate-300">Est. ~0s left</span>
-                </div>
-                <div class="w-full bg-slate-800/90 rounded-full h-3 overflow-hidden border border-slate-700/80 p-0.5">
-                  <div id="pdfCenterProgressBar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-200 ease-out shadow-xs" style="width: 0%"></div>
-                </div>
-              </div>
-
-              <div class="flex items-center gap-2 text-[11px] text-slate-300 bg-white/5 border border-white/10 px-3 py-1 rounded-full">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                <span>Zero-Port Native IPC Engine Active</span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </main>
@@ -1446,21 +1418,8 @@
   <!-- Persistent Execution Toolbar (Automatic Smart Scan Focused Workflow) -->
   <footer
     class="w-full bg-slate-900 text-slate-100 px-gutter py-2 flex flex-nowrap items-center justify-between gap-space-sm border-t border-slate-700/80 shadow-2xl shrink-0 z-40 min-h-[50px] overflow-x-auto select-none">
-    <!-- Left: Operational Live Progress Bar (Behavior 3) -->
-    <div id="pdfExecutionProgressWrap" class="hidden flex-1 max-w-xl mr-6 flex items-center gap-3">
-      <div class="flex-1">
-        <div class="flex items-center justify-between text-xs font-mono mb-1 text-slate-200">
-          <span id="pdfProgressText" class="font-bold flex items-center gap-1.5">
-            <span class="animate-spin text-emerald-400 text-sm">hourglass_top</span>
-            <span id="pdfProgressCount">Compressing: 0 / 0 Files (0%)</span>
-          </span>
-          <span id="pdfProgressEta" class="text-slate-400 font-medium font-mono text-[11px]">Est. ~0s left</span>
-        </div>
-        <div class="w-full bg-slate-800/90 rounded-full h-2.5 overflow-hidden border border-slate-700/80 p-0.5">
-          <div id="pdfProgressBar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-200 ease-out shadow-xs" style="width: 0%"></div>
-        </div>
-      </div>
-    </div>
+    <!-- Center Global Bottom-Bar Toast Slot (Choice 1-A) -->
+    <div id="pdfBottomToastSlot" class="bottom-toast-slot flex-1 min-w-0 max-w-[460px] mx-2 flex items-center justify-center h-7 select-none pointer-events-none"></div>
 
     <!-- Right: Emerald Primary Action Button -->
     <div class="flex items-center gap-space-sm shrink-0 ml-auto">
@@ -1473,6 +1432,32 @@
       </button>
     </div>
   </footer>
+
+  <!-- Viewport-Pinned Center Processing Modal (Choice 2-A - Never pushed down or clipped by scrolling) -->
+  <div id="pdfCenterProgressOverlay" class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-md flex items-center justify-center p-6 text-center select-none hidden transition-all">
+    <div class="max-w-md w-full bg-slate-900/95 border border-blue-500/40 rounded-2xl p-6 shadow-2xl backdrop-blur-xl flex flex-col items-center text-white">
+      <div class="w-14 h-14 rounded-2xl bg-blue-500/20 border border-blue-400/40 text-blue-400 flex items-center justify-center mb-3 shadow-inner">
+        <span class="material-symbols-outlined text-[32px] animate-spin text-blue-400">sync</span>
+      </div>
+      <h3 class="text-lg font-bold tracking-tight text-white mb-1">Compressing Documents</h3>
+      <p id="pdfCenterProgressFileName" class="text-xs text-blue-200/80 font-mono mb-4 truncate max-w-xs">Processing batch...</p>
+      
+      <div class="w-full mb-3">
+        <div class="flex items-center justify-between text-xs font-mono mb-1.5 text-slate-200">
+          <span id="pdfCenterProgressCount" class="font-bold">Compressing: 0 / 0 Files (0%)</span>
+          <span id="pdfCenterProgressEta" class="text-slate-300">Est. ~0s left</span>
+        </div>
+        <div class="w-full bg-slate-800/90 rounded-full h-3 overflow-hidden border border-slate-700/80 p-0.5">
+          <div id="pdfCenterProgressBar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-200 ease-out shadow-xs" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 text-[11px] text-slate-300 bg-white/5 border border-white/10 px-3 py-1 rounded-full">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        <span>Zero-Port Native IPC Engine Active</span>
+      </div>
+    </div>
+  </div>
 
   <!-- Modal: Interactive Bento Document Preview Viewport (Choice 3-B) -->
   <div id="modalPdfStudioPreview"
@@ -3776,8 +3761,7 @@
   </div>
 
 
-  <!-- Toast Notification Hub (Safe Top-Right Placement, below 64px header) -->
-  <div id="toast-container" class="fixed top-20 right-6 z-[9999] flex flex-col gap-2 pointer-events-none max-w-[420px] select-none"></div>
+  <!-- Global Toast Slot is now mounted inside each active tool's bottom black footer (.bottom-toast-slot) per Choice 1-A -->
 
   <!-- ========================================== -->
   <!-- DOCMITRA FULL-SCREEN ACTIVATION GATE OVERLAY -->
@@ -4259,7 +4243,7 @@
   <!-- UI Shell Script (Modular UI Scripting) -->
   <script src="assets/js/libs/pdf.min.js"></script>
   <script src="assets/js/libs/pdf-lib.min.js"></script>
-  <script type="module" src="assets/js/app.js?v=20261127_01"></script>
+  <script type="module" src="assets/js/app.js?v=20261127_053"></script>
 </body>
 
 </html>
