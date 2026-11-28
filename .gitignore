@@ -33,3 +33,4 @@ __pycache__/
 testsprite_tests/tmp/
 testsprite_tests/tmp/config.json
 .playwright-mcp/
+scratch/

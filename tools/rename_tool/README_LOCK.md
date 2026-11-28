@@ -1,16 +1,25 @@
 # 🔒 LOCKED TOOL: Bulk Document Renamer (`tools/rename_tool/`)
 
 > [!IMPORTANT]
-> **FROZEN & FULLY SEALED PRODUCTION MILESTONE UNDER CHECKPOINT `CP-062`**  
-> **Status:** `LOCKED — PRODUCTION STABLE`  
+> **PRODUCTION STATUS: FULLY STABILIZED & SEALED UNDER CHECKPOINT CP-063**  
+> **Status:** `LOCKED — PRODUCTION STABLE (CP-063 Verified 100%)`  
 > **Governance Policy:** `AGENTS.md` (RULE 7) & `RENAME_TOOL_AGENT.md`  
 > **Module Integrity:** 100% Passing Across All Verification Tests via Dual-MCP QA (Playwright MCP + Chrome DevTools MCP: 0 Console Errors)  
-> **Verification Date:** 2026-11-27  
-> **Core Architecture:** Complete Production Suite (Physical Windows Folder Rename, Exact Casing, Circular Queue, 3-Tab Settings Modal with Deduplicated 58 Canonical Documents, Linked Documents Manager with Dynamic Zero-Error Exclusion, Bento Document Desk with Universal 1-0 and A-Z Natural Auto-Sort, In-App Notepad Report with Windows Notepad Launcher, 3-Way Unlimited Rotation Toolkit, Pure Standard English Matching Engine, Choice 1-B Direct Typed Word + Student Name Appending Engine, Choice 1-A & 2-B Strict Stop-Word Isolation, Choice 1-A & 2-A Complete Purge of Phonetic Sound Matching & Regional Desi Terms, Choice 1-A & 2-A Multi-Layer Student Deduplication & Auto-Assign `✓ Perfect` to Existing Formatted Files).
+> **Verification Date:** 2026-11-28  
+> **Core Architecture:** Complete Production Suite (Physical Windows Folder Rename, Exact Casing, Circular Queue, 3-Tab Settings Modal with Deduplicated 58 Canonical Documents, Linked Documents Manager with Dynamic Zero-Error Exclusion, Bento Document Desk with Universal 1-0 and A-Z Natural Auto-Sort, In-App Notepad Report with Windows Notepad Launcher, 3-Way Unlimited Rotation Toolkit, Pure Standard English Matching Engine, Choice 1-B Direct Typed Word + Student Name Appending Engine, Choice 1-A & 2-B Strict Stop-Word Isolation, Choice 1-A & 2-A Complete Purge of Phonetic Sound Matching & Regional Desi Terms, Choice 1-A & 2-A Multi-Layer Student Deduplication & Auto-Assign `✓ Perfect` to Existing Formatted Files, CP-063 4 Targeted Improvements: False Duplicates on Unmatched Scans Fixed, Dedicated Sort by Preset Button, Dash Sequence Prefix Toggle 01- 02-, and Cross-Check Modal Unmatched Default Unchecked & Short Name Badge).
 >
 > **LOCKED BY POLICY (`AGENTS.md` Rule 3):**  
 > Strict Feature Freeze in effect. Zero direct file modifications permitted inside `tools/rename_tool/` without explicit user unlock command:  
 > `UNLOCK RENAME_TOOL`
+
+> **Last QA Stabilization & Verification:** 2026-11-28 (4 Targeted Improvements [CP-063] Verified 100%:
+> 1. Restrict Base Duplicate Grouping Strictly to Matched Files: In `detectDuplicateFiles` Tier 3, filename collision grouping is guarded by `isMatched === true || status === 'matched' || status === 'ready' || smartConfidence >= 50`. Unmatched scanner/camera files (e.g., `IMG_8835.pdf`, `IMG_8836.pdf`) are NEVER stripped of trailing numbers or falsely grouped as duplicates. Only exact byte size + ext (Tier 1) and SHA-256 hash (Tier 2) apply to unmatched files.
+> 2. Dedicated "Sort by Preset" Button (Choice 1-B): Added `#btnSortPreset` to main toolbar and `#btnModalSortPreset` to Cross-Check modal toolbar. Ranks matched files in exact active preset checklist order, followed by unmatched files in natural A-Z order, preserving the active `currentIndex` preview pointer.
+> 3. Optional Sequence Prefix Toggle (Choice 2-D): Added `#chkAddSequencePrefix` in main toolbar and `#btnToggleCrossCheckSeqPrefix` in Cross-Check modal toolbar with dash format `01-`, `02-` (persisted in `localStorage` as `docmitra_rename_seq_prefix`). Automatically aligns file order in Windows Explorer to match active portal sequences.
+> 4. Clean Up Cross-Check Modal:
+>    - Unmatched files (`isMatched === false`, `confidence < 50%`) are automatically unchecked by default (`userToggled: false`) so unrecognized files are never accidentally renamed on bulk confirmation.
+>    - Added `evaluateOldNameDifference` detecting clean token subsets: Recognized short forms (e.g. `INCOME` -> `INCOME CERTIFICATE`, `VALIDITY` -> `CASTE VALIDITY CERTIFICATE`, `10 TH PASSING` -> `10TH PASSING CERTIFICATE`) show a clean blue `Short Name` badge instead of false red `% Wrong`. Actual typos (e.g. `VALEDITY`) strictly retain the red/amber `% Wrong` badge.
+> 5. Dual-MCP Verification: 100% PASS across Playwright MCP and Chrome DevTools MCP (0 console errors); compiled UI with `node build-ui.js`; compiled release binary via `cargo build --release`; deployed directly to `C:\Users\USER\AppData\Local\DocMitra\app.exe`; re-sealed under `CP-063`).
 
 > **Last QA Stabilization & Verification:** 2026-11-27 (Multi-Layer Student Deduplication & Auto-Assign `✓ Perfect` to Existing Files [CP-062] Verified 100%:
 > 1. Strict Deduplication in `formatPatternName` (Choice 1-A): Added regex word boundary check (`(^|\s)${escapedStudent}(\s|$)`) ensuring student name is NEVER appended if `docType` already contains it.

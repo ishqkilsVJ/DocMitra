@@ -73,6 +73,7 @@ import {
   cleanPortalSafe,
   escapeHtml,
   computeOldNameErrorPercent,
+  evaluateOldNameDifference,
   detectDuplicateFiles,
   generateSmartKeywords,
   GENERIC_STOP_KEYWORDS,
@@ -250,7 +251,8 @@ export class RenamerUIManager {
       activePdfUrl: null,
       isSmartScanning: false,
       isMissingDocsCollapsed: true,
-      isMissingModalOpen: false
+      isMissingModalOpen: false,
+      addSequencePrefix: (localStorage.getItem('docmitra_rename_seq_prefix') === 'true')
     };
     this._scanAbortController = null;
     this.missingModal = null;
@@ -352,6 +354,22 @@ export class RenamerUIManager {
       });
     }
 
+    // 2b. Memory Persistent Checkbox for Sequence Prefix (01-, 02-)
+    const chkSeq = document.getElementById('chkAddSequencePrefix');
+    if (chkSeq) {
+      chkSeq.checked = !!this.state.addSequencePrefix;
+      chkSeq.addEventListener('change', () => {
+        this.state.addSequencePrefix = chkSeq.checked;
+        localStorage.setItem('docmitra_rename_seq_prefix', String(chkSeq.checked));
+        this._recalculateTargetNames(true);
+        this.renderQueue();
+        this.renderCurrentPreview();
+        this.updateTelemetry();
+        const statusMsg = chkSeq.checked ? 'Sequence prefix (01-, 02-) enabled' : 'Sequence prefix disabled';
+        toast.show('Sequence Setting', statusMsg, 'info');
+      });
+    }
+
     // 3. In-Ribbon Folder Name Edit & Apply (Variant 3 Dark Slate)
     const btnEditFolder = document.getElementById('btnEditFolderName');
     const btnApplyFolder = document.getElementById('btnApplyFolderName');
@@ -443,6 +461,12 @@ export class RenamerUIManager {
     const btnSortQueue = document.getElementById('btnSortQueue');
     if (btnSortQueue) {
       btnSortQueue.addEventListener('click', () => this.handleSortDocuments());
+    }
+
+    // Sort by Preset Button
+    const btnSortPreset = document.getElementById('btnSortPreset');
+    if (btnSortPreset) {
+      btnSortPreset.addEventListener('click', () => this.handleSortByPreset());
     }
 
     // Save Batch (Ctrl+S)
@@ -1643,9 +1667,17 @@ export class RenamerUIManager {
         }
         const docBase = f.docType || cleanName(f.name);
         const currentExt = f.ext || ('.' + f.name.split('.').pop()).toLowerCase();
-        const newBase = f.hasUserEdited && f.userEditedName
+        let newBase = f.hasUserEdited && f.userEditedName
           ? f.userEditedName
           : buildName(docBase, effStudent, this.state.settings?.groups, this.state.style);
+
+        if (this.state.addSequencePrefix && (f.isMatched || f.status === 'matched')) {
+          const prefix = this.getSequencePrefixForDoc(f.docType || f.smartDocType || docBase);
+          if (prefix && !newBase.startsWith(prefix)) {
+            newBase = `${prefix}${newBase}`;
+          }
+        }
+
         const desired = newBase.endsWith(currentExt) ? newBase : `${newBase}${currentExt}`;
         const unique = uniqueDestination(desired, f.name, usedDestinations, effStudent);
         usedDestinations.add(unique);
@@ -3154,6 +3186,120 @@ export class RenamerUIManager {
     }
 
     toast.show('Sorted', `Documents sorted ${this._sortOrder === 'asc' ? 'A → Z' : 'Z → A'}`, 'info');
+  }
+
+  getSequencePrefixForDoc(docName) {
+    if (!this.state.addSequencePrefix || !docName) return '';
+    const activeDocs = this.getActivePresetDocuments();
+    const cleanTarget = cleanName(docName).toUpperCase().trim();
+
+    // 1. Exact canonical name match
+    let idx = activeDocs.findIndex(d => {
+      const dName = (d.name || '').trim().toUpperCase();
+      return dName === cleanTarget || cleanName(dName) === cleanTarget;
+    });
+
+    // 2. Token containment match
+    if (idx === -1) {
+      idx = activeDocs.findIndex(d => {
+        const dName = cleanName(d.name || '').toUpperCase().trim();
+        return dName && (cleanTarget.startsWith(dName) || dName.startsWith(cleanTarget));
+      });
+    }
+
+    // 3. Fallback to keyword match
+    if (idx === -1) {
+      const targetLower = cleanTarget.toLowerCase();
+      idx = activeDocs.findIndex(d => {
+        return Array.isArray(d.keywords) && d.keywords.some(k => k && targetLower.includes(k.toLowerCase()));
+      });
+    }
+
+    if (idx !== -1) {
+      // Dash format per User Choice 2-D: "01-", "02-", ...
+      return `${String(idx + 1).padStart(2, '0')}-`;
+    }
+    return '';
+  }
+
+  handleSortByPreset() {
+    if (!this.state.files || this.state.files.length === 0) {
+      toast.show('No Files to Sort', 'Please load documents first.', 'info');
+      return;
+    }
+
+    const currentFile = this.state.files[this.state.currentIndex];
+    const activeDocs = this.getActivePresetDocuments();
+
+    // Build map of preset items to their 0-based sequence index
+    const presetIndexMap = new Map();
+    activeDocs.forEach((doc, idx) => {
+      const canon = (doc.name || '').trim().toUpperCase();
+      if (canon && !presetIndexMap.has(canon)) presetIndexMap.set(canon, idx);
+      const cleanCanon = cleanName(canon);
+      if (cleanCanon && !presetIndexMap.has(cleanCanon)) presetIndexMap.set(cleanCanon, idx);
+      if (doc.code) {
+        const code = doc.code.trim().toUpperCase();
+        if (code && !presetIndexMap.has(code)) presetIndexMap.set(code, idx);
+      }
+      if (Array.isArray(doc.keywords)) {
+        doc.keywords.forEach(kw => {
+          if (kw) {
+            const kwUpper = kw.trim().toUpperCase();
+            if (kwUpper && !presetIndexMap.has(kwUpper)) presetIndexMap.set(kwUpper, idx);
+          }
+        });
+      }
+    });
+
+    const getFilePresetRank = (f) => {
+      const isMatched = f.isMatched || f.status === 'matched' || f.status === 'ready' || (f.smartConfidence !== undefined && f.smartConfidence >= 50);
+      if (!isMatched) return 9999; // Unmatched files appear at the end
+
+      if (f.docType) {
+        const dtUpper = f.docType.trim().toUpperCase();
+        if (presetIndexMap.has(dtUpper)) return presetIndexMap.get(dtUpper);
+        const dtClean = cleanName(dtUpper);
+        if (presetIndexMap.has(dtClean)) return presetIndexMap.get(dtClean);
+      }
+      if (f.smartDocType) {
+        const sdtUpper = f.smartDocType.trim().toUpperCase();
+        if (presetIndexMap.has(sdtUpper)) return presetIndexMap.get(sdtUpper);
+        const sdtClean = cleanName(sdtUpper);
+        if (presetIndexMap.has(sdtClean)) return presetIndexMap.get(sdtClean);
+      }
+      const targetBase = cleanName(f.targetName || f.name || '').toUpperCase();
+      for (const [key, idx] of presetIndexMap.entries()) {
+        if (targetBase.includes(key)) return idx;
+      }
+      return 9990;
+    };
+
+    this.state.files.sort((a, b) => {
+      const rankA = getFilePresetRank(a);
+      const rankB = getFilePresetRank(b);
+      if (rankA !== rankB) {
+        return rankA - rankB;
+      }
+      const nameA = a.targetName || a.name || '';
+      const nameB = b.targetName || b.name || '';
+      return nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: 'base' });
+    });
+
+    if (currentFile) {
+      const newIdx = this.state.files.findIndex(f => f.id === currentFile.id || f.name === currentFile.name);
+      if (newIdx !== -1) this.state.currentIndex = newIdx;
+    }
+
+    this.renderQueue();
+    this.renderCurrentPreview();
+
+    const modal = document.getElementById('modalCrossCheck');
+    if (modal && !modal.classList.contains('hidden')) {
+      this._renderCrossCheckRows();
+    }
+
+    toast.show('Sorted by Preset', `Documents sorted according to "${this.state.activePreset || 'Active Preset'}" sequence`, 'info');
   }
 
   getExtraDuplicateFiles() {
@@ -6084,6 +6230,27 @@ export class RenamerUIManager {
       });
     }
 
+    // Pattern Bar: Sequence Prefix Toggle (01-, 02-)
+    const btnSeqToggle = document.getElementById('btnToggleCrossCheckSeqPrefix');
+    const seqToggleLabel = document.getElementById('crossCheckSeqPrefixToggleLabel');
+    if (btnSeqToggle) {
+      btnSeqToggle.addEventListener('click', () => {
+        this.state.addSequencePrefix = !this.state.addSequencePrefix;
+        localStorage.setItem('docmitra_rename_seq_prefix', String(this.state.addSequencePrefix));
+        const isOn = this.state.addSequencePrefix;
+        if (seqToggleLabel) {
+          seqToggleLabel.textContent = isOn ? 'ON' : 'OFF';
+        }
+        btnSeqToggle.className = `inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold border transition-all cursor-pointer ${isOn ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'
+          }`;
+        const chkSeq = document.getElementById('chkAddSequencePrefix');
+        if (chkSeq) chkSeq.checked = isOn;
+        this._recalculateTargetNames(true);
+        this.renderQueue();
+        this._recalculateAndRenderCrossCheck(true);
+      });
+    }
+
     // Pattern Bar: Casing pills
     modal.querySelectorAll('[data-pattern-case]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -6239,6 +6406,12 @@ export class RenamerUIManager {
       btnModalSort.addEventListener('click', () => this.handleSortDocuments());
     }
 
+    // Modal Sort by Preset Button
+    const btnModalSortPreset = document.getElementById('btnModalSortPreset');
+    if (btnModalSortPreset) {
+      btnModalSortPreset.addEventListener('click', () => this.handleSortByPreset());
+    }
+
     // Keyboard Navigation within Modal
     modal.addEventListener('keydown', (e) => {
       if (modal.classList.contains('hidden')) return;
@@ -6345,16 +6518,23 @@ export class RenamerUIManager {
     const rawStudent = (this.state.studentName || '').replace(/\.[a-zA-Z0-9]+$/i, '').trim();
     const extension = f.ext || ext(f.name) || '';
     const baseDoc = this._getCrossCheckTargetBase(f);
+    const prefix = (this.state.addSequencePrefix && (f.isMatched || f.status === 'matched'))
+      ? this.getSequencePrefixForDoc(f.docType || f.smartDocType || baseDoc)
+      : '';
 
     let cleanTarget = '';
     if (this._crossCheckState && this._crossCheckState.overrides && this._crossCheckState.overrides.has(f.id)) {
       cleanTarget = applyCase(baseDoc, this._crossCheckState.casing);
+      if (prefix && !cleanTarget.startsWith(prefix)) {
+        cleanTarget = `${prefix}${cleanTarget}`;
+      }
     } else {
       cleanTarget = formatPatternName(baseDoc, rawStudent, {
         order: this._crossCheckState ? this._crossCheckState.order : 'doc_student',
         separator: this._crossCheckState ? this._crossCheckState.separator : ' ',
         includeStudent: this._crossCheckState ? this._crossCheckState.includeStudent : true,
-        casing: this._crossCheckState ? this._crossCheckState.casing : (this.state.style || 'upper')
+        casing: this._crossCheckState ? this._crossCheckState.casing : (this.state.style || 'upper'),
+        prefix
       });
     }
 
@@ -6390,11 +6570,12 @@ export class RenamerUIManager {
       focusedIndex: 0
     };
 
-    // Auto-evaluate initial checkboxes: Perfect files unchecked by default, others checked!
+    // Auto-evaluate initial checkboxes: Perfect files & Unmatched files unchecked by default!
     allFiles.forEach(f => {
       const targetName = this._getCrossCheckTargetName(f);
       const isPerfect = (cleanName(f.name) === cleanName(targetName));
-      this._crossCheckState.userToggled.set(f.id, !isPerfect);
+      const isUnmatched = (f.isMatched === false) || (f.status === 'unmatched') || (f.smartConfidence !== undefined && f.smartConfidence < 50);
+      this._crossCheckState.userToggled.set(f.id, !isPerfect && !isUnmatched);
     });
 
     // Reset pattern pills UI to initial state
@@ -6409,6 +6590,13 @@ export class RenamerUIManager {
       btnStudentToggle.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold border transition-all cursor-pointer bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100';
     }
 
+    const seqToggleLabel = document.getElementById('crossCheckSeqPrefixToggleLabel');
+    if (seqToggleLabel) seqToggleLabel.textContent = this.state.addSequencePrefix ? 'ON' : 'OFF';
+    const btnSeqToggle = document.getElementById('btnToggleCrossCheckSeqPrefix');
+    if (btnSeqToggle) {
+      btnSeqToggle.className = `inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold border transition-all cursor-pointer ${this.state.addSequencePrefix ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'}`;
+    }
+
     this._renderCrossCheckRows();
     modal.classList.remove('hidden');
   }
@@ -6420,7 +6608,8 @@ export class RenamerUIManager {
       allMatched.forEach(f => {
         const targetName = this._getCrossCheckTargetName(f);
         const isPerfect = (cleanName(f.name) === cleanName(targetName));
-        this._crossCheckState.userToggled.set(f.id, !isPerfect);
+        const isUnmatched = (f.isMatched === false) || (f.status === 'unmatched') || (f.smartConfidence !== undefined && f.smartConfidence < 50);
+        this._crossCheckState.userToggled.set(f.id, !isPerfect && !isUnmatched);
       });
     }
     this._renderCrossCheckRows();
@@ -6550,13 +6739,19 @@ export class RenamerUIManager {
         oldBadgesDiv.appendChild(probBadge);
       }
 
-      const errPct = computeOldNameErrorPercent(f.name, targetName, this.state.studentName);
-      if (errPct > 0) {
+      const diffEval = evaluateOldNameDifference(f.name, targetName, this.state.studentName);
+      if (diffEval.isShortName) {
+        const shortBadge = document.createElement('span');
+        shortBadge.className = 'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap select-none';
+        shortBadge.textContent = 'Short Name';
+        shortBadge.title = 'Old name is a recognized short form of this document';
+        oldBadgesDiv.appendChild(shortBadge);
+      } else if (diffEval.errorPercent > 0) {
         const errBadge = document.createElement('span');
-        const errClass = errPct >= 30 ? 'badge-wrong-major' : 'badge-wrong-minor';
+        const errClass = diffEval.errorPercent >= 30 ? 'badge-wrong-major' : 'badge-wrong-minor';
         errBadge.className = `inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap select-none ${errClass}`;
-        errBadge.textContent = `${errPct}% Wrong`;
-        errBadge.title = `${errPct}% difference from suggested document name`;
+        errBadge.textContent = `${diffEval.errorPercent}% Wrong`;
+        errBadge.title = `${diffEval.errorPercent}% difference from suggested document name`;
         oldBadgesDiv.appendChild(errBadge);
       }
 

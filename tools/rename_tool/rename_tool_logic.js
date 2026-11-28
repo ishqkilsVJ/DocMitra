@@ -3552,35 +3552,46 @@ export function formatPatternName(docType, studentName, options = {}) {
     order = 'doc_student',
     separator = ' ',
     includeStudent = true,
-    casing = 'upper'
+    casing = 'upper',
+    prefix = ''
   } = options;
 
   const doc = (docType || '').trim();
   const student = (studentName || '').trim();
 
+  let formatted = '';
   if (!includeStudent || !student) {
-    return applyCase(doc, casing);
-  }
-
-  const normDoc = doc.replace(/[_\-]+/g, ' ').replace(/\s+/g, ' ');
-  const normStudent = student.replace(/[_\-]+/g, ' ').replace(/\s+/g, ' ');
-  const escapedStudent = normStudent.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const studentWordRegex = new RegExp(`(^|\\s)${escapedStudent}(\\s|$)`, 'i');
-
-  // Choice 1-A: Strict Deduplication - If doc already contains student name at word boundaries, do not append duplicate!
-  if (studentWordRegex.test(normDoc)) {
-    return applyCase(doc, casing);
-  }
-
-  let parts = [];
-  if (order === 'student_doc') {
-    parts = [student, doc];
+    formatted = applyCase(doc, casing);
   } else {
-    parts = [doc, student];
+    const normDoc = doc.replace(/[_\-]+/g, ' ').replace(/\s+/g, ' ');
+    const normStudent = student.replace(/[_\-]+/g, ' ').replace(/\s+/g, ' ');
+    const escapedStudent = normStudent.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const studentWordRegex = new RegExp(`(^|\\s)${escapedStudent}(\\s|$)`, 'i');
+
+    // Choice 1-A: Strict Deduplication - If doc already contains student name at word boundaries, do not append duplicate!
+    if (studentWordRegex.test(normDoc)) {
+      formatted = applyCase(doc, casing);
+    } else {
+      let parts = [];
+      if (order === 'student_doc') {
+        parts = [student, doc];
+      } else {
+        parts = [doc, student];
+      }
+
+      const combined = parts.filter(Boolean).join(separator);
+      formatted = applyCase(combined, casing);
+    }
   }
 
-  const combined = parts.filter(Boolean).join(separator);
-  return applyCase(combined, casing);
+  // Prepend optional sequence prefix (e.g. "01-", "02-") if provided
+  if (prefix && typeof prefix === 'string') {
+    if (!formatted.startsWith(prefix)) {
+      formatted = `${prefix}${formatted}`;
+    }
+  }
+
+  return formatted;
 }
 
 /**
@@ -3619,8 +3630,12 @@ export function cleanPortalSafe(name) {
  * Formula:
  * errorPercent = Math.round((editDistance / Math.max(oldLen, newLen)) * 100)
  */
-export function computeOldNameErrorPercent(oldName, targetName, studentName = '') {
-  if (!oldName || !targetName) return 0;
+/**
+ * Smart difference and error evaluation between old and target filenames.
+ * Distinguishes true typos from valid exact subset short names (e.g. INCOME -> INCOME CERTIFICATE).
+ */
+export function evaluateOldNameDifference(oldName, targetName, studentName = '') {
+  if (!oldName || !targetName) return { errorPercent: 0, isShortName: false };
 
   // Strip file extensions
   const cleanOld = cleanName(oldName).trim();
@@ -3638,6 +3653,9 @@ export function computeOldNameErrorPercent(oldName, targetName, studentName = ''
     }
   }
 
+  // Strip leading sequence prefix if present (e.g. "01-", "02-", "01_")
+  cleanTarget = cleanTarget.replace(/^\d{2}[_\-]/, '').trim();
+
   // Normalize: lower case, standardize standard tokens (e.g. "10 th" -> "10th", "mark sheet" -> "marksheet"), collapse whitespace
   let normOld = cleanOld.toLowerCase()
     .replace(/(\d+)\s+(th|st|nd|rd)\b/gi, '$1$2')
@@ -3652,15 +3670,35 @@ export function computeOldNameErrorPercent(oldName, targetName, studentName = ''
     .trim();
 
   if (!normOld || !normTarget || normOld === normTarget) {
-    return 0;
+    return { errorPercent: 0, isShortName: false };
+  }
+
+  // Check if all tokens of normOld are an exact subset of normTarget tokens
+  // E.g. "income" in "income certificate", "validity" in "caste validity certificate", "10th passing" in "10th passing certificate"
+  const oldTokens = normOld.split(/\s+/).filter(Boolean);
+  const targetTokens = new Set(normTarget.split(/\s+/).filter(Boolean));
+  const isSubset = oldTokens.length > 0 && oldTokens.every(tok => targetTokens.has(tok));
+
+  if (isSubset) {
+    return { errorPercent: 0, isShortName: true };
   }
 
   const dist = levenshteinDistance(normOld, normTarget);
   const maxLen = Math.max(normOld.length, normTarget.length);
-  if (maxLen === 0) return 0;
+  if (maxLen === 0) return { errorPercent: 0, isShortName: false };
 
   const pct = Math.round((dist / maxLen) * 100);
-  return Math.min(100, Math.max(0, pct));
+  return { errorPercent: Math.min(100, Math.max(0, pct)), isShortName: false };
+}
+
+/**
+ * Calculates percentage difference between old filename and suggested target name.
+ * 0 = identical, 100 = completely different.
+ * Uses Levenshtein distance on normalized document names (excluding student name if newly added).
+ * errorPercent = Math.round((editDistance / Math.max(oldLen, newLen)) * 100)
+ */
+export function computeOldNameErrorPercent(oldName, targetName, studentName = '') {
+  return evaluateOldNameDifference(oldName, targetName, studentName).errorPercent;
 }
 
 /**
@@ -3749,6 +3787,11 @@ export function detectDuplicateFiles(files) {
   // 4. Mark 100% Confirmed if canonical base document collision with numbered suffix (e.g. CASTE CERTIFICATE, CASTE CERTIFICATE 2)
   const baseGroups = new Map();
   files.forEach(f => {
+    // RESTRICTION: Only evaluate matched files for canonical base collisions!
+    // Unmatched camera/scanner files (e.g. IMG_8835, IMG_8836) are strictly excluded from Tier 3.
+    const isMatched = (f.isMatched === true) || (f.status === 'matched') || (f.status === 'ready') || (f.smartConfidence !== undefined && f.smartConfidence >= 50);
+    if (!isMatched) return;
+
     const activeName = cleanName(f.targetName || f.name || '');
     // Normalize and remove suffix copy numbers like " 2", " 3", "(2)", "_2", "-2"
     let base = activeName.toLowerCase()
